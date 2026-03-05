@@ -1,6 +1,5 @@
 import { ScrollReveal } from "./ScrollReveal";
-import { Mail, Linkedin, Github } from "lucide-react";
-import { Magnetic } from "./Magnetic";
+import { ArrowUpRight } from "lucide-react";
 
 export function Contact() {
   return (
@@ -20,38 +19,41 @@ export function Contact() {
         </ScrollReveal>
 
         <ScrollReveal slideFrom={1}>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Magnetic strength={0.3} radius={60}>
-              <a
-                href="mailto:bryce.rambach@gmail.com"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-blue-500 text-white rounded-2xl font-medium transition-all duration-200 hover:bg-blue-400 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(59,130,246,0.3)] active:scale-[0.98] shadow-lg"
-              >
-                <Mail className="w-4 h-4" />
-                Email Me
-              </a>
-            </Magnetic>
-            <Magnetic strength={0.3} radius={60}>
-              <a
-                href="https://www.linkedin.com/in/bryce-rambach/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/[0.07] text-neutral-300 rounded-2xl font-medium hover:bg-white/10 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(0,0,0,0.3)] active:scale-[0.98] border border-white/10"
-              >
-                <Linkedin className="w-4 h-4" />
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-8">
+            <a
+              href="mailto:bryce.rambach@gmail.com"
+              className="group inline-flex items-center gap-2 text-white font-medium transition-colors"
+            >
+              <span className="relative">
+                Email
+                <span className="absolute -bottom-1 left-0 w-full h-px bg-white/30 group-hover:bg-white transition-colors duration-200" />
+              </span>
+              <ArrowUpRight className="w-4 h-4 text-neutral-600 group-hover:text-white transition-all duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+            </a>
+            <a
+              href="https://www.linkedin.com/in/bryce-rambach/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-2 text-neutral-400 hover:text-white font-medium transition-colors"
+            >
+              <span className="relative">
                 LinkedIn
-              </a>
-            </Magnetic>
-            <Magnetic strength={0.3} radius={60}>
-              <a
-                href="https://github.com/brambach"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/[0.07] text-neutral-300 rounded-2xl font-medium hover:bg-white/10 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(0,0,0,0.3)] active:scale-[0.98] border border-white/10"
-              >
-                <Github className="w-4 h-4" />
+                <span className="absolute -bottom-1 left-0 w-0 h-px bg-white group-hover:w-full transition-all duration-200" />
+              </span>
+              <ArrowUpRight className="w-4 h-4 text-neutral-600 group-hover:text-white transition-all duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+            </a>
+            <a
+              href="https://github.com/brambach"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-2 text-neutral-400 hover:text-white font-medium transition-colors"
+            >
+              <span className="relative">
                 GitHub
-              </a>
-            </Magnetic>
+                <span className="absolute -bottom-1 left-0 w-0 h-px bg-white group-hover:w-full transition-all duration-200" />
+              </span>
+              <ArrowUpRight className="w-4 h-4 text-neutral-600 group-hover:text-white transition-all duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+            </a>
           </div>
         </ScrollReveal>
       </div>

@@ -1,6 +1,5 @@
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
-import { Magnetic } from "./Magnetic";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -23,24 +22,19 @@ export function Navbar() {
       }`}
     >
       <div className="max-w-6xl mx-auto px-6 md:px-12 flex items-center justify-between">
-        <Magnetic strength={0.3} radius={40}>
-          <a href="#" className="text-lg font-semibold tracking-tight text-white">
-            BR.
-          </a>
-        </Magnetic>
+        <a href="#" className="text-lg font-semibold tracking-tight text-white">
+          BR.
+        </a>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-500">
           {['About', 'Skills', 'Work', 'Portfolio', 'Contact'].map((item) => (
-            <div key={item}>
-              <Magnetic strength={0.4} radius={40}>
-                <a
-                  href={`#${item.toLowerCase()}`}
-                  className="hover:text-white transition-colors relative group py-1"
-                >
-                  {item}
-                  <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-white transition-all duration-200 ease-in-out group-hover:w-full rounded-full"></span>
-                </a>
-              </Magnetic>
-            </div>
+            <a
+              key={item}
+              href={`#${item.toLowerCase()}`}
+              className="hover:text-white transition-colors relative group py-1"
+            >
+              {item}
+              <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-white transition-all duration-200 ease-in-out group-hover:w-full rounded-full"></span>
+            </a>
           ))}
         </nav>
       </div>
