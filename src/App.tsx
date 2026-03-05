@@ -7,7 +7,6 @@ import { Work } from "./components/Work";
 import { Portfolio } from "./components/Portfolio";
 import { Contact } from "./components/Contact";
 import { Footer } from "./components/Footer";
-import { CustomCursor } from "./components/CustomCursor";
 
 function DotGrid() {
   const { scrollY } = useScroll();
@@ -48,7 +47,7 @@ export default function App() {
       transition={{ duration: 0.8, ease: "easeOut" }}
       className="min-h-screen text-neutral-300 font-sans selection:bg-white/10 selection:text-white relative z-0"
     >
-      <CustomCursor />
+      {/* cursor removed */}
       {/* Animated Gradient Mesh Background */}
       <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none will-change-transform">
         <div className="absolute top-[-20%] left-[-15%] w-[60%] h-[60%] rounded-full bg-blue-600/15 blur-[150px] animate-blob" />

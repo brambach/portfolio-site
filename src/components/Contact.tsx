@@ -4,11 +4,11 @@ import { Magnetic } from "./Magnetic";
 
 export function Contact() {
   return (
-    <section id="contact" className="relative py-40 md:py-56 overflow-hidden">
+    <section id="contact" className="relative py-32 md:py-40 overflow-hidden">
       {/* Decorative gradient circle */}
       <div
         aria-hidden="true"
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 rounded-full bg-linear-to-br from-blue-500/10 via-purple-500/10 to-emerald-500/5 blur-3xl pointer-events-none"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 rounded-full bg-blue-500/15 blur-3xl pointer-events-none"
       />
 
       {/* Decorative horizontal lines */}
@@ -23,9 +23,9 @@ export function Contact() {
 
       <div className="relative max-w-5xl mx-auto px-6 md:px-12 text-center">
         <ScrollReveal>
-          <h2 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white tracking-tight mb-8">
+          <h2 className="text-5xl md:text-7xl lg:text-8xl font-display text-white tracking-tight mb-8">
             Let's build something{" "}
-            <span className="text-gradient-accent">together</span>.
+            <span className="text-blue-400 italic">together</span>.
           </h2>
         </ScrollReveal>
 
@@ -42,7 +42,7 @@ export function Contact() {
             <Magnetic strength={0.3} radius={60}>
               <a
                 href="mailto:bryce.rambach@gmail.com"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-linear-to-r from-blue-500 to-purple-500 text-white rounded-2xl font-medium transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(99,102,241,0.4)] active:scale-[0.98] shadow-lg"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-blue-500 text-white rounded-2xl font-medium transition-all duration-200 hover:bg-blue-400 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(59,130,246,0.3)] active:scale-[0.98] shadow-lg"
               >
                 <Mail className="w-4 h-4" />
                 Email Me

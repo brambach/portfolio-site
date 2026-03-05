@@ -1,8 +1,8 @@
 export function Footer() {
   return (
-    <footer className="py-16 mt-24">
+    <footer className="py-12 mt-8">
       {/* Gradient top border */}
-      <div className="h-px w-full bg-linear-to-r from-transparent via-white/10 to-transparent mb-16" />
+      <div className="h-px w-full bg-linear-to-r from-transparent via-white/10 to-transparent mb-10" />
 
       <div className="max-w-6xl mx-auto px-6 md:px-12 flex flex-col md:flex-row items-center justify-between gap-6">
         {/* BR. logo mark */}
