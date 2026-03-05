@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -7,7 +7,21 @@
 
 @layer base {
   body {
-    @apply bg-[#F5F5F7] text-[#111111] antialiased selection:bg-neutral-200 selection:text-black;
+    @apply bg-[#0A0A0B] text-neutral-300 antialiased selection:bg-white/10 selection:text-white;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0A0A0B;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
   }
 }
 
@@ -20,6 +34,9 @@
   }
   .animation-delay-4000 {
     animation-delay: 4s;
+  }
+  .animation-delay-6000 {
+    animation-delay: 6s;
   }
 }
 
