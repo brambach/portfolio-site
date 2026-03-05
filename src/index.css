@@ -48,6 +48,30 @@
   .animate-marquee-reverse {
     animation: marquee-reverse linear infinite;
   }
+  .text-gradient {
+    background: linear-gradient(to right, #ffffff, #a1a1aa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .text-gradient-accent {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6, #10b981);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .animate-orbit {
+    animation: orbit 20s linear infinite;
+  }
+  .animate-orbit-reverse {
+    animation: orbit 25s linear infinite reverse;
+  }
+  .animate-spin-slow {
+    animation: spin 30s linear infinite;
+  }
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
 }
 
 @keyframes marquee {
@@ -58,6 +82,16 @@
 @keyframes marquee-reverse {
   0% { transform: translateX(-50%); }
   100% { transform: translateX(0); }
+}
+
+@keyframes orbit {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
 }
 
 @keyframes blob {
@@ -83,7 +117,11 @@
 
   .animate-blob,
   .animate-marquee,
-  .animate-marquee-reverse {
+  .animate-marquee-reverse,
+  .animate-orbit,
+  .animate-orbit-reverse,
+  .animate-spin-slow,
+  .animate-float {
     animation: none;
   }
 }

@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from "motion/react";
+import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
 import { About } from "./components/About";
@@ -8,6 +8,35 @@ import { Portfolio } from "./components/Portfolio";
 import { Contact } from "./components/Contact";
 import { Footer } from "./components/Footer";
 import { CustomCursor } from "./components/CustomCursor";
+
+function DotGrid() {
+  const { scrollY } = useScroll();
+  const opacity = useTransform(scrollY, [0, 600], [0.4, 0]);
+
+  return (
+    <motion.div
+      style={{ opacity }}
+      className="fixed inset-0 z-[-1] pointer-events-none"
+    >
+      <svg width="100%" height="100%">
+        <defs>
+          <pattern id="dotgrid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="1" fill="rgba(255,255,255,0.15)" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#dotgrid)" />
+      </svg>
+    </motion.div>
+  );
+}
+
+function SectionDivider() {
+  return (
+    <div className="relative w-full max-w-6xl mx-auto px-6 md:px-12 py-2">
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+    </div>
+  );
+}
 
 export default function App() {
   const reducedMotion = useReducedMotion();
@@ -38,13 +67,19 @@ export default function App() {
         </svg>
       </div>
 
+      <DotGrid />
+
       <Navbar />
-      <main className="max-w-6xl mx-auto px-6 md:px-12 pt-24">
+      <main className="pt-24">
         <Hero />
+        <SectionDivider />
         <About />
+        <SectionDivider />
         <Skills />
+        <SectionDivider />
         <Work />
         <Portfolio />
+        <SectionDivider />
         <Contact />
       </main>
       <Footer />
