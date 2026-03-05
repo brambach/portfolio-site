@@ -6,6 +6,10 @@
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-[#0A0A0B] text-neutral-300 antialiased selection:bg-white/10 selection:text-white;
   }
@@ -68,5 +72,25 @@
   }
   100% {
     transform: translate(0px, 0px) scale(1);
+  }
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-blob,
+  .animate-marquee,
+  .animate-marquee-reverse {
+    animation: none;
+  }
+}
+
+/* Disable heavy effects on touch/mobile */
+@media (pointer: coarse) {
+  .animate-blob {
+    animation-duration: 40s;
   }
 }
