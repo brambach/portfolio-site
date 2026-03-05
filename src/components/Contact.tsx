@@ -1,4 +1,4 @@
-import { FadeIn } from "./FadeIn";
+import { ScrollReveal, Parallax } from "./ScrollReveal";
 import { Mail, Linkedin, Github } from "lucide-react";
 
 export function Contact() {
@@ -6,14 +6,16 @@ export function Contact() {
     <section id="contact" className="py-24 md:py-32 border-t border-white/5">
       <div className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-8">
         <div className="md:col-span-4">
-          <FadeIn>
-            <h3 className="text-sm font-semibold uppercase tracking-widest text-neutral-500">
-              Contact
-            </h3>
-          </FadeIn>
+          <Parallax offset={-30}>
+            <ScrollReveal>
+              <h3 className="text-sm font-semibold uppercase tracking-widest text-neutral-500">
+                Contact
+              </h3>
+            </ScrollReveal>
+          </Parallax>
         </div>
         <div className="md:col-span-8">
-          <FadeIn delay={0.1}>
+          <ScrollReveal slideFrom={1}>
             <div className="bg-white/3 backdrop-blur-xl border border-white/6 shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-4xl p-8 md:p-12 transition-all duration-300 hover:-translate-y-1 hover:border-white/10 hover:shadow-[0_16px_48px_rgba(0,0,0,0.4)]">
               <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight mb-8">
                 Let's build something together.
@@ -50,7 +52,7 @@ export function Contact() {
                 </a>
               </div>
             </div>
-          </FadeIn>
+          </ScrollReveal>
         </div>
       </div>
     </section>
