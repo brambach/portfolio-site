@@ -26,7 +26,7 @@ export function Navbar() {
           BR.
         </a>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-500">
-          {['About', 'Skills', 'Work', 'Contact'].map((item) => (
+          {['About', 'Skills', 'Work', 'Portfolio', 'Contact'].map((item) => (
             <a 
               key={item}
               href={`#${item.toLowerCase()}`} 
