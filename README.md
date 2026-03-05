@@ -2,7 +2,7 @@
 
 # brycerambach.com
 
-My personal portfolio — built with React, TypeScript, and Tailwind CSS.
+Personal portfolio site — editorial dark aesthetic, built with React, TypeScript, and Tailwind CSS v4.
 
 [Live Site](https://brycerambach.com) &nbsp;&middot;&nbsp; [LinkedIn](https://www.linkedin.com/in/bryce-rambach/) &nbsp;&middot;&nbsp; [Email](mailto:bryce.rambach@gmail.com)
 
@@ -12,9 +12,7 @@ My personal portfolio — built with React, TypeScript, and Tailwind CSS.
 
 ## About
 
-I'm Bryce Rambach — a Computer Science student at a university (graduating May 2026) and Integration Specialist at the consultancy. I build enterprise HRIS integrations connecting platforms like the HR system, the finance system, a rostering system, and an integration platform, and I'm targeting Solutions Engineer roles in the city.
-
-This site is a single-page portfolio showcasing my background, skills, and experience.
+I'm Bryce Rambach — a Computer Science student at a university (graduating May 2026) and Integration Specialist at the consultancy. I build enterprise integrations connecting platforms like the HR system, the finance system, a rostering system, and an integration platform, and I'm targeting Solutions Engineer roles in the city.
 
 ## Tech Stack
 
@@ -22,48 +20,45 @@ This site is a single-page portfolio showcasing my background, skills, and exper
 |-------|------|
 | Framework | React 19 |
 | Language | TypeScript |
-| Build Tool | Vite |
+| Build Tool | Vite 6 |
 | Styling | Tailwind CSS v4 |
-| Animations | Motion (Framer Motion) |
+| Animations | Motion (motion/react) |
+| Typography | Instrument Serif, Inter, JetBrains Mono |
 | Icons | Lucide React |
 
 ## Getting Started
 
 ```bash
-# Install dependencies
 npm install
-
-# Start dev server on port 3000
-npm run dev
-
-# Production build
-npm run build
-
-# Preview production build
-npm run preview
+npm run dev       # dev server on port 3000
+npm run build     # production build
+npm run preview   # preview production build
 ```
 
 ## Project Structure
 
 ```
 src/
-├── App.tsx              # Root layout + ambient background
-├── main.tsx             # Entry point
-├── index.css            # Global styles
+├── App.tsx                # Root layout + ambient background
+├── main.tsx               # Entry point
+├── index.css              # Global styles, keyframes, fonts
 └── components/
-    ├── Navbar.tsx        # Fixed navigation
-    ├── Hero.tsx          # Landing section
-    ├── About.tsx         # Bio
-    ├── Skills.tsx        # Tech stack & competencies
-    ├── Work.tsx          # Experience timeline
-    ├── Contact.tsx       # CTA + socials
-    ├── Footer.tsx        # Footer
-    └── FadeIn.tsx        # Scroll-triggered fade animation
+    ├── Navbar.tsx          # Fixed nav with scroll-aware styling
+    ├── Hero.tsx            # Full-height intro with animated typography
+    ├── About.tsx           # Bio section
+    ├── Skills.tsx          # Tech stack marquee + animated counters
+    ├── Work.tsx            # Experience timeline with scroll-drawn line
+    ├── Portfolio.tsx       # Horizontal-scroll project cards with 3D tilt
+    ├── Contact.tsx         # CTA links
+    ├── Footer.tsx          # Footer
+    ├── ScrollReveal.tsx    # Scroll-triggered reveal + parallax
+    ├── TextScramble.tsx    # Character scramble animation on scroll
+    └── CustomCursor.tsx    # Custom cursor with context-aware states
 ```
 
 ## Design
 
-The site uses a glassmorphism aesthetic — frosted-glass cards with `backdrop-blur`, translucent gradients, and soft inset shadows over animated ambient blobs. Fully responsive with smooth scroll-triggered animations throughout.
+Refined editorial aesthetic — mostly monochrome with serif/monospace typography contrast. Instrument Serif for display headings, JetBrains Mono for technical details, Inter for body text. Scroll-driven animations throughout including a horizontal-scroll portfolio gallery, drawing timeline, and staggered text reveals. Fully responsive with reduced-motion support.
 
 ## License
 
