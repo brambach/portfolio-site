@@ -24,16 +24,15 @@ export function Contact() {
       <div className="relative max-w-5xl mx-auto px-6 md:px-12 text-center">
         <ScrollReveal>
           <h2 className="text-5xl md:text-7xl lg:text-8xl font-display text-white tracking-tight mb-8">
-            Let's build something{" "}
-            <span className="text-blue-400 italic">together</span>.
+            Let's{" "}
+            <span className="text-blue-400 italic">connect</span>.
           </h2>
         </ScrollReveal>
 
         <ScrollReveal slideFrom={1}>
           <p className="text-xl md:text-2xl font-light text-neutral-400 mb-16 max-w-2xl mx-auto">
-            I'm targeting Solutions Engineer roles in the city starting Summer 2026.
-            If you have an opportunity or want to chat about integrations, reach
-            out.
+            Targeting Solutions Engineer roles in the city, Summer 2026. Got an
+            opportunity? Want to nerd out about integrations? I'm all ears.
           </p>
         </ScrollReveal>
 

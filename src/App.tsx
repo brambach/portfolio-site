@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
@@ -40,6 +41,41 @@ function SectionDivider() {
 export default function App() {
   const reducedMotion = useReducedMotion();
 
+  // Console signature — for the devs who inspect
+  useEffect(() => {
+    console.log(
+      "%c BR. %c Bryce Rambach — bryce.rambach@gmail.com\n%c Built with React, Tailwind v4, and Motion.\n If you're reading this, we should probably talk.",
+      "background: #3b82f6; color: white; font-size: 20px; font-weight: bold; padding: 8px 12px; border-radius: 4px;",
+      "color: #e5e5e5; font-size: 13px; padding: 8px 0;",
+      "color: #737373; font-size: 11px;"
+    );
+  }, []);
+
+  // Konami code easter egg
+  useEffect(() => {
+    const code = ["ArrowUp","ArrowUp","ArrowDown","ArrowDown","ArrowLeft","ArrowRight","ArrowLeft","ArrowRight","b","a"];
+    let index = 0;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === code[index]) {
+        index++;
+        if (index === code.length) {
+          index = 0;
+          document.title = "🎮 Nice. You found it.";
+          document.body.style.transition = "filter 0.6s ease";
+          document.body.style.filter = "hue-rotate(180deg)";
+          setTimeout(() => {
+            document.body.style.filter = "";
+            setTimeout(() => { document.title = "Bryce Rambach"; }, 2000);
+          }, 3000);
+        }
+      } else {
+        index = 0;
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
   return (
     <motion.div
       initial={reducedMotion ? false : { opacity: 0 }}
@@ -47,7 +83,6 @@ export default function App() {
       transition={{ duration: 0.8, ease: "easeOut" }}
       className="min-h-screen text-neutral-300 font-sans selection:bg-white/10 selection:text-white relative z-0"
     >
-      {/* cursor removed */}
       {/* Animated Gradient Mesh Background */}
       <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none will-change-transform">
         <div className="absolute top-[-20%] left-[-15%] w-[60%] h-[60%] rounded-full bg-blue-600/15 blur-[150px] animate-blob" />
