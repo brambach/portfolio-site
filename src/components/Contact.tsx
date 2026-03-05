@@ -4,28 +4,11 @@ import { Magnetic } from "./Magnetic";
 
 export function Contact() {
   return (
-    <section id="contact" className="relative py-32 md:py-40 overflow-hidden">
-      {/* Decorative gradient circle */}
-      <div
-        aria-hidden="true"
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 rounded-full bg-blue-500/15 blur-3xl pointer-events-none"
-      />
-
-      {/* Decorative horizontal lines */}
-      <div
-        aria-hidden="true"
-        className="absolute top-1/2 left-0 w-full h-px bg-linear-to-r from-transparent via-white/10 to-transparent -translate-y-20"
-      />
-      <div
-        aria-hidden="true"
-        className="absolute top-1/2 left-0 w-full h-px bg-linear-to-r from-transparent via-white/5 to-transparent translate-y-20"
-      />
-
+    <section id="contact" className="relative py-32 md:py-40">
       <div className="relative max-w-5xl mx-auto px-6 md:px-12 text-center">
         <ScrollReveal>
           <h2 className="text-5xl md:text-7xl lg:text-8xl font-display text-white tracking-tight mb-8">
-            Let's{" "}
-            <span className="text-blue-400 italic">connect</span>.
+            Let's connect.
           </h2>
         </ScrollReveal>
 
@@ -52,7 +35,7 @@ export function Contact() {
                 href="https://www.linkedin.com/in/bryce-rambach/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/5 backdrop-blur-xl text-neutral-300 rounded-2xl font-medium hover:bg-white/10 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(0,0,0,0.3)] active:scale-[0.98] border border-white/10"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/[0.07] text-neutral-300 rounded-2xl font-medium hover:bg-white/10 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(0,0,0,0.3)] active:scale-[0.98] border border-white/10"
               >
                 <Linkedin className="w-4 h-4" />
                 LinkedIn
@@ -63,7 +46,7 @@ export function Contact() {
                 href="https://github.com/brambach"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/5 backdrop-blur-xl text-neutral-300 rounded-2xl font-medium hover:bg-white/10 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(0,0,0,0.3)] active:scale-[0.98] border border-white/10"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/[0.07] text-neutral-300 rounded-2xl font-medium hover:bg-white/10 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(0,0,0,0.3)] active:scale-[0.98] border border-white/10"
               >
                 <Github className="w-4 h-4" />
                 GitHub
