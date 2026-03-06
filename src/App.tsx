@@ -111,6 +111,7 @@ export default function App() {
         <Skills />
         <SectionDivider />
         <Work />
+        <SectionDivider />
         <Portfolio />
         <SectionDivider />
         <Contact />
