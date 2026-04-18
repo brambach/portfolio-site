@@ -6,6 +6,8 @@ coverage/
 *.log
 .env*
 !.env.example
+!.env.local.example
 .superpowers/
 .worktrees/
 .claude/
+.vercel/
