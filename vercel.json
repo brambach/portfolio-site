@@ -1,7 +1,4 @@
 {
-  "functions": {
-    "api/chat.ts": { "runtime": "edge" }
-  },
   "headers": [
     {
       "source": "/(.*)",
