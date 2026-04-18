@@ -2,7 +2,7 @@
 
 # brycerambach.com
 
-Personal portfolio site — editorial dark aesthetic, built with React, TypeScript, and Tailwind CSS v4.
+Personal portfolio as a conversation — warm cream paper, a living ember-orb avatar, and a hybrid scripted / Claude Haiku chat backend.
 
 [Live Site](https://brycerambach.com) &nbsp;&middot;&nbsp; [LinkedIn](https://www.linkedin.com/in/bryce-rambach/) &nbsp;&middot;&nbsp; [Email](mailto:bryce.rambach@gmail.com)
 
@@ -12,53 +12,76 @@ Personal portfolio site — editorial dark aesthetic, built with React, TypeScri
 
 ## About
 
-I'm Bryce Rambach — a Computer Science student at a university (graduating May 2026) and Integration Specialist at the consultancy. I build enterprise integrations connecting platforms like the HR system, the finance system, a rostering system, and an integration platform, and I'm targeting Solutions Engineer roles in the city.
+I'm Bryce Rambach — CS at college (graduating May 2026), Integration Specialist at the consultancy. Targeting Solutions Engineer / full-stack roles at early-stage startups in a new city, summer 2026.
+
+This site isn't a scroll. It's a chat. Ask it anything.
 
 ## Tech Stack
 
-| Layer | Tech |
-|-------|------|
-| Framework | React 19 |
-| Language | TypeScript |
-| Build Tool | Vite 6 |
-| Styling | Tailwind CSS v4 |
-| Animations | Motion (motion/react) |
-| Typography | Instrument Serif, Inter, JetBrains Mono |
-| Icons | Lucide React |
+| Layer            | Tech                                      |
+|------------------|-------------------------------------------|
+| Framework        | React 19                                  |
+| Language         | TypeScript                                |
+| Build            | Vite 6                                    |
+| Styling          | Tailwind CSS v4                           |
+| Motion           | Motion (`motion/react`) + CSS keyframes   |
+| State            | Zustand                                   |
+| Typography       | Instrument Serif, Inter                   |
+| Icons            | Lucide React                              |
+| AI Backend       | Claude Haiku 4.5 via Vercel Edge Function |
+| Rate limiting    | Upstash Redis                             |
+| Bot protection   | Cloudflare Turnstile                      |
 
 ## Getting Started
 
 ```bash
 npm install
-npm run dev       # dev server on port 3000
-npm run build     # production build
-npm run preview   # preview production build
+cp .env.local.example .env.local   # fill in keys (Anthropic, Upstash)
+npm run dev                         # http://localhost:3000
+npm run build
+npm run preview
+npm run lint                        # tsc --noEmit
+npm test                            # vitest
 ```
 
 ## Project Structure
 
 ```
 src/
-├── App.tsx                # Root layout + ambient background
-├── main.tsx               # Entry point
-├── index.css              # Global styles, keyframes, fonts
-└── components/
-    ├── Navbar.tsx          # Fixed nav with scroll-aware styling
-    ├── Hero.tsx            # Full-height intro with animated typography
-    ├── About.tsx           # Bio section
-    ├── Skills.tsx          # Tech stack marquee + animated counters
-    ├── Work.tsx            # Experience timeline with scroll-drawn line
-    ├── Portfolio.tsx       # Horizontal-scroll project cards with 3D tilt
-    ├── Contact.tsx         # CTA links
-    ├── Footer.tsx          # Footer
-    ├── ScrollReveal.tsx    # Scroll-triggered reveal + parallax
-    ├── TextScramble.tsx    # Character scramble animation on scroll
-    └── CustomCursor.tsx    # Custom cursor with context-aware states
+├── App.tsx                      # Page shell + ignition
+├── main.tsx
+├── index.css                    # Tokens, keyframes, reduced-motion
+├── components/
+│   ├── Orb/                     # Avatar
+│   ├── Chat/                    # Input, Message, MessageStack, Chips, Chat
+│   ├── Artifacts/               # RoleCard, ProjectCarousel, StackStrip, Resume, Contact
+│   ├── Header/                  # Top bar
+│   ├── Constellation/           # Conversation dot-map
+│   └── CursorHalo/              # Warm cursor follower
+└── lib/
+    ├── chat.ts                  # Zustand store
+    ├── content.ts               # Bio, projects, topics, system prompt
+    ├── match.ts                 # Topic keyword matcher + segmenter
+    ├── stream.ts                # char streaming + SSE consumer
+    └── absorb.ts                # Letter absorption animation
+
+api/
+└── chat.ts                      # Vercel Edge Function
 ```
 
-## Design
+## Design spec & implementation plan
 
-Refined editorial aesthetic — mostly monochrome with serif/monospace typography contrast. Instrument Serif for display headings, JetBrains Mono for technical details, Inter for body text. Scroll-driven animations throughout including a horizontal-scroll portfolio gallery, drawing timeline, and staggered text reveals. Fully responsive with reduced-motion support.
+- Spec: `docs/superpowers/specs/2026-04-18-portfolio-conversational-redesign-design.md`
+- Plan: `docs/superpowers/plans/2026-04-18-portfolio-conversational-redesign.md`
+
+## Deployment checklist
+
+1. Push to GitHub, connect to Vercel.
+2. Set environment variables in Vercel → Settings → Environment Variables:
+   - `ANTHROPIC_API_KEY` (required)
+   - `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` (install from Vercel marketplace)
+   - `TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY` (optional)
+3. Set a $20/mo budget alert in the Anthropic console as a kill switch.
 
 ## License
 
