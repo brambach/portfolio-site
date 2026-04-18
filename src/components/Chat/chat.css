@@ -27,7 +27,9 @@
 
 .message-stack {
   padding-top: 48px;
-  padding-bottom: 24px;
+  /* Enough bottom clearance so the newest text never hides behind the
+     sticky chat-input-bar when auto-scrolled. */
+  padding-bottom: 140px;
   min-height: calc(100vh - 180px);
 }
 

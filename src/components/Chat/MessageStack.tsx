@@ -4,11 +4,10 @@ import { Message } from './Message';
 import { ArtifactRenderer } from '@/src/components/Artifacts/ArtifactRenderer';
 import './chat.css';
 
-const NEAR_BOTTOM_PX = 140;
+const NEAR_BOTTOM_PX = 160;
 
 export function MessageStack() {
   const messages = useChatStore((s) => s.messages);
-  const bottomRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(0);
   const lastText = messages[messages.length - 1]?.text ?? '';
 
@@ -18,18 +17,23 @@ export function MessageStack() {
     const isNewMessage = messages.length !== prevCountRef.current;
     prevCountRef.current = messages.length;
 
-    // Respect the user's scroll-away: if they've scrolled up to re-read,
-    // don't force them back down mid-stream. Always follow on a new message
-    // (since they just submitted and their attention is at the bottom).
-    const nearBottom =
-      window.innerHeight + window.scrollY >=
-      document.documentElement.scrollHeight - NEAR_BOTTOM_PX;
+    const doc = document.documentElement;
+    const maxScroll = doc.scrollHeight - window.innerHeight;
+    const currentScroll = window.scrollY;
+    const nearBottom = maxScroll - currentScroll <= NEAR_BOTTOM_PX;
 
+    // Respect the user's scroll-away: if they've scrolled up to re-read,
+    // don't yank them back mid-stream. Always follow on a new message
+    // (they just submitted and their attention is at the bottom).
     if (!isNewMessage && !nearBottom) return;
 
-    bottomRef.current?.scrollIntoView({
+    // window.scrollTo honors `behavior` regardless of CSS `scroll-behavior`,
+    // which is important because we set `scroll-behavior: smooth` globally
+    // and that would otherwise override scrollIntoView's 'instant' during
+    // per-char streaming, causing jank on iOS Safari.
+    window.scrollTo({
+      top: maxScroll,
       behavior: isNewMessage ? 'smooth' : 'instant',
-      block: 'end',
     });
   }, [messages.length, lastText]);
 
@@ -43,7 +47,6 @@ export function MessageStack() {
           )}
         </div>
       ))}
-      <div ref={bottomRef} />
     </div>
   );
 }
