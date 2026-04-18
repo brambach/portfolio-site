@@ -165,18 +165,28 @@ function Greeting({ typewrite }: { typewrite: boolean }) {
   const [len, setLen] = useState(typewrite ? 0 : text.length);
 
   useEffect(() => {
-    if (!typewrite) return;
+    // If we've already greeted (returning visitor, or the greeted flag
+    // flips after sessionStorage is read), show the full text immediately.
+    if (!typewrite) {
+      setLen(text.length);
+      return;
+    }
+    let cancelled = false;
     let i = 0;
     const startDelay = 600; // let the ignition particles land first
-    const t = setTimeout(() => {
+    const startTimer = setTimeout(() => {
       const tick = () => {
+        if (cancelled) return;
         i++;
         setLen(i);
         if (i < text.length) setTimeout(tick, 55 + Math.random() * 35);
       };
       tick();
     }, startDelay);
-    return () => clearTimeout(t);
+    return () => {
+      cancelled = true;
+      clearTimeout(startTimer);
+    };
   }, [typewrite, text.length]);
 
   const shown = text.slice(0, len);
