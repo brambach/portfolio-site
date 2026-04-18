@@ -15,7 +15,7 @@
 }
 @media (max-width: 639px) {
   .orb-wrap {
-    --orb-size: 72px;
+    --orb-size: 96px;
   }
 }
 

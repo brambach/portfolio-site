@@ -1,11 +1,11 @@
 .artifact {
   margin: 0 auto 32px;
   max-width: 560px;
-  padding: 20px 24px;
-  background: #fff;
+  padding: 22px 26px;
+  background: #fdfaf5;
   border: 1px solid var(--color-line);
   border-radius: 14px;
-  box-shadow: 0 10px 30px -20px rgba(31, 29, 26, 0.15);
+  box-shadow: 0 12px 30px -22px rgba(138, 66, 32, 0.18);
 }
 
 .artifact-eyebrow {

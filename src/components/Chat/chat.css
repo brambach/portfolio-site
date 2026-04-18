@@ -50,6 +50,21 @@
   font-style: italic;
   color: var(--color-accent);
 }
+.greeting-caret {
+  display: inline-block;
+  width: 3px;
+  height: 0.9em;
+  background: var(--color-accent);
+  margin-left: 4px;
+  vertical-align: text-bottom;
+  animation: caret-blink 1s steps(2) infinite;
+}
+
+@keyframes sub-fade-in {
+  to {
+    opacity: 1;
+  }
+}
 .greeting .sub {
   font-family: var(--font-sans);
   font-size: 15px;

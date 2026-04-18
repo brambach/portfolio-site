@@ -26,7 +26,7 @@ export default function App() {
       setIgnited(true);
       return;
     }
-    const duration = reduced ? 400 : 2600;
+    const duration = reduced ? 400 : 2200;
     const timer = setTimeout(() => {
       setIgnited(true);
       markGreeted();
@@ -65,31 +65,29 @@ export default function App() {
   }, []);
 
   return (
-    <motion.div
-      initial={false}
-      animate={{ opacity: ignited ? 1 : 0.4 }}
-      transition={{ duration: 0.8 }}
-      style={{ position: 'relative', minHeight: '100vh' }}
-    >
+    <div style={{ position: 'relative', minHeight: '100vh' }}>
       <CursorHalo />
       <Header onTopic={handleTopic} />
       <Constellation />
 
       <main>
-        <Chat
-          orbRef={orbRef}
-          registerSubmit={(fn) => {
-            submitRef.current = fn;
-          }}
-        />
+        <div className="chat-stage">
+          <div className="chat-col">
+            <Chat
+              orbRef={orbRef}
+              registerSubmit={(fn) => {
+                submitRef.current = fn;
+              }}
+            />
+          </div>
+          <div className="orb-col">
+            <Orb ref={orbRef} />
+          </div>
+        </div>
       </main>
 
-      <div className="orb-host">
-        <Orb ref={orbRef} />
-      </div>
-
       {!ignited && !greeted && !reduced && <IgnitionParticles />}
-    </motion.div>
+    </div>
   );
 }
 
@@ -99,9 +97,8 @@ function IgnitionParticles() {
   const [orbY, setOrbY] = useState<number | null>(null);
 
   useEffect(() => {
-    // Measure the orb host so particles fly toward the real center.
     const measure = () => {
-      const host = document.querySelector('.orb-host');
+      const host = document.querySelector('.orb-col .orb-wrap');
       if (!host) return;
       const r = host.getBoundingClientRect();
       setOrbX(r.left + r.width / 2);
@@ -125,7 +122,7 @@ function IgnitionParticles() {
     >
       {particles.map((i) => {
         const angle = (i / particles.length) * Math.PI * 2 + Math.random() * 0.5;
-        const startDist = window.innerWidth * 0.6;
+        const startDist = window.innerWidth * 0.5;
         const startX = orbX + Math.cos(angle) * startDist;
         const startY = orbY + Math.sin(angle) * startDist;
         return (

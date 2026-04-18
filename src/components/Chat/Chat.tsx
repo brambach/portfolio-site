@@ -1,9 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { useReducedMotion } from 'motion/react';
 import { useChatStore } from '@/src/lib/chat';
 import { matchTopic } from '@/src/lib/match';
-import { KEYWORDS_TO_HIGHLIGHT, GREETING } from '@/src/lib/content';
+import {
+  KEYWORDS_TO_HIGHLIGHT,
+  GREETING,
+  FOLLOW_UPS,
+  type ArtifactKind,
+} from '@/src/lib/content';
 import { streamChars, consumeSSE, type StreamEvent } from '@/src/lib/stream';
 import { absorbLetters } from '@/src/lib/absorb';
 import type { OrbHandle } from '@/src/components/Orb/Orb';
@@ -24,6 +29,7 @@ export function Chat({ orbRef, registerSubmit }: Props) {
   const [busy, setBusy] = useState(false);
 
   const messages = useChatStore((s) => s.messages);
+  const greeted = useChatStore((s) => s.greeted);
   const showGreeting = messages.length === 0;
 
   const runAnswer = useCallback(
@@ -33,15 +39,15 @@ export function Chat({ orbRef, registerSubmit }: Props) {
       setBusy(true);
 
       const store = useChatStore.getState();
-      // Capture history BEFORE adding the new messages so the LLM
-      // context doesn't include the currently-streaming empty turn.
       const historySnapshot = store.messages.slice(-4).map((m) => ({
         role: m.role,
         text: m.text,
       }));
       store.addUserMessage(prompt);
 
-      // 1. Absorption phase
+      // Hold so the user can see what they just said before it gets absorbed.
+      await wait(reduced ? 80 : 320);
+
       store.setOrbState('absorbing');
       const targetCenter = orbRef.current?.getCenter() ?? { x: 0, y: 0 };
       await new Promise<void>((resolve) => {
@@ -62,13 +68,14 @@ export function Chat({ orbRef, registerSubmit }: Props) {
         });
       });
 
-      // 2. Thinking phase
-      useChatStore.getState().setOrbState('thinking');
-      await wait(900);
-
-      // 3. Prepare Bryce message
-      useChatStore.getState().setOrbState('responding');
       const topic = matchTopic(prompt);
+      // Longer beat for free-text (LLM) questions, shorter for scripted.
+      const baseThink = topic ? 600 : 950;
+      const thinkMs = reduced ? 300 : baseThink + Math.floor(Math.random() * 450);
+      useChatStore.getState().setOrbState('thinking');
+      await wait(thinkMs);
+
+      useChatStore.getState().setOrbState('responding');
       const bryceId = useChatStore.getState().addBryceMessage({
         artifact: topic?.artifact,
       });
@@ -108,31 +115,37 @@ export function Chat({ orbRef, registerSubmit }: Props) {
     });
   }, [registerSubmit, runAnswer]);
 
+  const handlePick = (t: string) => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.value = t;
+    runAnswer(t, el);
+    el.value = '';
+  };
+
+  // Follow-up chips: show after the most recent bryce message if it finished
+  // streaming and had an artifact (i.e. came from a scripted topic).
+  const lastBryceArtifact = useMemo<ArtifactKind | null>(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i];
+      if (m.role !== 'bryce') continue;
+      if (m.streaming) return null;
+      return m.artifact ?? null;
+    }
+    return null;
+  }, [messages]);
+
   return (
     <>
-      {showGreeting && (
-        <div className="greeting">
-          <h1 dangerouslySetInnerHTML={{ __html: GREETING.line }} />
-          <p className="sub">
-            {GREETING.subtitleLines.map((l) => (
-              <span key={l} className="sub-line">
-                {l}
-              </span>
-            ))}
-          </p>
-        </div>
-      )}
+      {showGreeting && <Greeting typewrite={!greeted && !reduced} />}
       <MessageStack />
       {showGreeting && (
+        <Chips chips={GREETING.chips} onPick={handlePick} disabled={busy} />
+      )}
+      {!showGreeting && lastBryceArtifact && !busy && (
         <Chips
-          chips={GREETING.chips}
-          onPick={(t) => {
-            const el = inputRef.current;
-            if (!el) return;
-            el.value = t;
-            runAnswer(t, el);
-            el.value = '';
-          }}
+          chips={FOLLOW_UPS[lastBryceArtifact]}
+          onPick={handlePick}
           disabled={busy}
         />
       )}
@@ -144,6 +157,69 @@ export function Chat({ orbRef, registerSubmit }: Props) {
         />
       </div>
     </>
+  );
+}
+
+function Greeting({ typewrite }: { typewrite: boolean }) {
+  const text = GREETING.lineText;
+  const [len, setLen] = useState(typewrite ? 0 : text.length);
+
+  useEffect(() => {
+    if (!typewrite) return;
+    let i = 0;
+    const startDelay = 600; // let the ignition particles land first
+    const t = setTimeout(() => {
+      const tick = () => {
+        i++;
+        setLen(i);
+        if (i < text.length) setTimeout(tick, 55 + Math.random() * 35);
+      };
+      tick();
+    }, startDelay);
+    return () => clearTimeout(t);
+  }, [typewrite, text.length]);
+
+  const shown = text.slice(0, len);
+  const caret = len < text.length;
+
+  // Split shown on accentWord to render the italic terracotta part.
+  const accent = GREETING.accentWord;
+  const idx = shown.indexOf(accent);
+  let before = shown;
+  let inAccent = '';
+  let after = '';
+  if (idx >= 0) {
+    before = shown.slice(0, idx);
+    const accentEnd = Math.min(idx + accent.length, shown.length);
+    inAccent = shown.slice(idx, accentEnd);
+    after = shown.slice(accentEnd);
+  }
+
+  return (
+    <div className="greeting">
+      <h1>
+        {before}
+        {inAccent && <em>{inAccent}</em>}
+        {after}
+        {caret && <span className="greeting-caret" aria-hidden="true" />}
+      </h1>
+      <p className="sub">
+        {GREETING.subtitleLines.map((l, i) => (
+          <span
+            key={l}
+            className="sub-line"
+            style={{
+              opacity: typewrite ? 0 : 1,
+              animation: typewrite
+                ? `sub-fade-in 0.6s ease-out ${1.1 + i * 0.18}s forwards`
+                : undefined,
+            }}
+          >
+            {l}
+          </span>
+        ))}
+      </p>
+    </div>
   );
 }
 
@@ -169,13 +245,17 @@ async function streamScripted(
   let charIdx = 0;
   const kwStarts = findKeywordStartIndices(text);
 
-  await streamChars(text, (ch) => {
-    store.appendToMessage(id, ch);
-    const progress = (charIdx + 1) / total;
-    store.setHeat(Math.sin(progress * Math.PI * 0.85));
-    if (kwStarts.has(charIdx)) onKeyword();
-    charIdx++;
-  });
+  await streamChars(
+    text,
+    (ch) => {
+      store.appendToMessage(id, ch);
+      const progress = (charIdx + 1) / total;
+      store.setHeat(Math.sin(progress * Math.PI * 0.85));
+      if (kwStarts.has(charIdx)) onKeyword();
+      charIdx++;
+    },
+    { minDelay: 35, maxDelay: 55 }
+  );
 }
 
 async function streamLLM(
@@ -228,7 +308,7 @@ async function streamLLM(
             store.setHeat(Math.sin(progress * Math.PI * 0.85));
             if (isKeywordStart(buffer, rendered - 1)) onKeyword();
           },
-          { minDelay: 12, maxDelay: 28 }
+          { minDelay: 25, maxDelay: 45 }
         )
       );
     }
@@ -266,3 +346,4 @@ function isKeywordStart(text: string, position: number): boolean {
   }
   return false;
 }
+

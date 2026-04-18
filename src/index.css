@@ -112,33 +112,55 @@
 }
 
 /* =========================
-   Layout — orb host + safe area
+   Layout — chat stage + orb column + safe area
    ========================= */
 body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-.orb-host {
-  position: fixed;
-  right: 48px;
-  top: 50vh;
-  transform: translateY(-50%);
-  z-index: 10;
-  pointer-events: none;
+.chat-stage {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 48px;
+  align-items: start;
 }
-.orb-host > * {
-  pointer-events: auto;
+
+.chat-col {
+  min-width: 0;
+}
+
+.orb-col {
+  position: sticky;
+  top: 0;
+  height: calc(100vh - 60px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @media (max-width: 1023px) {
-  .orb-host {
+  .chat-stage {
+    grid-template-columns: 1fr;
+    padding: 0;
+    gap: 0;
+  }
+  .orb-col {
+    position: fixed;
     top: 14px;
     right: 18px;
-    transform: none;
+    height: auto;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .orb-col > * {
+    pointer-events: auto;
   }
 }
 @media (max-width: 639px) {
-  .orb-host {
+  .orb-col {
     right: 12px;
     top: 10px;
   }
