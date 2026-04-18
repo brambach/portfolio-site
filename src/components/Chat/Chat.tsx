@@ -138,10 +138,10 @@ export function Chat({ orbRef, registerSubmit }: Props) {
   return (
     <>
       {showGreeting && <Greeting typewrite={!greeted && !reduced} />}
-      <MessageStack />
       {showGreeting && (
         <Chips chips={GREETING.chips} onPick={handlePick} disabled={busy} />
       )}
+      <MessageStack />
       {!showGreeting && lastBryceArtifact && !busy && (
         <Chips
           chips={FOLLOW_UPS[lastBryceArtifact]}
