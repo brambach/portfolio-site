@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import type { CSSProperties } from 'react';
+import { useReducedMotion } from 'motion/react';
 import { useChatStore } from '@/src/lib/chat';
 import './orb.css';
 
@@ -17,6 +18,7 @@ type Props = {
 export const Orb = forwardRef<OrbHandle, Props>(function Orb({ className }, ref) {
   const orbState = useChatStore((s) => s.orbState);
   const heat = useChatStore((s) => s.heat);
+  const reduced = useReducedMotion() ?? false;
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const flashRef = useRef<HTMLDivElement>(null);
@@ -53,7 +55,7 @@ export const Orb = forwardRef<OrbHandle, Props>(function Orb({ className }, ref)
   }));
 
   useEffect(() => {
-    if (orbState !== 'idle') {
+    if (orbState !== 'idle' || reduced) {
       if (wrapRef.current) wrapRef.current.style.transform = '';
       return;
     }
@@ -69,7 +71,7 @@ export const Orb = forwardRef<OrbHandle, Props>(function Orb({ className }, ref)
     };
     window.addEventListener('mousemove', onMove);
     return () => window.removeEventListener('mousemove', onMove);
-  }, [orbState]);
+  }, [orbState, reduced]);
 
   return (
     <div

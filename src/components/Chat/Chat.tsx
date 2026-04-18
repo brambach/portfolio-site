@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { useReducedMotion } from 'motion/react';
 import { useChatStore } from '@/src/lib/chat';
@@ -21,6 +21,7 @@ export function Chat({ orbRef, registerSubmit }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const reduced = useReducedMotion() ?? false;
   const busyRef = useRef(false);
+  const [busy, setBusy] = useState(false);
 
   const messages = useChatStore((s) => s.messages);
   const showGreeting = messages.length === 0;
@@ -29,8 +30,15 @@ export function Chat({ orbRef, registerSubmit }: Props) {
     async (prompt: string, inputEl: HTMLInputElement | null) => {
       if (busyRef.current) return;
       busyRef.current = true;
+      setBusy(true);
 
       const store = useChatStore.getState();
+      // Capture history BEFORE adding the new messages so the LLM
+      // context doesn't include the currently-streaming empty turn.
+      const historySnapshot = store.messages.slice(-4).map((m) => ({
+        role: m.role,
+        text: m.text,
+      }));
       store.addUserMessage(prompt);
 
       // 1. Absorption phase
@@ -72,10 +80,7 @@ export function Chat({ orbRef, registerSubmit }: Props) {
           });
         } else {
           await streamLLM(prompt, bryceId, {
-            history: useChatStore
-              .getState()
-              .messages.slice(-5, -1)
-              .map((m) => ({ role: m.role, text: m.text })),
+            history: historySnapshot,
             onKeyword: () => orbRef.current?.echo(),
           });
         }
@@ -87,6 +92,7 @@ export function Chat({ orbRef, registerSubmit }: Props) {
       useChatStore.getState().setHeat(0);
       useChatStore.getState().setOrbState('idle');
       busyRef.current = false;
+      setBusy(false);
       setTimeout(() => inputRef.current?.focus(), 100);
     },
     [orbRef, reduced]
@@ -127,11 +133,15 @@ export function Chat({ orbRef, registerSubmit }: Props) {
             runAnswer(t, el);
             el.value = '';
           }}
-          disabled={busyRef.current}
+          disabled={busy}
         />
       )}
       <div className="chat-input-bar">
-        <Input ref={inputRef} onSubmit={(t, el) => runAnswer(t, el)} />
+        <Input
+          ref={inputRef}
+          disabled={busy}
+          onSubmit={(t, el) => runAnswer(t, el)}
+        />
       </div>
     </>
   );

@@ -124,5 +124,8 @@ export function absorbLetters(opts: AbsorbOptions): void {
       landed++;
       if (landed === total) onComplete?.();
     };
+    anim.oncancel = () => {
+      el.remove();
+    };
   });
 }
