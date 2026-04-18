@@ -148,20 +148,16 @@ body {
     gap: 0;
   }
   .orb-col {
-    position: fixed;
-    top: 14px;
-    right: 18px;
+    order: -1;
+    position: static;
     height: auto;
-    z-index: 10;
-    pointer-events: none;
-  }
-  .orb-col > * {
-    pointer-events: auto;
+    padding: 36px 0 4px;
+    display: flex;
+    justify-content: center;
   }
 }
 @media (max-width: 639px) {
   .orb-col {
-    right: 12px;
-    top: 10px;
+    padding: 24px 0 0;
   }
 }

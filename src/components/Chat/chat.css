@@ -76,11 +76,20 @@
   display: block;
 }
 
+@media (max-width: 1023px) {
+  .greeting {
+    padding-top: 24px;
+    text-align: center;
+  }
+}
 @media (max-width: 639px) {
   .greeting {
-    padding-top: 40px;
+    padding-top: 20px;
   }
   .greeting h1 {
     font-size: 36px;
+  }
+  .chips {
+    justify-content: center;
   }
 }
