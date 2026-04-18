@@ -110,3 +110,36 @@
     animation: aura-breathe 7s ease-in-out infinite !important;
   }
 }
+
+/* =========================
+   Layout — orb host + safe area
+   ========================= */
+body {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.orb-host {
+  position: fixed;
+  right: 48px;
+  top: 50vh;
+  transform: translateY(-50%);
+  z-index: 10;
+  pointer-events: none;
+}
+.orb-host > * {
+  pointer-events: auto;
+}
+
+@media (max-width: 1023px) {
+  .orb-host {
+    top: 14px;
+    right: 18px;
+    transform: none;
+  }
+}
+@media (max-width: 639px) {
+  .orb-host {
+    right: 12px;
+    top: 10px;
+  }
+}
