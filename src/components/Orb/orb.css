@@ -10,12 +10,12 @@
 
 @media (max-width: 1023px) {
   .orb-wrap {
-    --orb-size: 150px;
+    --orb-size: 120px;
   }
 }
 @media (max-width: 639px) {
   .orb-wrap {
-    --orb-size: 120px;
+    --orb-size: 90px;
   }
 }
 
