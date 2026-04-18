@@ -5,7 +5,6 @@ import { useChatStore } from '@/src/lib/chat';
 import './orb.css';
 
 export type OrbHandle = {
-  flashAbsorb: () => void;
   fireShockwave: () => void;
   echo: () => void;
   getCenter: () => { x: number; y: number };
@@ -21,17 +20,9 @@ export const Orb = forwardRef<OrbHandle, Props>(function Orb({ className }, ref)
   const reduced = useReducedMotion() ?? false;
 
   const wrapRef = useRef<HTMLDivElement>(null);
-  const flashRef = useRef<HTMLDivElement>(null);
   const shockRef = useRef<HTMLDivElement>(null);
 
   useImperativeHandle(ref, () => ({
-    flashAbsorb: () => {
-      const el = flashRef.current;
-      if (!el) return;
-      el.classList.remove('fire');
-      void el.offsetWidth;
-      el.classList.add('fire');
-    },
     fireShockwave: () => {
       const el = shockRef.current;
       if (!el) return;
@@ -45,7 +36,7 @@ export const Orb = forwardRef<OrbHandle, Props>(function Orb({ className }, ref)
       el.dataset.orbEcho = '1';
       setTimeout(() => {
         if (el.dataset.orbEcho === '1') delete el.dataset.orbEcho;
-      }, 360);
+      }, 520);
     },
     getCenter: () => {
       const r = wrapRef.current?.getBoundingClientRect();
@@ -81,15 +72,17 @@ export const Orb = forwardRef<OrbHandle, Props>(function Orb({ className }, ref)
       style={{ '--heat': heat } as CSSProperties}
       aria-hidden="true"
     >
+      <div className="orb-halo" />
       <div className="orb-aura" data-orb-aura />
       <div className="orb-core" data-orb-core>
-        <div className="orb-ember orb-ember-1" />
-        <div className="orb-ember orb-ember-2" />
-        <div className="orb-ember orb-ember-3" />
-        <div className="orb-ember orb-ember-4" />
+        <div className="orb-embers-layer">
+          <div className="orb-ember orb-ember-1" />
+          <div className="orb-ember orb-ember-2" />
+          <div className="orb-ember orb-ember-3" />
+          <div className="orb-ember orb-ember-4" />
+        </div>
         <div className="orb-rim" />
       </div>
-      <div ref={flashRef} className="orb-flash" />
       <div ref={shockRef} className="orb-shockwave" />
       <div className="orb-thought-dots">
         <div className="td" />

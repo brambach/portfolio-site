@@ -33,6 +33,20 @@
   transition: animation-duration 0.4s ease;
 }
 
+/* Faint secondary ring for added depth — breathes counter-phase. */
+.orb-halo {
+  position: absolute;
+  inset: -14%;
+  border-radius: 50%;
+  border: 1px solid rgba(200, 112, 74, 0.14);
+  animation: halo-pulse 8s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes halo-pulse {
+  0%, 100% { transform: scale(0.98); opacity: 0.6; }
+  50%      { transform: scale(1.04); opacity: 1;   }
+}
+
 .orb-wrap[data-orb-state='responding'] .orb-aura {
   animation-duration: 3s;
 }
@@ -59,9 +73,26 @@
   will-change: transform, filter;
 }
 
+/* Keyword echo: gentle scale + warmth pulse. Not a flash. */
 .orb-wrap[data-orb-echo='1'] .orb-core {
   animation: core-breath 5s ease-in-out infinite,
-    echo-flash 0.35s ease-out;
+    echo-pulse 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes echo-pulse {
+  0%   { transform: scale(1);    }
+  45%  { transform: scale(1.035); }
+  100% { transform: scale(1);    }
+}
+
+/* Inner layer that slowly rotates — compounds with each ember's drift for
+   an organic, non-repeating motion. */
+.orb-embers-layer {
+  position: absolute;
+  inset: 0;
+  animation: orb-rotate-slow 60s linear infinite;
+}
+@keyframes orb-rotate-slow {
+  to { transform: rotate(360deg); }
 }
 
 .orb-ember {
@@ -134,18 +165,6 @@
     transparent 34%
   );
   pointer-events: none;
-}
-
-.orb-flash {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid var(--color-warm-hi);
-  pointer-events: none;
-  opacity: 0;
-}
-.orb-flash.fire {
-  animation: flash-inward 500ms cubic-bezier(0.1, 0.7, 0.4, 1);
 }
 
 .orb-shockwave {

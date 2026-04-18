@@ -49,6 +49,7 @@ export function Chat({ orbRef, registerSubmit }: Props) {
       await wait(reduced ? 80 : 320);
 
       store.setOrbState('absorbing');
+      store.setHeat(0);
       const targetCenter = orbRef.current?.getCenter() ?? { x: 0, y: 0 };
       await new Promise<void>((resolve) => {
         if (!inputEl) {
@@ -60,7 +61,11 @@ export function Chat({ orbRef, registerSubmit }: Props) {
           text: prompt,
           target: targetCenter,
           reducedMotion: reduced,
-          onLand: () => orbRef.current?.flashAbsorb(),
+          // Accumulate heat as each letter lands — orb grows brighter
+          // and warmer smoothly instead of flashing staccato per-letter.
+          onLand: (i, total) => {
+            useChatStore.getState().setHeat((i + 1) / total);
+          },
           onComplete: () => {
             orbRef.current?.fireShockwave();
             resolve();
@@ -260,7 +265,9 @@ async function streamScripted(
     (ch) => {
       store.appendToMessage(id, ch);
       const progress = (charIdx + 1) / total;
-      store.setHeat(Math.sin(progress * Math.PI * 0.85));
+      // Heat oscillates 0.4 → 1.0 → 0.4 — orb stays warm through the
+      // answer rather than dipping dark at the start and end.
+      store.setHeat(0.4 + 0.6 * Math.sin(progress * Math.PI));
       if (kwStarts.has(charIdx)) onKeyword();
       charIdx++;
     },
@@ -315,7 +322,7 @@ async function streamLLM(
             store.appendToMessage(id, ch);
             rendered++;
             const progress = rendered / total.value;
-            store.setHeat(Math.sin(progress * Math.PI * 0.85));
+            store.setHeat(0.4 + 0.6 * Math.sin(progress * Math.PI));
             if (isKeywordStart(buffer, rendered - 1)) onKeyword();
           },
           { minDelay: 25, maxDelay: 45 }
