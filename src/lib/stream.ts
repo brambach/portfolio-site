@@ -7,18 +7,41 @@ export interface StreamCharsOptions {
   minDelay?: number;
   maxDelay?: number;
   signal?: AbortSignal;
+  /**
+   * Extra pause (ms) to add after specific characters — creates natural
+   * thought cadence. Defaults to sentence-end 180ms, comma/semi/colon
+   * 90ms, em-dash 90ms. Pass `() => 0` to disable.
+   */
+  pauseAfter?: (char: string) => number;
 }
 
+const defaultPauseAfter = (ch: string): number => {
+  if (/[.!?]/.test(ch)) return 180;
+  if (/[,;:]/.test(ch)) return 90;
+  if (ch === '\u2014' /* em dash */) return 90;
+  return 0;
+};
+
 /**
- * Emit `text` one character at a time with randomized pacing.
- * Used for both scripted responses and LLM streaming (per-chunk).
+ * Emit `text` one character at a time with randomized pacing plus
+ * natural pauses at punctuation. Used for both scripted responses and
+ * LLM streaming (per-chunk).
+ *
+ * Defaults land around 45 chars/sec streaming (~480 WPM) — slightly
+ * faster than average reading speed so the reader stays ahead of the
+ * cursor rather than chasing it.
  */
 export function streamChars(
   text: string,
   onChar: (char: string, progress: number) => void,
   opts: StreamCharsOptions = {}
 ): Promise<void> {
-  const { minDelay = 22, maxDelay = 40, signal } = opts;
+  const {
+    minDelay = 16,
+    maxDelay = 28,
+    signal,
+    pauseAfter = defaultPauseAfter,
+  } = opts;
   if (!text) return Promise.resolve();
 
   return new Promise<void>((resolve) => {
@@ -34,10 +57,12 @@ export function streamChars(
         resolve();
         return;
       }
-      onChar(text[i], (i + 1) / total);
+      const ch = text[i];
+      onChar(ch, (i + 1) / total);
       i++;
-      const delay = minDelay + Math.random() * (maxDelay - minDelay);
-      setTimeout(tick, delay);
+      const base = minDelay + Math.random() * (maxDelay - minDelay);
+      const pause = pauseAfter(ch);
+      setTimeout(tick, base + pause);
     };
     tick();
   });

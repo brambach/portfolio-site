@@ -36,6 +36,21 @@ describe('streamChars', () => {
     await streamChars('', onChar, { minDelay: 0, maxDelay: 0 });
     expect(onChar).not.toHaveBeenCalled();
   });
+
+  it('accepts a custom pauseAfter function', async () => {
+    const onChar = vi.fn();
+    const seen: string[] = [];
+    const pauseAfter = (ch: string): number => {
+      seen.push(ch);
+      return 0;
+    };
+    await streamChars('a,b.', onChar, {
+      minDelay: 0,
+      maxDelay: 0,
+      pauseAfter,
+    });
+    expect(seen).toEqual(['a', ',', 'b', '.']);
+  });
 });
 
 describe('parseSSELine', () => {

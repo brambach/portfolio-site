@@ -260,19 +260,15 @@ async function streamScripted(
   let charIdx = 0;
   const kwStarts = findKeywordStartIndices(text);
 
-  await streamChars(
-    text,
-    (ch) => {
-      store.appendToMessage(id, ch);
-      const progress = (charIdx + 1) / total;
-      // Heat oscillates 0.4 → 1.0 → 0.4 — orb stays warm through the
-      // answer rather than dipping dark at the start and end.
-      store.setHeat(0.4 + 0.6 * Math.sin(progress * Math.PI));
-      if (kwStarts.has(charIdx)) onKeyword();
-      charIdx++;
-    },
-    { minDelay: 35, maxDelay: 55 }
-  );
+  await streamChars(text, (ch) => {
+    store.appendToMessage(id, ch);
+    const progress = (charIdx + 1) / total;
+    // Heat oscillates 0.4 → 1.0 → 0.4 — orb stays warm through the
+    // answer rather than dipping dark at the start and end.
+    store.setHeat(0.4 + 0.6 * Math.sin(progress * Math.PI));
+    if (kwStarts.has(charIdx)) onKeyword();
+    charIdx++;
+  });
 }
 
 async function streamLLM(
@@ -325,7 +321,9 @@ async function streamLLM(
             store.setHeat(0.4 + 0.6 * Math.sin(progress * Math.PI));
             if (isKeywordStart(buffer, rendered - 1)) onKeyword();
           },
-          { minDelay: 25, maxDelay: 45 }
+          // LLM tokens arrive in bursts; run char-render slightly faster
+          // so we don't artificially bottleneck the real stream rate.
+          { minDelay: 10, maxDelay: 20 }
         )
       );
     }
