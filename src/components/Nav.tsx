@@ -43,6 +43,7 @@ export function Nav() {
     <>
       <nav
         aria-label="Primary"
+        className="primary-nav"
         style={{
           position: 'sticky',
           top: 0,
@@ -62,6 +63,7 @@ export function Nav() {
         }}
       >
         <a
+          className="nav-logo"
           href="#hero"
           style={{
             color: '#fff',
@@ -125,6 +127,8 @@ export function Nav() {
 
       <style>{`
         @media (max-width: 767px) {
+          .primary-nav { grid-template-columns: 1fr !important; }
+          .nav-logo   { display: none !important; }
           .nav-links  { display: none !important; }
           .nav-resume { display: none !important; }
         }

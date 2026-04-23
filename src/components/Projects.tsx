@@ -34,12 +34,15 @@ function StageContent({
     <div
       style={{
         position: 'absolute',
-        inset: 0,
+        top: 200,
+        left: 0,
+        right: 0,
+        bottom: 96,
         opacity,
         transform: `translateY(${y}px)`,
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         padding: '0 24px',
       }}
     >
@@ -400,9 +403,8 @@ function PinnedStage() {
 }
 
 export function Projects() {
-  const isDesktop = useMatchMedia('(min-width: 640px)');
   const reducedMotion = useMatchMedia('(prefers-reduced-motion: reduce)');
-  const usePinned = isDesktop && !reducedMotion;
+  const usePinned = !reducedMotion;
 
   return (
     <section
