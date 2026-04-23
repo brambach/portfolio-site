@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import { Nav } from './Nav';
 
 describe('Nav', () => {
@@ -27,5 +27,51 @@ describe('Nav', () => {
   it('has a primary navigation landmark', () => {
     render(<Nav />);
     expect(screen.getByRole('navigation', { name: /Primary/i })).toBeInTheDocument();
+  });
+});
+
+describe('Nav scroll-spy', () => {
+  it('marks the Projects link active when the projects section intersects', () => {
+    // Stub IntersectionObserver to capture the callback
+    let capturedCallback: IntersectionObserverCallback | null = null;
+    const observeCalls: Element[] = [];
+    class FakeIO implements IntersectionObserver {
+      root = null;
+      rootMargin = '';
+      thresholds = [];
+      constructor(cb: IntersectionObserverCallback) {
+        capturedCallback = cb;
+      }
+      observe(el: Element) { observeCalls.push(el); }
+      unobserve() {}
+      disconnect() {}
+      takeRecords(): IntersectionObserverEntry[] { return []; }
+    }
+    // @ts-expect-error - test stub
+    globalThis.IntersectionObserver = FakeIO;
+
+    // Render Nav + fake section anchors so the observer can find them
+    const projectsSection = document.createElement('section');
+    projectsSection.id = 'projects';
+    document.body.appendChild(projectsSection);
+    const workSection = document.createElement('section');
+    workSection.id = 'work';
+    document.body.appendChild(workSection);
+
+    render(<Nav />);
+
+    // Fire a fake intersection on #projects
+    act(() => {
+      capturedCallback?.(
+        [{ target: projectsSection, isIntersecting: true, intersectionRatio: 0.6 } as IntersectionObserverEntry],
+        {} as IntersectionObserver,
+      );
+    });
+
+    const projectsLink = screen.getByRole('link', { name: 'Projects' });
+    expect(projectsLink.getAttribute('data-active')).toBe('true');
+
+    document.body.removeChild(projectsSection);
+    document.body.removeChild(workSection);
   });
 });

@@ -1,13 +1,44 @@
+import { useEffect, useState } from 'react';
 import { MobileMenu } from './MobileMenu';
 
 const LINKS = [
-  { label: 'Work', href: '#work' },
-  { label: 'Projects', href: '#projects' },
-  { label: 'AI & Tools', href: '#stack' },
-  { label: 'Contact', href: '#contact' },
+  { label: 'Work', href: '#work', id: 'work' },
+  { label: 'Projects', href: '#projects', id: 'projects' },
+  { label: 'AI & Tools', href: '#stack', id: 'stack' },
+  { label: 'Contact', href: '#contact', id: 'contact' },
 ];
 
+function useActiveSection(): string | null {
+  const [active, setActive] = useState<string | null>(null);
+
+  useEffect(() => {
+    const els = LINKS
+      .map((l) => document.getElementById(l.id))
+      .filter((el): el is HTMLElement => el !== null);
+    if (els.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // The section with the highest intersection ratio wins.
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible.length > 0) {
+          setActive(visible[0].target.id);
+        }
+      },
+      { rootMargin: '-40% 0px -50% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] },
+    );
+    els.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
+  return active;
+}
+
 export function Nav() {
+  const active = useActiveSection();
+
   return (
     <>
       <nav
@@ -51,15 +82,24 @@ export function Nav() {
             justifySelf: 'center',
           }}
         >
-          {LINKS.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              style={{ color: 'rgba(255,255,255,0.8)' }}
-            >
-              {l.label}
-            </a>
-          ))}
+          {LINKS.map((l) => {
+            const isActive = active === l.id;
+            return (
+              <a
+                key={l.href}
+                href={l.href}
+                data-active={isActive ? 'true' : 'false'}
+                style={{
+                  color: isActive ? '#fff' : 'rgba(255,255,255,0.8)',
+                  textDecoration: isActive ? 'underline' : 'none',
+                  textUnderlineOffset: 4,
+                  transition: 'color 200ms var(--ease-apple)',
+                }}
+              >
+                {l.label}
+              </a>
+            );
+          })}
         </div>
 
         <div style={{ justifySelf: 'end', display: 'flex', alignItems: 'center', gap: 8 }}>
