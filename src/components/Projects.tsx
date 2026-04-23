@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { motion, useScroll, useTransform } from 'motion/react';
+import { useScroll } from 'motion/react';
 import { PROJECTS } from '@/src/lib/content';
 import { FadeIn } from './FadeIn';
 import { getStageState } from '@/src/lib/projects-progress';
@@ -22,18 +22,21 @@ function useMatchMedia(query: string): boolean {
 function StageContent({
   index,
   opacity,
+  y,
 }: {
   index: number;
-  opacity: number | ReturnType<typeof useTransform>;
+  opacity: number;
+  y: number;
 }) {
   const p = PROJECTS[index];
   const number = String(index + 1).padStart(2, '0');
   return (
-    <motion.div
+    <div
       style={{
         position: 'absolute',
         inset: 0,
         opacity,
+        transform: `translateY(${y}px)`,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -126,7 +129,7 @@ function StageContent({
           ))}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -248,23 +251,16 @@ function PinnedStage() {
     offset: ['start start', 'end end'],
   });
 
-  const [announceIndex, setAnnounceIndex] = useState(0);
+  const [stageState, setStageState] = useState(() => getStageState(0, STAGES));
 
   useEffect(() => {
     const unsub = scrollYProgress.on('change', (v) => {
-      const { activeIndex } = getStageState(v, STAGES);
-      setAnnounceIndex((prev) => (prev === activeIndex ? prev : activeIndex));
+      setStageState(getStageState(v, STAGES));
     });
     return () => unsub();
   }, [scrollYProgress]);
 
-  // Derive per-stage opacity transforms from scroll progress
-  const opacities = Array.from({ length: STAGES }, (_, i) =>
-    useTransform(scrollYProgress, (v) => getStageState(v, STAGES).opacities[i]),
-  );
-  const tickFills = Array.from({ length: STAGES }, (_, i) =>
-    useTransform(scrollYProgress, (v) => getStageState(v, STAGES).tickFills[i]),
-  );
+  const { opacities, tickFills, ys, activeIndex } = stageState;
 
   return (
     <div ref={wrapRef} style={{ position: 'relative', height: `${PIN_VH}vh` }}>
@@ -336,7 +332,7 @@ function PinnedStage() {
           }}
         >
           {opacities.map((op, i) => (
-            <StageContent key={i} index={i} opacity={op} />
+            <StageContent key={i} index={i} opacity={op} y={ys[i]} />
           ))}
         </div>
 
@@ -359,7 +355,7 @@ function PinnedStage() {
             }}
           >
             {tickFills.map((fill, i) => (
-              <motion.div
+              <div
                 key={i}
                 style={{
                   width: 24,
@@ -368,17 +364,17 @@ function PinnedStage() {
                   background: 'rgba(255,255,255,0.2)',
                 }}
               >
-                <motion.div
+                <div
                   style={{
                     width: '100%',
                     height: '100%',
                     borderRadius: 1,
                     background: '#fff',
-                    scaleX: fill,
+                    transform: `scaleX(${fill})`,
                     transformOrigin: '0% 50%',
                   }}
                 />
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -397,14 +393,14 @@ function PinnedStage() {
           whiteSpace: 'nowrap',
         }}
       >
-        Project {announceIndex + 1} of {STAGES}: {PROJECTS[announceIndex].title}
+        Project {activeIndex + 1} of {STAGES}: {PROJECTS[activeIndex].title}
       </div>
     </div>
   );
 }
 
 export function Projects() {
-  const isDesktop = useMatchMedia('(min-width: 768px)');
+  const isDesktop = useMatchMedia('(min-width: 640px)');
   const reducedMotion = useMatchMedia('(prefers-reduced-motion: reduce)');
   const usePinned = isDesktop && !reducedMotion;
 

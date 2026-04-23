@@ -2,6 +2,7 @@ export type StageState = {
   activeIndex: number;
   opacities: number[];
   tickFills: number[];
+  ys: number[];
 };
 
 /**
@@ -68,5 +69,13 @@ export function getStageState(progress: number, stages: number): StageState {
     }
   }
 
-  return { activeIndex, opacities, tickFills };
+  // y drift per stage: entering → +24→0, exiting → 0→-24
+  const ys = new Array<number>(stages).fill(0);
+  for (let i = 0; i < stages; i++) {
+    const stageCenter = (i + 0.5) / stages;
+    const isBefore = clamped < stageCenter;
+    ys[i] = isBefore ? (1 - opacities[i]) * 24 : (opacities[i] - 1) * 24;
+  }
+
+  return { activeIndex, opacities, tickFills, ys };
 }

@@ -47,4 +47,33 @@ describe('getStageState', () => {
     expect(getStageState(0.55, 4).tickFills).toEqual([1, 1, 1, 0]);
     expect(getStageState(0.80, 4).tickFills).toEqual([1, 1, 1, 1]);
   });
+
+  it('ys array has correct length', () => {
+    const s = getStageState(0.5, STAGES);
+    expect(s.ys).toHaveLength(STAGES);
+  });
+
+  it('at progress 0 stage 0 is fully visible so y is 0', () => {
+    const s = getStageState(0, STAGES);
+    expect(s.ys[0]).toBeCloseTo(0, 2);
+  });
+
+  it('at progress 0.125 (mid stage 0) stage 0 y is 0 and stage 1 has +24 drift (not yet entered)', () => {
+    const s = getStageState(0.125, STAGES);
+    expect(s.ys[0]).toBeCloseTo(0, 2);
+    // stage 1 is fully transparent and before its center → y = +24
+    expect(s.ys[1]).toBeCloseTo(24, 2);
+  });
+
+  it('at progress 0.30 stage 1 is fully active so y is 0', () => {
+    const s = getStageState(0.30, STAGES);
+    expect(s.ys[1]).toBeCloseTo(0, 2);
+  });
+
+  it('stage exits with negative y drift as opacity falls to 0', () => {
+    // At progress 0.45 we are approaching the 0.5 boundary: stage 1 is exiting
+    // (progress > stageCenter 0.375) so y = (opacity - 1) * 24, which is <= 0
+    const s = getStageState(0.45, STAGES);
+    expect(s.ys[1]).toBeLessThanOrEqual(0);
+  });
 });
