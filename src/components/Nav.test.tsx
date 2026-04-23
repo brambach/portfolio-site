@@ -47,8 +47,8 @@ describe('Nav scroll-spy', () => {
       disconnect() {}
       takeRecords(): IntersectionObserverEntry[] { return []; }
     }
-    // @ts-expect-error - test stub
-    globalThis.IntersectionObserver = FakeIO;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (globalThis as any).IntersectionObserver = FakeIO;
 
     // Render Nav + fake section anchors so the observer can find them
     const projectsSection = document.createElement('section');
@@ -63,7 +63,7 @@ describe('Nav scroll-spy', () => {
     // Fire a fake intersection on #projects
     act(() => {
       capturedCallback?.(
-        [{ target: projectsSection, isIntersecting: true, intersectionRatio: 0.6 } as IntersectionObserverEntry],
+        [{ target: projectsSection, isIntersecting: true, intersectionRatio: 0.6 } as unknown as IntersectionObserverEntry],
         {} as IntersectionObserver,
       );
     });

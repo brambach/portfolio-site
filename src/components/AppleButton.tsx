@@ -1,4 +1,4 @@
-import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'react';
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
 
 type Variant = 'primary' | 'ghost';
 
@@ -18,7 +18,7 @@ type AnchorProps = CommonProps & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, '
 
 export type AppleButtonProps = ButtonProps | AnchorProps;
 
-const baseStyle: React.CSSProperties = {
+const baseStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -35,13 +35,13 @@ const baseStyle: React.CSSProperties = {
   textDecoration: 'none',
 };
 
-const primaryStyle: React.CSSProperties = {
+const primaryStyle: CSSProperties = {
   background: 'var(--accent-blue)',
   color: '#fff',
   border: '1px solid var(--accent-blue)',
 };
 
-const ghostStyle: React.CSSProperties = {
+const ghostStyle: CSSProperties = {
   background: 'transparent',
   color: 'var(--link-dark)',
   border: '1px solid rgba(41,151,255,0.6)',

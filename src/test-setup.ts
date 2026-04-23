@@ -30,8 +30,8 @@ if (typeof globalThis.IntersectionObserver === 'undefined') {
     rootMargin = '';
     thresholds = [];
   }
-  // @ts-expect-error - test-only mock
-  globalThis.IntersectionObserver = MockIntersectionObserver;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (globalThis as any).IntersectionObserver = MockIntersectionObserver;
 }
 
 afterEach(() => {

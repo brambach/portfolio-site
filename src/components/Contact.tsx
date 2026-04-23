@@ -1,7 +1,8 @@
+import type { CSSProperties } from 'react';
 import { AppleButton } from './AppleButton';
 import { FadeIn } from './FadeIn';
 
-const rowStyle: React.CSSProperties = {
+const rowStyle: CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'baseline',
@@ -11,7 +12,7 @@ const rowStyle: React.CSSProperties = {
   gap: 12,
 };
 
-const labelStyle: React.CSSProperties = {
+const labelStyle: CSSProperties = {
   color: 'var(--text-muted-on-dark)',
   textTransform: 'uppercase',
   letterSpacing: '0.3px',
@@ -20,7 +21,7 @@ const labelStyle: React.CSSProperties = {
   flexShrink: 0,
 };
 
-const valueStyle: React.CSSProperties = {
+const valueStyle: CSSProperties = {
   color: '#fff',
   textAlign: 'right',
   wordBreak: 'break-word',
