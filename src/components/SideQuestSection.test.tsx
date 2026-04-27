@@ -7,7 +7,7 @@ describe('SideQuestSection', () => {
   it('renders the section heading and concept copy', () => {
     render(<SideQuestSection onOpen={() => {}} />);
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(/SideQuest/i);
-    expect(screen.getByText(/quest engine/i)).toBeInTheDocument();
+    expect(screen.getByText(/real-world\s+intent/i)).toBeInTheDocument();
   });
 
   it('clicking OPEN CONCEPT DOSSIER calls onOpen with sidequest slug', async () => {
