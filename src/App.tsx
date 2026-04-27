@@ -9,25 +9,28 @@ import { SystemsSection } from './components/SystemsSection';
 import { SideQuestSection } from './components/SideQuestSection';
 import { OpsSection } from './components/OpsSection';
 import { ContactSection } from './components/ContactSection';
+import { SmoothScroll } from './components/SmoothScroll';
 import { useProjectFromUrl } from './lib/use-project-from-url';
 
 export default function App() {
   const { openSlug, openProject, closeProject } = useProjectFromUrl();
 
   return (
-    <MotionConfig reducedMotion="user">
-      <CosmicBackground />
-      <Chrome />
-      <main className="relative z-10">
-        <Hero />
-        <ArchiveSection onOpen={openProject} />
-        <SystemsSection />
-        <SideQuestSection onOpen={openProject} />
-        <OpsSection onOpen={openProject} />
-        <ContactSection />
-      </main>
-      <Footer />
-      <DossierDialog openSlug={openSlug} onClose={closeProject} />
-    </MotionConfig>
+    <SmoothScroll>
+      <MotionConfig reducedMotion="user">
+        <CosmicBackground />
+        <Chrome />
+        <main className="relative z-10">
+          <Hero />
+          <ArchiveSection onOpen={openProject} />
+          <SystemsSection />
+          <SideQuestSection onOpen={openProject} />
+          <OpsSection onOpen={openProject} />
+          <ContactSection />
+        </main>
+        <Footer />
+        <DossierDialog openSlug={openSlug} onClose={closeProject} />
+      </MotionConfig>
+    </SmoothScroll>
   );
 }
