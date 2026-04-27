@@ -6,6 +6,7 @@ import { DossierDialog } from './components/DossierDialog';
 import { Hero } from './components/Hero';
 import { ArchiveSection } from './components/ArchiveSection';
 import { SystemsSection } from './components/SystemsSection';
+import { SideQuestSection } from './components/SideQuestSection';
 import { useProjectFromUrl } from './lib/use-project-from-url';
 
 export default function App() {
@@ -19,7 +20,7 @@ export default function App() {
         <Hero />
         <ArchiveSection onOpen={openProject} />
         <SystemsSection />
-        <section id="sidequest" className="min-h-screen p-12">CONCEPT — placeholder</section>
+        <SideQuestSection onOpen={openProject} />
         <section id="ops" className="min-h-screen p-12">OPS — placeholder</section>
         <section id="contact" className="min-h-screen p-12">CONTACT — placeholder</section>
       </main>

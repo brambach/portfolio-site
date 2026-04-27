@@ -123,3 +123,26 @@ p { margin: 0; }
 }
 
 .chrome-link:hover { color: var(--color-ink); background: rgba(255, 255, 255, 0.04); }
+
+.sq-depth-field {
+  background:
+    radial-gradient(400px circle at 30% 50%, rgba(56,189,248,0.18), transparent 70%),
+    radial-gradient(300px circle at 80% 70%, rgba(168,85,247,0.10), transparent 70%);
+  filter: blur(2px);
+  opacity: 0.9;
+}
+
+.sq-shape .ring {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  border: 1px solid rgba(56,189,248,0.3);
+  border-radius: 50%;
+}
+.sq-shape .ring.r1 { width: 80px;  height: 80px; }
+.sq-shape .ring.r2 { width: 130px; height: 130px; border-color: rgba(56,189,248,0.18); }
+.sq-shape .ring.r3 { width: 180px; height: 180px; border-color: rgba(56,189,248,0.10); }
+.sq-shape .core {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 12px; height: 12px; border-radius: 50%;
+  background: rgb(56,189,248);
+  box-shadow: 0 0 16px 4px rgba(56,189,248,0.45);
+}
