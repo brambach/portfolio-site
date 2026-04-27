@@ -1,15 +1,24 @@
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Icosahedron } from '@react-three/drei';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import type { Mesh } from 'three';
 
 function SpinningIcos() {
   const ref = useRef<Mesh>(null);
+  const scrollRef = useRef(0);
+
+  useEffect(() => {
+    const onScroll = () => { scrollRef.current = window.scrollY; };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   useFrame((_, delta) => {
     if (!ref.current) return;
-    ref.current.rotation.y += delta * 0.18;
+    ref.current.rotation.y += delta * 0.18 + scrollRef.current * 0.000004;
     ref.current.rotation.x += delta * 0.05;
   });
+
   return (
     <Icosahedron ref={ref} args={[1.4, 0]}>
       <meshBasicMaterial color="rgb(56, 189, 248)" wireframe transparent opacity={0.65} />
