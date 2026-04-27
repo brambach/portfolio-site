@@ -7,6 +7,7 @@ import { Hero } from './components/Hero';
 import { ArchiveSection } from './components/ArchiveSection';
 import { SystemsSection } from './components/SystemsSection';
 import { SideQuestSection } from './components/SideQuestSection';
+import { OpsSection } from './components/OpsSection';
 import { useProjectFromUrl } from './lib/use-project-from-url';
 
 export default function App() {
@@ -21,7 +22,7 @@ export default function App() {
         <ArchiveSection onOpen={openProject} />
         <SystemsSection />
         <SideQuestSection onOpen={openProject} />
-        <section id="ops" className="min-h-screen p-12">OPS — placeholder</section>
+        <OpsSection onOpen={openProject} />
         <section id="contact" className="min-h-screen p-12">CONTACT — placeholder</section>
       </main>
       <Footer />
