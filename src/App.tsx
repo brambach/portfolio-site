@@ -8,6 +8,7 @@ import { ArchiveSection } from './components/ArchiveSection';
 import { SystemsSection } from './components/SystemsSection';
 import { SideQuestSection } from './components/SideQuestSection';
 import { OpsSection } from './components/OpsSection';
+import { ContactSection } from './components/ContactSection';
 import { useProjectFromUrl } from './lib/use-project-from-url';
 
 export default function App() {
@@ -23,7 +24,7 @@ export default function App() {
         <SystemsSection />
         <SideQuestSection onOpen={openProject} />
         <OpsSection onOpen={openProject} />
-        <section id="contact" className="min-h-screen p-12">CONTACT — placeholder</section>
+        <ContactSection />
       </main>
       <Footer />
       <DossierDialog openSlug={openSlug} onClose={closeProject} />
