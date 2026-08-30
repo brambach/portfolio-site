@@ -14,7 +14,11 @@ export function DayArc() {
   const stopsRef = useRef<ArcStops>(DAY_STOPS);
 
   const apply = (t: number) => {
-    document.body.style.backgroundColor = dayArcColor(t, stopsRef.current);
+    const color = dayArcColor(t, stopsRef.current);
+    document.body.style.backgroundColor = color;
+    // html too: the scroll area can run a hair past the body, and overscroll
+    // shows the html ground - it must never flash paper over the night
+    document.documentElement.style.backgroundColor = color;
     document.documentElement.dataset.arc = isDarkAt(t, stopsRef.current) ? 'dark' : 'light';
   };
 
@@ -41,6 +45,7 @@ export function DayArc() {
       ro.disconnect();
       window.removeEventListener('resize', measure);
       document.body.style.backgroundColor = '';
+      document.documentElement.style.backgroundColor = '';
       delete document.documentElement.dataset.arc;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

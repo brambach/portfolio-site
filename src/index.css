@@ -130,6 +130,66 @@ html[data-arc="dark"] .topnav a:focus-visible,
   color: var(--color-paper);
 }
 
+/* The corner clock follows the same ink rules as the nav. */
+.day-clock {
+  color: color-mix(in srgb, var(--color-oak) 55%, transparent);
+  transition: color 0.5s ease;
+}
+
+html[data-arc="dark"] .day-clock,
+.day-clock[data-over-photo] {
+  color: color-mix(in srgb, var(--color-paper) 60%, transparent);
+}
+
+/* Hover the nav hare and it gallops in place: the two run frames
+   flip-book at full cadence with a small bob. */
+.topnav a:hover .hare-fA,
+.topnav a:focus-visible .hare-fA {
+  animation: nav-gait-a 0.26s linear infinite;
+}
+
+.topnav a:hover .hare-fB,
+.topnav a:focus-visible .hare-fB {
+  animation: nav-gait-b 0.26s linear infinite;
+}
+
+.topnav a:hover svg,
+.topnav a:focus-visible svg {
+  animation: nav-bob 0.26s ease-in-out infinite;
+}
+
+@keyframes nav-gait-a {
+  0%,
+  49% {
+    visibility: visible;
+  }
+  50%,
+  100% {
+    visibility: hidden;
+  }
+}
+
+@keyframes nav-gait-b {
+  0%,
+  49% {
+    visibility: hidden;
+  }
+  50%,
+  100% {
+    visibility: visible;
+  }
+}
+
+@keyframes nav-bob {
+  0%,
+  100% {
+    transform: translateY(-1.5px);
+  }
+  50% {
+    transform: translateY(0.5px);
+  }
+}
+
 /* Dappled canopy light drifting across the hero. */
 .dapple1 {
   animation: drift1 16s ease-in-out infinite alternate;

@@ -85,6 +85,14 @@ export const vibeCards: VibeCard[] = [
   },
 ];
 
-export const streakDay = 214;
+/** day 1 of the streak - day 214 fell on 2026-08-30 */
+const STREAK_START_UTC = Date.UTC(2026, 0, 29);
+
+export function streakDayOn(date: Date): number {
+  return Math.max(1, Math.floor((date.getTime() - STREAK_START_UTC) / 86_400_000) + 1);
+}
+
+/** today's streak day, so the site never goes stale */
+export const streakDay = streakDayOn(new Date());
 
 export const email = 'bryce.rambach@gmail.com';

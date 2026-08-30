@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { streakDay } from '../../lib/site';
 import { OffTheClockSection } from './OffTheClockSection';
 
 describe('OffTheClockSection', () => {
@@ -10,11 +11,11 @@ describe('OffTheClockSection', () => {
     expect(screen.getByText('dawn miles · clay courts when I can get them')).toBeInTheDocument();
   });
 
-  it('counts the streak to 214', async () => {
+  it('counts the streak to today', async () => {
     render(<OffTheClockSection />);
     // generous: the count is 1.3s of rAF, but a loaded event loop
     // (parallel suites) can stretch it well past that
-    await screen.findByText('214', undefined, { timeout: 10000 });
+    await screen.findByText(streakDay.toLocaleString(), undefined, { timeout: 10000 });
   }, 12000);
 
   it('keeps the dream garage', () => {

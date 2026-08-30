@@ -1,5 +1,6 @@
 import { MotionConfig } from 'motion/react';
 import { DayArc } from './components/DayArc';
+import { DayClock } from './components/DayClock';
 import { Grain } from './components/Grain';
 import { SmoothScroll } from './components/SmoothScroll';
 import { TopNav } from './components/TopNav';
@@ -18,6 +19,7 @@ export default function App() {
         <DayArc />
         <Grain />
         <TopNav />
+        <DayClock />
         <main className="relative">
           <TrailRunner />
           <HeroDawn />
