@@ -10,7 +10,8 @@ import {
   strideCadence,
   strideFrame,
   sitSpotClearOfRings,
-  RING_CLEARANCE_PX,
+  RING_CLEARANCE_BEFORE_PX,
+  RING_CLEARANCE_AFTER_PX,
 } from './hare-gait';
 
 describe('strideCadence', () => {
@@ -108,11 +109,19 @@ describe('sitSpotClearOfRings', () => {
   });
 
   it('sidesteps to just short of a ring it would squat on', () => {
-    expect(sitSpotClearOfRings(898, rings, 1, 900)).toBe(900 - RING_CLEARANCE_PX);
+    expect(sitSpotClearOfRings(898, rings, 1, 900)).toBe(900 - RING_CLEARANCE_BEFORE_PX);
+  });
+
+  it('gives extra room past a ring - its ears reach back that way', () => {
+    expect(sitSpotClearOfRings(417, rings, 1, 900)).toBe(400 + RING_CLEARANCE_AFTER_PX);
+  });
+
+  it('needs less room before a ring - only its feet face it', () => {
+    expect(sitSpotClearOfRings(400 - RING_CLEARANCE_BEFORE_PX - 1, rings, 1, 900)).toBeNull();
   });
 
   it('sidesteps forward off the trail head when facing back up the page', () => {
-    expect(sitSpotClearOfRings(4, rings, -1, 900)).toBe(RING_CLEARANCE_PX);
+    expect(sitSpotClearOfRings(4, rings, -1, 900)).toBe(RING_CLEARANCE_AFTER_PX);
   });
 
   it('never sidesteps outside the path', () => {

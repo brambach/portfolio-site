@@ -61,27 +61,35 @@ export function ignoreWhileSitting(gapPx: number): boolean {
   return Math.abs(gapPx) < DEADBAND_PX;
 }
 
-/** how close to a waypoint ring counts as squatting on it */
-const RING_NEAR_PX = 13;
+/** fully beside the ring, before it: feet face the ring, so the sit
+ * drawing's ~15px forward extent plus the ring's 7 sets the gap */
+export const RING_CLEARANCE_BEFORE_PX = 24;
 
-/** where the hare sits instead: fully beside the ring, on its approach side
- * (the sit drawing spans ~15px around its anchor, the ring another 7) */
-export const RING_CLEARANCE_PX = 24;
+/** fully beside the ring, past it: the ears reach ~30px back up the trail,
+ * so sitting on the later side needs more room */
+export const RING_CLEARANCE_AFTER_PX = 40;
+
+const ringClearance = (side: number) =>
+  side >= 0 ? RING_CLEARANCE_AFTER_PX : RING_CLEARANCE_BEFORE_PX;
 
 /**
  * A polite hare sits beside the marker it stamped, never on it. Returns the
- * adjusted sit spot when the given position would squat on a ring, or null
- * when the spot is already clear.
+ * adjusted sit spot - the nearest clear point on the side of the ring the
+ * hare is already on - when the given position would touch one, or null
+ * when it's already clear.
  */
 export function sitSpotClearOfRings(
   posPx: number,
   ringsPx: number[],
-  facing: 1 | -1,
+  lastDir: 1 | -1,
   totalPx: number,
 ): number | null {
-  const ring = ringsPx.find((r) => Math.abs(posPx - r) < RING_NEAR_PX);
+  // dead on a ring, fall back to the side it came from
+  const sideOf = (r: number) => Math.sign(posPx - r) || -lastDir;
+  const ring = ringsPx.find((r) => Math.abs(posPx - r) < ringClearance(sideOf(r)));
   if (ring === undefined) return null;
-  let spot = ring - RING_CLEARANCE_PX * facing;
-  if (spot < 0 || spot > totalPx) spot = ring + RING_CLEARANCE_PX * facing;
+  const side = sideOf(ring);
+  let spot = ring + ringClearance(side) * side;
+  if (spot < 0 || spot > totalPx) spot = ring - ringClearance(-side) * side;
   return spot;
 }
