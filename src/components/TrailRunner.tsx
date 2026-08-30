@@ -62,6 +62,7 @@ export function TrailRunner() {
   const settledSince = useRef(0);
   const poseRef = useRef<'running' | 'sitting'>('sitting');
   const facing = useRef<1 | -1>(1);
+  const lastDir = useRef<1 | -1>(1);
   const dirAcc = useRef(0);
   const tilt = useRef(0);
   const raf = useRef(0);
@@ -184,7 +185,13 @@ export function TrailRunner() {
       dotEls.current.push(c);
     }
     lastDrawn.current = 0;
-    placed.current = false;
+    // on re-measure (resize, images settling) the hare keeps its spot -
+    // clamped to the new path - and visibly runs to wherever the reader
+    // now maps. It relocates; it never teleports.
+    if (placed.current) {
+      hareLen.current = Math.min(hareLen.current, L);
+      targetLen.current = Math.min(targetLen.current, L);
+    }
     update(scrollYProgress.get());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [geom]);
@@ -230,7 +237,7 @@ export function TrailRunner() {
    * the path's slope only tips it a little (smoothed), so a near-vertical
    * stretch can't make it flap. Its feet sit on the trail line.
    */
-  const placeHare = (len: number, dirSign: 1 | -1, running: boolean, pitch = 0) => {
+  const placeHare = (len: number, dirSign: 1 | -1, running: boolean, pitch = 0, moved = 0) => {
     const path = pathRef.current;
     const g = hareRef.current;
     if (!path || !g) return;
@@ -242,6 +249,13 @@ export function TrailRunner() {
       const ahead = path.getPointAtLength(Math.min(Math.max(l + 24 * dirSign, 0), L));
       const mdx = ahead.x - pt.x;
       const mdy = ahead.y - pt.y;
+      // the body faces where it's going ON SCREEN, not along the path's
+      // parameter: the trail zigzags, so forward can mean leftward. Facing
+      // flips only after committed horizontal travel; near-vertical
+      // stretches (mdx ~ 0) keep the last facing.
+      dirAcc.current = Math.max(-40, Math.min(40, dirAcc.current + Math.sign(mdx) * moved));
+      if (dirAcc.current > 14) facing.current = 1;
+      else if (dirAcc.current < -14) facing.current = -1;
       target = (Math.atan2(mdy, Math.abs(mdx) + 34) * 180) / Math.PI;
       target = Math.max(-26, Math.min(26, target));
     }
@@ -267,10 +281,8 @@ export function TrailRunner() {
     // smoothed ground speed feeds the gait: cadence, bounce, and pitch
     spd.current += (Math.abs(delta) / dt - spd.current) * (1 - Math.exp(-dt / 70));
 
-    // facing flips only after committed movement in the new direction
-    dirAcc.current = Math.max(-40, Math.min(40, dirAcc.current + delta));
-    if (dirAcc.current > 14) facing.current = 1;
-    else if (dirAcc.current < -14) facing.current = -1;
+    if (delta > 0) lastDir.current = 1;
+    else if (delta < 0) lastDir.current = -1;
 
     const speedy = Math.abs(delta) > 0.02 * dt;
     if (speedy) {
@@ -285,7 +297,7 @@ export function TrailRunner() {
       const clear = sitSpotClearOfRings(
         next,
         wpLens.current,
-        facing.current,
+        lastDir.current,
         pathRef.current?.getTotalLength() ?? next,
       );
       if (clear !== null && Math.abs(clear - next) > 1) {
@@ -317,7 +329,7 @@ export function TrailRunner() {
       pitch = pitchDeg(phase.current, spd.current);
     }
 
-    placeHare(next, delta >= 0 ? 1 : -1, poseRef.current === 'running', pitch);
+    placeHare(next, delta >= 0 ? 1 : -1, poseRef.current === 'running', pitch, Math.abs(delta));
     drawDots(next - 8);
     stamp(next);
 
@@ -354,8 +366,18 @@ export function TrailRunner() {
     readerLen.current = tl;
     targetLen.current = tl;
     if (!placed.current) {
+      // the first sit spot gets the same courtesy as a settle: never on a
+      // ring (at the very top this means one small hop past the trail head)
+      const clear = sitSpotClearOfRings(
+        tl,
+        wpLens.current,
+        lastDir.current,
+        pathRef.current.getTotalLength(),
+      );
+      if (clear !== null) targetLen.current = clear;
       // on a mid-page load, start close by and run in - not across the page
       hareLen.current = Math.max(0, targetLen.current - 500);
+      restAt.current = tl;
       placed.current = true;
     }
     kick();
