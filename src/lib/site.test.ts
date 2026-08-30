@@ -20,14 +20,19 @@ describe('site data', () => {
 
 describe('streakDayOn', () => {
   it('knows day 214 fell on 2026-08-30', () => {
-    expect(streakDayOn(new Date(Date.UTC(2026, 7, 30, 12)))).toBe(214);
+    expect(streakDayOn(new Date(2026, 7, 30, 12))).toBe(214);
   });
 
-  it('ticks over the next day', () => {
-    expect(streakDayOn(new Date(Date.UTC(2026, 7, 31, 12)))).toBe(215);
+  it('holds through the early local morning - no UTC rollover', () => {
+    expect(streakDayOn(new Date(2026, 7, 30, 0, 5))).toBe(214);
+    expect(streakDayOn(new Date(2026, 7, 30, 8))).toBe(214);
+  });
+
+  it('ticks over at local midnight', () => {
+    expect(streakDayOn(new Date(2026, 7, 31, 0, 5))).toBe(215);
   });
 
   it('never reports less than day one', () => {
-    expect(streakDayOn(new Date(Date.UTC(2020, 0, 1)))).toBe(1);
+    expect(streakDayOn(new Date(2020, 0, 1))).toBe(1);
   });
 });

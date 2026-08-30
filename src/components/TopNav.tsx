@@ -1,5 +1,5 @@
 import { useScroll, useMotionValueEvent } from 'motion/react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { HareMark } from './HareMark';
 
 const LINKS = [
@@ -17,9 +17,23 @@ const LINKS = [
 export function TopNav() {
   const { scrollY } = useScroll();
   const [overPhoto, setOverPhoto] = useState(true);
+  // flip where the photograph actually leaves the nav: the hero can be
+  // taller than the viewport (min-h 640), so a viewport fraction flips
+  // too early on short windows
+  const flipAt = useRef(0);
+
+  useEffect(() => {
+    const measure = () => {
+      const hero = document.getElementById('hero');
+      flipAt.current = Math.max(0, (hero?.offsetHeight ?? window.innerHeight) - 194);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
 
   useMotionValueEvent(scrollY, 'change', (y) => {
-    setOverPhoto(y < window.innerHeight * 0.72);
+    setOverPhoto(y < flipAt.current);
   });
 
   return (

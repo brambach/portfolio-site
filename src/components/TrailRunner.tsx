@@ -1,6 +1,7 @@
 import { useScroll, useMotionValueEvent, useReducedMotion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import {
+  RING_CLEARANCE_BEFORE_PX,
   advancePhase,
   bobY,
   ignoreWhileSitting,
@@ -13,6 +14,17 @@ import { buildTrailPath, waypointThresholds } from '../lib/trail';
 import { HareBody } from './HareMark';
 
 const DOT_STEP = 16;
+
+/** how far behind its mapped spot the hare spawns on a mid-page load -
+ * at MAX_SPEED this is roughly a 300ms visible run-in */
+const RUN_IN_PX = 500;
+
+/** rings stamp once the pen is this far past them... */
+const STAMP_OVERSHOOT_PX = 6;
+
+/** ...and un-stamp only on a retreat beyond the sit-beside clearance,
+ * so the polite sidestep can never wipe a ring it just stamped */
+const UNSTAMP_MARGIN_PX = RING_CLEARANCE_BEFORE_PX + 16;
 
 /** Lateral position of each waypoint across the main column, top to bottom:
  * trail head under the hero, left rail past work, out and back through dusk
@@ -71,8 +83,15 @@ export function TrailRunner() {
   const lastFrame = useRef<'stretch' | 'gather' | null>(null);
   const readerLen = useRef(0);
   const restAt = useRef(0);
+  const reduceRef = useRef(false);
+  const totalLen = useRef(0);
+  const wpEls = useRef<Element[]>([]);
 
   const { scrollYProgress } = useScroll();
+
+  useEffect(() => {
+    reduceRef.current = reduce ?? false;
+  }, [reduce]);
 
   useEffect(() => {
     const m = window.matchMedia('(min-width: 768px)');
@@ -156,6 +175,7 @@ export function TrailRunner() {
     if (!geom || !path || !dots) return;
 
     const L = path.getTotalLength();
+    totalLen.current = L;
 
     // prefix lengths at every path point, then pick out the waypoints
     const probe = path.cloneNode() as SVGPathElement;
@@ -195,7 +215,7 @@ export function TrailRunner() {
       hareLen.current = Math.min(hareLen.current, L);
       targetLen.current = Math.min(targetLen.current, L);
     }
-    update(scrollYProgress.get());
+    update(scrollYProgress.get(), true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [geom]);
 
@@ -208,10 +228,10 @@ export function TrailRunner() {
     if (t < thresholds[0]) return 0;
     let i = 0;
     while (i < thresholds.length - 1 && t >= thresholds[i + 1]) i++;
-    if (i >= thresholds.length - 1) return path.getTotalLength();
+    if (i >= thresholds.length - 1) return totalLen.current;
     const f = (t - thresholds[i]) / Math.max(1e-6, thresholds[i + 1] - thresholds[i]);
     const a = wpLens.current[i] ?? 0;
-    const b = wpLens.current[i + 1] ?? path.getTotalLength();
+    const b = wpLens.current[i + 1] ?? totalLen.current;
     return a + (b - a) * f;
   };
 
@@ -231,11 +251,11 @@ export function TrailRunner() {
    * unstamped - including the origin ring under the hare at load, which
    * appears only as it departs */
   const stamp = (upTo: number) => {
-    const L = pathRef.current?.getTotalLength() ?? Infinity;
-    stampsRef.current?.querySelectorAll('.wp').forEach((el, i) => {
+    const L = totalLen.current || Infinity;
+    wpEls.current.forEach((el, i) => {
       const w = wpLens.current[i] ?? Infinity;
-      if (reduce || upTo >= Math.min(w + 6, L - 1)) el.classList.add('stamped');
-      else if (upTo < w - 40) el.classList.remove('stamped');
+      if (reduce || upTo >= Math.min(w + STAMP_OVERSHOOT_PX, L - 1)) el.classList.add('stamped');
+      else if (upTo < w - UNSTAMP_MARGIN_PX) el.classList.remove('stamped');
     });
   };
 
@@ -248,7 +268,8 @@ export function TrailRunner() {
     const path = pathRef.current;
     const g = hareRef.current;
     if (!path || !g) return;
-    const L = path.getTotalLength();
+    const L = totalLen.current;
+    totalLen.current = L;
     const l = Math.min(Math.max(len, 1), L - 1);
     const pt = path.getPointAtLength(l);
     let target = 0;
@@ -277,6 +298,12 @@ export function TrailRunner() {
 
   const loop = (now: number) => {
     if (!loopOn.current) return;
+    if (reduceRef.current) {
+      // the setting flipped mid-run: stop moving and disappear now
+      loopOn.current = false;
+      if (hareRef.current) hareRef.current.style.opacity = '0';
+      return;
+    }
     const dt = Math.min(48, Math.max(8, now - lastTs.current));
     lastTs.current = now;
 
@@ -301,12 +328,7 @@ export function TrailRunner() {
       }
     } else if (poseRef.current === 'running' && now - settledSince.current > 300) {
       // a polite hare sits beside the ring it stamped, never on it
-      const clear = sitSpotClearOfRings(
-        next,
-        wpLens.current,
-        lastDir.current,
-        pathRef.current?.getTotalLength() ?? next,
-      );
+      const clear = sitSpotClearOfRings(next, wpLens.current, lastDir.current, totalLen.current);
       if (clear !== null && Math.abs(clear - next) > 1) {
         targetLen.current = clear;
         settledSince.current = now;
@@ -355,7 +377,7 @@ export function TrailRunner() {
     raf.current = requestAnimationFrame(loop);
   };
 
-  const update = (t: number) => {
+  const update = (t: number, force = false) => {
     if (!geom || !pathRef.current) return;
     if (reduce) {
       dotEls.current.forEach((d) => d.setAttribute('opacity', '0.85'));
@@ -368,6 +390,12 @@ export function TrailRunner() {
     // reader has moved a real hop's worth from where it settled
     if (placed.current && poseRef.current === 'sitting' && ignoreWhileSitting(tl - restAt.current)) {
       readerLen.current = tl;
+      // a re-measure rebuilds the dots hidden; repaint in place without
+      // moving the hare, or the laid trail stays invisible
+      if (force) {
+        targetLen.current = hareLen.current;
+        kick();
+      }
       return;
     }
     readerLen.current = tl;
@@ -383,7 +411,7 @@ export function TrailRunner() {
           : null;
       if (clear !== null) targetLen.current = clear;
       // on a mid-page load, start close by and run in - not across the page
-      hareLen.current = Math.max(0, targetLen.current - 500);
+      hareLen.current = Math.max(0, targetLen.current - RUN_IN_PX);
       restAt.current = tl;
       placed.current = true;
     }
@@ -406,10 +434,14 @@ export function TrailRunner() {
         raf = 0;
         const g = hareRef.current;
         if (!g) return;
+        if (poseRef.current !== 'sitting') {
+          g.classList.remove('hare-hello');
+          return;
+        }
         const r = g.getBoundingClientRect();
         const d = Math.hypot(px - (r.left + r.width / 2), py - (r.top + r.height / 2));
-        if (d < 52 && poseRef.current === 'sitting') g.classList.add('hare-hello');
-        else if (d > 84 || poseRef.current !== 'sitting') g.classList.remove('hare-hello');
+        if (d < 52) g.classList.add('hare-hello');
+        else if (d > 84) g.classList.remove('hare-hello');
       });
     };
     // poke it (click nearby while it rests) and it startles: a little
@@ -441,6 +473,18 @@ export function TrailRunner() {
       window.clearTimeout(startleTimer);
     };
   }, [desktop, reduce]);
+
+  // the ring elements re-render with stampPts: cache them for stamp(),
+  // and under reduced motion stamp everything as soon as they exist -
+  // update() ran before they were committed
+  useEffect(() => {
+    wpEls.current = stampsRef.current ? [...stampsRef.current.querySelectorAll('.wp')] : [];
+    if (reduce) {
+      dotEls.current.forEach((d) => d.setAttribute('opacity', '0.85'));
+      stamp(Infinity);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stampPts, reduce]);
 
   // the run drawing remounts on pose changes; re-find its two frames
   useEffect(() => {

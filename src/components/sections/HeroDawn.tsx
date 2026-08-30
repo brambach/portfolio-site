@@ -1,9 +1,7 @@
 import { motion } from 'motion/react';
 import { HareMark } from '../HareMark';
 import { InkNote } from '../InkNote';
-import { Settle } from '../Settle';
-
-const SETTLE_EASE = [0.16, 1, 0.3, 1.35] as const;
+import { SETTLE_EASE, Settle } from '../Settle';
 
 /** The wordmark, set letter by letter like hand-set type, the clay full
  * stop stamped in last. */

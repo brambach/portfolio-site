@@ -1,7 +1,8 @@
 /**
  * The engraved hare, in currentColor so the ground decides its ink. Two
- * bounding frames (stretch and gather) make the gallop: a parent with the
- * `hare-gallop` class alternates them flip-book style; everywhere else only
+ * bounding frames (stretch and gather) make the gallop: the TrailRunner
+ * flips their visibility from its animation loop at a speed-set cadence,
+ * and the nav hare flip-books them on hover via CSS; everywhere else only
  * the stretch frame shows, so static marks stay still. Sitting is its own
  * drawing, ears up, with the idle flick.
  *

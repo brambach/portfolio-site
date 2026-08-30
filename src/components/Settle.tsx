@@ -1,7 +1,8 @@
 import { motion } from 'motion/react';
 import type { ReactNode } from 'react';
 
-const SETTLE_EASE = [0.16, 1, 0.3, 1.35] as const;
+/** the house entrance curve, shared by every settle variant */
+export const SETTLE_EASE = [0.16, 1, 0.3, 1.35] as const;
 
 /**
  * The one entrance move on the site: a letterpress settle. Slight drop and

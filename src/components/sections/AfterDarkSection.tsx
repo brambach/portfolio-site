@@ -65,6 +65,12 @@ export function AfterDarkSection() {
               say hi →
             </a>
             <div className="font-mono text-[11px] tracking-[0.08em] text-paper/55">{email}</div>
+            <a
+              href="https://github.com/brambach"
+              className="ink-link font-mono text-[11px] tracking-[0.08em] text-paper/55 hover:text-paper"
+            >
+              github
+            </a>
           </div>
         </div>
 

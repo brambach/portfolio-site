@@ -26,8 +26,6 @@
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
   --font-hand: "Caveat Variable", "Comic Sans MS", cursive;
 
-  --ease-settle: cubic-bezier(0.16, 1, 0.3, 1.35);
-  --ease-cover: cubic-bezier(0.5, 0, 0.15, 1);
   --ease-stamp: cubic-bezier(0.2, 1.4, 0.4, 1);
 }
 
@@ -143,8 +141,7 @@ html[data-arc="dark"] .topnav a:focus-visible,
   transition: color 0.5s ease;
 }
 
-html[data-arc="dark"] .day-clock,
-.day-clock[data-over-photo] {
+html[data-arc="dark"] .day-clock {
   color: color-mix(in srgb, var(--color-paper) 60%, transparent);
 }
 

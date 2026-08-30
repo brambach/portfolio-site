@@ -85,11 +85,14 @@ export const vibeCards: VibeCard[] = [
   },
 ];
 
-/** day 1 of the streak - day 214 fell on 2026-08-30 */
-const STREAK_START_UTC = Date.UTC(2026, 0, 29);
+/** day 1 of the streak - day 214 fell on 2026-08-30, in the viewer's
+ * local day, so the number rolls at their midnight, not UTC's */
+const STREAK_START = [2026, 0, 29] as const;
 
 export function streakDayOn(date: Date): number {
-  return Math.max(1, Math.floor((date.getTime() - STREAK_START_UTC) / 86_400_000) + 1);
+  const start = new Date(STREAK_START[0], STREAK_START[1], STREAK_START[2]);
+  const today = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return Math.max(1, Math.round((today.getTime() - start.getTime()) / 86_400_000) + 1);
 }
 
 /** today's streak day, so the site never goes stale */
