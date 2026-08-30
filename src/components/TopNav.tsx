@@ -32,7 +32,7 @@ export function TopNav() {
       </a>
       <nav className="flex items-center gap-5 text-[13.5px] font-medium tracking-[0.04em] md:gap-7">
         {LINKS.map(([label, href]) => (
-          <a key={href} href={href} className="transition-colors duration-500">
+          <a key={href} href={href} className="ink-link transition-colors duration-500">
             {label}
           </a>
         ))}

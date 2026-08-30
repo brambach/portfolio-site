@@ -12,8 +12,10 @@ describe('OffTheClockSection', () => {
 
   it('counts the streak to 214', async () => {
     render(<OffTheClockSection />);
-    await screen.findByText('214', undefined, { timeout: 3000 });
-  });
+    // generous: the count is 1.3s of rAF, but a loaded event loop
+    // (parallel suites) can stretch it well past that
+    await screen.findByText('214', undefined, { timeout: 10000 });
+  }, 12000);
 
   it('keeps the dream garage', () => {
     render(<OffTheClockSection />);

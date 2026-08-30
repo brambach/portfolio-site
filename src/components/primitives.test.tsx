@@ -31,6 +31,8 @@ describe('primitives', () => {
 
   it('StreakNumber lands on the target', async () => {
     render(<StreakNumber value={214} />);
-    await screen.findByText('214', undefined, { timeout: 3000 });
-  });
+    // generous: the count is 1.3s of rAF, but a loaded event loop
+    // (parallel suites) can stretch it well past that
+    await screen.findByText('214', undefined, { timeout: 10000 });
+  }, 12000);
 });

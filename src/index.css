@@ -298,6 +298,96 @@ html[data-arc="dark"] .trail-ink .wp circle {
   }
 }
 
+/* A print you can almost pick up: resting tilt via --tilt, and under the
+   cursor it lifts, straightens most of the way, and settles back after. */
+.polaroid-lift {
+  transform: rotate(var(--tilt, 0deg));
+  transition: transform 0.5s var(--ease-stamp);
+}
+
+.polaroid-lift:hover {
+  transform: rotate(calc(var(--tilt, 0deg) * 0.3)) translateY(-5px) scale(1.012);
+}
+
+/* An ink underline that draws itself left to right under the cursor. */
+.ink-link {
+  position: relative;
+}
+
+.ink-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  height: 1.5px;
+  width: 100%;
+  border-radius: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s var(--ease-stamp);
+}
+
+.ink-link:hover::after,
+.ink-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* Dot leaders in the index: hover a row and the dots march toward the
+   tag, the same trail the hare lays down the page. */
+.leader-dots {
+  height: 3px;
+  background-image: radial-gradient(circle, currentColor 1.1px, transparent 1.4px);
+  background-size: 7px 3px;
+  background-repeat: repeat-x;
+  background-position: 0 50%;
+}
+
+.group:hover .leader-dots {
+  animation: leader-march 0.9s linear infinite;
+}
+
+@keyframes leader-march {
+  to {
+    background-position-x: 7px;
+  }
+}
+
+/* Ink stars over the night section: mostly still, each blinks rarely on
+   its own clock - the ear-flick rule, applied to the sky. */
+.star-blink {
+  animation: star-blink 11s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.star-blink.s2 {
+  animation-duration: 14s;
+  animation-delay: 4s;
+}
+
+.star-blink.s3 {
+  animation-duration: 17s;
+  animation-delay: 9s;
+}
+
+@keyframes star-blink {
+  0%,
+  90%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  93% {
+    opacity: 0.95;
+    transform: scale(1.18);
+  }
+  96% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+}
+
 /* Faint split-flap tick while a StreakNumber is counting. */
 .ticking {
   display: inline-block;

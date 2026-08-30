@@ -46,7 +46,7 @@ export function MadeSection() {
               <span className="mb-[7px] hidden min-w-8 flex-grow overflow-hidden sm:block">
                 <motion.span
                   aria-hidden
-                  className="block border-b border-dotted border-oak/40"
+                  className="leader-dots block text-oak/40"
                   variants={leaderVariants}
                 />
               </span>
@@ -54,7 +54,7 @@ export function MadeSection() {
                 {p.tag}
               </span>
               {p.href && (
-                <a href={p.href} className="text-[13.5px] font-medium">
+                <a href={p.href} className="ink-link text-[13.5px] font-medium">
                   take a look{' '}
                   <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">
                     →

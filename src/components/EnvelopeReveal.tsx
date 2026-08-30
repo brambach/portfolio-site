@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from 'motion/react';
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
+import { useDrift } from './useDrift';
 
 /** Torn bottom edge on the lifting cover, like a print pulled from an envelope. */
 const TORN_COVER =
@@ -28,12 +29,24 @@ export function EnvelopeReveal({
   children?: ReactNode;
 }) {
   const reduce = useReducedMotion();
+  const figRef = useRef<HTMLElement>(null);
+  const y = useDrift(figRef);
   return (
     <motion.figure
+      ref={figRef}
       className={`relative m-0 overflow-hidden ${className}`}
       style={{ rotate }}
     >
-      <img src={src} alt={alt} className="absolute inset-0 h-full w-full object-cover" />
+      {y ? (
+        <motion.img
+          src={src}
+          alt={alt}
+          className="absolute inset-0 h-full w-full object-cover"
+          style={{ y, scale: 1.12 }}
+        />
+      ) : (
+        <img src={src} alt={alt} className="absolute inset-0 h-full w-full object-cover" />
+      )}
       {children}
       {!reduce && (
         <motion.div

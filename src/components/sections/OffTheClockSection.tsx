@@ -106,7 +106,10 @@ export function OffTheClockSection() {
 
         <div className="flex flex-col items-center gap-6">
           <Settle className="w-full max-w-[360px]">
-            <figure className="relative m-0 rotate-[1.6deg] bg-paper px-7 pb-4 pt-6 text-oak shadow-[0_18px_44px_rgba(0,0,0,0.35)]">
+            <figure
+              className="polaroid-lift relative m-0 bg-paper px-7 pb-4 pt-6 text-oak shadow-[0_18px_44px_rgba(0,0,0,0.35)]"
+              style={{ '--tilt': '1.6deg' } as React.CSSProperties}
+            >
               <div
                 aria-hidden
                 className="absolute -top-2.5 left-8 h-[22px] w-[74px] -rotate-4 bg-[rgba(233,196,138,0.65)]"

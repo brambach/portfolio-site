@@ -5,6 +5,32 @@ import { InkNote } from '../InkNote';
 import { Polaroid } from '../Polaroid';
 import { Settle } from '../Settle';
 
+/** Three engraved stars and a sliver of moon; each star blinks rarely on
+ * its own clock. Ink on night, nothing more. */
+function NightSky() {
+  return (
+    <svg
+      viewBox="0 0 150 60"
+      className="pointer-events-none absolute right-[10%] top-14 hidden h-[60px] w-[150px] text-paper/60 md:block"
+      aria-hidden
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+    >
+      <path d="M 128 10 C 122 14 120 22 124 28 C 118 26 115 20 117 14 C 119 10 123 8 128 10 Z" strokeWidth="1.3" />
+      <g className="star-blink" strokeWidth="1.2">
+        <path d="M 22 24 L 22 34 M 17 29 L 27 29" />
+      </g>
+      <g className="star-blink s2" strokeWidth="1.1">
+        <path d="M 62 10 L 62 18 M 58 14 L 66 14" />
+      </g>
+      <g className="star-blink s3" strokeWidth="1">
+        <path d="M 88 38 L 88 44 M 85 41 L 91 41" />
+      </g>
+    </svg>
+  );
+}
+
 function TrailFlag() {
   return (
     <svg viewBox="0 0 26 40" className="h-10 w-[26px] text-claybright" aria-hidden>
@@ -18,6 +44,7 @@ function TrailFlag() {
 export function AfterDarkSection() {
   return (
     <section id="after-dark" data-waypoint="4" className="relative text-paper">
+      <NightSky />
       <div className="mx-auto grid max-w-6xl items-center gap-14 px-6 pb-16 pt-28 md:grid-cols-2 md:px-12 md:pb-24 md:pt-44 lg:pl-32">
         <div className="flex flex-col gap-5">
           <div className="font-mono text-[11px] tracking-[0.2em] text-claybright">after dark</div>

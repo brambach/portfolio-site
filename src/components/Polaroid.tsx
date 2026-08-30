@@ -1,6 +1,12 @@
+import { motion } from 'motion/react';
+import { useRef, type CSSProperties } from 'react';
+import { useDrift } from './useDrift';
+
 /**
  * A print in a warm paper frame with a Caveat caption and an optional strip
- * of tape. Purely presentational; the vibe board animates these from outside.
+ * of tape. The photo drifts gently inside its frame as it crosses the
+ * viewport, and the whole print lifts and straightens under the cursor.
+ * The vibe board animates entrances from outside.
  */
 export function Polaroid({
   src,
@@ -21,10 +27,12 @@ export function Polaroid({
   className?: string;
   imgClassName?: string;
 }) {
+  const frameRef = useRef<HTMLDivElement>(null);
+  const y = useDrift(frameRef);
   return (
     <figure
-      className={`relative m-0 bg-paperwarm p-[10px] pb-3 shadow-[0_16px_38px_rgba(42,37,25,0.28)] ${className}`}
-      style={{ transform: `rotate(${rotate}deg)` }}
+      className={`polaroid-lift relative m-0 bg-paperwarm p-[10px] pb-3 shadow-[0_16px_38px_rgba(42,37,25,0.28)] ${className}`}
+      style={{ '--tilt': `${rotate}deg` } as CSSProperties}
     >
       {tape && (
         <div
@@ -34,8 +42,17 @@ export function Polaroid({
           }`}
         />
       )}
-      <div className={`relative overflow-hidden ${imgClassName}`}>
-        <img src={src} alt={alt} className="block h-full w-full object-cover" />
+      <div ref={frameRef} className={`relative overflow-hidden ${imgClassName}`}>
+        {y ? (
+          <motion.img
+            src={src}
+            alt={alt}
+            className="block h-full w-full object-cover"
+            style={{ y, scale: 1.12 }}
+          />
+        ) : (
+          <img src={src} alt={alt} className="block h-full w-full object-cover" />
+        )}
       </div>
       <figcaption className="mt-1.5 text-center font-hand text-xl font-semibold text-inksoft">
         {caption}
