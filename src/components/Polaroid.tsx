@@ -47,13 +47,14 @@ export function Polaroid({
           <motion.img
             src={src}
             alt={alt}
+            draggable={false}
             loading="lazy"
             decoding="async"
             className="block h-full w-full object-cover"
             style={{ y, scale: 1.12 }}
           />
         ) : (
-          <img src={src} alt={alt} loading="lazy" decoding="async" className="block h-full w-full object-cover" />
+          <img src={src} alt={alt} draggable={false} loading="lazy" decoding="async" className="block h-full w-full object-cover" />
         )}
       </div>
       <figcaption className="mt-1.5 text-center font-hand text-xl font-semibold text-inksoft">

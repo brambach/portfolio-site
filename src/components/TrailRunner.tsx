@@ -412,10 +412,33 @@ export function TrailRunner() {
         else if (d > 84 || poseRef.current !== 'sitting') g.classList.remove('hare-hello');
       });
     };
+    // poke it (click nearby while it rests) and it startles: a little
+    // jump. The listener never captures, so clicks land where they were
+    // going anyway.
+    let startleTimer = 0;
+    const onClick = (e: MouseEvent) => {
+      const g = hareRef.current;
+      if (!g || poseRef.current !== 'sitting') return;
+      const r = g.getBoundingClientRect();
+      const d = Math.hypot(
+        e.clientX - (r.left + r.width / 2),
+        e.clientY - (r.top + r.height / 2),
+      );
+      if (d < 60) {
+        g.classList.remove('hare-startle');
+        void g.getBoundingClientRect(); // restart the animation
+        g.classList.add('hare-startle');
+        window.clearTimeout(startleTimer);
+        startleTimer = window.setTimeout(() => g.classList.remove('hare-startle'), 550);
+      }
+    };
     window.addEventListener('pointermove', onMove);
+    window.addEventListener('click', onClick);
     return () => {
       window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('click', onClick);
       cancelAnimationFrame(raf);
+      window.clearTimeout(startleTimer);
     };
   }, [desktop, reduce]);
 

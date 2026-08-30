@@ -47,8 +47,10 @@ function DreamGarage() {
         <path d="M 70.8 70.1 L 67.9 66" />
         <path d="M 73.2 70.1 L 76.1 66" />
       </g>
-      {/* the upright lamp leads the nose */}
+      {/* the upright lamp leads the nose; it turns on when the card is
+          hovered (.lamp fill) */}
       <ellipse
+        className="lamp"
         cx="229.6"
         cy="54.9"
         rx="5.1"

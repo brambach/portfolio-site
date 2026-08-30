@@ -320,6 +320,50 @@ html[data-arc="dark"] .trail-ink .wp circle {
   }
 }
 
+/* Poke the resting hare (a click nearby) and it startles: a small
+   vertical hop with a squash landing, then back to breathing. */
+.hare-startle .hare-sit {
+  animation: hare-startle 0.5s var(--ease-stamp);
+}
+
+@keyframes hare-startle {
+  0% {
+    transform: scale(1, 1) translateY(0);
+  }
+  28% {
+    transform: scale(0.94, 1.07) translateY(-9px);
+  }
+  58% {
+    transform: scale(1.06, 0.9) translateY(0);
+  }
+  80% {
+    transform: scale(0.985, 1.015) translateY(0);
+  }
+  100% {
+    transform: scale(1, 1) translateY(0);
+  }
+}
+
+/* Hover the dream-garage card and the 911's lamp turns on. */
+.lamp {
+  transition: fill 0.45s ease;
+  fill: none;
+}
+
+.polaroid-lift:hover .lamp {
+  fill: rgba(233, 196, 138, 0.9);
+}
+
+/* The wordmark is alive: poke a letter and it hops. */
+.wm-letter {
+  display: inline-block;
+  transition: transform 0.3s var(--ease-stamp);
+}
+
+.wm-letter:hover {
+  transform: translateY(-0.05em) rotate(-1.4deg);
+}
+
 /* A rare ear flick while the hare rests. */
 .hare-ears {
   transform-box: fill-box;
@@ -363,6 +407,16 @@ html[data-arc="dark"] .trail-ink .wp circle {
   97% {
     transform: rotate(2deg);
   }
+}
+
+/* Pinboard prints: the browser's native image-drag must never swallow
+   the pointer, and dragged paper shouldn't select text on the way. */
+.cursor-grab img {
+  -webkit-user-drag: none;
+}
+
+.cursor-grab {
+  user-select: none;
 }
 
 /* A print you can almost pick up: resting tilt via --tilt, and under the

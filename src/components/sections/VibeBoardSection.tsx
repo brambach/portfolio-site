@@ -1,11 +1,16 @@
 import { motion } from 'motion/react';
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { vibeCards } from '../../lib/site';
 import { HareMark } from '../HareMark';
 import { Polaroid } from '../Polaroid';
 import { SettleWords } from '../SettleWords';
 
-/** Scatter-in: each print lands from an exaggerated tilt onto its resting one. */
+/**
+ * Scatter-in: each print lands from an exaggerated tilt onto its resting
+ * one. On pointer devices the board is a real pinboard afterward - pick a
+ * print up (it lifts and straightens), drop it where you like, within
+ * reach of its pin.
+ */
 function Scatter({
   rotate,
   order,
@@ -16,12 +21,26 @@ function Scatter({
   children: ReactNode;
 }) {
   const exaggerated = Math.max(-8, Math.min(8, rotate * 3.2));
+  const [grabbable, setGrabbable] = useState(false);
+  useEffect(() => {
+    const m = window.matchMedia('(pointer: fine)');
+    const on = () => setGrabbable(m.matches);
+    on();
+    m.addEventListener('change', on);
+    return () => m.removeEventListener('change', on);
+  }, []);
   return (
     <motion.div
+      className={grabbable ? 'cursor-grab active:cursor-grabbing' : undefined}
       initial={{ opacity: 0, y: 46, rotate: exaggerated }}
       whileInView={{ opacity: 1, y: 0, rotate: 0 }}
       viewport={{ once: true, amount: 0.35 }}
       transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1.2], delay: order * 0.12 }}
+      drag={grabbable}
+      dragConstraints={{ top: -60, left: -80, right: 80, bottom: 60 }}
+      dragElastic={0.16}
+      dragMomentum={false}
+      whileDrag={{ scale: 1.04, rotate: 0, zIndex: 30 }}
     >
       {children}
     </motion.div>

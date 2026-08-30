@@ -5,6 +5,7 @@ import { Grain } from './components/Grain';
 import { SmoothScroll } from './components/SmoothScroll';
 import { TopNav } from './components/TopNav';
 import { TrailRunner } from './components/TrailRunner';
+import { WindowTitle } from './components/WindowTitle';
 import { AfterDarkSection } from './components/sections/AfterDarkSection';
 import { HeroDawn } from './components/sections/HeroDawn';
 import { MadeSection } from './components/sections/MadeSection';
@@ -20,6 +21,7 @@ export default function App() {
         <Grain />
         <TopNav />
         <DayClock />
+        <WindowTitle />
         <main className="relative">
           <TrailRunner />
           <HeroDawn />

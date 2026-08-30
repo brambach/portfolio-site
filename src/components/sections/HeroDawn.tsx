@@ -20,31 +20,32 @@ function Wordmark() {
       }}
     >
       {[...'bryce'].map((ch, i) => (
-        <motion.span
-          key={i}
-          aria-hidden
-          className="inline-block"
-          initial={{ opacity: 0, y: '0.3em', rotate: i % 2 ? 2.2 : -2.6 }}
-          animate={{ opacity: 1, y: 0, rotate: 0 }}
-          transition={{
-            duration: 0.85,
-            ease: SETTLE_EASE,
-            delay: 0.2 + i * 0.07,
-            opacity: { duration: 0.4, ease: 'easeOut', delay: 0.2 + i * 0.07 },
-          }}
-        >
-          {ch}
-        </motion.span>
+        <span key={i} aria-hidden className="wm-letter">
+          <motion.span
+            className="inline-block"
+            initial={{ opacity: 0, y: '0.3em', rotate: i % 2 ? 2.2 : -2.6 }}
+            animate={{ opacity: 1, y: 0, rotate: 0 }}
+            transition={{
+              duration: 0.85,
+              ease: SETTLE_EASE,
+              delay: 0.2 + i * 0.07,
+              opacity: { duration: 0.4, ease: 'easeOut', delay: 0.2 + i * 0.07 },
+            }}
+          >
+            {ch}
+          </motion.span>
+        </span>
       ))}
-      <motion.span
-        aria-hidden
-        className="inline-block text-clay"
-        initial={{ opacity: 0, scale: 2.6 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.78, duration: 0.5, ease: [0.2, 1.4, 0.4, 1] }}
-      >
-        .
-      </motion.span>
+      <span aria-hidden className="wm-letter text-clay">
+        <motion.span
+          className="inline-block"
+          initial={{ opacity: 0, scale: 2.6 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.78, duration: 0.5, ease: [0.2, 1.4, 0.4, 1] }}
+        >
+          .
+        </motion.span>
+      </span>
     </h1>
   );
 }
