@@ -383,6 +383,35 @@ export function TrailRunner() {
     kick();
   };
 
+  // the hare notices a cursor that comes close while it rests: one ear
+  // flick hello. Tracked from pointer position because the trail svg sits
+  // behind the content layers, where :hover can't reach.
+  useEffect(() => {
+    if (!desktop || reduce) return;
+    let raf = 0;
+    let px = 0;
+    let py = 0;
+    const onMove = (e: PointerEvent) => {
+      px = e.clientX;
+      py = e.clientY;
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const g = hareRef.current;
+        if (!g) return;
+        const r = g.getBoundingClientRect();
+        const d = Math.hypot(px - (r.left + r.width / 2), py - (r.top + r.height / 2));
+        if (d < 52 && poseRef.current === 'sitting') g.classList.add('hare-hello');
+        else if (d > 84 || poseRef.current !== 'sitting') g.classList.remove('hare-hello');
+      });
+    };
+    window.addEventListener('pointermove', onMove);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      cancelAnimationFrame(raf);
+    };
+  }, [desktop, reduce]);
+
   // the run drawing remounts on pose changes; re-find its two frames
   useEffect(() => {
     frameA.current = hareRef.current?.querySelector<SVGGElement>('.hare-fA') ?? null;
