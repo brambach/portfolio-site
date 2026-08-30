@@ -1,5 +1,13 @@
 import { useScroll, useMotionValueEvent, useReducedMotion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
+import {
+  advancePhase,
+  bobY,
+  ignoreWhileSitting,
+  pitchDeg,
+  sitSpotClearOfRings,
+  strideFrame,
+} from '../lib/hare-gait';
 import { pursue } from '../lib/hare-pursuit';
 import { buildTrailPath, waypointThresholds } from '../lib/trail';
 import { HareBody } from './HareMark';
@@ -38,6 +46,9 @@ export function TrailRunner() {
   const dotsRef = useRef<SVGGElement>(null);
   const stampsRef = useRef<SVGGElement>(null);
   const hareRef = useRef<SVGGElement>(null);
+  const bobRef = useRef<SVGGElement>(null);
+  const frameA = useRef<SVGGElement | null>(null);
+  const frameB = useRef<SVGGElement | null>(null);
 
   const dotEls = useRef<SVGCircleElement[]>([]);
   const wpLens = useRef<number[]>([]);
@@ -54,6 +65,11 @@ export function TrailRunner() {
   const dirAcc = useRef(0);
   const tilt = useRef(0);
   const raf = useRef(0);
+  const spd = useRef(0);
+  const phase = useRef(0);
+  const lastFrame = useRef<'stretch' | 'gather' | null>(null);
+  const readerLen = useRef(0);
+  const restAt = useRef(0);
 
   const { scrollYProgress } = useScroll();
 
@@ -199,9 +215,13 @@ export function TrailRunner() {
     lastDrawn.current = n;
   };
 
+  /** stamped on approach, un-stamped only on a real retreat: the gap keeps
+   * the sit-beside-the-ring sidestep from wiping a ring it just stamped */
   const stamp = (upTo: number) => {
     stampsRef.current?.querySelectorAll('.wp').forEach((el, i) => {
-      el.classList.toggle('stamped', reduce || upTo >= (wpLens.current[i] ?? Infinity) - 4);
+      const w = wpLens.current[i] ?? Infinity;
+      if (reduce || upTo >= w - 4) el.classList.add('stamped');
+      else if (upTo < w - 40) el.classList.remove('stamped');
     });
   };
 
@@ -210,7 +230,7 @@ export function TrailRunner() {
    * the path's slope only tips it a little (smoothed), so a near-vertical
    * stretch can't make it flap. Its feet sit on the trail line.
    */
-  const placeHare = (len: number, dirSign: 1 | -1, running: boolean) => {
+  const placeHare = (len: number, dirSign: 1 | -1, running: boolean, pitch = 0) => {
     const path = pathRef.current;
     const g = hareRef.current;
     if (!path || !g) return;
@@ -229,7 +249,7 @@ export function TrailRunner() {
     const flip = facing.current;
     g.setAttribute(
       'transform',
-      `translate(${pt.x}, ${pt.y}) rotate(${(tilt.current * flip).toFixed(1)}) scale(${0.52 * flip}, 0.52) translate(-62, -60)`,
+      `translate(${pt.x}, ${pt.y}) rotate(${((tilt.current + pitch) * flip).toFixed(1)}) scale(${0.52 * flip}, 0.52) translate(-62, -60)`,
     );
     g.style.opacity = '1';
   };
@@ -244,6 +264,9 @@ export function TrailRunner() {
     hareLen.current = next;
     const delta = next - prev;
 
+    // smoothed ground speed feeds the gait: cadence, bounce, and pitch
+    spd.current += (Math.abs(delta) / dt - spd.current) * (1 - Math.exp(-dt / 70));
+
     // facing flips only after committed movement in the new direction
     dirAcc.current = Math.max(-40, Math.min(40, dirAcc.current + delta));
     if (dirAcc.current > 14) facing.current = 1;
@@ -255,13 +278,46 @@ export function TrailRunner() {
       if (poseRef.current !== 'running') {
         poseRef.current = 'running';
         setPose('running');
+        phase.current = 0; // every run starts at the launch of a bound
       }
     } else if (poseRef.current === 'running' && now - settledSince.current > 300) {
-      poseRef.current = 'sitting';
-      setPose('sitting');
+      // a polite hare sits beside the ring it stamped, never on it
+      const clear = sitSpotClearOfRings(
+        next,
+        wpLens.current,
+        facing.current,
+        pathRef.current?.getTotalLength() ?? next,
+      );
+      if (clear !== null && Math.abs(clear - next) > 1) {
+        targetLen.current = clear;
+        settledSince.current = now;
+      } else {
+        poseRef.current = 'sitting';
+        setPose('sitting');
+        restAt.current = readerLen.current;
+        spd.current = 0;
+        lastFrame.current = null;
+        bobRef.current?.removeAttribute('transform');
+      }
     }
 
-    placeHare(next, delta >= 0 ? 1 : -1, poseRef.current === 'running');
+    let pitch = 0;
+    if (poseRef.current === 'running') {
+      phase.current = advancePhase(phase.current, spd.current, dt);
+      const frame = strideFrame(phase.current);
+      if (frame !== lastFrame.current && frameA.current && frameB.current) {
+        frameA.current.style.visibility = frame === 'stretch' ? 'visible' : 'hidden';
+        frameB.current.style.visibility = frame === 'gather' ? 'visible' : 'hidden';
+        lastFrame.current = frame;
+      }
+      bobRef.current?.setAttribute(
+        'transform',
+        `translate(0, ${bobY(phase.current, spd.current).toFixed(2)})`,
+      );
+      pitch = pitchDeg(phase.current, spd.current);
+    }
+
+    placeHare(next, delta >= 0 ? 1 : -1, poseRef.current === 'running', pitch);
     drawDots(next - 8);
     stamp(next);
 
@@ -288,7 +344,15 @@ export function TrailRunner() {
       if (hareRef.current) hareRef.current.style.opacity = '0';
       return;
     }
-    targetLen.current = targetFor(t);
+    const tl = targetFor(t);
+    // a resting hare doesn't chase every inch: it gets up only once the
+    // reader has moved a real hop's worth from where it settled
+    if (placed.current && poseRef.current === 'sitting' && ignoreWhileSitting(tl - restAt.current)) {
+      readerLen.current = tl;
+      return;
+    }
+    readerLen.current = tl;
+    targetLen.current = tl;
     if (!placed.current) {
       // on a mid-page load, start close by and run in - not across the page
       hareLen.current = Math.max(0, targetLen.current - 500);
@@ -296,6 +360,13 @@ export function TrailRunner() {
     }
     kick();
   };
+
+  // the run drawing remounts on pose changes; re-find its two frames
+  useEffect(() => {
+    frameA.current = hareRef.current?.querySelector<SVGGElement>('.hare-fA') ?? null;
+    frameB.current = hareRef.current?.querySelector<SVGGElement>('.hare-fB') ?? null;
+    lastFrame.current = null;
+  }, [pose]);
 
   useMotionValueEvent(scrollYProgress, 'change', update);
   useEffect(
@@ -327,7 +398,7 @@ export function TrailRunner() {
         ))}
       </g>
       <g ref={hareRef} style={{ opacity: 0, transition: 'opacity 0.4s ease' }}>
-        <g className={pose === 'running' ? 'hare-gallop' : undefined}>
+        <g ref={bobRef}>
           <HareBody pose={pose} strokeWidth={3} />
         </g>
       </g>

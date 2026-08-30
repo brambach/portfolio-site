@@ -216,49 +216,40 @@ html[data-arc="dark"] .trail-ink .wp circle {
   transform: scale(1);
 }
 
-/* The gallop: two engraved frames alternating flip-book style, with a small
-   bounce. Only a `.hare-gallop` parent animates; static marks show the
-   stretch frame. */
+/* The gallop is two engraved frames (stretch and gather). The TrailRunner
+   flips them from its animation loop at a cadence set by ground speed, so
+   the legs match the ground going by; static marks just show the stretch. */
 .hare-fB {
   visibility: hidden;
 }
 
-.hare-gallop .hare-fA {
-  animation: gait-a 0.26s linear infinite;
+/* The trail hare lands into its sit with a small squash, then breathes.
+   Both live on an inner group so they can't fight the drawing's own
+   transform attributes. */
+.trail-ink .hare-sit {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation:
+    hare-sit-in 0.3s var(--ease-stamp),
+    hare-breath 3.6s ease-in-out 0.3s infinite;
 }
 
-.hare-gallop .hare-fB {
-  animation: gait-b 0.26s linear infinite;
-}
-
-.hare-gallop {
-  animation: hare-bob 0.26s ease-in-out infinite;
-}
-
-@keyframes gait-a {
-  0%, 49% {
-    visibility: visible;
+@keyframes hare-sit-in {
+  from {
+    transform: scale(1.06, 0.88);
   }
-  50%, 100% {
-    visibility: hidden;
-  }
-}
-
-@keyframes gait-b {
-  0%, 49% {
-    visibility: hidden;
-  }
-  50%, 100% {
-    visibility: visible;
+  to {
+    transform: scale(1, 1);
   }
 }
 
-@keyframes hare-bob {
-  0%, 100% {
-    transform: translateY(-3px);
+@keyframes hare-breath {
+  0%,
+  100% {
+    transform: scale(1, 1);
   }
   50% {
-    transform: translateY(1px);
+    transform: scale(1.008, 1.014);
   }
 }
 

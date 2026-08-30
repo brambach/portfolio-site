@@ -51,6 +51,7 @@ function RunGather({ w, thin, hair }: { w: number; thin: number; hair: number })
 function Sitting({ w, thin, hair }: { w: number; thin: number; hair: number }) {
   return (
     <g transform="translate(14, 2)">
+      <g className="hare-sit">
       <path d="M 34 62 C 22 58 18 45 26 35 C 31 28 40 25 47 27" strokeWidth={w} />
       <path d="M 47 27 C 50 20 56 16 62 18 C 67 20 68 25 66 29 C 64 33 58 34 54 32" strokeWidth={w} />
       <circle cx="61" cy="23" r={hair * 1.1} fill="currentColor" stroke="none" />
@@ -63,6 +64,7 @@ function Sitting({ w, thin, hair }: { w: number; thin: number; hair: number }) {
       <path d="M 62 50 C 63 55 63 58 61 62" strokeWidth={hair} />
       <path d="M 34 62 C 42 64 52 64 60 62" strokeWidth={hair} />
       <path d="M 34 62 C 29 61 26 57 27 52" strokeWidth={hair} />
+      </g>
     </g>
   );
 }
