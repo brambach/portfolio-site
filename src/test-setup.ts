@@ -19,10 +19,30 @@ if (typeof window.matchMedia === 'undefined') {
   });
 }
 
-// Mock IntersectionObserver for jsdom
+// Mock IntersectionObserver for jsdom. Everything observed reports as
+// immediately in view so whileInView/useInView content settles in tests.
 if (typeof globalThis.IntersectionObserver === 'undefined') {
   class MockIntersectionObserver {
-    observe() {}
+    private cb: IntersectionObserverCallback;
+    constructor(cb: IntersectionObserverCallback) {
+      this.cb = cb;
+    }
+    observe(target: Element) {
+      this.cb(
+        [
+          {
+            isIntersecting: true,
+            target,
+            intersectionRatio: 1,
+            boundingClientRect: target.getBoundingClientRect(),
+            intersectionRect: target.getBoundingClientRect(),
+            rootBounds: null,
+            time: 0,
+          } as IntersectionObserverEntry,
+        ],
+        this as unknown as IntersectionObserver,
+      );
+    }
     unobserve() {}
     disconnect() {}
     takeRecords() { return []; }
@@ -34,7 +54,7 @@ if (typeof globalThis.IntersectionObserver === 'undefined') {
   (globalThis as any).IntersectionObserver = MockIntersectionObserver;
 }
 
-// Mock ResizeObserver for jsdom (used by react-use-measure)
+// Mock ResizeObserver for jsdom (used by DayArc and TrailRunner)
 if (typeof globalThis.ResizeObserver === 'undefined') {
   class MockResizeObserver {
     observe() {}
