@@ -1,13 +1,10 @@
 import { useScroll, useMotionValueEvent, useReducedMotion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
-import { sprintProgress, stepHare, type HareState } from '../lib/hare-state';
+import { pursue } from '../lib/hare-pursuit';
 import { buildTrailPath, waypointThresholds } from '../lib/trail';
 import { HareBody } from './HareMark';
 
 const DOT_STEP = 16;
-
-/** the hare pulls up just past each waypoint ring, not on top of it */
-const REST_OFFSET = 24;
 
 /** Lateral position of each waypoint across the main column, top to bottom:
  * trail head under the hero, left rail past work, out and back through dusk
@@ -24,10 +21,11 @@ type Geometry = {
 };
 
 /**
- * The trail spine and its runner. Dots draw with the reader's progress; the
- * hare rests at the last waypoint and sprints ahead in one burst when the
- * next threshold is crossed (dash-and-rest, never scrollbar-glued). Desktop
- * only; ink follows html[data-arc].
+ * The trail and its runner, one system: the hare is the pen. It chases the
+ * reader's position along the path with a lag and a speed cap (so it runs,
+ * never teleports), lays the dotted trail down behind itself, stamps each
+ * waypoint ring as it passes, and sits wherever you stop. Desktop only;
+ * ink follows html[data-arc].
  */
 export function TrailRunner() {
   const reduce = useReducedMotion();
@@ -43,20 +41,19 @@ export function TrailRunner() {
 
   const dotEls = useRef<SVGCircleElement[]>([]);
   const wpLens = useRef<number[]>([]);
-  const hare = useRef<HareState>({ kind: 'hidden' });
-  const facing = useRef<1 | -1>(1);
-  const tilt = useRef(0);
-  const raf = useRef(0);
   const lastDrawn = useRef(0);
 
-  /** path length at a (possibly fractional) waypoint index */
-  const lenAtIdx = (idx: number) => {
-    const lens = wpLens.current;
-    if (lens.length === 0) return 0;
-    const lo = Math.max(0, Math.min(lens.length - 1, Math.floor(idx)));
-    const hi = Math.max(0, Math.min(lens.length - 1, Math.ceil(idx)));
-    return lens[lo] + (lens[hi] - lens[lo]) * (idx - lo);
-  };
+  const hareLen = useRef(0);
+  const targetLen = useRef(0);
+  const placed = useRef(false);
+  const loopOn = useRef(false);
+  const lastTs = useRef(0);
+  const settledSince = useRef(0);
+  const poseRef = useRef<'running' | 'sitting'>('sitting');
+  const facing = useRef<1 | -1>(1);
+  const dirAcc = useRef(0);
+  const tilt = useRef(0);
+  const raf = useRef(0);
 
   const { scrollYProgress } = useScroll();
 
@@ -152,7 +149,7 @@ export function TrailRunner() {
     }
     wpLens.current = geom.wpIdx.map((i) => lens[i] ?? 0);
     setStampPts(
-      lens.map((l) => {
+      wpLens.current.map((l) => {
         const pt = path.getPointAtLength(Math.min(l, L - 1));
         return { x: pt.x, y: pt.y };
       }),
@@ -171,19 +168,49 @@ export function TrailRunner() {
       dotEls.current.push(c);
     }
     lastDrawn.current = 0;
+    placed.current = false;
     update(scrollYProgress.get());
-    // after a re-measure, a resting hare must move to its waypoint's new spot
-    if (hare.current.kind === 'resting')
-      placeHare(lenAtIdx(hare.current.at) + REST_OFFSET, 1, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [geom]);
 
+  /** reader's position mapped to path length: lerp between waypoint lengths */
+  const targetFor = (t: number): number => {
+    const geo = geom;
+    const path = pathRef.current;
+    if (!geo || !path) return 0;
+    const { thresholds } = geo;
+    if (t < thresholds[0]) return 0;
+    let i = 0;
+    while (i < thresholds.length - 1 && t >= thresholds[i + 1]) i++;
+    if (i >= thresholds.length - 1) return path.getTotalLength();
+    const f = (t - thresholds[i]) / Math.max(1e-6, thresholds[i + 1] - thresholds[i]);
+    const a = wpLens.current[i] ?? 0;
+    const b = wpLens.current[i + 1] ?? path.getTotalLength();
+    return a + (b - a) * f;
+  };
+
+  const drawDots = (upTo: number) => {
+    const n = Math.min(dotEls.current.length, Math.max(0, Math.floor(upTo / DOT_STEP)));
+    if (n > lastDrawn.current) {
+      for (let i = lastDrawn.current; i < n; i++) dotEls.current[i].setAttribute('opacity', '0.85');
+    } else if (n < lastDrawn.current) {
+      for (let i = n; i < lastDrawn.current; i++) dotEls.current[i].setAttribute('opacity', '0');
+    }
+    lastDrawn.current = n;
+  };
+
+  const stamp = (upTo: number) => {
+    stampsRef.current?.querySelectorAll('.wp').forEach((el, i) => {
+      el.classList.toggle('stamped', reduce || upTo >= (wpLens.current[i] ?? Infinity) - 4);
+    });
+  };
+
   /**
    * The hare stays essentially level and faces its direction of travel;
-   * the path's slope only tips it a little. Facing is fixed once per sprint
-   * and the tilt is smoothed, so a near-vertical path can't make it flap.
+   * the path's slope only tips it a little (smoothed), so a near-vertical
+   * stretch can't make it flap. Its feet sit on the trail line.
    */
-  const placeHare = (len: number, dirSign: 1 | -1, sprinting: boolean) => {
+  const placeHare = (len: number, dirSign: 1 | -1, running: boolean) => {
     const path = pathRef.current;
     const g = hareRef.current;
     if (!path || !g) return;
@@ -191,119 +218,93 @@ export function TrailRunner() {
     const l = Math.min(Math.max(len, 1), L - 1);
     const pt = path.getPointAtLength(l);
     let target = 0;
-    if (sprinting) {
+    if (running) {
       const ahead = path.getPointAtLength(Math.min(Math.max(l + 24 * dirSign, 0), L));
       const mdx = ahead.x - pt.x;
       const mdy = ahead.y - pt.y;
-      // slope against a softened horizontal so vertical stretches read as a
-      // downhill bound, not a nosedive
       target = (Math.atan2(mdy, Math.abs(mdx) + 34) * 180) / Math.PI;
       target = Math.max(-26, Math.min(26, target));
     }
-    tilt.current += (target - tilt.current) * (sprinting ? 0.22 : 1);
+    tilt.current += (target - tilt.current) * (running ? 0.22 : 0.4);
     const flip = facing.current;
     g.setAttribute(
       'transform',
-      `translate(${pt.x}, ${pt.y}) rotate(${(tilt.current * flip).toFixed(1)}) scale(${0.52 * flip}, 0.52) translate(-62, -50)`,
+      `translate(${pt.x}, ${pt.y}) rotate(${(tilt.current * flip).toFixed(1)}) scale(${0.52 * flip}, 0.52) translate(-62, -60)`,
     );
     g.style.opacity = '1';
   };
 
-  /** face where this sprint is headed; on a vertical hop keep the old facing */
-  const setFacing = (fromIdx: number, toIdx: number) => {
-    const netDx =
-      (pathRef.current?.getPointAtLength(lenAtIdx(toIdx)).x ?? 0) -
-      (pathRef.current?.getPointAtLength(lenAtIdx(fromIdx)).x ?? 0);
-    if (Math.abs(netDx) > 8) facing.current = netDx >= 0 ? 1 : -1;
+  const loop = (now: number) => {
+    if (!loopOn.current) return;
+    const dt = Math.min(48, Math.max(8, now - lastTs.current));
+    lastTs.current = now;
+
+    const prev = hareLen.current;
+    const next = pursue(prev, targetLen.current, dt);
+    hareLen.current = next;
+    const delta = next - prev;
+
+    // facing flips only after committed movement in the new direction
+    dirAcc.current = Math.max(-40, Math.min(40, dirAcc.current + delta));
+    if (dirAcc.current > 14) facing.current = 1;
+    else if (dirAcc.current < -14) facing.current = -1;
+
+    const speedy = Math.abs(delta) > 0.02 * dt;
+    if (speedy) {
+      settledSince.current = now;
+      if (poseRef.current !== 'running') {
+        poseRef.current = 'running';
+        setPose('running');
+      }
+    } else if (poseRef.current === 'running' && now - settledSince.current > 300) {
+      poseRef.current = 'sitting';
+      setPose('sitting');
+    }
+
+    placeHare(next, delta >= 0 ? 1 : -1, poseRef.current === 'running');
+    drawDots(next - 8);
+    stamp(next);
+
+    const arrived = Math.abs(targetLen.current - next) < 0.6;
+    if (!arrived || poseRef.current === 'running') {
+      raf.current = requestAnimationFrame(loop);
+    } else {
+      loopOn.current = false;
+    }
   };
 
-  const tick = () => {
-    const now = performance.now();
-    const state = hare.current;
-    if (state.kind !== 'sprinting') return;
-    const f = sprintProgress(state, now);
-    const from = lenAtIdx(state.from);
-    const to = lenAtIdx(state.to);
-    placeHare(from + (to - from) * f, to >= from ? 1 : -1, true);
-    const next = stepHare(state, state.to, now);
-    if (next.kind === 'sprinting') {
-      raf.current = requestAnimationFrame(tick);
-    } else {
-      hare.current = next;
-      setPose('sitting');
-      if (next.kind === 'resting') placeHare(lenAtIdx(next.at) + REST_OFFSET, 1, false);
-    }
+  const kick = () => {
+    if (loopOn.current || reduce) return;
+    loopOn.current = true;
+    lastTs.current = performance.now();
+    raf.current = requestAnimationFrame(loop);
   };
 
   const update = (t: number) => {
-    const geo = geom;
-    const path = pathRef.current;
-    if (!geo || !path) return;
-    const { thresholds } = geo;
-
-    // dots draw between waypoints, tracking the reader
-    const L = path.getTotalLength();
-    let drawn = 0;
-    if (t >= thresholds[0]) {
-      let i = 0;
-      while (i < thresholds.length - 1 && t >= thresholds[i + 1]) i++;
-      if (i >= thresholds.length - 1) {
-        drawn = L;
-      } else {
-        const f = (t - thresholds[i]) / Math.max(1e-6, thresholds[i + 1] - thresholds[i]);
-        const a = wpLens.current[i] ?? 0;
-        const b = wpLens.current[i + 1] ?? L;
-        drawn = a + (b - a) * f + 30;
-      }
-    }
-    const n = Math.min(dotEls.current.length, Math.floor(drawn / DOT_STEP));
+    if (!geom || !pathRef.current) return;
     if (reduce) {
       dotEls.current.forEach((d) => d.setAttribute('opacity', '0.85'));
-    } else if (n > lastDrawn.current) {
-      for (let i = lastDrawn.current; i < n; i++) dotEls.current[i].setAttribute('opacity', '0.85');
-      lastDrawn.current = n;
-    } else if (n < lastDrawn.current) {
-      for (let i = n; i < lastDrawn.current; i++) dotEls.current[i].setAttribute('opacity', '0');
-      lastDrawn.current = n;
-    }
-
-    // waypoint stamps
-    let target = -1;
-    for (let i = 0; i < thresholds.length; i++) if (t >= thresholds[i]) target = i;
-    stampsRef.current?.querySelectorAll('.wp').forEach((el, i) => {
-      el.classList.toggle('stamped', reduce || i <= target);
-    });
-
-    // the hare
-    if (reduce) {
+      stamp(Infinity);
       if (hareRef.current) hareRef.current.style.opacity = '0';
       return;
     }
-    const now = performance.now();
-    const prev = hare.current;
-    const next = stepHare(prev, target, now);
-    hare.current = next;
-    if (next.kind === 'hidden') {
-      if (hareRef.current) hareRef.current.style.opacity = '0';
-      setPose('sitting');
-    } else if (next.kind === 'resting') {
-      if (prev.kind !== 'resting' || prev.at !== next.at) {
-        setPose('sitting');
-        placeHare(lenAtIdx(next.at) + REST_OFFSET, 1, false);
-      }
-    } else if (prev.kind !== 'sprinting' || prev.to !== next.to) {
-      // a new sprint, or a retarget: fix the facing for this leg
-      setFacing(next.from, next.to);
-      if (prev.kind !== 'sprinting') {
-        setPose('running');
-        cancelAnimationFrame(raf.current);
-        raf.current = requestAnimationFrame(tick);
-      }
+    targetLen.current = targetFor(t);
+    if (!placed.current) {
+      // on a mid-page load, start close by and run in - not across the page
+      hareLen.current = Math.max(0, targetLen.current - 500);
+      placed.current = true;
     }
+    kick();
   };
 
   useMotionValueEvent(scrollYProgress, 'change', update);
-  useEffect(() => () => cancelAnimationFrame(raf.current), []);
+  useEffect(
+    () => () => {
+      loopOn.current = false;
+      cancelAnimationFrame(raf.current);
+    },
+    [],
+  );
 
   if (!desktop || !geom) return null;
 
