@@ -178,6 +178,44 @@ html[data-arc="dark"] .topnav a:focus-visible,
   }
 }
 
+/* Trail ink follows the day: oak on paper hours, paper after dark. */
+.trail-ink {
+  color: var(--color-oak);
+  transition: color 0.6s ease;
+}
+
+html[data-arc="dark"] .trail-ink {
+  color: var(--color-paper);
+}
+
+.trail-dots circle {
+  fill: var(--color-clay);
+  transition: opacity 0.35s ease;
+}
+
+html[data-arc="dark"] .trail-dots circle {
+  fill: var(--color-claybright);
+}
+
+.trail-ink .wp circle {
+  fill: var(--color-paper);
+  stroke: var(--color-clay);
+}
+
+html[data-arc="dark"] .trail-ink .wp circle {
+  fill: var(--color-oak);
+  stroke: var(--color-claybright);
+}
+
+.trail-ink .wp {
+  transform: scale(0);
+  transition: transform 0.45s var(--ease-stamp);
+}
+
+.trail-ink .wp.stamped {
+  transform: scale(1);
+}
+
 /* A rare ear flick while the hare rests. */
 .hare-ears {
   transform-box: fill-box;

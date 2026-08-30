@@ -75,8 +75,9 @@ export function AfterDarkSection() {
         <InkNote rotate={-2} className="self-center text-[28px] font-semibold text-claybright">
           made it.
         </InkNote>
-        <div className="flex items-center justify-center gap-4 pb-2">
-          <HareMark pose="sitting" className="h-9 w-[58px] text-paper/85" strokeWidth={1.6} />
+        {/* on desktop the live trail hare arrives and sits here instead */}
+        <div data-trail-end className="flex items-center justify-center gap-4 pb-2">
+          <HareMark pose="sitting" className="h-9 w-[58px] text-paper/85 md:hidden" strokeWidth={1.6} />
           <TrailFlag />
           <div className="font-mono text-[10px] tracking-[0.24em] text-paper/45">
             end of trail · for now

@@ -2,28 +2,22 @@
  * The engraved hare, in currentColor so the ground decides its ink. Running
  * pose for motion and the nav mark; sitting pose for rest stops and the end
  * of the trail. Paths come from the Oak and Clay artboards.
+ *
+ * HareBody is the bare path group (viewBox space 120x70) so the TrailRunner
+ * can place it inside its own svg; HareMark wraps it for standalone use.
  */
-export function HareMark({
+export function HareBody({
   pose = 'running',
-  className = '',
   strokeWidth = 1.5,
 }: {
   pose?: 'running' | 'sitting';
-  className?: string;
   strokeWidth?: number;
 }) {
   const w = strokeWidth;
   const thin = w * 0.93;
   const hair = w * 0.87;
   return (
-    <svg
-      viewBox="0 0 120 70"
-      className={className}
-      aria-hidden
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-    >
+    <g fill="none" stroke="currentColor" strokeLinecap="round">
       {/* body and head */}
       <path d="M 22 42 C 30 30 52 26 68 30 C 80 33 88 40 90 46" strokeWidth={w} />
       <path d="M 90 46 C 94 42 100 40 106 42 C 110 43 112 46 111 49 C 108 52 102 52 98 52" strokeWidth={w} />
@@ -48,6 +42,22 @@ export function HareMark({
       <path d="M 28 44 C 40 52 60 54 76 50" strokeWidth={hair} />
       <path d="M 22 42 C 18 40 16 37 17 33" strokeWidth={hair} />
       <circle cx="104" cy="45" r={hair} fill="currentColor" stroke="none" />
+    </g>
+  );
+}
+
+export function HareMark({
+  pose = 'running',
+  className = '',
+  strokeWidth = 1.5,
+}: {
+  pose?: 'running' | 'sitting';
+  className?: string;
+  strokeWidth?: number;
+}) {
+  return (
+    <svg viewBox="0 0 120 70" className={className} aria-hidden>
+      <HareBody pose={pose} strokeWidth={strokeWidth} />
     </svg>
   );
 }

@@ -3,6 +3,7 @@ import { DayArc } from './components/DayArc';
 import { Grain } from './components/Grain';
 import { SmoothScroll } from './components/SmoothScroll';
 import { TopNav } from './components/TopNav';
+import { TrailRunner } from './components/TrailRunner';
 import { AfterDarkSection } from './components/sections/AfterDarkSection';
 import { HeroDawn } from './components/sections/HeroDawn';
 import { MadeSection } from './components/sections/MadeSection';
@@ -17,7 +18,8 @@ export default function App() {
         <DayArc />
         <Grain />
         <TopNav />
-        <main>
+        <main className="relative">
+          <TrailRunner />
           <HeroDawn />
           <WorkSection />
           <MadeSection />
