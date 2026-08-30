@@ -54,7 +54,7 @@ if (typeof globalThis.IntersectionObserver === 'undefined') {
   (globalThis as any).IntersectionObserver = MockIntersectionObserver;
 }
 
-// Mock ResizeObserver for jsdom (used by react-use-measure)
+// Mock ResizeObserver for jsdom (used by DayArc and TrailRunner)
 if (typeof globalThis.ResizeObserver === 'undefined') {
   class MockResizeObserver {
     observe() {}
