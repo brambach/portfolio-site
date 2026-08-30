@@ -108,6 +108,97 @@ p {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.4 0 0 0 0 0.4 0 0 0 0 0.35 0 0 0 0.05 0'/></filter><rect width='180' height='180' filter='url(%23n)'/></svg>");
 }
 
+/* Nav ink: oak on paper, paper over the hero photo or once the arc is dark. */
+.topnav a {
+  color: color-mix(in srgb, var(--color-oak) 82%, transparent);
+}
+
+.topnav a:hover,
+.topnav a:focus-visible {
+  color: var(--color-oak);
+}
+
+html[data-arc="dark"] .topnav a,
+.topnav[data-over-photo] a {
+  color: color-mix(in srgb, var(--color-paper) 85%, transparent);
+}
+
+html[data-arc="dark"] .topnav a:hover,
+html[data-arc="dark"] .topnav a:focus-visible,
+.topnav[data-over-photo] a:hover,
+.topnav[data-over-photo] a:focus-visible {
+  color: var(--color-paper);
+}
+
+/* Dappled canopy light drifting across the hero. */
+.dapple1 {
+  animation: drift1 16s ease-in-out infinite alternate;
+}
+
+.dapple2 {
+  animation: drift2 21s ease-in-out infinite alternate;
+}
+
+@keyframes drift1 {
+  from {
+    transform: translate(0, 0) rotate(-14deg);
+    opacity: 0.5;
+  }
+  to {
+    transform: translate(70px, 24px) rotate(-6deg);
+    opacity: 0.75;
+  }
+}
+
+@keyframes drift2 {
+  from {
+    transform: translate(0, 0);
+    opacity: 0.35;
+  }
+  to {
+    transform: translate(-60px, 14px);
+    opacity: 0.6;
+  }
+}
+
+/* Gentle bob on the "follow the trail" invitation. */
+.hint-bob {
+  animation: hint 2.6s ease-in-out infinite;
+}
+
+@keyframes hint {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.75;
+  }
+  50% {
+    transform: translateY(6px);
+    opacity: 1;
+  }
+}
+
+/* A rare ear flick while the hare rests. */
+.hare-ears {
+  transform-box: fill-box;
+  transform-origin: 15% 90%;
+  animation: earflick 8s ease-in-out infinite;
+}
+
+@keyframes earflick {
+  0%,
+  91%,
+  100% {
+    transform: rotate(0deg);
+  }
+  94% {
+    transform: rotate(-7deg);
+  }
+  97% {
+    transform: rotate(2deg);
+  }
+}
+
 /* Faint split-flap tick while a StreakNumber is counting. */
 .ticking {
   display: inline-block;
