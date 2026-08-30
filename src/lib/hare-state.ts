@@ -7,6 +7,7 @@
 export type HareState =
   | { kind: 'hidden' }
   | { kind: 'resting'; at: number }
+  /** `from` may be fractional: a retarget takes off from wherever it was */
   | { kind: 'sprinting'; from: number; to: number; start: number };
 
 export const SPRINT_MS = 900;
@@ -29,8 +30,11 @@ export function stepHare(state: HareState, targetWp: number, now: number): HareS
         return stepHare(landed, targetWp, now);
       }
       if (state.to !== targetWp) {
-        // retarget mid-flight from the current position in time
-        return { kind: 'sprinting', from: state.from, to: targetWp, start: state.start };
+        // retarget mid-flight: take off from the current eased position with
+        // a fresh clock, so the hop never teleports
+        const f = easeOutCubic(Math.min(1, (now - state.start) / SPRINT_MS));
+        const pos = state.from + (state.to - state.from) * f;
+        return { kind: 'sprinting', from: pos, to: targetWp, start: now };
       }
       return state;
     }

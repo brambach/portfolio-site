@@ -35,7 +35,7 @@ export function WorkSection() {
             <InkNote rotate={-2} className="text-[24px] font-semibold text-inksoft">
               the desk, 6pm
             </InkNote>
-            <HareMark pose="running" className="h-[46px] w-[78px] text-oak" strokeWidth={1.5} />
+            <HareMark pose="running" className="h-[46px] w-[78px] text-oak" />
           </div>
         </div>
       </div>

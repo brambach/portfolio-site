@@ -19,9 +19,14 @@ describe('stepHare', () => {
     });
   });
 
-  it('retargets mid-sprint without restarting from rest', () => {
+  it('retargets mid-sprint from its current position, clock restarted', () => {
     const s = stepHare({ kind: 'sprinting', from: 0, to: 1, start: 1000 }, 2, 1200);
-    expect(s).toMatchObject({ kind: 'sprinting', to: 2 });
+    expect(s).toMatchObject({ kind: 'sprinting', to: 2, start: 1200 });
+    // it was ~53% of the way to waypoint 1 (eased), so it takes off from there
+    if (s.kind === 'sprinting') {
+      expect(s.from).toBeGreaterThan(0.4);
+      expect(s.from).toBeLessThan(0.6);
+    }
   });
 
   it('settles to resting when the sprint completes', () => {

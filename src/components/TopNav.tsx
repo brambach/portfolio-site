@@ -28,7 +28,7 @@ export function TopNav() {
       data-over-photo={overPhoto || undefined}
     >
       <a href="#hero" aria-label="back to the top" className="transition-colors duration-500">
-        <HareMark pose="running" className="h-9 w-[58px]" strokeWidth={2.2} />
+        <HareMark pose="running" className="h-9 w-[58px]" strokeWidth={3.4} />
       </a>
       <nav className="flex items-center gap-5 text-[13.5px] font-medium tracking-[0.04em] md:gap-7">
         {LINKS.map(([label, href]) => (

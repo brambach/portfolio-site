@@ -80,7 +80,7 @@ export function AfterDarkSection() {
         </InkNote>
         {/* on desktop the live trail hare arrives and sits here instead */}
         <div data-trail-end className="flex items-center justify-center gap-4 pb-2">
-          <HareMark pose="sitting" className="h-9 w-[58px] text-paper/85 md:hidden" strokeWidth={1.6} />
+          <HareMark pose="sitting" className="h-9 w-[58px] text-paper/85 md:hidden" strokeWidth={3.2} />
           <TrailFlag />
           <div className="font-mono text-[10px] tracking-[0.24em] text-paper/45">
             end of trail · for now

@@ -93,7 +93,7 @@ export function VibeBoardSection() {
             )}
             <Scatter rotate={-1.8} order={5}>
               <div className="flex -rotate-[1.8deg] flex-col items-center gap-3 border border-oak/20 bg-paperwarm px-6 py-7 text-oak">
-                <HareMark pose="running" className="h-[52px] w-[86px]" strokeWidth={1.5} />
+                <HareMark pose="running" className="h-[52px] w-[86px]" />
                 <div className="font-mono text-[10px] tracking-[0.14em] text-oak/55">
                   always running
                 </div>

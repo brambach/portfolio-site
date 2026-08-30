@@ -6,6 +6,9 @@ import { HareBody } from './HareMark';
 
 const DOT_STEP = 16;
 
+/** the hare pulls up just past each waypoint ring, not on top of it */
+const REST_OFFSET = 24;
+
 /** Lateral position of each waypoint across the main column, top to bottom:
  * trail head under the hero, left rail past work, out and back through dusk
  * and blue hour, then in to the flag at the end. */
@@ -42,8 +45,18 @@ export function TrailRunner() {
   const wpLens = useRef<number[]>([]);
   const hare = useRef<HareState>({ kind: 'hidden' });
   const facing = useRef<1 | -1>(1);
+  const tilt = useRef(0);
   const raf = useRef(0);
   const lastDrawn = useRef(0);
+
+  /** path length at a (possibly fractional) waypoint index */
+  const lenAtIdx = (idx: number) => {
+    const lens = wpLens.current;
+    if (lens.length === 0) return 0;
+    const lo = Math.max(0, Math.min(lens.length - 1, Math.floor(idx)));
+    const hi = Math.max(0, Math.min(lens.length - 1, Math.ceil(idx)));
+    return lens[lo] + (lens[hi] - lens[lo]) * (idx - lo);
+  };
 
   const { scrollYProgress } = useScroll();
 
@@ -159,31 +172,49 @@ export function TrailRunner() {
     }
     lastDrawn.current = 0;
     update(scrollYProgress.get());
+    // after a re-measure, a resting hare must move to its waypoint's new spot
+    if (hare.current.kind === 'resting')
+      placeHare(lenAtIdx(hare.current.at) + REST_OFFSET, 1, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [geom]);
 
-  const placeHare = (len: number, movingForward: boolean, sprinting: boolean) => {
+  /**
+   * The hare stays essentially level and faces its direction of travel;
+   * the path's slope only tips it a little. Facing is fixed once per sprint
+   * and the tilt is smoothed, so a near-vertical path can't make it flap.
+   */
+  const placeHare = (len: number, dirSign: 1 | -1, sprinting: boolean) => {
     const path = pathRef.current;
     const g = hareRef.current;
     if (!path || !g) return;
     const L = path.getTotalLength();
     const l = Math.min(Math.max(len, 1), L - 1);
     const pt = path.getPointAtLength(l);
-    let ang = 0;
+    let target = 0;
     if (sprinting) {
-      const ahead = path.getPointAtLength(Math.min(l + 10, L));
-      ang = (Math.atan2(ahead.y - pt.y, ahead.x - pt.x) * 180) / Math.PI;
-      if (ang > 90) ang -= 180;
-      if (ang < -90) ang += 180;
-      ang = Math.max(-24, Math.min(24, ang));
-      facing.current = movingForward ? 1 : -1;
+      const ahead = path.getPointAtLength(Math.min(Math.max(l + 24 * dirSign, 0), L));
+      const mdx = ahead.x - pt.x;
+      const mdy = ahead.y - pt.y;
+      // slope against a softened horizontal so vertical stretches read as a
+      // downhill bound, not a nosedive
+      target = (Math.atan2(mdy, Math.abs(mdx) + 34) * 180) / Math.PI;
+      target = Math.max(-26, Math.min(26, target));
     }
-    const flip = facing.current === -1 ? -1 : 1;
+    tilt.current += (target - tilt.current) * (sprinting ? 0.22 : 1);
+    const flip = facing.current;
     g.setAttribute(
       'transform',
-      `translate(${pt.x}, ${pt.y}) rotate(${(ang * flip).toFixed(1)}) scale(${0.52 * flip}, 0.52) translate(-62, -50)`,
+      `translate(${pt.x}, ${pt.y}) rotate(${(tilt.current * flip).toFixed(1)}) scale(${0.52 * flip}, 0.52) translate(-62, -50)`,
     );
     g.style.opacity = '1';
+  };
+
+  /** face where this sprint is headed; on a vertical hop keep the old facing */
+  const setFacing = (fromIdx: number, toIdx: number) => {
+    const netDx =
+      (pathRef.current?.getPointAtLength(lenAtIdx(toIdx)).x ?? 0) -
+      (pathRef.current?.getPointAtLength(lenAtIdx(fromIdx)).x ?? 0);
+    if (Math.abs(netDx) > 8) facing.current = netDx >= 0 ? 1 : -1;
   };
 
   const tick = () => {
@@ -191,16 +222,16 @@ export function TrailRunner() {
     const state = hare.current;
     if (state.kind !== 'sprinting') return;
     const f = sprintProgress(state, now);
-    const from = wpLens.current[state.from] ?? 0;
-    const to = wpLens.current[state.to] ?? 0;
-    placeHare(from + (to - from) * f, to >= from, true);
+    const from = lenAtIdx(state.from);
+    const to = lenAtIdx(state.to);
+    placeHare(from + (to - from) * f, to >= from ? 1 : -1, true);
     const next = stepHare(state, state.to, now);
     if (next.kind === 'sprinting') {
       raf.current = requestAnimationFrame(tick);
     } else {
       hare.current = next;
       setPose('sitting');
-      if (next.kind === 'resting') placeHare(wpLens.current[next.at] ?? 0, true, false);
+      if (next.kind === 'resting') placeHare(lenAtIdx(next.at) + REST_OFFSET, 1, false);
     }
   };
 
@@ -258,12 +289,16 @@ export function TrailRunner() {
     } else if (next.kind === 'resting') {
       if (prev.kind !== 'resting' || prev.at !== next.at) {
         setPose('sitting');
-        placeHare(wpLens.current[next.at] ?? 0, true, false);
+        placeHare(lenAtIdx(next.at) + REST_OFFSET, 1, false);
       }
-    } else if (prev.kind !== 'sprinting') {
-      setPose('running');
-      cancelAnimationFrame(raf.current);
-      raf.current = requestAnimationFrame(tick);
+    } else if (prev.kind !== 'sprinting' || prev.to !== next.to) {
+      // a new sprint, or a retarget: fix the facing for this leg
+      setFacing(next.from, next.to);
+      if (prev.kind !== 'sprinting') {
+        setPose('running');
+        cancelAnimationFrame(raf.current);
+        raf.current = requestAnimationFrame(tick);
+      }
     }
   };
 
@@ -291,7 +326,9 @@ export function TrailRunner() {
         ))}
       </g>
       <g ref={hareRef} style={{ opacity: 0, transition: 'opacity 0.4s ease' }}>
-        <HareBody pose={pose} strokeWidth={3} />
+        <g className={pose === 'running' ? 'hare-gallop' : undefined}>
+          <HareBody pose={pose} strokeWidth={3} />
+        </g>
       </g>
     </svg>
   );

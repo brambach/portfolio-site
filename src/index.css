@@ -216,6 +216,52 @@ html[data-arc="dark"] .trail-ink .wp circle {
   transform: scale(1);
 }
 
+/* The gallop: two engraved frames alternating flip-book style, with a small
+   bounce. Only a `.hare-gallop` parent animates; static marks show the
+   stretch frame. */
+.hare-fB {
+  visibility: hidden;
+}
+
+.hare-gallop .hare-fA {
+  animation: gait-a 0.26s linear infinite;
+}
+
+.hare-gallop .hare-fB {
+  animation: gait-b 0.26s linear infinite;
+}
+
+.hare-gallop {
+  animation: hare-bob 0.26s ease-in-out infinite;
+}
+
+@keyframes gait-a {
+  0%, 49% {
+    visibility: visible;
+  }
+  50%, 100% {
+    visibility: hidden;
+  }
+}
+
+@keyframes gait-b {
+  0%, 49% {
+    visibility: hidden;
+  }
+  50%, 100% {
+    visibility: visible;
+  }
+}
+
+@keyframes hare-bob {
+  0%, 100% {
+    transform: translateY(-3px);
+  }
+  50% {
+    transform: translateY(1px);
+  }
+}
+
 /* A rare ear flick while the hare rests. */
 .hare-ears {
   transform-box: fill-box;
