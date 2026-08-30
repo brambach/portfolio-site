@@ -17,8 +17,10 @@ export function buildTrailPath(points: { x: number; y: number }[]): string {
 
 /**
  * Scroll progress (0..1) at which each waypoint counts as reached: when its
- * document y sits 60% down the viewport. Clamped and monotonic by input
- * order (callers pass waypoints top to bottom).
+ * document y sits 60% down the viewport. The trail head is the exception -
+ * the journey begins at scroll zero, so the hare waiting there reacts to
+ * the very first scroll instead of a dead zone. Clamped and monotonic by
+ * input order (callers pass waypoints top to bottom).
  */
 export function waypointThresholds(
   ys: number[],
@@ -26,5 +28,7 @@ export function waypointThresholds(
   viewport: number,
 ): number[] {
   const maxScroll = Math.max(1, docHeight - viewport);
-  return ys.map((y) => Math.min(1, Math.max(0, (y - viewport * 0.6) / maxScroll)));
+  return ys.map((y, i) =>
+    i === 0 ? 0 : Math.min(1, Math.max(0, (y - viewport * 0.6) / maxScroll)),
+  );
 }

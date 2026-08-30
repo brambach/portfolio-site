@@ -105,7 +105,10 @@ export function TrailRunner() {
           const er = end.getBoundingClientRect();
           y = er.top + window.scrollY + er.height / 2;
         }
-        return { doc: y, x: X_FRACTIONS[i % X_FRACTIONS.length] * w };
+        // the head sits a fixed hand's width right of the centered
+        // "follow the trail" line, where the hare waits at load
+        const x = i === 0 ? w * 0.5 + 128 : X_FRACTIONS[i % X_FRACTIONS.length] * w;
+        return { doc: y, x };
       });
 
       // path points: the waypoints, plus vias that hold the left rail through
@@ -222,12 +225,16 @@ export function TrailRunner() {
     lastDrawn.current = n;
   };
 
-  /** stamped on approach, un-stamped only on a real retreat: the gap keeps
-   * the sit-beside-the-ring sidestep from wiping a ring it just stamped */
+  /** stamped as the pen passes over, un-stamped only on a real retreat:
+   * the gap keeps the sit-beside-the-ring sidestep from wiping a ring it
+   * just stamped, and a ring the hare rests near but hasn't reached stays
+   * unstamped - including the origin ring under the hare at load, which
+   * appears only as it departs */
   const stamp = (upTo: number) => {
+    const L = pathRef.current?.getTotalLength() ?? Infinity;
     stampsRef.current?.querySelectorAll('.wp').forEach((el, i) => {
       const w = wpLens.current[i] ?? Infinity;
-      if (reduce || upTo >= w - 4) el.classList.add('stamped');
+      if (reduce || upTo >= Math.min(w + 6, L - 1)) el.classList.add('stamped');
       else if (upTo < w - 40) el.classList.remove('stamped');
     });
   };
@@ -367,13 +374,13 @@ export function TrailRunner() {
     targetLen.current = tl;
     if (!placed.current) {
       // the first sit spot gets the same courtesy as a settle: never on a
-      // ring (at the very top this means one small hop past the trail head)
-      const clear = sitSpotClearOfRings(
-        tl,
-        wpLens.current,
-        lastDir.current,
-        pathRef.current.getTotalLength(),
-      );
+      // stamped ring. The exception is the trail head at the very top -
+      // its ring is still invisible, and the hare waiting exactly there,
+      // beside the invitation, IS the composition.
+      const clear =
+        tl > 0.5
+          ? sitSpotClearOfRings(tl, wpLens.current, lastDir.current, pathRef.current.getTotalLength())
+          : null;
       if (clear !== null) targetLen.current = clear;
       // on a mid-page load, start close by and run in - not across the page
       hareLen.current = Math.max(0, targetLen.current - 500);
@@ -432,7 +439,7 @@ export function TrailRunner() {
 
   return (
     <svg
-      className="trail-ink pointer-events-none absolute left-0 top-0 z-0"
+      className="trail-ink pointer-events-none absolute left-0 top-0 z-10"
       width="100%"
       height={geom.h}
       viewBox={`0 0 ${geom.w} ${geom.h}`}

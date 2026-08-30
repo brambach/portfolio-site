@@ -67,6 +67,7 @@ export const vibeCards: VibeCard[] = [
     alt: 'a single trail through a meadow at first light',
     caption: 'dawn miles',
     rotate: -1.4,
+    tape: 'right',
   },
   {
     kind: 'photo',

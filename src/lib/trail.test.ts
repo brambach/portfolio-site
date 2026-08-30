@@ -32,4 +32,11 @@ describe('waypointThresholds', () => {
     expect([...t].sort((a, b) => a - b)).toEqual(t);
     expect(t.every((v) => v >= 0 && v <= 1)).toBe(true);
   });
+
+  it('treats the trail head as reached at scroll zero, wherever it sits', () => {
+    // the head is visible at load with the hare waiting on it; the very
+    // first scroll should set the journey going, not a dead zone
+    const t = waypointThresholds([884, 2000, 4000], 4683, 900);
+    expect(t[0]).toBe(0);
+  });
 });

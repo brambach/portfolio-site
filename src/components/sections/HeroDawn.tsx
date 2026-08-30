@@ -105,20 +105,12 @@ export function HeroDawn() {
         className="absolute inset-x-0 bottom-0 h-[104px] bg-paper"
         style={{ clipPath: TORN_TOP }}
       >
+        {/* the live hare waits just right of this line at load; the static
+            dotted arrow it replaced is gone */}
         <div className="hint-bob absolute inset-x-0 bottom-5 flex items-center justify-center gap-3 text-oak">
           <div className="font-mono text-[11px] tracking-[0.18em] text-oak/65">
             follow the trail
           </div>
-          <svg viewBox="0 0 40 22" className="h-[22px] w-10" aria-hidden>
-            <path
-              d="M 4 11 C 14 11 26 11 36 11"
-              fill="none"
-              stroke="var(--color-clay)"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeDasharray="0.1 8"
-            />
-          </svg>
         </div>
       </div>
     </section>
