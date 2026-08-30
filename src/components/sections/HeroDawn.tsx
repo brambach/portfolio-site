@@ -1,6 +1,53 @@
+import { motion } from 'motion/react';
 import { HareMark } from '../HareMark';
 import { InkNote } from '../InkNote';
 import { Settle } from '../Settle';
+
+const SETTLE_EASE = [0.16, 1, 0.3, 1.35] as const;
+
+/** The wordmark, set letter by letter like hand-set type, the clay full
+ * stop stamped in last. */
+function Wordmark() {
+  return (
+    <h1
+      aria-label="bryce."
+      className="font-display leading-none tracking-[-0.02em]"
+      style={{
+        fontSize: 'clamp(5rem, 19vw, 17rem)',
+        fontWeight: 560,
+        fontVariationSettings: '"opsz" 144, "SOFT" 60, "WONK" 1',
+        textShadow: '0 10px 60px rgba(6,13,9,0.6)',
+      }}
+    >
+      {[...'bryce'].map((ch, i) => (
+        <motion.span
+          key={i}
+          aria-hidden
+          className="inline-block"
+          initial={{ opacity: 0, y: '0.3em', rotate: i % 2 ? 2.2 : -2.6 }}
+          animate={{ opacity: 1, y: 0, rotate: 0 }}
+          transition={{
+            duration: 0.85,
+            ease: SETTLE_EASE,
+            delay: 0.2 + i * 0.07,
+            opacity: { duration: 0.4, ease: 'easeOut', delay: 0.2 + i * 0.07 },
+          }}
+        >
+          {ch}
+        </motion.span>
+      ))}
+      <motion.span
+        aria-hidden
+        className="inline-block text-clay"
+        initial={{ opacity: 0, scale: 2.6 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.78, duration: 0.5, ease: [0.2, 1.4, 0.4, 1] }}
+      >
+        .
+      </motion.span>
+    </h1>
+  );
+}
 
 /** Torn top edge of the paper sheet that closes the hero photograph. */
 const TORN_TOP =
@@ -52,17 +99,7 @@ export function HeroDawn() {
       <div className="relative h-full text-paper">
         <div className="absolute inset-x-0 top-[24%] flex flex-col items-center px-6 md:top-[26%]">
           <div className="relative">
-            <Settle delay={0.15}>
-              <h1
-                className="font-display font-medium leading-none tracking-[-0.02em]"
-                style={{
-                  fontSize: 'clamp(5.5rem, 21vw, 19rem)',
-                  textShadow: '0 10px 60px rgba(6,13,9,0.6)',
-                }}
-              >
-                bryce<span className="text-clay">.</span>
-              </h1>
-            </Settle>
+            <Wordmark />
             <InkNote
               rotate={-7}
               delay={1.15}

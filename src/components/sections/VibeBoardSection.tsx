@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { vibeCards } from '../../lib/site';
 import { HareMark } from '../HareMark';
 import { Polaroid } from '../Polaroid';
-import { Settle } from '../Settle';
+import { SettleWords } from '../SettleWords';
 
 /** Scatter-in: each print lands from an exaggerated tilt onto its resting one. */
 function Scatter({
@@ -37,11 +37,10 @@ export function VibeBoardSection() {
     <section id="vibe-board" data-waypoint="3" className="relative text-paper">
       <div className="mx-auto max-w-6xl px-6 py-28 md:px-12 md:py-40 lg:pl-32">
         <div className="mb-11 flex flex-col gap-2">
-          <Settle>
-            <h2 className="font-display text-[40px] font-normal italic leading-[1.05] md:text-[54px]">
-              The vibe board.
-            </h2>
-          </Settle>
+          <SettleWords
+            text="The vibe board."
+            className="font-display text-[40px] font-normal italic leading-[1.05] md:text-[54px]"
+          />
           <p className="text-[15px] leading-[1.65] text-paper/75">
             Things I love, things I'm after. It's the same list.
           </p>

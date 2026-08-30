@@ -4,6 +4,7 @@ import { HareMark } from '../HareMark';
 import { InkNote } from '../InkNote';
 import { Polaroid } from '../Polaroid';
 import { Settle } from '../Settle';
+import { SettleWords } from '../SettleWords';
 
 /** Three engraved stars and a sliver of moon; each star blinks rarely on
  * its own clock. Ink on night, nothing more. */
@@ -48,11 +49,10 @@ export function AfterDarkSection() {
       <div className="mx-auto grid max-w-6xl items-center gap-14 px-6 pb-16 pt-28 md:grid-cols-2 md:px-12 md:pb-24 md:pt-44 lg:pl-32">
         <div className="flex flex-col gap-5">
           <div className="font-mono text-[11px] tracking-[0.2em] text-claybright">after dark</div>
-          <Settle>
-            <h2 className="font-display text-[44px] font-normal italic leading-[1.05] md:text-[60px]">
-              Pull up a chair.
-            </h2>
-          </Settle>
+          <SettleWords
+            text="Pull up a chair."
+            className="font-display text-[44px] font-normal italic leading-[1.05] md:text-[60px]"
+          />
           <p className="max-w-[440px] text-[15px] leading-[1.7] text-paper/75">
             Beach fires, backyard movies, spikeball until nobody can see the ball. If you made it
             all the way down here, we'd probably get along.

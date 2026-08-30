@@ -1,7 +1,7 @@
 import { EnvelopeReveal } from '../EnvelopeReveal';
 import { HareMark } from '../HareMark';
 import { InkNote } from '../InkNote';
-import { Settle } from '../Settle';
+import { SettleWords } from '../SettleWords';
 
 export function WorkSection() {
   return (
@@ -9,11 +9,10 @@ export function WorkSection() {
       <div className="mx-auto grid max-w-6xl gap-12 px-6 py-28 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:items-center md:px-12 md:py-40 lg:pl-32">
         <div className="flex max-w-[430px] flex-col gap-5">
           <div className="font-mono text-[11px] tracking-[0.2em] text-oak/55">the work</div>
-          <Settle>
-            <h2 className="text-balance font-display text-[42px] font-medium leading-[1.05] md:text-[56px]">
-              Systems, wired together.
-            </h2>
-          </Settle>
+          <SettleWords
+            text="Systems, wired together."
+            className="text-balance font-display text-[42px] font-medium leading-[1.05] md:text-[56px]"
+          />
           <p className="max-w-[360px] text-[15px] leading-[1.7] text-inksoft">
             By day I wire payroll, HR and finance platforms together at the consultancy. The
             kind of plumbing nobody notices, which is the point.

@@ -1,6 +1,7 @@
 import { streakDay } from '../../lib/site';
 import { InkNote } from '../InkNote';
 import { Settle } from '../Settle';
+import { SettleWords } from '../SettleWords';
 import { StreakNumber } from '../StreakNumber';
 
 /** The engraved 911, a figure from an old owner's manual: long-hood
@@ -90,11 +91,10 @@ export function OffTheClockSection() {
           <div className="font-mono text-[11px] tracking-[0.2em] text-claybright">
             off the clock
           </div>
-          <Settle>
-            <h2 className="font-display text-[44px] font-normal italic leading-[1.05] md:text-[60px]">
-              Run it in the family.
-            </h2>
-          </Settle>
+          <SettleWords
+            text="Run it in the family."
+            className="font-display text-[44px] font-normal italic leading-[1.05] md:text-[60px]"
+          />
           <p className="max-w-[430px] text-[15px] leading-[1.7] text-paper/80">
             The streak started as a bet with myself and became a family ritual. Day{' '}
             <StreakNumber value={streakDay} /> and counting. arro exists so the flame stays lit.
