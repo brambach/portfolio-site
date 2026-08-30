@@ -6,6 +6,7 @@ export function Polaroid({
   src,
   alt,
   caption,
+  sub,
   rotate,
   tape,
   className = '',
@@ -14,6 +15,7 @@ export function Polaroid({
   src: string;
   alt: string;
   caption: string;
+  sub?: string;
   rotate: number;
   tape?: 'left' | 'right';
   className?: string;
@@ -37,6 +39,11 @@ export function Polaroid({
       </div>
       <figcaption className="mt-1.5 text-center font-hand text-xl font-semibold text-inksoft">
         {caption}
+        {sub && (
+          <span className="mt-0.5 block font-mono text-[8.5px] font-normal tracking-[0.14em] text-oak/60">
+            {sub}
+          </span>
+        )}
       </figcaption>
     </figure>
   );
