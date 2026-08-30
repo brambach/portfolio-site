@@ -4,6 +4,8 @@ import { Grain } from './components/Grain';
 import { SmoothScroll } from './components/SmoothScroll';
 import { TopNav } from './components/TopNav';
 import { HeroDawn } from './components/sections/HeroDawn';
+import { MadeSection } from './components/sections/MadeSection';
+import { WorkSection } from './components/sections/WorkSection';
 
 export default function App() {
   return (
@@ -14,6 +16,8 @@ export default function App() {
         <TopNav />
         <main>
           <HeroDawn />
+          <WorkSection />
+          <MadeSection />
         </main>
       </MotionConfig>
     </SmoothScroll>

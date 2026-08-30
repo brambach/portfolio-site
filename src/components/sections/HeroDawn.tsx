@@ -47,40 +47,45 @@ export function HeroDawn() {
         }}
       />
 
-      <div className="relative flex h-full flex-col items-center justify-center px-6 pb-24 text-paper">
-        <div className="relative">
-          <Settle delay={0.15}>
-            <h1
-              className="font-display font-medium leading-none tracking-[-0.02em]"
-              style={{
-                fontSize: 'clamp(5.5rem, 21vw, 19rem)',
-                textShadow: '0 10px 60px rgba(6,13,9,0.6)',
-              }}
+      <div className="relative h-full text-paper">
+        <div className="absolute inset-x-0 top-[24%] flex flex-col items-center px-6 md:top-[26%]">
+          <div className="relative">
+            <Settle delay={0.15}>
+              <h1
+                className="font-display font-medium leading-none tracking-[-0.02em]"
+                style={{
+                  fontSize: 'clamp(5.5rem, 21vw, 19rem)',
+                  textShadow: '0 10px 60px rgba(6,13,9,0.6)',
+                }}
+              >
+                bryce<span className="text-clay">.</span>
+              </h1>
+            </Settle>
+            <InkNote
+              rotate={-7}
+              delay={1.15}
+              className="absolute -top-8 right-0 text-[26px] font-semibold text-claybright md:-right-24 md:top-6 md:text-3xl"
             >
-              bryce<span className="text-clay">.</span>
-            </h1>
-          </Settle>
-          <InkNote
-            rotate={-7}
-            delay={1.15}
-            className="absolute -right-4 -top-4 text-[26px] font-semibold text-claybright md:-right-16 md:top-2 md:text-3xl"
-          >
-            <span className="flex flex-col items-start">
-              welcome in
-              <svg viewBox="0 0 70 34" className="ml-5 h-[30px] w-[62px]" aria-hidden>
-                <path
-                  d="M 8 4 C 24 10 40 16 52 26 M 52 26 L 44 24 M 52 26 L 50 17"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </span>
-          </InkNote>
+              <span className="flex flex-col items-start">
+                welcome in
+                <svg viewBox="0 0 70 34" className="ml-5 h-[30px] w-[62px]" aria-hidden>
+                  <path
+                    d="M 8 4 C 24 10 40 16 52 26 M 52 26 L 44 24 M 52 26 L 50 17"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
+            </InkNote>
+          </div>
         </div>
 
-        <Settle delay={0.32} className="mt-7 flex flex-col items-center gap-3">
+        <Settle
+          delay={0.32}
+          className="absolute inset-x-0 bottom-[150px] flex flex-col items-center gap-3 px-6 md:bottom-[168px]"
+        >
           <p className="max-w-[480px] text-center text-[16px] leading-relaxed text-paper/90">
             I build software, run before the sun's up, and spend the rest chasing good light.
           </p>
