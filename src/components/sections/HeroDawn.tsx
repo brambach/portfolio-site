@@ -1,3 +1,4 @@
+import { HareMark } from '../HareMark';
 import { InkNote } from '../InkNote';
 import { Settle } from '../Settle';
 
@@ -11,6 +12,7 @@ export function HeroDawn() {
       <img
         src="/images/hero-forest.jpg"
         alt="first light through a forest canopy"
+        fetchPriority="high"
         className="absolute inset-0 h-full w-full object-cover"
       />
       <div
@@ -105,12 +107,13 @@ export function HeroDawn() {
         className="absolute inset-x-0 bottom-0 h-[104px] bg-paper"
         style={{ clipPath: TORN_TOP }}
       >
-        {/* the live hare waits just right of this line at load; the static
-            dotted arrow it replaced is gone */}
+        {/* the live hare waits just right of this line at load (desktop);
+            on mobile, where the trail never renders, a still one sits in */}
         <div className="hint-bob absolute inset-x-0 bottom-5 flex items-center justify-center gap-3 text-oak">
           <div className="font-mono text-[11px] tracking-[0.18em] text-oak/65">
             follow the trail
           </div>
+          <HareMark pose="sitting" className="h-7 w-[46px] text-oak/80 md:hidden" strokeWidth={3.4} />
         </div>
       </div>
     </section>

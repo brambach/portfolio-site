@@ -41,11 +41,13 @@ export function EnvelopeReveal({
         <motion.img
           src={src}
           alt={alt}
+          loading="lazy"
+          decoding="async"
           className="absolute inset-0 h-full w-full object-cover"
           style={{ y, scale: 1.12 }}
         />
       ) : (
-        <img src={src} alt={alt} className="absolute inset-0 h-full w-full object-cover" />
+        <img src={src} alt={alt} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
       )}
       {children}
       {!reduce && (
