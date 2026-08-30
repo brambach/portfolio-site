@@ -34,6 +34,17 @@ if (typeof globalThis.IntersectionObserver === 'undefined') {
   (globalThis as any).IntersectionObserver = MockIntersectionObserver;
 }
 
+// Mock ResizeObserver for jsdom (used by react-use-measure)
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  class MockResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (globalThis as any).ResizeObserver = MockResizeObserver;
+}
+
 afterEach(() => {
   cleanup();
 });

@@ -47,11 +47,15 @@ export function SideQuestSection({ onOpen }: { onOpen: (slug: string) => void })
                 </button>
               </div>
 
-              <div className="sq-shape relative h-[200px]" aria-hidden="true">
+              <div className="sq-shape relative h-[220px]" aria-hidden="true">
                 <div className="ring r1" />
                 <div className="ring r2" />
                 <div className="ring r3" />
+                <span className="orbit-dot dot-a" />
+                <span className="orbit-dot dot-b" />
+                <span className="orbit-dot dot-c" />
                 <div className="core" />
+                <div className="core-pulse" />
               </div>
             </div>
           </GlassCard>

@@ -33,8 +33,8 @@ export function ArchiveSection({ onOpen }: { onOpen: (slug: string) => void }) {
 
       <div className="grid gap-5 md:grid-cols-12 md:auto-rows-[280px]">
         {archive.map((p, i) => (
-          <Reveal key={p.slug} delay={Math.min(i, 4) as 0 | 1 | 2 | 3 | 4}>
-            <TiltCard className={SLOT_CLASS[p.bentoSlot]}>
+          <Reveal key={p.slug} delay={Math.min(i, 4) as 0 | 1 | 2 | 3 | 4} className={SLOT_CLASS[p.bentoSlot]}>
+            <TiltCard className="h-full">
               <GlassCard className="h-full p-6 flex flex-col gap-4">
                 <div className="flex items-center justify-between font-mono text-[10.5px] uppercase" style={{ letterSpacing: '0.16em', color: 'var(--color-ink-3)' }}>
                   <span>{p.index} — {p.kind}</span>
