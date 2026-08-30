@@ -25,8 +25,8 @@ export function WorkSection() {
 
         <div className="relative w-full">
           <EnvelopeReveal
-            src="/images/macbook-desk.jpg"
-            alt="a desk with an open MacBook in late golden light"
+            src="/images/desk-6pm.jpg"
+            alt="a desk with a curved ultrawide monitor full of code in late golden light"
             rotate={-1.2}
             coverColor="#E8C98F"
             className="ml-auto aspect-[26/17] w-full max-w-[520px] shadow-[0_18px_44px_rgba(28,53,39,0.28)]"
