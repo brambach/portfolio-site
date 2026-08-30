@@ -57,7 +57,10 @@ export function AfterDarkSection() {
               the good part of the day
             </InkNote>
           </EnvelopeReveal>
-          <Settle delay={0.25} className="absolute -bottom-14 right-2 w-[210px] md:right-6">
+          <Settle
+            delay={0.25}
+            className="mx-auto mt-8 w-[210px] md:absolute md:-bottom-14 md:right-6 md:mx-0 md:mt-0"
+          >
             <Polaroid
               src="/images/city-dusk.jpg"
               alt="a city skyline at dusk"

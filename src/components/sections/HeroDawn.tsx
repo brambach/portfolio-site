@@ -64,7 +64,7 @@ export function HeroDawn() {
             <InkNote
               rotate={-7}
               delay={1.15}
-              className="absolute -top-8 right-0 text-[26px] font-semibold text-claybright md:-right-24 md:top-6 md:text-3xl"
+              className="absolute -top-16 right-1 text-[26px] font-semibold text-claybright md:-right-24 md:top-6 md:text-3xl"
             >
               <span className="flex flex-col items-start">
                 welcome in
