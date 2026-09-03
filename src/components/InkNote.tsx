@@ -1,5 +1,6 @@
 import { motion, useInView, useReducedMotion } from 'motion/react';
 import { useRef } from 'react';
+import { DUR, EASE_INK } from '../lib/motion';
 import type { ReactNode } from 'react';
 
 /**
@@ -31,7 +32,7 @@ export function InkNote({
         className="font-hand"
         initial={reduce ? false : { clipPath: 'inset(-20% 100% -20% 0)' }}
         animate={inView || reduce ? { clipPath: 'inset(-20% -5% -20% 0)' } : undefined}
-        transition={{ duration: 1.1, ease: [0.6, 0.05, 0.3, 0.95], delay }}
+        transition={{ duration: DUR.statementLong, ease: EASE_INK, delay }}
       >
         {children}
       </motion.div>

@@ -1,7 +1,8 @@
 import { motion } from 'motion/react';
 import { useEffect, useState, type ReactNode } from 'react';
+import { DUR, EASE_SCATTER, STAGGER } from '../../lib/motion';
 import { vibeCards, type VibeCard } from '../../lib/site';
-import { HareMark } from '../HareMark';
+import { FirMark } from '../FirMark';
 import { Polaroid } from '../Polaroid';
 import { SettleWords } from '../SettleWords';
 
@@ -35,7 +36,11 @@ function Scatter({
       initial={{ opacity: 0, y: 46, rotate: exaggerated }}
       whileInView={{ opacity: 1, y: 0, rotate: 0 }}
       viewport={{ once: true, amount: 0.35 }}
-      transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1.2], delay: order * 0.12 }}
+      transition={{
+        duration: DUR.statement,
+        ease: EASE_SCATTER,
+        delay: order * STAGGER.scatter,
+      }}
       drag={grabbable}
       dragConstraints={{ top: -60, left: -80, right: 80, bottom: 60 }}
       dragElastic={0.16}
@@ -113,9 +118,13 @@ export function VibeBoardSection() {
             )}
             <Scatter rotate={-1.8} order={5}>
               <div className="flex -rotate-[1.8deg] flex-col items-center gap-3 border border-oak/20 bg-paperwarm px-6 py-7 text-oak">
-                <HareMark pose="running" className="h-[52px] w-[86px]" />
+                <div className="flex items-end gap-1.5" aria-hidden>
+                  <FirMark className="h-8 w-6 opacity-70" strokeWidth={2.4} />
+                  <FirMark className="h-[52px] w-10" strokeWidth={2} />
+                  <FirMark className="h-7 w-5 opacity-55" strokeWidth={2.6} />
+                </div>
                 <div className="font-mono text-[10px] tracking-[0.14em] text-oak/55">
-                  always running
+                  out before the fog lifts
                 </div>
               </div>
             </Scatter>

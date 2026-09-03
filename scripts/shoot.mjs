@@ -9,7 +9,7 @@ const height = Number(process.argv[4] ?? 900);
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width, height } });
-await page.goto('http://localhost:3000', { waitUntil: 'networkidle' });
+await page.goto('http://localhost:3100', { waitUntil: 'networkidle' });
 await page.waitForTimeout(1800);
 
 // walk the page so every whileInView fires

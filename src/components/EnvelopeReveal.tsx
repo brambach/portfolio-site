@@ -1,12 +1,11 @@
 import { motion, useReducedMotion } from 'motion/react';
 import { useRef, type ReactNode } from 'react';
+import { DUR, EASE_COVER } from '../lib/motion';
 import { useDrift } from './useDrift';
 
 /** Torn bottom edge on the lifting cover, like a print pulled from an envelope. */
 const TORN_COVER =
   'polygon(0% 0%, 100% 0%, 100% 88%, 92% 95%, 82% 89%, 70% 97%, 58% 90%, 45% 97%, 33% 90%, 20% 96%, 9% 90%, 0% 96%)';
-
-const COVER_EASE = [0.5, 0, 0.15, 1] as const;
 
 /**
  * A photo hidden behind a sheet of the surrounding ground; the sheet lifts
@@ -58,7 +57,7 @@ export function EnvelopeReveal({
           initial={{ y: '0%', rotate: 0 }}
           whileInView={{ y: '-112%', rotate: -2 }}
           viewport={{ once: true, amount: 0.45 }}
-          transition={{ duration: 1.05, ease: COVER_EASE, delay: 0.1 }}
+          transition={{ duration: DUR.statementLong, ease: EASE_COVER, delay: 0.1 }}
         />
       )}
     </motion.figure>

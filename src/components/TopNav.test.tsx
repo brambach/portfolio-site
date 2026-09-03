@@ -11,7 +11,7 @@ describe('TopNav', () => {
     expect(screen.getByRole('link', { name: 'say hi' })).toHaveAttribute('href', '#after-dark');
   });
 
-  it('marks the way home with the hare', () => {
+  it('marks the way home with the fir', () => {
     render(<TopNav />);
     expect(screen.getByRole('link', { name: 'back to the top' })).toHaveAttribute('href', '#hero');
   });

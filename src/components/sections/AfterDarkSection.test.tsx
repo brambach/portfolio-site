@@ -19,9 +19,9 @@ describe('AfterDarkSection', () => {
     expect(screen.getByText(email)).toBeInTheDocument();
   });
 
-  it('ends the trail for now', () => {
+  it('lets the forest keep going', () => {
     render(<AfterDarkSection />);
-    expect(screen.getByText('end of trail · for now')).toBeInTheDocument();
+    expect(screen.getByText('the forest keeps going · goodnight')).toBeInTheDocument();
     expect(screen.getByText('the good part of the day')).toBeInTheDocument();
     expect(screen.getByText('made it.')).toBeInTheDocument();
   });

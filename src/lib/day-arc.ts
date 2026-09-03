@@ -4,11 +4,11 @@
  * Motion Study artboard and get tuned against real content.
  */
 export const DAY_STOPS: ReadonlyArray<readonly [number, readonly [number, number, number]]> = [
-  [0, [242, 235, 221]], // paper · dawn
-  [0.26, [232, 201, 143]], // golden · the work
+  [0, [242, 235, 221]], // paper · dawn fog
+  [0.26, [232, 201, 143]], // golden · shafts through the canopy
   [0.5, [28, 53, 39]], // oak dusk · off the clock
-  [0.72, [20, 36, 44]], // blue hour · the vibe board
-  [1, [14, 20, 26]], // night · after dark
+  [0.72, [19, 38, 36]], // fir blue hour · the vibe board
+  [1, [13, 23, 18]], // forest night · after dark
 ];
 
 export type ArcStops = ReadonlyArray<readonly [number, readonly [number, number, number]]>;
@@ -45,8 +45,8 @@ const HOUR_BY_SECTION: Record<string, readonly [number, number, number]> = {
   work: [232, 201, 143], // golden hour
   made: [232, 201, 143], // golden holds through the index
   'off-the-clock': [28, 53, 39], // oak dusk
-  'vibe-board': [20, 36, 44], // blue hour
-  'after-dark': [14, 20, 26], // night
+  'vibe-board': [19, 38, 36], // fir blue hour
+  'after-dark': [13, 23, 18], // forest night
 };
 
 /**

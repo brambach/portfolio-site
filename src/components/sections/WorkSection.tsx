@@ -1,11 +1,29 @@
 import { EnvelopeReveal } from '../EnvelopeReveal';
-import { HareMark } from '../HareMark';
 import { InkNote } from '../InkNote';
 import { SettleWords } from '../SettleWords';
 
 export function WorkSection() {
   return (
-    <section id="work" data-waypoint="1" className="relative">
+    <section id="work" data-waypoint="1" className="relative overflow-hidden">
+      {/* golden hour gets through the canopy here: two shafts, barely there */}
+      <div
+        aria-hidden
+        className="shaft1 pointer-events-none absolute -top-24 left-[14%] h-[130%] w-16"
+        style={{
+          background:
+            'linear-gradient(180deg, rgba(247,231,196,0.5) 0%, rgba(247,231,196,0) 78%)',
+          transform: 'skewX(-14deg)',
+        }}
+      />
+      <div
+        aria-hidden
+        className="shaft2 pointer-events-none absolute -top-24 left-[38%] h-[120%] w-9"
+        style={{
+          background:
+            'linear-gradient(180deg, rgba(247,231,196,0.36) 0%, rgba(247,231,196,0) 72%)',
+          transform: 'skewX(-14deg)',
+        }}
+      />
       <div className="mx-auto grid max-w-6xl gap-12 px-6 py-28 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:items-center md:px-12 md:py-40 lg:pl-32">
         <div className="flex max-w-[430px] flex-col gap-5">
           <div className="font-mono text-[11px] tracking-[0.2em] text-oak/55">the work</div>
@@ -34,7 +52,6 @@ export function WorkSection() {
             <InkNote rotate={-2} className="text-[24px] font-semibold text-inksoft">
               the desk, 6pm
             </InkNote>
-            <HareMark pose="running" className="h-[46px] w-[78px] text-oak" />
           </div>
         </div>
       </div>

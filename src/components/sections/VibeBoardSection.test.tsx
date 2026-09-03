@@ -21,6 +21,6 @@ describe('VibeBoardSection', () => {
         expect(screen.getByText(card.sub)).toBeInTheDocument();
       }
     }
-    expect(screen.getByText('always running')).toBeInTheDocument();
+    expect(screen.getByText('out before the fog lifts')).toBeInTheDocument();
   });
 });

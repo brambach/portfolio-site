@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 export function WindowTitle() {
   useEffect(() => {
     const onVis = () => {
-      document.title = document.hidden ? 'the hare waits.' : 'bryce.';
+      document.title = document.hidden ? 'the fog rolls in.' : 'bryce.';
     };
     document.addEventListener('visibilitychange', onVis);
     return () => {

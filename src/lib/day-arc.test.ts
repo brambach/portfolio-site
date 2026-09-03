@@ -2,15 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { arcStops, dayArcColor, isDarkAt } from './day-arc';
 
 describe('dayArcColor', () => {
-  it('returns paper at dawn and night at the end', () => {
+  it('returns paper at dawn and forest night at the end', () => {
     expect(dayArcColor(0)).toBe('rgb(242,235,221)');
-    expect(dayArcColor(1)).toBe('rgb(14,20,26)');
+    expect(dayArcColor(1)).toBe('rgb(13,23,18)');
   });
 
   it('hits each stop exactly', () => {
     expect(dayArcColor(0.26)).toBe('rgb(232,201,143)');
     expect(dayArcColor(0.5)).toBe('rgb(28,53,39)');
-    expect(dayArcColor(0.72)).toBe('rgb(20,36,44)');
+    expect(dayArcColor(0.72)).toBe('rgb(19,38,36)');
   });
 
   it('interpolates midway between stops and clamps out-of-range', () => {
@@ -34,7 +34,7 @@ describe('arcStops', () => {
     expect(stops.map(([t]) => t)).toEqual([0, 0.18, 0.34, 0.55, 0.74, 0.94, 1]);
     // golden holds through the index, night holds to the end
     expect(stops[2][1]).toEqual([232, 201, 143]);
-    expect(stops[6][1]).toEqual([14, 20, 26]);
+    expect(stops[6][1]).toEqual([13, 23, 18]);
   });
 
   it('lets the lerp run through missing sections and stays sorted', () => {

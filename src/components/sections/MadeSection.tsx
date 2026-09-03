@@ -1,13 +1,13 @@
 import { motion } from 'motion/react';
 import { projects } from '../../lib/site';
-import { SETTLE_EASE } from '../Settle';
+import { DUR, EASE_SETTLE, STAGGER } from '../../lib/motion';
 
 const rowVariants = {
   out: { opacity: 0, y: 16 },
   in: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.65, ease: SETTLE_EASE },
+    transition: { duration: DUR.statement, ease: EASE_SETTLE },
   },
 };
 
@@ -15,7 +15,7 @@ const leaderVariants = {
   out: { width: '0%' },
   in: {
     width: '100%',
-    transition: { duration: 1, delay: 0.25, ease: 'easeOut' as const },
+    transition: { duration: DUR.statementLong, delay: 0.25, ease: 'easeOut' as const },
   },
 };
 
@@ -36,7 +36,7 @@ export function MadeSection() {
               whileInView="in"
               viewport={{ once: true, amount: 0.6 }}
               variants={rowVariants}
-              transition={{ delay: i * 0.08 }}
+              transition={{ delay: i * STAGGER.wave }}
             >
               <span className="font-display text-[26px] font-medium leading-none md:text-[34px]">
                 {p.name}
