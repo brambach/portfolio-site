@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { email, projects, streakDay, streakDayOn, vibeCards } from './site';
 
 describe('site data', () => {
-  it('lists the four projects in order with human one-liners', () => {
-    expect(projects.map((p) => p.name)).toEqual(['arro', 'trace', 'throughline', 'bryce-os']);
-    expect(projects[0].oneLiner).toBe('a running-streak ritual my family actually keeps');
+  it('leads with AgentSky and keeps the existing projects', () => {
+    expect(projects.map((p) => p.name)).toEqual(['AgentSky', 'arro', 'trace', 'throughline', 'bryce-os']);
+    expect(projects.find(p => p.name === 'arro')?.oneLiner).toBe('a running-streak ritual my family actually keeps');
   });
 
   it('keeps the streak and email', () => {

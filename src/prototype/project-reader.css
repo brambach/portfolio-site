@@ -1,0 +1,13 @@
+.project-reader { min-height:100svh; background:#e8e7da; padding:32px max(24px,calc((100vw - 880px)/2)); color:#344237; font-family:'Hanken Grotesk Variable',sans-serif; }
+.project-reader__header,.project-reader__footer { display:flex; justify-content:space-between; align-items:center; gap:20px; font-size:14px; }
+.project-reader a { color:inherit; text-underline-offset:5px; padding:12px 0; }
+.project-reader__pages { margin:28px 0; border:1px solid #bac3ae; border-radius:14px; overflow:hidden; box-shadow:0 20px 60px #34423712; }
+.project-reader .laptop-os { height:auto; min-height:580px; font-size:20px; }
+.project-reader .laptop-os__body { flex:1; }
+.project-reader .laptop-os__bar button { display:none; }
+.project-reader__footer { color:#69735f; }
+@media(max-width:600px) { .project-reader { padding:16px; }.project-reader .laptop-os { min-height:580px; height:auto; font-size:18px; }.project-reader__footer { align-items:flex-start; } }
+
+.project-reader__intro { max-width:600px; margin:48px 0 32px; }
+.project-reader__intro h1 { font:400 clamp(32px,6vw,48px)/1.1 Georgia,serif; margin:0 0 22px; }
+.project-reader__intro p { font-size:16px; line-height:1.7; }

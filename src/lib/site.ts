@@ -3,6 +3,8 @@ export type Project = {
   oneLiner: string;
   tag: string;
   href?: string;
+  sourceHref?: string;
+  studyHref?: string;
 };
 
 export type VibeCard =
@@ -23,6 +25,12 @@ export type VibeCard =
 
 export const projects: Project[] = [
   {
+    name: 'AgentSky',
+    oneLiner: 'an agent platform, explained through interaction',
+    tag: 'design study',
+    studyHref: '/projects/agentsky',
+  },
+  {
     name: 'arro',
     oneLiner: 'a running-streak ritual my family actually keeps',
     tag: 'react native',
@@ -31,6 +39,7 @@ export const projects: Project[] = [
     name: 'trace',
     oneLiner: 'a second brain for my late-night coding sessions',
     tag: 'typescript',
+    sourceHref: 'https://github.com/brambach/trace',
   },
   {
     name: 'throughline',

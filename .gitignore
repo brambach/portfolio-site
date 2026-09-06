@@ -11,3 +11,6 @@ coverage/
 .worktrees/
 .claude/
 .vercel/
+
+# Local review evidence and video exports
+.codex/

@@ -1,0 +1,67 @@
+.entrance {
+  --linen: #f4edd9;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #24291d;
+  color: var(--linen);
+  isolation: isolate;
+  font-family: 'Hanken Grotesk Variable', sans-serif;
+}
+.entrance a { color: inherit; text-decoration: none; }
+.entrance button { font: inherit; color: inherit; cursor: pointer; }
+.entrance button:disabled { cursor: wait; opacity: .65; }
+.entrance a:focus-visible, .entrance button:focus-visible { outline: 2px solid #f0cf82; outline-offset: 7px; }
+.entrance__road-plane { position: absolute; width: max(100vw, 153.97svh); height: max(100svh, 64.95vw); left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.entrance__camera { position: absolute; inset: 0; transform-origin: 46% 47%; }
+.entrance__camera img { position: absolute; width: 100%; height: 100%; object-fit: fill; }
+.entrance__real-road { opacity: 0; }
+.entrance__car { position: absolute; left: 39.5%; top: 21%; width: 22%; height: 69%; border: 0; border-radius: 35%; background: transparent; }
+.entrance__car-hint { position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 12px; white-space: nowrap; padding: 9px 18px 9px 10px; border: 1px solid #f4edd957; border-radius: 40px; background: #1d281ed6; box-shadow: 0 3px 24px #0004; transition: background .25s, transform .25s; }
+.entrance__car-hint > span { display: grid; place-items: center; border: 1px solid #f4edd959; width: 30px; height: 30px; border-radius: 50%; }
+.entrance__car:hover .entrance__car-hint { background: #38412b; transform: translate(-50%, -50%) scale(1.06); }
+.entrance__cabin { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
+.entrance__cabin img { width: 100%; height: 100%; object-fit: cover; object-position: 43% center; }
+.entrance__shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg,#12180f70 0%,transparent 24%,transparent 53%,#0f170b9c 100%), linear-gradient(90deg,#111a0e60,transparent 55%); }
+.entrance__header { position: absolute; inset: 0 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 25px 42px; }
+.entrance__name { font-family: 'Fraunces Variable', Georgia, serif; font-size: 36px; letter-spacing: -2px; line-height: 1; }
+.entrance__header nav { display: flex; gap: 30px; font-size: 15px; }
+.entrance__header nav a { border-bottom: 1px solid transparent; }
+.entrance__header nav a:hover { border-bottom-color: currentColor; }
+.entrance__invitation { position: absolute; left: 6.2%; bottom: 15%; }
+.entrance__invitation h1 { font-family: 'Fraunces Variable', Georgia, serif; font-size: clamp(48px, 6.6vw, 108px); line-height: .98; letter-spacing: -.055em; font-weight: 400; margin: 0 0 22px; }
+.entrance__invitation p { margin: 0 0 25px; font-size: 17px; }
+.entrance__enter { display: flex; gap: 34px; align-items: center; background: #f4edd9; color: #283121 !important; border: 0; border-radius: 3px; padding: 12px 19px; font-size: 14px !important; }
+.entrance__enter:hover { background: #fff8e8; }
+.entrance__footer { position: absolute; bottom: 25px; left: 42px; right: 42px; display: flex; justify-content: space-between; gap: 24px; font-size: 12px; color: #f4edd9bf; }
+.entrance__arrival { position: absolute; right: 5%; bottom: 13%; max-width: 470px; animation: entrance-copy 1s both; }
+.entrance__arrival p { margin: 0 0 7px; font-size: 15px; }
+.entrance__arrival h1 { font-family: 'Fraunces Variable', Georgia, serif; font-weight: 400; font-size: clamp(30px,3.6vw,52px); letter-spacing: -.04em; line-height: 1.1; margin: 0 0 25px; }
+.entrance__arrival > div { display: flex; align-items: center; gap: 25px; font-size: 14px; }
+.entrance__arrival a { padding: 10px 0; border-bottom: 1px solid #f4edd98c; }
+.entrance__arrival button { padding: 10px 0; background: none; border: 0; }
+.entrance__arrival button span { margin-left: 8px; }
+.entrance--entering .entrance__camera { animation: entrance-approach 4.9s cubic-bezier(.48,0,.16,1) forwards; will-change: transform; }
+.entrance--entering .entrance__real-road { animation: entrance-resolve 4.9s linear forwards; }
+.entrance--entering .entrance__cabin { animation: entrance-seat 4.9s linear forwards; will-change: transform, opacity; }
+.entrance--entering .entrance__header, .entrance--entering .entrance__footer { opacity: .35; transition: opacity .6s; }
+.entrance--inside .entrance__road-plane { visibility: hidden; }
+.entrance--inside .entrance__cabin { opacity: 1; }
+.entrance__sr { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+@keyframes entrance-approach { 0% { transform: scale(1) rotate(0); } 40% { transform: scale(2.5) rotate(-3deg); } 78%,100% { transform: scale(7) rotate(-9deg); } }
+@keyframes entrance-resolve { 0%,8% { opacity: 0; } 36%,100% { opacity: 1; } }
+@keyframes entrance-seat { 0%,44% { opacity: 0; transform: scale(1.22) translateY(5%); filter: blur(8px); } 64% { opacity: .7; filter: blur(2px); } 88%,100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); } }
+@keyframes entrance-copy { from { opacity: 0; } to { opacity: 1; } }
+@media (max-width: 700px) {
+  .entrance__header { padding: 24px; }
+  .entrance__header nav { gap: 23px; }
+  .entrance__invitation { left: 24px; bottom: 12%; }
+  .entrance__invitation h1 { font-size: clamp(44px,10vw,66px); }
+  .entrance__invitation p { font-size: 14px; margin-bottom: 16px; }
+  .entrance__footer { left: 24px; right: 24px; bottom: 20px; font-size: 10px; }
+  .entrance__footer span:last-child { max-width: 140px; text-align: right; }
+  .entrance__arrival { left: 24px; right: 24px; bottom: 13%; }
+  .entrance__cabin img { object-position: 35% center; }
+  .entrance__shade { background: linear-gradient(180deg,#11180c77,transparent 25%,transparent 48%,#11180cbb); }
+}
+@media (prefers-reduced-motion: reduce) { .entrance *, .entrance *::before { animation: none !important; transition: none !important; } }

@@ -1,0 +1,8 @@
+Fir Sapling, variant A
+Photography: Rob Tuytel. Modeling: Rico Cilliers.
+Source: https://polyhaven.com/a/fir_sapling
+License: CC0, https://polyhaven.com/license
+
+The source geometry is preserved. Variant A was isolated from the 1K glTF
+and compressed with gltfpack 1.2 using -cc. Distant views are rendered from
+this same model when the scene loads; nearby trees use its full geometry.

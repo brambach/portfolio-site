@@ -1,0 +1,26 @@
+.race-countdown,.race-finish,.race-hud{position:absolute;z-index:32;color:#f3eddc;background:#17271ff2;border:1px solid #b7bb9466;border-radius:8px;padding:24px;font-family:var(--journey-body);box-shadow:0 12px 50px #0005}
+.race-countdown{top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;width:min(400px,calc(100% - 36px))}.race-countdown>strong{display:block;font:100px/1.2 Georgia,serif}
+.race-countdown>span,.race-finish>span,.race-hud>span{font:10px var(--journey-mono);letter-spacing:.12em}
+.race-hud{top:90px;left:24px;width:230px;padding:16px}.race-hud>strong{display:block;font:28px var(--journey-mono);margin:8px 0}.race-hud p{font-size:12px}.race-hud progress{width:100%;accent-color:#d2e78b}
+.race-finish{top:50%;left:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 36px));max-height:calc(100% - 36px);overflow:auto;border-top:8px solid #c8d9a0}.race-finish h1{font:32px/1.15 Georgia,serif}.race-finish>strong{font:36px var(--journey-mono)}.race-finish p{font-size:14px;line-height:1.5}.race-finish label{display:block;margin:16px 0 8px}.race-finish input{width:100%;min-height:44px;background:#eff0df;color:#17271f;border:1px solid #bac2a2;border-radius:4px;padding:10px;font:16px var(--journey-body)}
+.race-countdown button,.race-finish button,.race-hud button,.race-finish a{display:block;min-height:44px;padding:12px 16px;margin-top:10px;background:#e3e9c9;color:#243628;border:0;border-radius:4px;font:14px var(--journey-body);cursor:pointer;text-align:center}.race-finish button:disabled{opacity:.5}.race-finish :focus-visible,.race-countdown :focus-visible,.race-hud :focus-visible{outline:3px solid #d2e78b;outline-offset:3px}
+@media(max-width:600px){.race-hud{top:85px;left:18px;width:205px;padding:12px}.race-finish{padding:20px}.race-finish h1{font-size:28px}}
+.race-finish ol{padding-left:24px;font-size:13px}.race-finish li{padding:8px 0;border-bottom:1px solid #e3e9c933}.race-finish li strong{float:right;font:13px var(--journey-mono)}
+.live-entrance .race-countdown button,.live-entrance .race-finish button,.live-entrance .race-hud button,.live-entrance .race-finish a{color:#243628;text-shadow:none;background:#e3e9c9}
+.live-entrance .race-hud{top:118px}.race-hud progress{display:block;height:5px}.live-entrance .race-hud button{background:transparent;color:#e3e9c9;padding:8px 0;text-align:left;margin:0}.city-drive-mode .autopilot-label{grid-column:1/-1;font:12px/1.4 var(--journey-body);color:#e5deca;padding:6px}
+
+/* The finish uses the same paper, ink and ruled edges as the cabin objects. */
+.live-entrance .race-finish{width:min(388px,calc(100% - 36px));padding:26px 28px 20px;border:1px solid #c0b493;border-radius:2px;background:#eee7d6;color:#303b31;box-shadow:0 1px 0 #fff9e7 inset,2px 3px 0 #c5bda7,0 12px 35px #14171040;text-shadow:none}
+.live-entrance .race-finish>span{display:block;padding-bottom:14px;border-bottom:1px solid #82765a40;color:#696754;font:9px/1.5 var(--journey-mono);letter-spacing:.09em}
+.live-entrance .race-finish h1{margin:20px 0;font:400 29px/1.13 Georgia,serif;letter-spacing:-.8px;color:#303b31}
+.race-finish__result{padding:18px 0 20px;border-block:1px dashed #82765a66;display:grid;gap:9px}.race-finish__result>span,.race-finish__result>small{font:9px/1.4 var(--journey-mono);letter-spacing:.08em;color:#696754}.race-finish__result>strong{font:400 clamp(33px,8vw,42px)/1.15 var(--journey-mono);letter-spacing:-2px;color:#344733;font-variant-numeric:tabular-nums}
+.live-entrance .race-finish p{margin:15px 0;color:#565b49;font:13px/1.55 var(--journey-body)}
+.live-entrance .race-finish #race-connection-status{font-size:11px;padding-left:10px;border-left:2px solid #afa387}
+.live-entrance .race-finish label{font:11px/1.5 var(--journey-body);margin:18px 0 5px;color:#565b49}
+.live-entrance .race-finish input{border:0;border-bottom:1px solid #94886a;border-radius:0;background:#f7f1e366;color:#303b31;padding:9px 10px;font:16px var(--journey-body);min-height:44px}
+.live-entrance .race-finish button{width:100%;min-height:44px;border:1px solid #45533e;border-radius:2px;background:#344733;color:#eee7d6;font:12px var(--journey-body);box-shadow:0 1px 0 #ffffff16 inset;margin:10px 0 0;padding:11px 14px}
+.live-entrance .race-finish button:disabled{opacity:1;background:#e1dac8;border-color:#c5baa0;color:#79735f;box-shadow:none;cursor:default}
+.live-entrance .race-finish a,.live-entrance .race-finish>button:last-child{min-height:44px;width:auto;background:transparent;border:0;box-shadow:none;color:#344733;margin:0;padding:12px 0;text-align:left;font:12px var(--journey-body);text-decoration:underline;text-underline-offset:4px}
+.live-entrance .race-finish a{margin-top:16px;border-top:1px solid #82765a40;padding-top:16px}.live-entrance .race-finish>button:last-child{color:#696754;text-decoration:none}
+.live-entrance .race-finish :focus-visible{outline:2px solid #344733;outline-offset:3px}.live-entrance .race-finish li{border-color:#82765a40}.live-entrance .race-finish h1:focus{outline:none}
+@media(max-width:400px){.live-entrance .race-finish{padding:20px 22px 14px}.live-entrance .race-finish h1{font-size:26px}}
