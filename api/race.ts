@@ -1,5 +1,5 @@
 import type {IncomingMessage,ServerResponse} from 'node:http';
-import {raceApi} from '../server/race-api';
+import {raceApi} from '../server/race-api.js';
 export default async function handler(req:IncomingMessage&{body?:unknown},res:ServerResponse){
   let body=req.method==='GET'?{id:new URL(req.url??'/','http://localhost').searchParams.get('id')}:req.body;
   try{
