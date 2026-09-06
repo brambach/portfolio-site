@@ -89,7 +89,7 @@
 }
 
 .cabin-object--physical-card .cabin-object__bar { position:sticky; top:0; z-index:1; background:#ece6d5; }
-.cabin-object--physical-card .contact-note a:last-of-type { margin-bottom:16px; }
+
 .laptop-os .laptop-os__bar button[aria-label="Ready for the keys"]{width:auto;min-width:160px;flex-shrink:0;padding:0 14px;font-size:16px;line-height:1.2;white-space:nowrap;border-radius:4px}
 
 .contact-links{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center;margin-top:14px}.contact-links a{display:inline-flex;align-items:center;min-height:44px;font:12px var(--journey-body,sans-serif);text-underline-offset:4px}.race-finish .contact-links{border-top:1px solid #82765a40;padding-top:6px}.race-finish .contact-links a{margin:0;font-size:11px}

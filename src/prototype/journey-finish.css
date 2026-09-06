@@ -9,6 +9,8 @@
 .cabin-object .contact-note h1{font:400 35px/1.1 Georgia,serif;letter-spacing:-1.1px;margin:10px 0 24px;color:#303b31}
 .cabin-object .contact-note .cabin-eyebrow{font:10px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#696754}
 .cabin-object .contact-note a{display:block;width:fit-content;max-width:100%;overflow-wrap:anywhere;padding:5px 0;font-size:14px;line-height:1.6;color:#3b4c3d;text-decoration:underline;text-decoration-color:#7e826450;text-underline-offset:4px}
+.cabin-object .contact-note .contact-links{margin-top:2px;gap:4px 22px}
+.cabin-object .contact-note .contact-links a{display:inline-flex;align-items:center;margin:0;min-height:44px}
 .cabin-object .contact-note p{font-size:14px;line-height:1.65;color:#515646;margin:20px 0 0}
 .cabin-object .contact-note p:last-child{padding-top:16px;border-top:1px solid #82765a35;font-size:12px;line-height:1.7;color:#626550}
 .cabin-tour-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 18px 8px 26px;border-top:1px solid #82765a40;background:#e8e0cc;color:#65634e}
