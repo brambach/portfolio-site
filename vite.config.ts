@@ -7,7 +7,7 @@ import {loadEnv} from 'vite';
 
 export default defineConfig(({mode})=>{
   const local=loadEnv(mode,process.cwd(),'');
-  for(const key of ['UPSTASH_REDIS_REST_URL','UPSTASH_REDIS_REST_TOKEN','KV_REST_API_URL','KV_REST_API_TOKEN']){
+  for(const key of ['RACE_KV_REST_API_URL','RACE_KV_REST_API_TOKEN','UPSTASH_REDIS_REST_URL','UPSTASH_REDIS_REST_TOKEN','KV_REST_API_URL','KV_REST_API_TOKEN']){
     if(local[key]&&!process.env[key])process.env[key]=local[key];
   }
   return {

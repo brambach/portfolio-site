@@ -1,3 +1,4 @@
+import {ContactLinks} from './ContactLinks';
 import {RaceTimes,TimeToBeat} from "./RaceTimes";
 import {readRaceResult,type SavedRace} from "./race-result";
 import {idleRace,type RaceState} from "./return-race";
@@ -569,7 +570,7 @@ export default function Entrance() {
         {townMode&&<TimeToBeat open={()=>setRaceTimes(true)}/>}
         {townMode && <button onClick={()=>{if(sceneRef.current?.startRace()){setLakeDismissed(true);focusCabin();}}}>Race back to the start ↗</button>}
         <button onClick={() => { setLakeDismissed(true); open("laptop"); }}>Open my projects</button>
-        <div className="journey-finish-links"><a href="/projects">Read the full portfolio ↗</a><a href="mailto:bryce.rambach@gmail.com">Say hello ↗</a></div>
+        <div className="journey-finish-links"><a href="/projects">Read the full portfolio ↗</a><a href="mailto:bryce.rambach@gmail.com">Say hello ↗</a></div><ContactLinks/>
         <button onClick={() => {setLakeDismissed(true);focusCabin();}}>Stay a little longer</button>
       </section>}
       {raceTimes&&<RaceTimes close={()=>{setRaceTimes(false);focusCabin();}}/>}

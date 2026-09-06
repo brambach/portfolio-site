@@ -6,7 +6,7 @@ export async function raceApi(method:string,body:unknown,ip:string,command?:Comm
   const reply=(status:number,data:unknown)=>({status,data});
   if(!['GET','POST'].includes(method))return reply(405,{error:'Method not allowed.'});
   if(!command){
-    const url=process.env.UPSTASH_REDIS_REST_URL??process.env.KV_REST_API_URL,token=process.env.UPSTASH_REDIS_REST_TOKEN??process.env.KV_REST_API_TOKEN;
+    const url=process.env.RACE_KV_REST_API_URL??process.env.UPSTASH_REDIS_REST_URL??process.env.KV_REST_API_URL,token=process.env.RACE_KV_REST_API_TOKEN??process.env.UPSTASH_REDIS_REST_TOKEN??process.env.KV_REST_API_TOKEN;
     if(!url||!token)return reply(503,{error:'The shared leaderboard isn’t connected yet.'});
     command=async(...args)=>{
       const response=await fetch(url,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify(args),signal:AbortSignal.timeout(5000)});
