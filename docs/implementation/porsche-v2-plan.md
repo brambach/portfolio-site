@@ -113,3 +113,9 @@ Confirmed the focus fix in a second actual browser lap: the finish heading retai
 Focus commit c6a255e deployed successfully. A fresh curl transfer (not a browser readiness measurement) fetched the production Porsche GLB with compression: 15,662,418 downloaded bytes, 1.109 s to first byte, 2.130 s total on this Mac's connection. A separate HEAD response showed Brotli encoding and a Vercel cache hit. This doesn't establish cold browser decoding, GPU readiness or phone loading.
 
 Binary inspection of the current GLB found 1,604,634 bytes of duplicate buffer-view payloads across 103 views in an 18,841,952-byte binary chunk. Images already use WebP. Next candidate: share identical binary payload ranges without changing mesh/texture bytes, then verify each buffer-view payload and render the resulting car before shipping. No asset change has been made yet.
+
+## Lossless model compaction
+
+Shared identical buffer payload ranges in the Porsche GLB while preserving every buffer-view index and all scene metadata. File size fell from 18,916,156 to 17,311,520 bytes, a 1,604,636-byte (8.5%) reduction. The checked script `scripts/compact-car-model.py` verifies all 103 views against their original bytes, confirms all non-offset view metadata and all other JSON metadata are unchanged, and checks GLB chunk structure. A second run saved zero bytes, confirming idempotence. No image recompression, mesh simplification or material change was used.
+
+Browser review reached ready and rendered the exterior and cabin entry. The local profiler reported 3,373 ms to ready and the same 343 geometries, 74 textures and 85 programs. This single run doesn't demonstrate a readiness-time improvement over the earlier 3,204 ms run. The benefit proven here is a smaller file; production transfer savings still need measurement. Build and whitespace checks pass.
