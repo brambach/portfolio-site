@@ -54,3 +54,17 @@ Saved onboarding now produces a welcome-back choice after entry. Completed the l
 Verified in the real local browser: reduced-motion entry, single card, keys, reload, welcome-back state; a development-only staged lake arrival then unlocked and successfully started the real countdown and manual controls. The staged test isn't evidence of a complete outward trip. The test run was cancelled without publishing a leaderboard result. Motion preference was restored afterward.
 
 313 full-suite tests passed; subsequent discovery persistence changes passed 25 focused tests, TypeScript and build. Additional checks cover blocked/corrupt storage, reset isolation, first-trip shortcut gating and repeat-race drivetrain reset. Introduction completion is recorded on the actual key handover, not when a returning visitor skips it.
+
+## Race finish work in progress
+
+Added device-local personal best with migration from the previous saved finish. A slower run preserves the best; invalid or blocked storage doesn't interrupt the finish. The finish compares against the nearest faster entry returned by the board, with a displayed-standings qualifier at the board boundary. It offers race retry after the saved the lake milestone. Retrying explicitly resets React's countdown state and remounts the race panel so the server starts a new run instead of reusing the finished request.
+
+28 focused tests pass and TypeScript passes. These changes still need browser verification before deployment. Timing-slip download, server-resolved challenge targets and a complete next-place lookup beyond the top 20 remain pending.
+
+Added an SVG timing-slip download with escaped driver text, real elapsed time and object-URL cleanup. Posted finishes can copy a canonical challenge URL; the lake time-to-beat resolves its target from the existing Redis board by ID. Missing/pruned targets are explained. The API now returns the selected entry and preceding place across the retained 200 rows, so posted drivers outside the visible top 20 can see their next-place gap. Retry also pre-fills the previous name.
+
+37 focused tests passed before the final challenge cases; the subsequent 8 panel/board tests and TypeScript pass. Build passes. New tests cover server target resolution, missing targets, URL-time tampering, artwork escaping and existing result restoration. Local browser confirms the returning visitor's race shortcut is available at the staged lake. Finish download, clipboard, retry remount and narrow-screen visual checks are still pending; nothing from this increment has been deployed.
+
+Finish verification: the actual RacePanel rendered with Bryce's existing published result against the local API. Desktop and 390 × 844 screenshots showed the paper layout fitting without horizontal clipping. Moved retry above the leaderboard so it appears beside the result. Posted names are read-only. Clipboard confirmed success through the UI, and clicking download created `the-long-way-timing-slip.svg` in Downloads. The review fixture is ignored and doesn't ship. This was a component review, not a completed physical-phone race.
+
+All 322 tests across 69 files pass, TypeScript passes, production build passes and diff whitespace checks pass. The new Entrance test proves a retry remount starts a second server request, preserves the previous result and doesn't register that finish again. Full live-route retry and physical-phone checks remain in final acceptance. The existing large-chunk warning remains.

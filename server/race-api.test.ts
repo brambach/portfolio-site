@@ -32,3 +32,10 @@ it('returns your rank even when your time is below the visible top twenty',async
  const result=await raceApi('GET',{id:'24'},'test',async()=>rows);
  expect(result.data).toMatchObject({rank:25});expect((result.data as any).entries).toHaveLength(20);
 });
+it('resolves challenge targets and the preceding place beyond the top twenty',async()=>{
+ const rows=Array.from({length:25},(_,index)=>({id:String(index),name:'Driver '+index,elapsed:30000+index}));
+ const result=await raceApi('GET',{id:'24'},'test',async()=>rows.map(row=>JSON.stringify(row)));
+ expect(result.data).toMatchObject({target:rows[24],next:rows[23],rank:25});
+ const missing=await raceApi('GET',{id:'removed'},'test',async()=>rows.map(row=>JSON.stringify(row)));
+ expect(missing.data).toMatchObject({target:null,next:null,rank:null});
+});

@@ -342,3 +342,25 @@ it('offers the race shortcut only after the lake and starts it explicitly',async
   const user=userEvent.setup();render(<Entrance/>);await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));
   await user.click(screen.getByRole('button',{name:/Back to the race/}));expect(scene.replayRace).toHaveBeenCalledOnce();expect(screen.queryByRole('region',{name:'Welcome back'})).not.toBeInTheDocument();
 });
+
+it('starts a fresh request on retry without registering the previous finish again',async()=>{
+  localStorage.setItem('bryce-journey-v2',JSON.stringify({onboarded:true,lake:true,discoveries:['lake']}));
+  const calls:Record<string,unknown>[]=[];
+  vi.stubGlobal('fetch',vi.fn(async(_url:string,options?:RequestInit)=>{
+    const body=options?.body?JSON.parse(String(options.body)):null;if(body)calls.push(body);
+    return {ok:true,json:async()=>body?.action==='start'?{id:'run-'+calls.length}:body?{}:{entries:[]}};
+  }));
+  try {
+    const user=userEvent.setup();render(<Entrance/>);
+    await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));
+    await user.click(screen.getByRole('button',{name:/Take another drive/}));
+    const host=screen.getByLabelText('Porsche cabin').parentElement!;
+    fireEvent(host,new CustomEvent('car-race',{detail:{phase:'finished',countdown:0,elapsed:41106,remaining:0,progress:1}}));
+    await waitFor(()=>expect(calls.filter(call=>call.action==='finish')).toHaveLength(1));
+    await user.click(screen.getByRole('button',{name:'Race again ↗'}));
+    expect(screen.getByRole('region',{name:'Race countdown'})).toBeInTheDocument();
+    await waitFor(()=>expect(calls.filter(call=>call.action==='start')).toHaveLength(2));
+    expect(calls.filter(call=>call.action==='finish')).toHaveLength(1);
+    expect(JSON.parse(localStorage.getItem('bryce-last-race')!).elapsed).toBe(41106);
+  }finally{vi.unstubAllGlobals();}
+});

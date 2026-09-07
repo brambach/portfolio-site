@@ -42,6 +42,7 @@ export default function Entrance() {
   const [call,setCall]=useState<"idle"|"ringing"|"answered"|"done">("idle");
   const [dismissedStops,setDismissedStops]=useState<JourneyStopId[]>([]);
   const [raceTimes,setRaceTimes]=useState(false);
+  const [raceAttempt,setRaceAttempt]=useState(0);
   const [lastResult,setLastResult]=useState<SavedRace|null>(null);
   const [loadingStep,setLoadingStep]=useState(0);
   const [openingFinished,setOpeningFinished]=useState(false);
@@ -265,6 +266,7 @@ export default function Entrance() {
   useEffect(()=>{if(race.phase==="racing")trackJourney("race_started");if(race.phase==="finished")trackJourney("race_finished");},[race.phase]);
   const lakeArrival = scenicMode && intro === "done" && telemetry.stop === "lake" && drive.phase === "parked" && !lakeDismissed;
   const invitation = townMode && phase === "inside" && intro === "done" && (drive.phase === "driving" || drive.phase === "off" || drive.phase === "parked") && !telemetry.approach ? stopInvitation(scenicAccess,telemetry.distance,telemetry.speed,[...visited,...dismissedStops]) : null;
+  const retryRace=()=>{if(sceneRef.current?.replayRace()){setLastResult(null);setRace({...idleRace,phase:"countdown",countdown:3});setRaceAttempt(value=>value+1);setLakeDismissed(true);focusCabin();}};
   const focusCabin=()=>hostRef.current?.querySelector("canvas")?.focus({preventScroll:true});
   const callAvailable=phase==="inside"&&!object&&laptop==="idle"&&!menu&&!routeMap&&!raceTimes&&!lastResult;
   const callDistance=townMode?950:scenicAccess.find(access=>access.id==="lake")!.entry-620;
@@ -594,9 +596,9 @@ export default function Entrance() {
         <button onClick={() => {setLakeDismissed(true);focusCabin();}}>Stay a little longer</button>
       </section>}
       {raceTimes&&<RaceTimes close={()=>{setRaceTimes(false);focusCabin();}}/>}
-      {lastResult&&<RacePanel race={{...idleRace,phase:"finished",elapsed:lastResult.elapsed}} resume={lastResult} cancel={()=>{setLastResult(null);focusCabin();}}/>}
+      {lastResult&&<RacePanel retry={phase==="inside"&&memory.lake?retryRace:undefined} race={{...idleRace,phase:"finished",elapsed:lastResult.elapsed}} resume={lastResult} cancel={()=>{setLastResult(null);focusCabin();}}/>}
       {egg&&!object&&!menu&&!raceTimes&&race.phase!=="finished"&&<aside className="journey-egg" role="status">{egg}</aside>}
-      {race.phase!=="idle" && !lastResult && <RacePanel race={race} cancel={()=>{sceneRef.current?.cancelRace();focusCabin();}}/>}
+      {race.phase!=="idle" && !lastResult && <RacePanel key={raceAttempt} retry={memory.lake?retryRace:undefined} race={race} cancel={()=>{sceneRef.current?.cancelRace();focusCabin();}}/>}
       {(journeyMode||townMode) && routeMap && <JourneyMap firstTrip={scenicMode&&!visited.includes("lake")} stops={townMode?JOURNEY_STOPS.filter(stop=>["cafe","tennis","lake"].includes(stop.id)):undefined} accessRoads={townMode?scenicAccess:undefined} position={{x:telemetry.x,z:telemetry.z}} restoreFocus={()=>hostRef.current?.querySelector("canvas")?.focus()} distance={telemetry.distance} visited={visited} close={()=>setRouteMap(false)} navigate={id=>{setRouteMap(false);sceneRef.current?.navigate(id);}}/>}
       {object && (
         <CabinObjects

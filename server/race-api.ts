@@ -20,7 +20,7 @@ export async function raceApi(method:string,body:unknown,ip:string,command?:Comm
       const all=rows.map((row:string)=>JSON.parse(row));
       const id=body&&typeof body==='object'?(body as {id?:unknown}).id:null;
       const index=typeof id==='string'?all.findIndex((entry:{id:string})=>entry.id===id):-1;
-      return reply(200,{entries:all.slice(0,20),...(id?{rank:index<0?null:index+1}:{})});
+      return reply(200,{entries:all.slice(0,20),...(id?{rank:index<0?null:index+1,target:index<0?null:all[index],next:index>0?all[index-1]:null}:{})});
     }
     if(!body||typeof body!=='object')return reply(400,{error:'Invalid request.'});
     const data=body as Record<string,unknown>;

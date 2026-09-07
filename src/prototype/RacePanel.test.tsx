@@ -3,7 +3,7 @@ import {render,screen,waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {RacePanel} from './RacePanel';
 import {idleRace} from './return-race';
-afterEach(()=>vi.unstubAllGlobals());
+afterEach(()=>{vi.unstubAllGlobals();localStorage.clear();});
 it('keeps a practice result visible when the shared board is unavailable',async()=>{
   vi.stubGlobal('fetch',vi.fn(async()=>({ok:false,json:async()=>({error:'Unavailable'})})));
   render(<RacePanel race={{...idleRace,phase:'finished',elapsed:65000}} cancel={vi.fn()}/>);
@@ -35,4 +35,15 @@ it('restores a published result without creating another race',async()=>{
  expect(await screen.findByText('YOUR TIME / #24 ON THE BOARD')).toBeInTheDocument();
  expect(screen.getByRole('button',{name:'Time posted'})).toBeDisabled();
  expect(fetcher.mock.calls.every(call=>call.length===1||!(call[1] as RequestInit)?.body)).toBe(true);
+});
+
+it('remembers a faster local result and offers an explicit retry',async()=>{
+ localStorage.setItem('bryce-best-race',JSON.stringify({elapsed:60000,id:null,name:'Bryce',saved:false}));
+ vi.stubGlobal('fetch',vi.fn(async()=>({ok:true,json:async()=>({entries:[]})})));
+ const retry=vi.fn();
+ render(<RacePanel race={{...idleRace,phase:'finished',elapsed:65000}} resume={{elapsed:65000,id:null,name:'Bryce',saved:false}} cancel={vi.fn()} retry={retry}/>);
+ expect(screen.getByText('Best on this device: 1:00.000')).toBeInTheDocument();
+ await userEvent.click(screen.getByRole('button',{name:'Race again ↗'}));
+ expect(retry).toHaveBeenCalledOnce();
+ expect(JSON.parse(localStorage.getItem('bryce-best-race')!).elapsed).toBe(60000);
 });

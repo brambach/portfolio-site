@@ -1,18 +1,21 @@
+import {challengeLink,downloadTimingSlip} from './timing-slip';
 import {trackJourney} from '../lib/journey-stats';
 import {ContactLinks} from './ContactLinks';
-import {saveRaceResult,type SavedRace} from "./race-result";
+import {readRaceResult,readPersonalBest,saveRaceResult,type SavedRace} from "./race-result";
 import {useEffect,useRef,useState} from 'react';
 import {raceTime,type RaceState} from './return-race';
 import './return-race.css';
 
-export function RacePanel({race,cancel,resume}:{race:RaceState;cancel:()=>void;resume?:SavedRace}){
-  const [name,setName]=useState(resume?.name??'');
+export function RacePanel({race,cancel,resume,retry}:{race:RaceState;cancel:()=>void;resume?:SavedRace;retry?:()=>void}){
+  const [previousBest]=useState(readPersonalBest);
+  const [name,setName]=useState(()=>resume?.name??readRaceResult()?.name??'');
   const [message,setMessage]=useState('');
   const [saving,setSaving]=useState(false);
   const [saved,setSaved]=useState(resume?.saved??false);
   const [rank,setRank]=useState<number|null>(null);
   const [runId,setRunId]=useState<string|null>(resume?.id??null);
   const [entries,setEntries]=useState<{id:string;name:string;elapsed:number}[]>([]);
+  const [preceding,setPreceding]=useState<{id:string;name:string;elapsed:number}|null>(null);
   const [online,setOnline]=useState(false);
   const request=useRef<Promise<string|null>>(Promise.resolve(null));
   const finishRequest=useRef<Promise<boolean>>(Promise.resolve(false));
@@ -22,7 +25,7 @@ export function RacePanel({race,cancel,resume}:{race:RaceState;cancel:()=>void;r
     const result=await response.json();if(!response.ok)throw new Error(result.error??'The leaderboard isn’t available.');return result;
   }
   async function loadBoard(){
-    try{const id=await request.current;const response=await fetch('/api/race'+(id?'?id='+encodeURIComponent(id):''),{signal:abort.current?.signal});if(response.ok){const result=await response.json();setEntries(result.entries);setRank(result.rank??null);}}catch{}
+    try{const id=await request.current;const response=await fetch('/api/race'+(id?'?id='+encodeURIComponent(id):''),{signal:abort.current?.signal});if(response.ok){const result=await response.json();setEntries(result.entries);setRank(result.rank??null);setPreceding(result.next??null);}}catch{}
   }
   useEffect(()=>{
     const controller=new AbortController();abort.current=controller;
@@ -41,6 +44,11 @@ export function RacePanel({race,cancel,resume}:{race:RaceState;cancel:()=>void;r
     void loadBoard();
   },[race.phase]);
   useEffect(()=>{if(race.phase==='finished')saveRaceResult({elapsed:race.elapsed,id:runId,name,saved});},[race.phase,race.elapsed,runId,name,saved]);
+  async function copyChallenge(){
+    if(!saved||!runId)return;
+    try{await navigator.clipboard.writeText(challengeLink(runId));setMessage('Challenge link copied.');}
+    catch{setMessage('Copy the challenge link below.');}
+  }
   async function save(){
     setSaving(true);setMessage('');
     try{
@@ -54,7 +62,9 @@ export function RacePanel({race,cancel,resume}:{race:RaceState;cancel:()=>void;r
     }catch(error){setMessage(error instanceof Error?error.message:'The leaderboard isn’t available.');}
     finally{setSaving(false);}
   }
+  const bestTime=Math.min(previousBest?.elapsed??Infinity,race.elapsed);
+  const nextDriver=preceding??entries.filter(entry=>entry.elapsed<race.elapsed).sort((a,b)=>b.elapsed-a.elapsed)[0];
   if(race.phase==='countdown')return <section className="race-countdown" aria-label="Race countdown"><span>THE LAKE → THE START</span><strong role="status">{race.countdown||'GO'}</strong><p>Your turn. W accelerates. A / D steer. S brakes.</p><button onClick={cancel}>Stay at the lake</button></section>;
   if(race.phase==='racing')return <aside className="race-hud" aria-label="Return race"><span>THE WAY BACK</span><strong>{raceTime(race.elapsed)}</strong><p>{Math.ceil(race.remaining)} m to the finish</p><progress aria-label="Race progress" max={1} value={race.progress}/><button onClick={cancel}>End run</button></aside>;
-  return <section className="race-finish" aria-label="Race finish"><span>THE LONG WAY / TIMING SLIP</span><h1 ref={finishHeading} tabIndex={-1}>Back where we started.</h1><div className="race-finish__result"><span>THE LAKE → HOME</span><strong>{raceTime(race.elapsed)}</strong><small>{rank?`YOUR TIME / #${rank} ON THE BOARD`:"YOUR TIME"}</small></div><p>Thanks for taking the long way.</p>{!online && <p id="race-connection-status">The leaderboard was offline when this run started, so this time can’t be posted.</p>}<label htmlFor="race-name">Name on the board</label><input id="race-name" maxLength={24} value={name} onChange={event=>setName(event.target.value)} autoComplete="nickname"/><button aria-describedby={!online?"race-connection-status":undefined} disabled={!online||saving||saved||!name.trim()} onClick={save}>{!online?'Leaderboard offline':saved?'Time posted':saving?'Saving…':'Post my time'}</button><p role="status">{message}</p>{entries.length>0 && <ol aria-label="Leaderboard">{entries.slice(0,5).map(entry=><li key={entry.id}><span>{entry.name}</span><strong>{raceTime(entry.elapsed)}</strong></li>)}</ol>}<a href="/projects">Back to my projects ↗</a><button onClick={cancel}>Keep exploring</button><ContactLinks/></section>;
+  return <section className="race-finish" aria-label="Race finish"><span>THE LONG WAY / TIMING SLIP</span><h1 ref={finishHeading} tabIndex={-1}>Back where we started.</h1><div className="race-finish__result"><span>THE LAKE → HOME</span><strong>{raceTime(race.elapsed)}</strong><small>{rank?`YOUR TIME / #${rank} ON THE BOARD`:"YOUR TIME"}</small></div><p>{previousBest&&race.elapsed<previousBest.elapsed?"A new personal best.":"Thanks for taking the long way."}</p><p className="race-finish__best">Best on this device: {raceTime(bestTime)}</p>{nextDriver&&<p>{raceTime(race.elapsed-nextDriver.elapsed)} behind {nextDriver.name}{entries.length===20&&nextDriver===entries[entries.length-1]?" in the displayed standings":""}.</p>}{!online && <p id="race-connection-status">The leaderboard was offline when this run started, so this time can’t be posted.</p>}{retry&&<button onClick={retry}>Race again ↗</button>}<label htmlFor="race-name">Name on the board</label><input id="race-name" readOnly={saved} maxLength={24} value={name} onChange={event=>setName(event.target.value)} autoComplete="nickname"/><button aria-describedby={!online?"race-connection-status":undefined} disabled={!online||saving||saved||!name.trim()} onClick={save}>{!online?'Leaderboard offline':saved?'Time posted':saving?'Saving…':'Post my time'}</button><p role="status">{message}</p>{entries.length>0 && <ol aria-label="Leaderboard">{entries.slice(0,5).map(entry=><li key={entry.id}><span>{entry.name}</span><strong>{raceTime(entry.elapsed)}</strong></li>)}</ol>}<button onClick={()=>downloadTimingSlip(name,race.elapsed)}>Download timing slip ↗</button>{saved&&runId&&<><button onClick={copyChallenge}>Copy challenge link</button><a href={challengeLink(runId)}>Open this challenge ↗</a></>}<a href="/projects">Back to my projects ↗</a><button onClick={cancel}>Keep exploring</button><ContactLinks/></section>;
 }
