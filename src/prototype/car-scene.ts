@@ -876,7 +876,8 @@ export async function createCarScene(
             targetYaw=yaw+Math.atan2(Math.sin(toward-yaw),Math.cos(toward-yaw));targetPitch=.1;
             if(reducedMotion.matches){yaw=targetYaw;pitch=targetPitch;}
           }
-          renderer.domElement.focus({ preventScroll: true });
+          // The finish slip already owns focus while the car settles into parking.
+          if(race.state.phase!=="finished")renderer.domElement.focus({ preventScroll: true });
         }
       }
       const travel = drive.pose();
