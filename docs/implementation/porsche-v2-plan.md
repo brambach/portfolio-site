@@ -107,3 +107,9 @@ The existing development held-key UI then exercised the real return race after t
 Found an accessibility issue during this run: the final parking transition could move focus back to the canvas after the finish heading had received it. Guarded that focus restoration while the race is finished. Browser confirmation of the focus fix is pending. No physics or audio constants changed.
 
 Confirmed the focus fix in a second actual browser lap: the finish heading retained focus after parking had settled. The run completed at 56,751 ms, correctly replacing the prior 58,215 ms local personal best. No test time was published. Production anonymous `/api/admin` still returned 401. TypeScript, 28 focused tests, build and whitespace checks pass for the focus change.
+
+## Production transfer and asset follow-up
+
+Focus commit c6a255e deployed successfully. A fresh curl transfer (not a browser readiness measurement) fetched the production Porsche GLB with compression: 15,662,418 downloaded bytes, 1.109 s to first byte, 2.130 s total on this Mac's connection. A separate HEAD response showed Brotli encoding and a Vercel cache hit. This doesn't establish cold browser decoding, GPU readiness or phone loading.
+
+Binary inspection of the current GLB found 1,604,634 bytes of duplicate buffer-view payloads across 103 views in an 18,841,952-byte binary chunk. Images already use WebP. Next candidate: share identical binary payload ranges without changing mesh/texture bytes, then verify each buffer-view payload and render the resulting car before shipping. No asset change has been made yet.
