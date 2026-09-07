@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Entrance from './Entrance';
 
-const scene = vi.hoisted(() => ({ fail: false, ringCall:vi.fn(), stopCall:vi.fn(), setSpeedHold:vi.fn(), honk:vi.fn(), reduceMotion: vi.fn(), stopEngine: vi.fn(), startDrive: vi.fn(), openMap: vi.fn(), openLaptop: vi.fn(), closeLaptop: vi.fn(), dispose: vi.fn() }));
+const scene = vi.hoisted(() => ({ fail: false, replayRace:vi.fn(()=>true), ringCall:vi.fn(), stopCall:vi.fn(), setSpeedHold:vi.fn(), honk:vi.fn(), reduceMotion: vi.fn(), stopEngine: vi.fn(), startDrive: vi.fn(), openMap: vi.fn(), openLaptop: vi.fn(), closeLaptop: vi.fn(), dispose: vi.fn() }));
 vi.mock('./car-scene', () => ({
   createCarScene: vi.fn(async (host: HTMLElement, ready: () => void, arrived: (inside: boolean) => void) => {
     if (scene.fail) throw new Error('WebGL unavailable');
@@ -21,7 +21,7 @@ vi.mock('./car-scene', () => ({
       screenElement: display,
       enter: () => { host.dispatchEvent(new Event('car-enter')); arrived(true); canvas.focus(); },
       exit: () => arrived(false), center: vi.fn(), look: vi.fn(), mute: vi.fn(), volume: vi.fn(), reduceMotion: scene.reduceMotion, putDownObject: vi.fn(), rev: vi.fn(),
-      setSpeedHold:scene.setSpeedHold,honk:scene.honk,skipApproach:vi.fn(),
+      replayRace:scene.replayRace, setSpeedHold:scene.setSpeedHold,honk:scene.honk,skipApproach:vi.fn(),
       ringCall:scene.ringCall,stopCall:scene.stopCall,setMusic:vi.fn(), allowIgnition: () => canvas.focus({preventScroll:true}), inspect: (item:string)=>host.dispatchEvent(new CustomEvent("car-artifact",{detail:item})),
       openMap: scene.openMap, stopEngine: scene.stopEngine, startDrive: scene.startDrive,
       openLaptop: scene.openLaptop, closeLaptop: scene.closeLaptop,
@@ -31,13 +31,12 @@ vi.mock('./car-scene', () => ({
 }));
 beforeAll(() => { HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');}; HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', ''); }; });
 afterEach(()=>{history.replaceState({},'', '/');});
-beforeEach(() => { scene.fail = false; vi.clearAllMocks(); localStorage.removeItem('bryce-portfolio-reduce-motion'); });
+beforeEach(() => { scene.fail = false; vi.clearAllMocks(); localStorage.removeItem('bryce-portfolio-reduce-motion'); localStorage.removeItem('bryce-journey-v2'); });
 
 async function finishIntro(user: ReturnType<typeof userEvent.setup>) {
   if(!screen.queryByRole('button',{name:'Fine, show me your stuff'})) return;
   await user.click(screen.getByRole('button',{name:'Fine, show me your stuff'}));
-  for(const name of ['Next: the racket','Next: off the clock','Next: my projects']) await user.click(await screen.findByRole('button',{name:new RegExp(name)}));
-  await user.click(await screen.findByRole('button',{name:'Ready for the keys'}));
+  await user.click(await screen.findByRole('button',{name:/Ready for the road/}));
   await user.click(await screen.findByRole('button',{name:'Hand over the keys'}));
   scene.openLaptop.mockClear();scene.closeLaptop.mockClear();
 }
@@ -330,4 +329,16 @@ it('allows car shortcut letters in the leaderboard name without starting the eng
   expect(name).toHaveValue('Rory Kirk');
   expect(scene.startDrive).not.toHaveBeenCalled();
   expect(name).toHaveFocus();
+});
+it('recognizes a completed introduction without requiring every object again',async()=>{
+  localStorage.setItem('bryce-journey-v2',JSON.stringify({onboarded:true,lake:false,discoveries:['card']}));
+  const user=userEvent.setup();render(<Entrance/>);await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));
+  expect(screen.getByRole('region',{name:'Welcome back'})).toBeInTheDocument();expect(screen.queryByRole('button',{name:/Back to the race/})).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button',{name:/Take another drive/}));expect(screen.getByRole('button',{name:'Turn the ignition key'})).toBeInTheDocument();
+});
+
+it('offers the race shortcut only after the lake and starts it explicitly',async()=>{
+  localStorage.setItem('bryce-journey-v2',JSON.stringify({onboarded:true,lake:true,discoveries:['lake']}));
+  const user=userEvent.setup();render(<Entrance/>);await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));
+  await user.click(screen.getByRole('button',{name:/Back to the race/}));expect(scene.replayRace).toHaveBeenCalledOnce();expect(screen.queryByRole('region',{name:'Welcome back'})).not.toBeInTheDocument();
 });

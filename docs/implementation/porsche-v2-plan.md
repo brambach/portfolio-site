@@ -44,3 +44,13 @@ These timings start at profiler initialization, not navigation. The second run b
 Added production signals for scene loading, scene ready, load failure, rendering failure and completed introduction. Navigation-to-ready is reported in four coarse buckets. All buckets share one client and Redis deduplication key so a faster reload cannot record a second timing bucket for the same session. The garage presents timing buckets and failures separately from route progress. Existing historical session counts won't acquire these new signals retroactively.
 
 Validation: 33 targeted tests pass, TypeScript passes, production build passes. No physics or asset changes in this increment. Next: cold production and constrained-device evidence, then the shorter introduction and return-visit state machine.
+
+## Short introduction and returning visitors
+
+Implemented one mandatory contact card before the keys. Racket and field notes remain in the menu, and the café/tennis parked controls offer projects/the racket at the relevant stop. The introductory copy previews that the remaining objects travel with the visitor.
+
+Saved onboarding now produces a welcome-back choice after entry. Completed the lake arrivals unlock an explicit race shortcut; the shortcut moves a stationary seated visitor to the lake, resets inputs, collision state and drivetrain, then uses the existing race countdown and traffic reset. It doesn't change acceleration, steering or gear ratios. Discoveries and visited stops persist; the menu can reset introduction/discovery progress without deleting saved race results or sound preferences. Personal-best presentation and immediate post-finish retry are still pending.
+
+Verified in the real local browser: reduced-motion entry, single card, keys, reload, welcome-back state; a development-only staged lake arrival then unlocked and successfully started the real countdown and manual controls. The staged test isn't evidence of a complete outward trip. The test run was cancelled without publishing a leaderboard result. Motion preference was restored afterward.
+
+313 full-suite tests passed; subsequent discovery persistence changes passed 25 focused tests, TypeScript and build. Additional checks cover blocked/corrupt storage, reset isolation, first-trip shortcut gating and repeat-race drivetrain reset. Introduction completion is recorded on the actual key handover, not when a returning visitor skips it.

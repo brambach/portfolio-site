@@ -28,3 +28,9 @@ it('cancels a countdown without a later surprise launch',()=>{
   const drive=createTownDrive(),race=new ReturnRace(drive);drive.reviewAt('lake');race.start(0);race.cancel();race.update(10000);
   expect(race.state.phase).toBe('idle');expect(drive.phase).toBe('parked');expect(drive.tourAutopilot).toBe(true);
 });
+it('returns a repeat race to the same start with clean controls and drivetrain',()=>{
+  const drive=createTownDrive(),race=new ReturnRace(drive);drive.reviewAt('lake');const origin=drive.position.clone();
+  race.start(0);race.update(3000);drive.engine.gear=5;drive.collisionTime=2;drive.speed=40;drive.input('left',true);
+  race.cancel();drive.resetAtLake();expect(drive.position.distanceTo(origin)).toBeLessThan(.001);
+  expect(drive.engine.gear).toBe(1);expect(drive.speed).toBe(0);expect(drive.collisionTime).toBe(0);expect(drive.controls.left).toBe(false);expect(race.start(10000)).toBe(true);
+});

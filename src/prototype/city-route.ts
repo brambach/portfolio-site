@@ -28,6 +28,13 @@ export class CityDrive {
     this.position.copy(this.access.road.frame(this.accessDistance,this.accessLane).point);this.yaw=this.access.road.frame(this.accessDistance).yaw;
     this.syncMainPosition();this.phase='parked';this.speed=0;
   }
+  resetAtLake(){
+    this.clearInput();this.requiredStop=null;this.requiredApproach=false;this.destination=null;
+    this.speedHold=null;this.turbo=false;this.steering=0;this.heading=0;this.acceleration=0;
+    this.appliedThrottle=0;this.blip=0;this.collisionTime=0;this.lastContact=null;this.contactCooldown=0;
+    this.engine.reset();this.engineState={rpm:0,gear:1,load:0};this.engineOn=false;
+    this.reviewAt('lake');
+  }
   private syncMainPosition(){const pose=this.road.nearest(this.position.x,this.position.z);this.distance+=MathUtils.euclideanModulo(pose.distance-this.distance+this.road.length/2,this.road.length)-this.road.length/2;this.lane=pose.lane;}
   private selectedAccess(){const destination=MathUtils.euclideanModulo(this.destination??this.road.cruiseStop,this.road.length);return this.accessRoads.find(access=>Math.abs(access.centre-destination)<1)??null;}
   private joinAccess(access:JourneyAccess){const nearest=access.road.nearest(this.position.x,this.position.z);this.access=access;this.accessDistance=nearest.distance;this.accessLane=nearest.lane;}

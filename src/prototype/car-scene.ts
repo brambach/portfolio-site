@@ -1,3 +1,4 @@
+import {readJourneyMemory} from './journey-memory';
 import {createRaceFinishLine} from "./race-finish-line";
 import {ReturnRace} from "./return-race";
 import {withFirstDrawObjects} from "./first-draw-warmup";
@@ -51,6 +52,7 @@ export type LaptopPhase = "idle" | "opening" | "reading" | "closing";
 
 export type CarScene = {
   startRace: () => boolean;
+  replayRace: () => boolean;
   cancelRace: () => void;
   enter: () => void;
   exit: () => void;
@@ -227,7 +229,7 @@ export async function createCarScene(
   let approachTime = 0;
   let approaching = true;
   let repeatArrival=false;
-  try{repeatArrival=sessionStorage.getItem("bryce-arrived")==="yes";}catch{}
+  try{repeatArrival=readJourneyMemory().onboarded||sessionStorage.getItem("bryce-arrived")==="yes";}catch{}
   let entryTime = 0;
   let entryStart = 0;
   let arrivalPause = 0;
@@ -1082,6 +1084,12 @@ export async function createCarScene(
   }
 
   return {
+    replayRace(){
+      if(progress!==1||moving||preparingMotion||laptopPhase!=="idle"||visit.phase!=="idle")return false;
+      race.cancel();drive.resetAtLake();ignitionAllowed=true;
+      yaw=pitch=targetYaw=targetPitch=0;sound.unlock();sound.ignite();
+      const started=race.start(performance.now());requestRender();return started;
+    },
     startRace(){
       if(progress!==1||moving||laptopPhase!=="idle"||!ignitionAllowed)return false;
       sound.unlock();const started=race.start(performance.now());

@@ -8,6 +8,7 @@ export class EngineSound {
   load=0;
   private speed=0;
   private manualHold=0;
+  reset(){this.rpm=0;this.gear=1;this.load=0;this.speed=0;this.manualHold=0;}
   get speedLimit(){return 7000/ratios[this.gear];}
   shift(direction: -1 | 1, speed: number) {
     const next=MathUtils.clamp(this.gear+direction,1,5);

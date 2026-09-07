@@ -1,3 +1,4 @@
+import {readJourneyMemory,rememberJourney,rememberDiscovery,resetJourneyMemory} from './journey-memory';
 import {trackJourney,recordSceneReady} from '../lib/journey-stats';
 import {ContactLinks} from './ContactLinks';
 import {RaceTimes,TimeToBeat} from "./RaceTimes";
@@ -25,7 +26,7 @@ import "./journey-finish.css";
 import { readSoundPreferences, saveSoundPreferences } from "./sound-preferences";
 import {readMotionPreference,saveMotionPreference} from './motion-preferences';
 
-type IntroStep = "welcome" | "card" | "racket" | "journal" | "laptop" | "ready" | "done";
+type IntroStep = "returning" | "welcome" | "card" | "racket" | "journal" | "laptop" | "ready" | "done";
 
 type Phase = "outside" | "entering" | "inside" | "exiting";
 
@@ -34,7 +35,9 @@ export default function Entrance() {
   const journeyMode = experience === "journey";
   const scenicMode = experience === "scenic";
   const townMode=isTownJourney();
-  const [intro,setIntro] = useState<IntroStep>(scenicMode ? "welcome" : "done");
+  const [memory,setMemory]=useState(readJourneyMemory);
+  const [resetPrompt,setResetPrompt]=useState(false);
+  const [intro,setIntro] = useState<IntroStep>(scenicMode ? memory.onboarded ? "returning" : "welcome" : "done");
   const introLaptopSeen = useRef(false);
   const [call,setCall]=useState<"idle"|"ringing"|"answered"|"done">("idle");
   const [dismissedStops,setDismissedStops]=useState<JourneyStopId[]>([]);
@@ -42,7 +45,7 @@ export default function Entrance() {
   const [lastResult,setLastResult]=useState<SavedRace|null>(null);
   const [loadingStep,setLoadingStep]=useState(0);
   const [openingFinished,setOpeningFinished]=useState(false);
-  const [returnVisit]=useState(()=>{try{return sessionStorage.getItem("bryce-arrived")==="yes";}catch{return false;}});
+  const [returnVisit]=useState(()=>{try{return memory.onboarded||sessionStorage.getItem("bryce-arrived")==="yes";}catch{return false;}});
   const [egg,setEgg]=useState("");
   const [race,setRace]=useState<RaceState>({...idleRace});
   const tourAutopilot=townMode && race.phase==="idle";
@@ -51,7 +54,7 @@ export default function Entrance() {
   const [visit,setVisit]=useState<{phase:VisitPhase;coffee:boolean;stop:JourneyStopId|null}>({phase:"idle",coffee:false,stop:null});
   const visitRegion=useRef<HTMLElement>(null);
   const [routeMap,setRouteMap]=useState(false);
-  const [visited,setVisited]=useState<JourneyStopId[]>([]);
+  const [visited,setVisited]=useState<JourneyStopId[]>(()=>memory.discoveries.filter((item):item is JourneyStopId=>["cafe","tennis","lake"].includes(item)));
   const hostRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<CarScene | null>(null);
   const enterRef = useRef<HTMLButtonElement>(null);
@@ -140,7 +143,9 @@ export default function Entrance() {
     const hoverObject = (event: Event) =>
       setHover((event as CustomEvent).detail);
     const laptopChanged = (event: Event) => {
-      setLaptop((event as CustomEvent<LaptopPhase>).detail);
+      const next=(event as CustomEvent<LaptopPhase>).detail;
+      setLaptop(next);
+      if(next==="reading")setMemory(rememberDiscovery("laptop"));
       setMenu(false);
       setHover(null);
     };
@@ -150,6 +155,7 @@ export default function Entrance() {
     };
     const inspect = (event: Event) => {
       const item = (event as CustomEvent).detail;
+      if(typeof item==="string")setMemory(rememberDiscovery(item));
       if (item === "laptop" || item === "journal" || item === "card" || item === "racket")
         setObject(item);
     };
@@ -214,7 +220,7 @@ export default function Entrance() {
     const timeout = window.setTimeout(() => setHint(false), 7200);
     return () => window.clearTimeout(timeout);
   }, [phase]);
-  useEffect(()=>{if((!journeyMode&&!townMode) || drive.phase!=="parked")return;const stop=telemetry.stop;if(stop)setVisited(previous=>previous.includes(stop)?previous:[...previous,stop]);},[journeyMode,townMode,drive.phase,telemetry.stop]);
+  useEffect(()=>{if((!journeyMode&&!townMode) || drive.phase!=="parked")return;const stop=telemetry.stop;if(stop){setVisited(previous=>previous.includes(stop)?previous:[...previous,stop]);setMemory(rememberDiscovery(stop));}},[journeyMode,townMode,drive.phase,telemetry.stop]);
   useEffect(()=>{if(visit.phase==="exploring")visitRegion.current?.focus();},[visit.phase,visit.coffee]);
   const currentStop=(journeyMode||townMode) && drive.phase==="parked"?JOURNEY_STOPS.find(stop=>stop.id===telemetry.stop):null;
   const moving = phase === "entering" || phase === "exiting";
@@ -230,6 +236,7 @@ export default function Entrance() {
     sceneRef.current?.startDrive();
   };
   const open = (item: CabinObject) => {
+    setMemory(rememberDiscovery(item));
     setMenu(false);
     setHint(false);
     if (item === "laptop" && phase === "inside" && sceneRef.current)
@@ -241,7 +248,7 @@ export default function Entrance() {
   const nextIntro = () => {
     sceneRef.current?.putDownObject();
     setObject(null);
-    setIntro(previous => previous === "card" ? "racket" : previous === "racket" ? "journal" : previous === "journal" ? "laptop" : previous === "laptop" ? "ready" : previous);
+    setIntro(previous => previous === "card" ? "ready" : previous === "racket" ? "journal" : previous === "journal" ? "laptop" : previous === "laptop" ? "ready" : previous);
   };
   useEffect(() => {
     if (phase !== "inside") return;
@@ -254,9 +261,8 @@ export default function Entrance() {
     if (laptop === "idle" && introLaptopSeen.current) setIntro("ready");
   }, [intro, laptop]);
   useEffect(()=>{if(phase==="inside")trackJourney("car_entered");},[phase]);
-  useEffect(()=>{if(telemetry.stop==="lake"&&drive.phase==="parked")trackJourney("lake_reached");},[telemetry.stop,drive.phase]);
+  useEffect(()=>{if(telemetry.stop==="lake"&&drive.phase==="parked"){trackJourney("lake_reached");setMemory(rememberJourney({lake:true}));}},[telemetry.stop,drive.phase]);
   useEffect(()=>{if(race.phase==="racing")trackJourney("race_started");if(race.phase==="finished")trackJourney("race_finished");},[race.phase]);
-  useEffect(()=>{if(scenicMode&&intro==="done")trackJourney("intro_completed");},[scenicMode,intro]);
   const lakeArrival = scenicMode && intro === "done" && telemetry.stop === "lake" && drive.phase === "parked" && !lakeDismissed;
   const invitation = townMode && phase === "inside" && intro === "done" && (drive.phase === "driving" || drive.phase === "off" || drive.phase === "parked") && !telemetry.approach ? stopInvitation(scenicAccess,telemetry.distance,telemetry.speed,[...visited,...dismissedStops]) : null;
   const focusCabin=()=>hostRef.current?.querySelector("canvas")?.focus({preventScroll:true});
@@ -326,8 +332,10 @@ export default function Entrance() {
           {(journeyMode||townMode) && phase === "inside" && visit.phase === "idle" && <button onClick={()=>{setMenu(false);sceneRef.current?.openMap();}}>Route map</button>}
           <button onClick={() => open("laptop")}>Personal projects</button>
           <button onClick={() => open("racket")}>Tennis racket</button>
-          {!scenicMode && <button onClick={() => open("journal")}>Photo board</button>}
+          <button onClick={() => open("journal")}>Off the clock</button>
           <button onClick={() => open("card")}>About & contact</button>
+          {memory.onboarded&&<button onClick={()=>setResetPrompt(true)}>Replay the introduction</button>}
+          {resetPrompt&&<section aria-label="Reset introduction"><p>Replay the introduction next time? Your race results and sound settings stay saved.</p><button onClick={()=>{resetJourneyMemory();setMemory(readJourneyMemory());setResetPrompt(false);setMenu(false);}}>Reset introduction</button><button onClick={()=>setResetPrompt(false)}>Keep my progress</button></section>}
           {phase === "outside" && ready && (
             <button
               onClick={() => {
@@ -497,6 +505,8 @@ export default function Entrance() {
               <h1>{currentStop?currentStop.name:drive.phase === "parked" ? (journeyMode?"Stay a little longer.":"The night's still young.") : "Take the long way."}</h1>
               <button className="city-start" onClick={ignite}>{drive.phase === "parked" ? "Back on the road" : "Start driving"}<span aria-hidden="true">↗</span></button>
               {currentStop?.id==="cafe" && <button className="stop-visit-action" onClick={()=>sceneRef.current?.visitCafe()}>Step out for a flat white ↗</button>}
+              {currentStop?.id==="cafe" && <button onClick={()=>open("laptop")}>What I’m building ↗</button>}
+              {currentStop?.id==="tennis" && <button onClick={()=>open("racket")}>About that racket ↗</button>}
               {currentStop?.id==="trailhead" && <button className="stop-visit-action" onClick={()=>sceneRef.current?.visitTrail()}>Take the short trail ↗</button>}
               <p>{currentStop?"The route map is on the dashboard. Pick your next stop whenever you’re ready.":journeyMode?"Coffee, forest roads and a little more time.":"You steer. The city keeps going."}</p>
             </section>
@@ -504,6 +514,8 @@ export default function Entrance() {
           {scenicMode && !travelling && <section className="scenic-ignition" aria-label="Ignition">
             {drive.phase === "parked" && (currentStop||drive.overlook) && <h1>{currentStop?.name??"Lakeside"}.</h1>}
             {townMode && <button onClick={()=>setRouteMap(true)}>Route map</button>}
+            {currentStop?.id==="cafe"&&<button onClick={()=>open("laptop")}>What I’m building ↗</button>}
+            {currentStop?.id==="tennis"&&<button onClick={()=>open("racket")}>About that racket ↗</button>}
             <button onClick={()=>{if(townMode&&currentStop&&currentStop.id!=="lake")sceneRef.current?.navigate("lake");else ignite();}}>{drive.phase === "parked" ? townMode&&currentStop&&currentStop.id!=="lake"?"Continue to lake":"Back on the road" : "Turn the ignition key"}<span aria-hidden="true"> ↗</span></button>
             {townMode && currentStop?.id==="lake" && race.phase==="idle" && <button onClick={()=>{if(sceneRef.current?.startRace()){setLakeDismissed(true);focusCabin();}}}>Race back to the start ↗</button>}
             {drive.phase === "parked" && <button disabled={!telemetry.engineOn} onClick={()=>{sceneRef.current?.stopEngine();hostRef.current?.querySelector('canvas')?.focus();}}>{telemetry.engineOn ? "Turn engine off" : "Engine off"}</button>}
@@ -553,11 +565,12 @@ export default function Entrance() {
         </>}
         {(visit.phase==='walking'||visit.phase==='exploring') && <button onClick={()=>sceneRef.current?.returnToCar()}>{visit.stop==='cafe' && visit.coffee?'Take coffee back to the car':'Back to the car'}</button>}
       </section>}
+      {phase === "inside" && intro === "returning" && <section className="journey-note" aria-label="Welcome back"><span>THE LONG WAY / BACK AGAIN</span><h1>You know where the keys are.</h1><p>Your introduction is saved. Take another trip, or head straight to the work.</p><button onClick={()=>{sceneRef.current?.allowIgnition();setIntro("done");setHint(false);}}>Take another drive ↗</button>{memory.lake&&townMode&&<button onClick={()=>{if(sceneRef.current?.replayRace()){setIntro("done");setLakeDismissed(true);setHint(false);focusCabin();}}}>Back to the race ↗</button>}<a href="/projects">Open my projects ↗</a><button onClick={()=>setIntro("welcome")}>Show me around again</button></section>}
       {phase === "inside" && (intro === "welcome" || intro === "ready") && <section className="journey-note" aria-label="Before we go">
         <span>BRYCE RAMBACH / {intro === "welcome" ? "BEFORE WE GO" : "YOUR TURN"}</span>
         <h1>{intro === "welcome" ? "A tiny toll before the keys." : "Okay. Have fun."}</h1>
-        <p>{intro === "welcome" ? "Sorry, you have to look through my stuff first. I did build a whole car to get you here." : "Turn the key. I’ll handle the road while you look around. At the lake, you can take the wheel for a race home."}</p>
-        <button onClick={() => { if (intro === "welcome") setIntro("card"); else { sceneRef.current?.allowIgnition(); setIntro("done"); setHint(false); } }}>{intro === "welcome" ? "Fine, show me your stuff" : "Hand over the keys"}</button>
+        <p>{intro === "welcome" ? "A quick introduction first. I did build a whole car to get you here. The rest of my stuff is coming along for the ride." : "Turn the key. I’ll handle the road while you look around. At the lake, you can take the wheel for a race home."}</p>
+        <button onClick={() => { if (intro === "welcome") setIntro("card"); else { sceneRef.current?.allowIgnition(); setMemory(rememberJourney({onboarded:true})); trackJourney("intro_completed"); setIntro("done"); setHint(false); } }}>{intro === "welcome" ? "Fine, show me your stuff" : "Hand over the keys"}</button>
         <a href="/projects">Just here for the work?</a>
       </section>}
       {(call==="ringing"||call==="answered") && phase==="inside" && !object && laptop==="idle" && !menu && <aside className="journey-call" aria-label="Car phone">
@@ -590,7 +603,7 @@ export default function Entrance() {
           key={object}
           object={object}
           physical={phase === "inside"}
-          nextLabel={phase === "inside" && intro === object ? intro === "card" ? "Next: the racket" : intro === "racket" ? "Next: off the clock" : "Next: my projects" : undefined}
+          nextLabel={phase === "inside" && intro === object ? intro === "card" ? "Ready for the road" : intro === "racket" ? "Next: off the clock" : "Next: my projects" : undefined}
           close={() => {
             if (phase === "inside" && intro === object) { nextIntro(); return; }
             setObject(null);
