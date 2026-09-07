@@ -7,12 +7,12 @@ Started 7 September 2026. This plan supersedes older scope and release restricti
 | Milestone | State | Evidence needed |
 | --- | --- | --- |
 | 1. Loading and measurement | In progress | Fresh desktop and narrow-screen runs with environment stated; scene readiness, failures and intro completion tracked; physical-phone limitations explicit |
-| 2. First visit and route pacing | Pending | Short mandatory introduction; project and personal depth placed at meaningful stops; no dead ends; first-minute route/race orientation |
-| 3. Return visits | Pending | Completed onboarding, discoveries, sound and personal best persist; direct race retry and projects; explicit reset; storage denial works |
-| 4. Project story | Pending | At least one verified problem/contribution/evidence presentation, checked against source material |
-| 5. Race finish | Pending | Personal best, next-place gap, immediate retry, downloadable timing slip, real-target challenge link; AI label retained; score-validation assessment |
-| 6. Personal reactions | Pending | A small set of persistent consequences using confirmed personal facts; no invented memories; quiet scenic moments preserved |
-| 7. Garage and acceptance | Pending | Loading, intro, project/contact, the lake, race and retry signals explained correctly; auth and resource checks; Bryce's completed-journey review |
+| 2. First visit and route pacing | Implemented, final route review pending | Short mandatory introduction; project and personal depth placed at meaningful stops; no dead ends; first-minute route/race orientation |
+| 3. Return visits | Implemented, final route review pending | Completed onboarding, discoveries, sound and personal best persist; direct race retry and projects; explicit reset; storage denial works |
+| 4. Project story | Source verified, revised copy in review | At least one verified problem/contribution/evidence presentation, checked against source material |
+| 5. Race finish | Deployed, full-route acceptance pending | Personal best, next-place gap, immediate retry, downloadable timing slip, real-target challenge link; AI label retained; score-validation assessment |
+| 6. Personal reactions | Implemented locally, review pending | A small set of persistent consequences using confirmed personal facts; no invented memories; quiet scenic moments preserved |
+| 7. Garage and acceptance | Signals deployed, owner acceptance pending | Loading, intro, project/contact, the lake, race and retry signals explained correctly; auth and resource checks; Bryce's completed-journey review |
 
 ## Current risks and quality queue
 
@@ -20,7 +20,7 @@ Started 7 September 2026. This plan supersedes older scope and release restricti
 - Current Porsche GLB is roughly 18 MB on disk. Verify actual compressed transfers and decode/GPU cost before changing assets.
 - Readiness follows shader compilation, texture warming, multiple first draws and a GPU wait. Avoid moving that work into entry and reintroducing stutter.
 - Existing counts are once-per-browser-tab session. Daily step totals aren't a matched-user conversion funnel.
-- Mandatory cabin flow currently includes card, racket, journal and laptop before ignition. Redesign its pacing without removing access to the content.
+- Mandatory cabin flow is now one contact card before ignition. Deeper objects remain available in the cabin and at relevant stops; verify the final full route with Bryce.
 - Sound preferences persist; verify other persistence and reset semantics before extending them.
 - Production owner password setup completed. First authenticated browser login wasn't observed by the agent.
 - Casual leaderboard validation doesn't prove that submitted movement obeyed the physics. Don't market it as cheat-proof.
@@ -76,3 +76,16 @@ Race finish commit b10b76a deployed successfully. Production readback returned B
 Added once-per-session events for opening projects (quiet page or cabin laptop), opening the AgentSky study, clicking Bryce's email, opening his social profiles, and choosing Race again. The garage groups these separately from the route tally and explicitly distinguishes clicks from sent mail, retries from completed laps and sessions from total clicks. Link classification accepts only Bryce's known destinations. It sends no href, email subject, race name or message content. Document listeners are removed on unmount; middle-click is supported. Local, admin and review exclusions remain enforced by the existing tracker.
 
 41 focused tests and TypeScript passed before the additional server-event acceptance test. No historical engagement data is backfilled. Authenticated production owner review is still outstanding.
+
+## Returning-stop details in progress
+
+Coffee orders now persist separately from cafe arrivals. On a subsequent visit, collecting another coffee gets one short line about the fictional cafe's questionable business model. A returning the lake visitor gets a view-versus-leaderboard line in place of the first-trip race invitation. These replace existing text rather than adding popups, and depend on recorded visitor actions rather than invented personal history. Introduction reset clears these discoveries. 27 focused tests and TypeScript pass. Visual review and deployment of these small reactions remain pending.
+
+
+## Competition assessment
+
+The race server validates a start ID, expiry, elapsed-time bounds, server wall time, a registered finish before publishing, rate limits and idempotent publication. It doesn't independently verify movement, route checkpoints, acceleration or collision penalties. A caller can wait and submit a plausible fabricated elapsed time. This is a casual community board, not cheat-proof competition. The public race-times panel now explicitly describes Astra's lap as an AI exhibition using direct road knowledge.
+
+Before prizes or a larger competitive launch, add server-issued checkpoint progression with bounded timing and a reviewed policy for suspicious scores. Checkpoints alone still won't prove honest client physics. Existing scores must retain their provenance and shouldn't be silently relabeled as verified. No existing rows were changed in this assessment.
+
+Current acceptance gaps: physical-phone loading and touch performance; cold production readiness and sustained-frame measurements with environment stated; a full outward trip and finish/retry after v2; authenticated owner review of garage counts; Bryce's subjective review. The goal remains active. A phone/browser test request is pending while independent work continues.

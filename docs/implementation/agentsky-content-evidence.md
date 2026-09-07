@@ -35,3 +35,9 @@ The embedded laptop's AgentSky link now uses a separate browsing context with `t
 Seven focused cabin/reader tests, TypeScript and production build pass. In the production preview, activating the study link left the original cabin URL and selected AgentSky note intact. Escape then closed the laptop and restored focus to the cabin canvas. No browser errors or warnings were recorded.
 
 The in-app browser didn't expose the destination as a controllable tab, so its tab lifecycle and return behavior weren't verified. The study route itself was verified in earlier work. Physical-phone behavior remains untested. Logs: `/tmp/porsche-study-return-tests.log`, `/tmp/porsche-study-return-types.log`, `/tmp/porsche-study-return-build.log`. No handling changes.
+
+## V2 project story, 7 September 2026
+
+Re-read the current concept README and the router/cloud implementation in the original `agentsky-concept` checkout. The README records replacing the connected-node illustration with a session workspace and three small output cards with a selector beside one full-size preview. `components/agentsky/router-demo.tsx` lines 38-49 clear timers on selection and unmount, reset phase, and schedule illustrative progress. The cloud component defines local, moving, cloud and offline states with a reopen transition.
+
+The portfolio now states the concrete design question and Bryce's design/implementation contribution in the opening. The existing screenshot sections explain those two composition changes and the interrupted-run behavior, avoiding a second block that repeats the same story. It retains the independent-study label, simulated data explanation and lack of measured business or model-performance claims. This pass verifies source behavior, not a fresh live execution of the separate concept.

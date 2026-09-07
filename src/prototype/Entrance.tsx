@@ -36,6 +36,7 @@ export default function Entrance() {
   const scenicMode = experience === "scenic";
   const townMode=isTownJourney();
   const [memory,setMemory]=useState(readJourneyMemory);
+  const [previousStops]=useState(()=>({coffee:memory.discoveries.includes('coffee'),lake:memory.lake}));
   const [resetPrompt,setResetPrompt]=useState(false);
   const [intro,setIntro] = useState<IntroStep>(scenicMode ? memory.onboarded ? "returning" : "welcome" : "done");
   const introLaptopSeen = useRef(false);
@@ -129,7 +130,7 @@ export default function Entrance() {
       setDrive((event as CustomEvent).detail);
       setMenu(false);
     };
-    const visitChanged=(event:Event)=>{setVisit((event as CustomEvent).detail);setMenu(false);};
+    const visitChanged=(event:Event)=>{const next=(event as CustomEvent).detail;setVisit(next);if(next.coffee)setMemory(rememberDiscovery("coffee"));setMenu(false);};
     host.addEventListener("car-visit",visitChanged);
     const showMap=()=>setRouteMap(true);
     host.addEventListener("car-map",showMap);
@@ -563,7 +564,7 @@ export default function Entrance() {
         <span>{visit.stop==='trailhead'?"THE LONG WAY / FOREST TRAIL":"THE LONG WAY / COFFEE STOP"}</span>
         <h2>{visit.phase==='leaving'?'Turning off the engine.':visit.phase==='walking'?(visit.stop==='trailhead'?'Follow the trail.':'A few steps to the window.'):visit.phase==='returning'||visit.phase==='entering'?'Back to the Porsche.':visit.stop==='trailhead'?'A little room to breathe.':visit.coffee?'Flat white, to go.':'Take your time.'}</h2>
         {visit.phase==='exploring' && <>
-          <p>{visit.stop==='trailhead'?'Stay at the view for a moment. The Porsche is where you left it.':visit.coffee?'Your coffee is on the counter. Take it back when you’re ready.':'A quiet stop before the hills.'}</p>
+          <p>{visit.stop==='trailhead'?'Stay at the view for a moment. The Porsche is where you left it.':visit.coffee?(previousStops.coffee?'Another coffee, on the house. This café has a very questionable business model.':'Your coffee is on the counter. Take it back when you’re ready.'):'A quiet stop before the hills.'}</p>
           {visit.stop==='cafe' && !visit.coffee && <button onClick={()=>sceneRef.current?.orderCoffee()}>Order a flat white</button>}
         </>}
         {(visit.phase==='walking'||visit.phase==='exploring') && <button onClick={()=>sceneRef.current?.returnToCar()}>{visit.stop==='cafe' && visit.coffee?'Take coffee back to the car':'Back to the car'}</button>}
@@ -589,7 +590,7 @@ export default function Entrance() {
       {lakeArrival && !object && laptop === "idle" && <section className="journey-note journey-note--finish" aria-label="the lake turnout">
         <span>THE LAST STOP / A LITTLE CLOSER TO HOME</span><h1>This one’s for the lake.</h1>
         <p>My family lives by the lake. It’s beautiful. This little stretch of road is my nod to it.</p>
-        <p>That’s the trip. Fancy taking the wheel for the way back?</p>
+        <p>{previousStops.lake?"You came back for the view. Or the leaderboard. I’ll take either.":"That’s the trip. Fancy taking the wheel for the way back?"}</p>
         {townMode&&<TimeToBeat open={()=>setRaceTimes(true)}/>}
         {townMode && <button onClick={()=>{if(sceneRef.current?.startRace()){setLakeDismissed(true);focusCabin();}}}>Race back to the start ↗</button>}
         <button onClick={() => { setLakeDismissed(true); open("laptop"); }}>Open my projects</button>

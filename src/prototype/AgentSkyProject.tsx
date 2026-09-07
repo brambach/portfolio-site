@@ -4,9 +4,9 @@ import {email} from '../lib/site';
 import './agent-sky-project.css';
 
 const screens=[
-  {id:'01 / Session',title:'Choose an agent. Follow the task.',text:'A single workspace keeps the request, progress and sample files together. Changing agents cancels the pending demonstration, so an old run can’t finish under a new selection.',image:'session',alt:'Completed sample session with task steps and a Files tab listing three illustrative project files.',caption:'The sample run reaches Completed; the Files tab reveals its illustrative output.'},
+  {id:'01 / Session',title:'Choose an agent. Follow the task.',text:'I replaced a connected-node illustration with one sample request, progress steps and inspectable files. Changing agents cancels the pending demonstration, so an old result can’t arrive under a new selection.',image:'session',alt:'Completed sample session with task steps and a Files tab listing three illustrative project files.',caption:'The sample run reaches Completed; the Files tab reveals its illustrative output.'},
   {id:'02 / Continuity',title:'Make the handoff visible.',text:'Layered local and cloud windows show which context carries over. Visitors can move the sample workspace, close the local session and reopen it. The transition explains continuity without relying on a paragraph of infrastructure terminology.',image:'cloud',alt:'A local terminal layered behind an active cloud workspace containing instructions, workspace files and session history.',caption:'Simulated workspace transfer. No files leave the visitor’s computer.'},
-  {id:'03 / Comparison',title:'Give each result room to be read.',text:'One full-size preview sits beside the agent selector. Switching examples changes the changelog design; filters and an expanded preview let visitors inspect the interface rather than judge a tiny thumbnail.',image:'comparison',alt:'Codex selected in a three-example comparison beside a readable product-changelog preview.',caption:'Three handcrafted examples. This comparison isn’t a model benchmark.'},
+  {id:'03 / Comparison',title:'Give each result room to be read.',text:'I replaced three small output cards with an agent selector beside one full-size preview. Filters, sample files and an expanded view let visitors inspect each example in the same space.',image:'comparison',alt:'Codex selected in a three-example comparison beside a readable product-changelog preview.',caption:'Three handcrafted examples. This comparison isn’t a model benchmark.'},
 ];
 
 export default function AgentSkyProject(){
@@ -19,7 +19,7 @@ export default function AgentSkyProject(){
         <p className="case-study__eyebrow">Independent design study · September 2026</p>
         <h1>AgentSky.</h1>
         <p className="case-study__lead">An agent platform, explained through interaction.</p>
-        <p className="case-study__summary">A homepage concept that lets visitors explore an agent session, follow a workspace into the cloud and compare sample outputs.</p>
+        <p className="case-study__summary">How do you explain an agent workspace before someone has used one? I designed and built a homepage concept that lets visitors follow a sample task, move its context and inspect the result.</p>
         <dl className="case-study__facts"><div><dt>Contribution</dt><dd>Interface design & implementation</dd></div><div><dt>Built with</dt><dd>React, TypeScript & Motion</dd></div><div><dt>Status</dt><dd>Interactive concept</dd></div></dl>
       </div>
       <figure><img width={1253} height={705} src="/images/projects/agentsky/hero.jpg" alt="AgentSky homepage concept with a blue sky, a large product headline and the beginning of its session playground." fetchPriority="high"/><figcaption>Current implementation capture. Sky imagery was generated for the concept.</figcaption></figure>
