@@ -144,6 +144,7 @@ export default function Entrance() {
     const hoverObject = (event: Event) =>
       setHover((event as CustomEvent).detail);
     const laptopChanged = (event: Event) => {
+      if((event as CustomEvent).detail==='reading')trackJourney('project_opened');
       const next=(event as CustomEvent<LaptopPhase>).detail;
       setLaptop(next);
       if(next==="reading")setMemory(rememberDiscovery("laptop"));
@@ -266,7 +267,7 @@ export default function Entrance() {
   useEffect(()=>{if(race.phase==="racing")trackJourney("race_started");if(race.phase==="finished")trackJourney("race_finished");},[race.phase]);
   const lakeArrival = scenicMode && intro === "done" && telemetry.stop === "lake" && drive.phase === "parked" && !lakeDismissed;
   const invitation = townMode && phase === "inside" && intro === "done" && (drive.phase === "driving" || drive.phase === "off" || drive.phase === "parked") && !telemetry.approach ? stopInvitation(scenicAccess,telemetry.distance,telemetry.speed,[...visited,...dismissedStops]) : null;
-  const retryRace=()=>{if(sceneRef.current?.replayRace()){setLastResult(null);setRace({...idleRace,phase:"countdown",countdown:3});setRaceAttempt(value=>value+1);setLakeDismissed(true);focusCabin();}};
+  const retryRace=()=>{if(sceneRef.current?.replayRace()){trackJourney('race_retried');setLastResult(null);setRace({...idleRace,phase:"countdown",countdown:3});setRaceAttempt(value=>value+1);setLakeDismissed(true);focusCabin();}};
   const focusCabin=()=>hostRef.current?.querySelector("canvas")?.focus({preventScroll:true});
   const callAvailable=phase==="inside"&&!object&&laptop==="idle"&&!menu&&!routeMap&&!raceTimes&&!lastResult;
   const callDistance=townMode?950:scenicAccess.find(access=>access.id==="lake")!.entry-620;

@@ -1,3 +1,4 @@
+import {trackJourney} from '../lib/journey-stats';
 import {useEffect} from 'react';
 import {email} from '../lib/site';
 import './agent-sky-project.css';
@@ -9,7 +10,7 @@ const screens=[
 ];
 
 export default function AgentSkyProject(){
-  useEffect(()=>{const previous=document.title;document.title='AgentSky · Bryce Rambach';return()=>{document.title=previous;};},[]);
+  useEffect(()=>{trackJourney('project_study_opened');const previous=document.title;document.title='AgentSky · Bryce Rambach';return()=>{document.title=previous;};},[]);
   return <main className="case-study">
     <a className="case-study__skip" href="#study">Skip to the design study</a>
     <header className="case-study__nav"><a href="/projects">← All projects</a><a href={`mailto:${email}`}>Work with Bryce ↗</a></header>

@@ -9,3 +9,12 @@ describe('visitor analytics',()=>{
     expect(visitorEvent({type:'pageview',url})).toBeNull();
   });
 });
+
+it('classifies only Bryce contact and profile links without collecting their query strings',async()=>{
+ const {engagementLink}=await import('./SiteAnalytics');
+ expect(engagementLink('mailto:bryce.rambach@gmail.com?subject=private')).toBe('contact_clicked');
+ expect(engagementLink('https://x.com/brycerambach')).toBe('social_clicked');
+ expect(engagementLink('https://github.com/brambach/trace')).toBeNull();
+ expect(engagementLink('https://x.com.evil.test/brycerambach')).toBeNull();
+ expect(engagementLink('mailto:someone@example.com')).toBeNull();
+});

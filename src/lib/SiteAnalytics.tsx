@@ -16,7 +16,27 @@ export function visitorEvent(event:BeforeSendEvent):BeforeSendEvent|null {
   return {...event,url:url.toString()};
 }
 
+export function engagementLink(href:string):'contact_clicked'|'social_clicked'|null {
+  try {
+    const url=new URL(href);
+    if(url.protocol==='mailto:'&&url.pathname.toLowerCase()==='bryce.rambach@gmail.com')return 'contact_clicked';
+    if(url.protocol==='https:'&&[
+      'x.com/brycerambach','www.linkedin.com/in/bryce-rambach','github.com/brambach'
+    ].includes(url.hostname+url.pathname.replace(/\/$/,'')))return 'social_clicked';
+  }catch{}
+  return null;
+}
 export function SiteAnalytics(){
-  useEffect(()=>{trackJourney('visit');},[]);
+  useEffect(()=>{
+    trackJourney('visit');
+    const clicked=(event:MouseEvent)=>{
+      if(event.type==='auxclick'&&event.button!==1)return;
+      const anchor=event.target instanceof Element?event.target.closest('a'):null;
+      const engagement=anchor?engagementLink(anchor.href):null;
+      if(engagement)trackJourney(engagement);
+    };
+    document.addEventListener('click',clicked);document.addEventListener('auxclick',clicked);
+    return()=>{document.removeEventListener('click',clicked);document.removeEventListener('auxclick',clicked);};
+  },[]);
   return import.meta.env.PROD ? <Analytics beforeSend={visitorEvent}/> : null;
 }

@@ -68,3 +68,11 @@ Added an SVG timing-slip download with escaped driver text, real elapsed time an
 Finish verification: the actual RacePanel rendered with Bryce's existing published result against the local API. Desktop and 390 × 844 screenshots showed the paper layout fitting without horizontal clipping. Moved retry above the leaderboard so it appears beside the result. Posted names are read-only. Clipboard confirmed success through the UI, and clicking download created `the-long-way-timing-slip.svg` in Downloads. The review fixture is ignored and doesn't ship. This was a component review, not a completed physical-phone race.
 
 All 322 tests across 69 files pass, TypeScript passes, production build passes and diff whitespace checks pass. The new Entrance test proves a retry remount starts a second server request, preserves the previous result and doesn't register that finish again. Full live-route retry and physical-phone checks remain in final acceptance. The existing large-chunk warning remains.
+
+## Garage engagement signals
+
+Race finish commit b10b76a deployed successfully. Production readback returned Bryce's existing target, rank and preceding entry without adding any test results.
+
+Added once-per-session events for opening projects (quiet page or cabin laptop), opening the AgentSky study, clicking Bryce's email, opening his social profiles, and choosing Race again. The garage groups these separately from the route tally and explicitly distinguishes clicks from sent mail, retries from completed laps and sessions from total clicks. Link classification accepts only Bryce's known destinations. It sends no href, email subject, race name or message content. Document listeners are removed on unmount; middle-click is supported. Local, admin and review exclusions remain enforced by the existing tracker.
+
+41 focused tests and TypeScript passed before the additional server-event acceptance test. No historical engagement data is backfilled. Authenticated production owner review is still outstanding.

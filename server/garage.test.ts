@@ -40,3 +40,11 @@ it('reports rate limits and storage errors without claiming success',async()=>{
   const body={event:'visit',session:'12345678-1234-1234-1234-123456789abc',source:'x'};
   expect((await journeyApi(body,'test',async()=>-1)).status).toBe(429);expect((await journeyApi(body,'test',async()=>{throw Error();})).status).toBe(503);
 });
+it('accepts the bounded engagement signals without storing link or message content',async()=>{
+ for(const event of ['project_opened','project_study_opened','contact_clicked','social_clicked','race_retried']){
+  const db=vi.fn(async()=>1);
+  const result=await journeyApi({event,session:'12345678-1234-1234-1234-123456789abc',source:'direct'},'test',db);
+  expect(result.status).toBe(200);
+  expect(db.mock.calls).toHaveLength(1);
+ }
+});
