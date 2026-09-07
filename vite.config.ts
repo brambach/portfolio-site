@@ -1,3 +1,5 @@
+import adminHandler from './api/admin';
+import journeyHandler from './api/journey';
 import raceHandler from "./api/race";
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
@@ -11,7 +13,7 @@ export default defineConfig(({mode})=>{
     if(local[key]&&!process.env[key])process.env[key]=local[key];
   }
   return {
-  plugins: [react(), tailwindcss(), {name:"local-race-api",configureServer(server){server.middlewares.use("/api/race",raceHandler);},configurePreviewServer(server){server.middlewares.use("/api/race",raceHandler);}}],
+  plugins: [react(), tailwindcss(), {name:"local-race-api",configureServer(server){server.middlewares.use("/api/race",raceHandler);server.middlewares.use("/api/admin",adminHandler);server.middlewares.use("/api/journey",journeyHandler);},configurePreviewServer(server){server.middlewares.use("/api/race",raceHandler);server.middlewares.use("/api/admin",adminHandler);server.middlewares.use("/api/journey",journeyHandler);}}],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, '.'),

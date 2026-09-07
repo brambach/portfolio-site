@@ -1,3 +1,4 @@
+import {trackJourney} from '../lib/journey-stats';
 import {ContactLinks} from './ContactLinks';
 import {saveRaceResult,type SavedRace} from "./race-result";
 import {useEffect,useRef,useState} from 'react';
@@ -49,7 +50,7 @@ export function RacePanel({race,cancel,resume}:{race:RaceState;cancel:()=>void;r
         await post({action:'finish',id,elapsed:Math.round(race.elapsed)});
       }
       await post({action:'publish',id:await request.current,name:name.trim()});
-      setSaved(true);setMessage('Your time is on the board.');await loadBoard();
+      trackJourney('time_posted');setSaved(true);setMessage('Your time is on the board.');await loadBoard();
     }catch(error){setMessage(error instanceof Error?error.message:'The leaderboard isn’t available.');}
     finally{setSaving(false);}
   }

@@ -1,3 +1,4 @@
+import {trackJourney} from '../lib/journey-stats';
 import {ContactLinks} from './ContactLinks';
 import {RaceTimes,TimeToBeat} from "./RaceTimes";
 import {readRaceResult,type SavedRace} from "./race-result";
@@ -250,6 +251,9 @@ export default function Entrance() {
     if (laptop === "reading") introLaptopSeen.current = true;
     if (laptop === "idle" && introLaptopSeen.current) setIntro("ready");
   }, [intro, laptop]);
+  useEffect(()=>{if(phase==="inside")trackJourney("car_entered");},[phase]);
+  useEffect(()=>{if(telemetry.stop==="lake"&&drive.phase==="parked")trackJourney("lake_reached");},[telemetry.stop,drive.phase]);
+  useEffect(()=>{if(race.phase==="racing")trackJourney("race_started");if(race.phase==="finished")trackJourney("race_finished");},[race.phase]);
   const lakeArrival = scenicMode && intro === "done" && telemetry.stop === "lake" && drive.phase === "parked" && !lakeDismissed;
   const invitation = townMode && phase === "inside" && intro === "done" && (drive.phase === "driving" || drive.phase === "off" || drive.phase === "parked") && !telemetry.approach ? stopInvitation(scenicAccess,telemetry.distance,telemetry.speed,[...visited,...dismissedStops]) : null;
   const focusCabin=()=>hostRef.current?.querySelector("canvas")?.focus({preventScroll:true});
