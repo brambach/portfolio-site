@@ -1,4 +1,4 @@
-import {trackJourney} from '../lib/journey-stats';
+import {trackJourney,recordSceneReady} from '../lib/journey-stats';
 import {ContactLinks} from './ContactLinks';
 import {RaceTimes,TimeToBeat} from "./RaceTimes";
 import {readRaceResult,type SavedRace} from "./race-result";
@@ -94,6 +94,7 @@ export default function Entrance() {
 
   useEffect(() => {
     const host = hostRef.current!;
+    trackJourney("scene_loading");
     setReady(false);
     setPhase("outside");
     setObject(null);
@@ -103,6 +104,7 @@ export default function Entrance() {
     const controller = new AbortController();
     const unavailable=()=>{
       if(cancelled)return;
+      trackJourney("scene_render_failed");
       cancelled=true;controller.abort();sceneRef.current?.dispose();sceneRef.current=null;
       setReady(false);setPhase('outside');setObject(null);setLaptop('idle');setScreenElement(null);
       setDrive({phase:'off',overlook:false});setVisit({phase:'idle',coffee:false,stop:null});setRouteMap(false);setMenu(false);setHover(null);
@@ -162,7 +164,7 @@ export default function Entrance() {
     createCarScene(
       host,
       () => {
-        if (!cancelled){setReady(true);try{sessionStorage.setItem("bryce-arrived","yes");}catch{}}
+        if (!cancelled){recordSceneReady(performance.now());setReady(true);try{sessionStorage.setItem("bryce-arrived","yes");}catch{}}
       },
       (inside) => {
         if (!cancelled) setPhase(inside ? "inside" : "outside");
@@ -181,7 +183,7 @@ export default function Entrance() {
         }
       })
       .catch(() => {
-        if (!cancelled) setFailed(true);
+        if (!cancelled){trackJourney("scene_load_failed");setFailed(true);}
       });
     return () => {
       cancelled = true;
@@ -254,6 +256,7 @@ export default function Entrance() {
   useEffect(()=>{if(phase==="inside")trackJourney("car_entered");},[phase]);
   useEffect(()=>{if(telemetry.stop==="lake"&&drive.phase==="parked")trackJourney("lake_reached");},[telemetry.stop,drive.phase]);
   useEffect(()=>{if(race.phase==="racing")trackJourney("race_started");if(race.phase==="finished")trackJourney("race_finished");},[race.phase]);
+  useEffect(()=>{if(scenicMode&&intro==="done")trackJourney("intro_completed");},[scenicMode,intro]);
   const lakeArrival = scenicMode && intro === "done" && telemetry.stop === "lake" && drive.phase === "parked" && !lakeDismissed;
   const invitation = townMode && phase === "inside" && intro === "done" && (drive.phase === "driving" || drive.phase === "off" || drive.phase === "parked") && !telemetry.approach ? stopInvitation(scenicAccess,telemetry.distance,telemetry.speed,[...visited,...dismissedStops]) : null;
   const focusCabin=()=>hostRef.current?.querySelector("canvas")?.focus({preventScroll:true});

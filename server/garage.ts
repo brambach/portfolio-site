@@ -1,7 +1,7 @@
 import {randomBytes,scrypt,timingSafeEqual,createHash} from 'node:crypto';
 import {command,type Command} from './garage-store.js';
 export const passwordKey='portfolio:garage:v1:password';
-export const steps=['visit','car_entered','lake_reached','race_started','race_finished','time_posted'] as const;
+export const steps=['visit','car_entered','lake_reached','race_started','race_finished','time_posted','scene_loading','scene_ready','scene_load_failed','scene_render_failed','intro_completed','ready_under_3s','ready_3_to_8s','ready_8_to_15s','ready_over_15s'] as const;
 export const sources=['direct','x','linkedin','github','other'] as const;
 const digest=(value:string)=>createHash('sha256').update(value).digest('hex');
 const derive=(password:string,salt:string)=>new Promise<Buffer>((resolve,reject)=>scrypt(password,salt,64,{N:32768,r:8,p:1,maxmem:64*1024*1024},(error,key)=>error?reject(error):resolve(key)));
@@ -53,7 +53,7 @@ export async function journeyApi(body:any,ip:string,db:Command=command){
       redis.call('HINCRBY',KEYS[3],ARGV[1],1)
       if ARGV[1]=='visit' then redis.call('HINCRBY',KEYS[3],'source:'..ARGV[2],1) end
       redis.call('EXPIRE',KEYS[3],7776000); redis.call('SET',KEYS[4],ARGV[3],'NX'); return 1`,4,
-      'portfolio:journey:v1:rate:'+digest(ip),'portfolio:journey:v1:seen:'+body.session+':'+body.event,
+      'portfolio:journey:v1:rate:'+digest(ip),'portfolio:journey:v1:seen:'+body.session+':'+(body.event.startsWith('ready_')?'ready_timing':body.event),
       'portfolio:journey:v1:day:'+day,'portfolio:journey:v1:started',body.event,body.source,new Date().toISOString());
     return {status:result===-1?429:200,data:{ok:result!==-1}};
   }catch{return {status:503,data:{error:'Stats unavailable.'}};}

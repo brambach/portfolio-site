@@ -1,5 +1,5 @@
 import {afterEach,beforeEach,it,expect,vi} from 'vitest';
-import {trackJourney} from './journey-stats';
+import {trackJourney,recordSceneReady} from './journey-stats';
 beforeEach(()=>{sessionStorage.clear();vi.stubEnv('PROD',true);vi.stubGlobal('location',{hostname:'www.brycerambach.com',pathname:'/',search:''});});
 afterEach(()=>{vi.unstubAllGlobals();vi.unstubAllEnvs();});
 it('counts repeated effects and a later refresh only once per session',async()=>{
@@ -13,4 +13,11 @@ it('excludes admin and local traffic',()=>{
 });
 it('can retry a failed delivery without breaking the journey',async()=>{
   const request=vi.fn(async()=>({ok:false}));vi.stubGlobal('fetch',request);trackJourney('visit');await new Promise(resolve=>setTimeout(resolve,0));trackJourney('visit');expect(request).toHaveBeenCalledTimes(2);
+});
+
+it('keeps one readiness bucket when a session reloads faster',async()=>{
+  const request=vi.fn(async(..._args:any[])=>({ok:true}));vi.stubGlobal('fetch',request);
+  recordSceneReady(16000);await new Promise(resolve=>setTimeout(resolve,0));recordSceneReady(2000);
+  const events=request.mock.calls.map(call=>JSON.parse(call[1].body).event);
+  expect(events).toEqual(['scene_ready','ready_over_15s']);
 });
