@@ -19,7 +19,10 @@
 .simulation-console button { min-width:40px; min-height:40px; border:0; border-radius:6px; background:none; color:#e8e4d4; font-size:13px; padding:8px 12px; }
 .simulation-console button:hover { background:#ffffff16; }
 .simulation-failure { position:absolute; inset:40% 20% auto; text-align:center; padding:24px; background:#172117; border-radius:12px; }
-.simulation-failure button { padding:12px; margin:10px; background:#d6dbc4; border:0; border-radius:4px; color:#172117; }
+.simulation-failure__actions { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin-top:18px; }
+.live-entrance .simulation-failure__actions button,.live-entrance .simulation-failure__actions a { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:12px; border-radius:4px; color:#172117; line-height:1.35; }
+.live-entrance .simulation-failure__actions button { background:#d6dbc4; border:0; }
+.simulation-failure__actions a { background:#f4edd9; text-decoration:none; }
 .cabin-object { border:0; padding:0; margin:auto; width:min(900px,calc(100vw - 48px)); max-height:calc(100svh - 64px); background:transparent; color:#283022; overflow:visible; }
 .cabin-object::backdrop { background:#111a1288; backdrop-filter:blur(7px); }
 .cabin-object__surface { max-height:calc(100svh - 64px); overflow:auto; background:#eff0e5; border:10px solid #30332c; border-radius:18px; box-shadow:0 30px 100px #0008; }

@@ -1,25 +1,41 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { CarAudio } from './car-audio';
+import { readFileSync } from 'node:fs';
+import { CarAudio, prepareStablePullLoop } from './car-audio';
 
-function audioHarness() {
+function audioHarness(sampleRate=44100) {
   const tones: {start: ReturnType<typeof vi.fn>;stop:ReturnType<typeof vi.fn>}[] = [];
   const started: string[] = [], stopped = vi.fn(), closed = vi.fn();
   const gains: { value: number; setTargetAtTime: ReturnType<typeof vi.fn>; cancelScheduledValues:ReturnType<typeof vi.fn> }[] = [];
+  const filters: { frequency: ReturnType<typeof parameter>; type: string }[] = [];
   const parameter = () => ({ value: 0, setTargetAtTime: vi.fn(), setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn(), cancelScheduledValues:vi.fn() });
+  const sources: {
+    buffer:{name:string};
+    playbackRate:ReturnType<typeof parameter>;
+    loop:boolean;
+    stop:ReturnType<typeof vi.fn>;
+    start:()=>void;
+  }[] = [];
   const connectable = () => ({ connect: vi.fn(), disconnect: vi.fn() });
   const ctor = vi.fn();
   const decoded=vi.fn();
   const resumed=vi.fn(async()=>{}),suspended=vi.fn(async()=>{});
   class Context {
     currentTime = 0;
+    sampleRate = sampleRate;
     destination = {};
     constructor() { ctor(); }
     createGain() { const gain = parameter(); gains.push(gain); return { ...connectable(), gain }; }
+    createBuffer(numberOfChannels:number,length:number,rate:number) {
+      const channels=Array.from({length:numberOfChannels},()=>new Float32Array(length));
+      return {numberOfChannels,length,sampleRate:rate,duration:length/rate,getChannelData:(channel:number)=>channels[channel]};
+    }
     createDynamicsCompressor() { return { ...connectable(), threshold: parameter(), ratio: parameter(), attack: parameter(), release: parameter() }; }
-    createBiquadFilter() { return { ...connectable(), frequency: parameter(), type: '' }; }
+    createBiquadFilter() { const filter={ ...connectable(), frequency: parameter(), type: '' };filters.push(filter);return filter; }
     createOscillator(){const tone={...connectable(),frequency:parameter(),type:"",start:vi.fn(),stop:vi.fn()};tones.push(tone);return tone;}
     createBufferSource() {
-      return { ...connectable(), buffer: null as unknown as { name: string }, playbackRate: parameter(), loop: false, stop: stopped, start() { started.push(this.buffer.name); } };
+      const source={ ...connectable(), buffer: null as unknown as { name: string }, playbackRate: parameter(), loop: false, stop: stopped, start() { started.push(this.buffer.name); } };
+      sources.push(source);
+      return source;
     }
     async decodeAudioData(data: string) { decoded(data);return { name: data }; }
     async resume() { await resumed(); }
@@ -29,7 +45,7 @@ function audioHarness() {
   const fetcher = vi.fn(async (url: string) => ({ ok: true, arrayBuffer: async () => url.split('/').at(-1) }));
   vi.stubGlobal('AudioContext', Context);
   vi.stubGlobal('fetch', fetcher);
-  return { tones, started, stopped, closed, gains, ctor, fetcher, decoded, resumed, suspended };
+  return { tones, sources, started, stopped, closed, gains, filters, ctor, fetcher, decoded, resumed, suspended };
 }
 
 afterEach(() => vi.unstubAllGlobals());
@@ -88,7 +104,7 @@ it('keeps one instance of each engine bed and ignores overlapping throttle blips
   expect(harness.started.filter(name=>name==='911-idle.wav')).toHaveLength(1);
   expect(harness.started.filter(name=>name==='911-pull.wav')).toHaveLength(1);
   expect(harness.started.filter(name=>name==='911-redline.wav')).toHaveLength(1);
-  expect(harness.started.filter(name=>name==='911-blip.wav')).toHaveLength(1);
+  expect(harness.started.filter(name=>name==='911-blip.wav')).toHaveLength(0);
   audio.dispose();
 });
 
@@ -211,4 +227,108 @@ it('restores the engine and radio mix after the phone stops ringing',async()=>{
   audio.stopCall();audio.update(0,true,1);
   for(const [gain,level] of mix)expect(gain.setTargetAtTime.mock.lastCall?.[0]).toBeCloseTo(level);
   audio.dispose();
+});
+
+it.each([8000,24000,44100,48000])('keeps filter frequency values inside Nyquist at %s Hz',async(sampleRate)=>{
+  const harness=audioHarness(sampleRate),ready=vi.fn(),audio=new CarAudio(vi.fn(),ready);
+  audio.unlock();await vi.waitFor(()=>expect(ready).toHaveBeenCalled());
+  for(const inside of [0,1]){
+    audio.update(18,true,inside,true,false,1/60,{rpm:3600,gear:3,load:.5});
+  }
+  const nyquist=sampleRate/2;
+  const writes=harness.filters.flatMap(filter=>[
+    filter.frequency.value,
+    ...filter.frequency.setTargetAtTime.mock.calls.map(([value])=>value),
+  ]);
+  expect(writes.every(value=>Number.isFinite(value)&&value>=0&&value<=nyquist)).toBe(true);
+  audio.dispose();
+});
+
+it('drives loop playback rates from the shared displayed RPM without an extra long pitch lag',async()=>{
+  const harness=audioHarness(),ready=vi.fn(),audio=new CarAudio(vi.fn(),ready);
+  audio.unlock();await vi.waitFor(()=>expect(ready).toHaveBeenCalled());
+  audio.update(18,true,1,.2,false,1/60,{rpm:2800,gear:4,load:.2});
+  const [idle,pull,redline]=['911-idle.wav','911-pull.wav','911-redline.wav'].map(name=>{
+    const index=harness.started.indexOf(name);
+    expect(index).toBeGreaterThanOrEqual(0);
+    return harness.sources[index];
+  });
+  expect(idle.playbackRate.setTargetAtTime).toHaveBeenLastCalledWith(1.8,0,.035);
+  expect(pull.playbackRate.setTargetAtTime).toHaveBeenLastCalledWith(.875,0,.035);
+  expect(redline.playbackRate.setTargetAtTime).toHaveBeenLastCalledWith(.875,0,.035);
+  audio.update(18,true,1,.2,false,1/60,{rpm:6500,gear:4,load:.8});
+  expect(redline.playbackRate.setTargetAtTime).toHaveBeenLastCalledWith(expect.closeTo(6500/3200,5),0,.035);
+  audio.dispose();
+});
+
+it('keeps shared-state revs on the engine loops instead of starting the prerecorded blip',async()=>{
+  const harness=audioHarness(),ready=vi.fn(),audio=new CarAudio(vi.fn(),ready);
+  audio.unlock();await vi.waitFor(()=>expect(ready).toHaveBeenCalled());
+  audio.update(0,true,1,0,false,1/60,{rpm:920,gear:1,load:.12});
+  audio.rev();
+  audio.update(0,true,1,0,false,1/60,{rpm:1500,gear:1,load:.25});
+  expect(harness.started.filter(name=>name==='911-blip.wav')).toHaveLength(0);
+  const idle=harness.sources[harness.started.indexOf('911-idle.wav')];
+  expect(idle.playbackRate.setTargetAtTime).toHaveBeenLastCalledWith(expect.closeTo(1500/920,5),0,.035);
+  audio.dispose();
+});
+
+it('keeps the fallback rev audible through the RPM-driven pull loop',async()=>{
+  const harness=audioHarness(),ready=vi.fn(),audio=new CarAudio(vi.fn(),ready);
+  audio.unlock();await vi.waitFor(()=>expect(ready).toHaveBeenCalled());
+  for(let i=0;i<60;i++)audio.update(0,true,1,false,false,1/60);
+  audio.rev();
+  const state=audio.update(0,true,1,false,false,.1);
+  expect(state.rpm).toBeGreaterThan(1100);
+  expect(harness.gains.at(-2)!.setTargetAtTime.mock.lastCall![0]).toBeGreaterThan(0);
+  audio.dispose();
+});
+
+function wavBuffer(path:string){
+  const data=readFileSync(path);
+  const channels=data.readUInt16LE(22),rate=data.readUInt32LE(24),bits=data.readUInt16LE(34);
+  let offset=12,size=0;
+  while(offset<data.length){
+    const id=data.toString('ascii',offset,offset+4),chunk=data.readUInt32LE(offset+4);
+    if(id==='data'){offset+=8;size=chunk;break;}
+    offset+=8+chunk+(chunk%2);
+  }
+  if(bits!==16||!size)throw new Error('Expected 16-bit PCM WAV.');
+  const frames=size/(channels*2);
+  const samples=Array.from({length:channels},()=>new Float32Array(frames));
+  for(let frame=0;frame<frames;frame++)for(let channel=0;channel<channels;channel++)samples[channel][frame]=data.readInt16LE(offset+(frame*channels+channel)*2)/32768;
+  return {numberOfChannels:channels,length:frames,sampleRate:rate,duration:frames/rate,getChannelData:(channel:number)=>samples[channel]};
+}
+
+it('keeps every adjacent sample bounded across the circular pull crossfade',()=>{
+  const sampleRate=1000,sourceData=Float32Array.from({length:4000},(_,i)=>Math.sin(2*Math.PI*17.3*i/sampleRate));
+  const source={sampleRate,length:sourceData.length,numberOfChannels:1,getChannelData:()=>sourceData} as unknown as AudioBuffer;
+  const context={createBuffer:(numberOfChannels:number,length:number,rate:number)=>{
+    const data=new Float32Array(length);
+    return {numberOfChannels,length,sampleRate:rate,duration:length/rate,getChannelData:()=>data} as unknown as AudioBuffer;
+  }};
+  const data=prepareStablePullLoop(context,source).getChannelData(0);
+  const jumps=Array.from(data,(value,i)=>Math.abs(value-data[(i+1)%data.length]));
+  expect(Math.max(...jumps)).toBeLessThanOrEqual(.16);
+});
+
+it('prepares a stable real 911-pull loop from the 0.3s to 2.3s recording region with circular continuity',()=>{
+  const source=wavBuffer('public/audio/forest-drive/911-pull.wav') as AudioBuffer;
+  const context={createBuffer:(channels:number,length:number,rate:number)=>{
+    const data=Array.from({length:channels},()=>new Float32Array(length));
+    return {numberOfChannels:channels,length,sampleRate:rate,duration:length/rate,getChannelData:(channel:number)=>data[channel]};
+  }};
+  const loop=prepareStablePullLoop(context as Pick<AudioContext,'createBuffer'>,source);
+  expect(loop.duration).toBeCloseTo(1.95,2);
+  expect(source.duration).toBeGreaterThan(9);
+  for(let channel=0;channel<loop.numberOfChannels;channel++){
+    const data=loop.getChannelData(channel),edge=256;
+    const sourceData=source.getChannelData(channel);
+    const join=Math.floor(2.3*source.sampleRate)-Math.floor(.05*source.sampleRate);
+    const discontinuity=Math.abs(data[0]-data[data.length-1]);
+    let body=0;
+    for(let i=edge;i<edge*2;i++)body+=Math.abs(data[i]-data[i+edge]);
+    expect(discontinuity).toBeCloseTo(Math.abs(sourceData[join]-sourceData[join-1]),6);
+    expect(body/edge).toBeGreaterThan(.01);
+  }
 });

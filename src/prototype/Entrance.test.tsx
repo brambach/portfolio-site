@@ -1,9 +1,9 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Entrance from './Entrance';
 
-const scene = vi.hoisted(() => ({ fail: false, replayRace:vi.fn(()=>true), ringCall:vi.fn(), stopCall:vi.fn(), setSpeedHold:vi.fn(), honk:vi.fn(), reduceMotion: vi.fn(), stopEngine: vi.fn(), startDrive: vi.fn(), openMap: vi.fn(), openLaptop: vi.fn(), closeLaptop: vi.fn(), dispose: vi.fn() }));
+const scene = vi.hoisted(() => ({ fail: false, replayRace:vi.fn(()=>true), routePreview:vi.fn(), ringCall:vi.fn(), stopCall:vi.fn(), setSpeedHold:vi.fn(), honk:vi.fn(), reduceMotion: vi.fn(), stopEngine: vi.fn(), startDrive: vi.fn(), navigate: vi.fn(), openMap: vi.fn(), goStraightTo: vi.fn(), openLaptop: vi.fn(), closeLaptop: vi.fn(), dispose: vi.fn() }));
 vi.mock('./car-scene', () => ({
   createCarScene: vi.fn(async (host: HTMLElement, ready: () => void, arrived: (inside: boolean) => void) => {
     if (scene.fail) throw new Error('WebGL unavailable');
@@ -20,24 +20,41 @@ vi.mock('./car-scene', () => ({
     return {
       screenElement: display,
       enter: () => { host.dispatchEvent(new Event('car-enter')); arrived(true); canvas.focus(); },
-      exit: () => arrived(false), center: vi.fn(), look: vi.fn(), mute: vi.fn(), volume: vi.fn(), reduceMotion: scene.reduceMotion, putDownObject: vi.fn(), rev: vi.fn(),
+      orderCoffee:vi.fn(), exit: () => arrived(false), center: vi.fn(), lookAtLake: vi.fn(), look: vi.fn(), mute: vi.fn(), volume: vi.fn(), reduceMotion: scene.reduceMotion, putDownObject: vi.fn(), rev: vi.fn(),
       replayRace:scene.replayRace, setSpeedHold:scene.setSpeedHold,honk:scene.honk,skipApproach:vi.fn(),
       ringCall:scene.ringCall,stopCall:scene.stopCall,setMusic:vi.fn(), allowIgnition: () => canvas.focus({preventScroll:true}), inspect: (item:string)=>host.dispatchEvent(new CustomEvent("car-artifact",{detail:item})),
-      openMap: scene.openMap, stopEngine: scene.stopEngine, startDrive: scene.startDrive,
+      openMap: scene.openMap, routePreview: scene.routePreview, goStraightTo: scene.goStraightTo, navigate: scene.navigate, stopEngine: scene.stopEngine, startDrive: scene.startDrive,
       openLaptop: scene.openLaptop, closeLaptop: scene.closeLaptop,
       dispose: () => { scene.dispose(); canvas.remove(); display.remove(); },
     };
   }),
 }));
 beforeAll(() => { HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');}; HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', ''); }; });
-afterEach(()=>{history.replaceState({},'', '/');});
-beforeEach(() => { scene.fail = false; vi.clearAllMocks(); localStorage.removeItem('bryce-portfolio-reduce-motion'); localStorage.removeItem('bryce-journey-v2'); });
+afterEach(()=>{cleanup();history.replaceState({},'', '/');vi.unstubAllGlobals();});
+beforeEach(() => { scene.fail = false; vi.clearAllMocks(); scene.routePreview.mockReturnValue(undefined); localStorage.removeItem('bryce-portfolio-reduce-motion'); localStorage.removeItem('bryce-journey-v2'); sessionStorage.clear(); });
+
+function mockMobileViewport(matches:boolean){
+  let current=matches;
+  const listeners=new Set<(event:MediaQueryListEvent)=>void>();
+  const query={
+    get matches(){return current;},
+    media:'(max-width:700px)',
+    onchange:null,
+    addEventListener:vi.fn((_event:string,listener:(event:MediaQueryListEvent)=>void)=>listeners.add(listener)),
+    removeEventListener:vi.fn((_event:string,listener:(event:MediaQueryListEvent)=>void)=>listeners.delete(listener)),
+    addListener:vi.fn((listener:(event:MediaQueryListEvent)=>void)=>listeners.add(listener)),
+    removeListener:vi.fn((listener:(event:MediaQueryListEvent)=>void)=>listeners.delete(listener)),
+    dispatchEvent:vi.fn(()=>true),
+  };
+  vi.stubGlobal('matchMedia',vi.fn(()=>query));
+  return {set(next:boolean){current=next;listeners.forEach(listener=>listener({matches:current,media:query.media} as MediaQueryListEvent));}};
+}
 
 async function finishIntro(user: ReturnType<typeof userEvent.setup>) {
-  if(!screen.queryByRole('button',{name:'Fine, show me your stuff'})) return;
-  await user.click(screen.getByRole('button',{name:'Fine, show me your stuff'}));
+  if(!screen.queryByRole('button',{name:'Meet Bryce'})) return;
+  await user.click(screen.getByRole('button',{name:'Meet Bryce'}));
   await user.click(await screen.findByRole('button',{name:/Ready for the road/}));
-  await user.click(await screen.findByRole('button',{name:'Hand over the keys'}));
+  await user.click(await screen.findByRole('button',{name:'Start the journey'}));
   scene.openLaptop.mockClear();scene.closeLaptop.mockClear();
 }
 
@@ -45,6 +62,7 @@ it('leaves modified ignition keys available to browser shortcuts', async () => {
   const user=userEvent.setup();render(<Entrance/>);
   await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));
   await finishIntro(user);
+  scene.startDrive.mockClear();scene.navigate.mockClear();
   const canvas=screen.getByLabelText('Porsche cabin');
   for(const modifier of ['metaKey','ctrlKey','altKey']){
     expect(fireEvent.keyDown(canvas,{key:'k',code:'KeyK',[modifier]:true})).toBe(true);
@@ -74,9 +92,49 @@ it('keeps projects available after a running scene becomes unavailable', async (
   expect(screen.getByRole('region',{name:'Scene unavailable'})).toHaveFocus();
   expect(screen.queryByRole('button',{name:'Turn the ignition key'})).not.toBeInTheDocument();
   await user.click(screen.getByRole('button',{name:'Open personal projects'}));
-  await user.click(screen.getByRole('button',{name:/^trace:/}));
-  expect(screen.getByRole('link',{name:'View source on GitHub ↗'})).toHaveAttribute('href','https://github.com/brambach/trace');
+  await user.click(screen.getByRole('link',{name:'View Lucid'}));
+  expect(screen.getByRole('dialog',{name:'Lucid project'})).toBeInTheDocument();
   expect(scene.openLaptop).not.toHaveBeenCalled();
+});
+
+it('renders readable wrapped recovery actions in the unavailable scene section', async () => {
+  scene.fail = true;
+  render(<Entrance/>);
+  const region=await screen.findByRole('region',{name:'Scene unavailable'});
+  expect(region).toHaveFocus();
+  const actions=screen.getByRole('group',{name:'Scene recovery actions'});
+  expect(region).toContainElement(actions);
+  const controls=[
+    screen.getByRole('button',{name:'Try again'}),
+    screen.getByRole('button',{name:'Open personal projects'}),
+    screen.getByRole('link',{name:'Read without the scene'}),
+    screen.getByRole('link',{name:'Contact Bryce'}),
+  ];
+  expect(controls.every(control=>actions.contains(control))).toBe(true);
+  controls.forEach(control=>expect(control.parentElement).toBe(actions));
+});
+
+it('returns focus to the persistent site menu opener after race times cancel and close',async()=>{
+  const fetcher=vi.fn(async()=>({ok:false,json:async()=>({})}));
+  vi.stubGlobal('fetch',fetcher);
+  const user=userEvent.setup();
+  render(<Entrance/>);
+  await screen.findByRole('button',{name:'Get in the Porsche'});
+  const menuButton=screen.getByRole('button',{name:'Open site menu'});
+  await user.click(menuButton);
+  await user.click(screen.getByRole('button',{name:'Race times'}));
+  await user.click(await screen.findByRole('button',{name:'Try again'}));
+  const dialog=screen.getByRole('dialog',{name:'Race times.'});
+  expect(fireEvent(dialog,new Event('cancel',{bubbles:false,cancelable:true}))).toBe(false);
+  await waitFor(()=>expect(screen.queryByRole('dialog',{name:'Race times.'})).not.toBeInTheDocument());
+  expect(menuButton).toHaveFocus();
+
+  await user.click(menuButton);
+  await user.click(screen.getByRole('button',{name:'Race times'}));
+  await user.click(await screen.findByRole('button',{name:'Try again'}));
+  await user.click(screen.getByRole('button',{name:'Close race times'}));
+  await waitFor(()=>expect(screen.queryByRole('dialog',{name:'Race times.'})).not.toBeInTheDocument());
+  expect(menuButton).toHaveFocus();
 });
 
 describe('the cabin reading sequence', () => {
@@ -92,15 +150,20 @@ describe('the cabin reading sequence', () => {
     expect(document.querySelector('dialog')).toBeNull();
     expect(screen.getByRole('dialog', { name: 'Project laptop' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Open site menu' })).toHaveAttribute('aria-expanded', 'false');
-    await user.click(screen.getByRole('button', { name: /^arro:/ }));
-    expect(screen.getByRole('heading', { name: 'arro' })).toBeInTheDocument();
-    fireEvent.keyDown(screen.getByRole('article'), { key: 'Escape' });
+    await user.click(screen.getByRole('link', { name: 'View Arro' }));
+    const viewer=screen.getByRole('dialog',{name:'Arro project'});
+    fireEvent.keyDown(viewer,{key:'k',code:'KeyK'});
+    expect(scene.startDrive).not.toHaveBeenCalled();
+    fireEvent(viewer,new Event('cancel',{bubbles:true,cancelable:true}));
+    await waitFor(()=>expect(screen.getByRole('link',{name:'View Arro'})).toHaveFocus());
+    expect(scene.closeLaptop).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button',{name:'Close laptop and return to seat'}));
     expect(scene.closeLaptop).toHaveBeenCalledOnce();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Porsche cabin')).toHaveFocus();
     await user.click(screen.getByRole('button', { name: 'Open site menu' }));
     await user.click(screen.getByRole('button', { name: 'Personal projects' }));
-    expect(screen.getByRole('heading', { name: 'arro' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'View Arro' })).toHaveAttribute('aria-current','true');
   });
   it('keeps projects available before entry and if the scene fails to load', async () => {
     scene.fail = true;
@@ -110,8 +173,9 @@ describe('the cabin reading sequence', () => {
     await user.click(screen.getByRole('button', { name: 'Open personal projects' }));
     expect(screen.getByRole('dialog', { name: 'Project laptop' }).tagName).toBe('DIALOG');
     expect(scene.openLaptop).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('button', { name: /^throughline:/ }));
-    expect(screen.getByRole('heading', { name: 'throughline' })).toBeInTheDocument();
+    await user.click(screen.getByRole('link', { name: 'View Dervo' }));
+    expect(screen.getByRole('dialog', { name: 'Dervo project' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button',{name:'← All projects'}));
     await user.click(screen.getByRole('button', { name: 'Put down object' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
@@ -131,6 +195,42 @@ it('opens the journey map from the keyboard menu and returns focus to the cabin'
   expect(screen.getByLabelText('Porsche cabin')).toHaveFocus();
 });
 
+it('keeps scenic map navigation default and offers straight-through placement',async()=>{
+  const user=userEvent.setup();render(<Entrance/>);
+  await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));
+  await finishIntro(user);
+  const host=screen.getByLabelText('Porsche cabin').parentElement!;
+  fireEvent(host,new CustomEvent('car-laptop',{detail:'idle'}));
+  fireEvent(host,new CustomEvent('car-drive',{detail:{phase:'parked',overlook:true}}));
+  fireEvent(host,new CustomEvent('car-telemetry',{detail:{speed:0,rpm:900,gear:1,engineOn:true,automatic:true,collision:false,distance:294.37,x:66,z:282,stop:'cafe'}}));
+  await user.click(screen.getByRole('button',{name:'Route map'}));
+  await user.click(screen.getByRole('button',{name:/^03.*Lakeside/}));
+  await user.click(screen.getByRole('button',{name:/Take the scenic route.*Lakeside/}));
+  expect(scene.goStraightTo).not.toHaveBeenCalled();
+  expect(scene.navigate).toHaveBeenCalledWith('lake');
+  await user.click(screen.getByRole('button',{name:'Route map'}));
+  await user.click(screen.getByRole('button',{name:/Go straight there.*Tennis club/}));
+  expect(await screen.findByText('Heading to Tennis club.')).toBeInTheDocument();
+  await waitFor(()=>expect(scene.goStraightTo).toHaveBeenCalledWith('tennis'));
+  await waitFor(()=>expect(screen.queryByText('Heading to Tennis club.')).not.toBeInTheDocument(),{timeout:1400});
+});
+
+it('explains a blocked forced lake approach and keeps controls reachable',async()=>{
+  const user=userEvent.setup();render(<Entrance/>);
+  await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));
+  await finishIntro(user);
+  const host=screen.getByLabelText('Porsche cabin').parentElement!;
+  fireEvent(host,new CustomEvent('car-route-blocked',{detail:{requested:'tennis',required:'lake'}}));
+  expect(screen.getByText(/already committed to the lake turnout/)).toBeInTheDocument();
+  expect(screen.getByRole('button',{name:'Go straight to Tennis club'})).toBeInTheDocument();
+  await user.click(screen.getByRole('button',{name:'Stay on the approach'}));
+  expect(screen.queryByText(/already committed/)).not.toBeInTheDocument();
+  expect(screen.getByLabelText('Porsche cabin')).toHaveFocus();
+  fireEvent(host,new CustomEvent('car-route-blocked',{detail:{requested:'tennis',required:'lake'}}));
+  await user.click(screen.getByRole('button',{name:'Go straight to Tennis club'}));
+  await waitFor(()=>expect(scene.goStraightTo).toHaveBeenCalledWith('tennis'));
+  await waitFor(()=>expect(screen.queryByText('Heading to Tennis club.')).not.toBeInTheDocument(),{timeout:1400});
+});
 
 it('keeps the release cabin focused and provides contact before entry', async () => {
   const user=userEvent.setup();render(<Entrance/>);
@@ -144,7 +244,7 @@ it('keeps the release cabin focused and provides contact before entry', async ()
   await user.click(screen.getByRole('button',{name:'Get in the Porsche'}));
   await finishIntro(user);
   expect(screen.queryByRole('navigation',{name:'Explore the cabin'})).not.toBeInTheDocument();
-  expect(screen.queryByText('A tiny toll before the keys.')).not.toBeInTheDocument();
+  expect(screen.queryByText('Before we go.')).not.toBeInTheDocument();
   await user.click(screen.getByRole('button',{name:'Turn the ignition key'}));
   expect(scene.startDrive).toHaveBeenCalledOnce();
   expect(screen.queryByText('Look around. The laptop, racket and contact card are yours to pick up.')).not.toBeInTheDocument();
@@ -157,7 +257,7 @@ it('lets a parked visitor turn the engine off and resume from the same seat', as
   const host=screen.getByLabelText('Porsche cabin').parentElement!;
   fireEvent(host,new CustomEvent('car-drive',{detail:{phase:'parked',overlook:true}}));
   fireEvent(host,new CustomEvent('car-telemetry',{detail:{speed:0,rpm:900,gear:1,engineOn:true,automatic:true,collision:false,distance:2400,x:0,z:0,stop:'lake'}}));
-  expect(screen.getByRole('heading',{name:'This one’s for the lake.'})).toBeInTheDocument();
+  expect(screen.getByRole('heading',{name:'Stay for a moment.'})).toBeInTheDocument();
   await user.click(screen.getByRole('button',{name:'Stay a little longer'}));
   await user.click(screen.getByRole('button',{name:'Turn engine off'}));
   expect(scene.stopEngine).toHaveBeenCalledOnce();
@@ -229,7 +329,7 @@ it('keeps ignition locked until the cabin tour finishes and offers projects at t
   const host=screen.getByLabelText('Porsche cabin').parentElement!;
   fireEvent(host,new CustomEvent('car-drive',{detail:{phase:'parked',overlook:true}}));
   fireEvent(host,new CustomEvent('car-telemetry',{detail:{speed:0,rpm:900,gear:1,engineOn:true,automatic:true,collision:false,distance:2400,x:0,z:0,stop:'lake'}}));
-  expect(screen.getByText(/My family lives by the lake/)).toBeInTheDocument();
+  expect(screen.getByText(/the lake means a lot to me/)).toBeInTheDocument();
   expect(screen.getByRole('link',{name:'Read the full portfolio ↗'})).toHaveAttribute('href','/projects');
   await user.click(screen.getByRole('button',{name:'Open my projects'}));
   expect(screen.getByRole('dialog',{name:'Project laptop'})).toBeInTheDocument();
@@ -319,6 +419,100 @@ it('shows autopilot guidance and keeps manual mode switches out of the outward t
   await user.click(screen.getByRole('button',{name:'Honk horn'}));expect(scene.honk).toHaveBeenCalledOnce();
 });
 
+it('defers road notes while an optional stop card has priority',async()=>{
+  history.replaceState({},'', '/?town');
+  const user=userEvent.setup();render(<Entrance/>);
+  await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));await finishIntro(user);
+  const host=screen.getByLabelText('Porsche cabin').parentElement!;
+  fireEvent(host,new CustomEvent('car-drive',{detail:{phase:'driving',overlook:false}}));
+  fireEvent(host,new CustomEvent('car-telemetry',{detail:{speed:0,rpm:2800,gear:2,engineOn:true,automatic:true,collision:false,distance:325,x:0,z:0,stop:null}}));
+  expect(await screen.findByRole('complementary',{name:'Tennis courts ahead'})).toBeInTheDocument();
+  expect(screen.getByRole('complementary',{name:'A little about Bryce'})).toHaveClass('is-deferred');
+  await user.click(screen.getByRole('button',{name:'A little more'}));
+  await user.click(screen.getByRole('button',{name:'Keep going'}));
+  expect(screen.getByRole('heading',{name:'I design and build software.'})).toBeInTheDocument();
+});
+
+it('moves focus from a newly hidden mobile road note to the optional stop action',async()=>{
+  history.replaceState({},'', '/?town');
+  mockMobileViewport(true);
+  const user=userEvent.setup();render(<Entrance/>);
+  await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));await finishIntro(user);
+  const host=screen.getByLabelText('Porsche cabin').parentElement!;
+  fireEvent(host,new CustomEvent('car-drive',{detail:{phase:'driving',overlook:false}}));
+  fireEvent(host,new CustomEvent('car-telemetry',{detail:{speed:0,rpm:2800,gear:2,engineOn:true,automatic:true,collision:false,distance:190,x:0,z:0,stop:null}}));
+  // The narrow note opens from its peek before it offers the longer read.
+  await user.click(await screen.findByRole('button',{name:/a little about bryce/i}));
+  await user.click(await screen.findByRole('button',{name:'A little more'}));
+  expect(screen.getByRole('button',{name:'Less'})).toHaveFocus();
+  fireEvent(host,new CustomEvent('car-telemetry',{detail:{speed:0,rpm:2800,gear:2,engineOn:true,automatic:true,collision:false,distance:325,x:0,z:0,stop:null}}));
+  expect(await screen.findByRole('complementary',{name:'Tennis courts ahead'})).toBeInTheDocument();
+  await waitFor(()=>expect(screen.getByRole('button',{name:/Optional stop/})).toHaveFocus());
+});
+
+it('does not steal unrelated mobile focus when road notes become deferred',async()=>{
+  history.replaceState({},'', '/?town');
+  mockMobileViewport(true);
+  const user=userEvent.setup();render(<Entrance/>);
+  await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));await finishIntro(user);
+  const host=screen.getByLabelText('Porsche cabin').parentElement!;
+  fireEvent(host,new CustomEvent('car-drive',{detail:{phase:'driving',overlook:false}}));
+  const honk=screen.getByRole('button',{name:'Honk horn'});
+  honk.focus({preventScroll:true});
+  await waitFor(()=>expect(honk).toHaveFocus());
+  fireEvent(host,new CustomEvent('car-telemetry',{detail:{speed:0,rpm:2800,gear:2,engineOn:true,automatic:true,collision:false,distance:325,x:0,z:0,stop:null}}));
+  expect(await screen.findByRole('complementary',{name:'Tennis courts ahead'})).toBeInTheDocument();
+  expect(honk).toHaveFocus();
+});
+
+it('keeps desktop road note focus when the stop card defers without hiding it',async()=>{
+  history.replaceState({},'', '/?town');
+  mockMobileViewport(false);
+  const user=userEvent.setup();render(<Entrance/>);
+  await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));await finishIntro(user);
+  const host=screen.getByLabelText('Porsche cabin').parentElement!;
+  fireEvent(host,new CustomEvent('car-drive',{detail:{phase:'driving',overlook:false}}));
+  fireEvent(host,new CustomEvent('car-telemetry',{detail:{speed:0,rpm:2800,gear:2,engineOn:true,automatic:true,collision:false,distance:190,x:0,z:0,stop:null}}));
+  const more=await screen.findByRole('button',{name:'A little more'});
+  more.focus();
+  fireEvent(host,new CustomEvent('car-telemetry',{detail:{speed:0,rpm:2800,gear:2,engineOn:true,automatic:true,collision:false,distance:325,x:0,z:0,stop:null}}));
+  expect(await screen.findByRole('complementary',{name:'Tennis courts ahead'})).toBeInTheDocument();
+  expect(screen.getByRole('complementary',{name:'A little about Bryce'})).toHaveClass('is-deferred');
+  expect(more).toHaveFocus();
+});
+
+it('hands focus to the stop action when a resize hides a focused deferred note',async()=>{
+  history.replaceState({},'', '/?town');
+  const viewport=mockMobileViewport(false);
+  const user=userEvent.setup();render(<Entrance/>);
+  await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));await finishIntro(user);
+  const host=screen.getByLabelText('Porsche cabin').parentElement!;
+  fireEvent(host,new CustomEvent('car-drive',{detail:{phase:'driving',overlook:false}}));
+  fireEvent(host,new CustomEvent('car-telemetry',{detail:{speed:0,rpm:2800,gear:2,engineOn:true,automatic:true,collision:false,distance:325,x:0,z:0,stop:null}}));
+  expect(await screen.findByRole('complementary',{name:'Tennis courts ahead'})).toBeInTheDocument();
+  screen.getByRole('button',{name:'A little more'}).focus();
+  viewport.set(true);
+  await waitFor(()=>expect(screen.getByRole('button',{name:/Optional stop/})).toHaveFocus());
+});
+
+it('restores mobile road note controls after the stop invitation is dismissed',async()=>{
+  history.replaceState({},'', '/?town');
+  mockMobileViewport(true);
+  const user=userEvent.setup();render(<Entrance/>);
+  await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));await finishIntro(user);
+  const host=screen.getByLabelText('Porsche cabin').parentElement!;
+  fireEvent(host,new CustomEvent('car-drive',{detail:{phase:'driving',overlook:false}}));
+  fireEvent(host,new CustomEvent('car-telemetry',{detail:{speed:0,rpm:2800,gear:2,engineOn:true,automatic:true,collision:false,distance:190,x:0,z:0,stop:null}}));
+  await user.click(await screen.findByRole('button',{name:/a little about bryce/i}));
+  await user.click(await screen.findByRole('button',{name:'A little more'}));
+  fireEvent(host,new CustomEvent('car-telemetry',{detail:{speed:0,rpm:2800,gear:2,engineOn:true,automatic:true,collision:false,distance:325,x:0,z:0,stop:null}}));
+  await user.click(await screen.findByRole('button',{name:/Optional stop/}));
+  await user.click(await screen.findByRole('button',{name:'Keep going'}));
+  expect(screen.getByRole('complementary',{name:'A little about Bryce'})).not.toHaveClass('is-mobile-deferred');
+  expect(screen.getByRole('button',{name:'Less'})).toBeEnabled();
+  expect(screen.getByText('The laptop brings those sides together: interface studies, desktop tools, mobile prototypes and integration work. Each project has something you can explore.')).toBeInTheDocument();
+});
+
 it('allows car shortcut letters in the leaderboard name without starting the engine',async()=>{
   const user=userEvent.setup();render(<Entrance/>);
   await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));await finishIntro(user);
@@ -363,4 +557,55 @@ it('starts a fresh request on retry without registering the previous finish agai
     expect(calls.filter(call=>call.action==='finish')).toHaveLength(1);
     expect(JSON.parse(localStorage.getItem('bryce-last-race')!).elapsed).toBe(41106);
   }finally{vi.unstubAllGlobals();}
+});
+
+it('gives the cafe a coffee interaction and a direct route into the laptop',async()=>{
+  const user=userEvent.setup();render(<Entrance/>);
+  await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));
+  await finishIntro(user);
+  const host=screen.getByLabelText('Porsche cabin').parentElement!;
+  fireEvent(host,new CustomEvent('car-drive',{detail:{phase:'parked',overlook:false}}));
+  fireEvent(host,new CustomEvent('car-telemetry',{detail:{speed:0,rpm:900,gear:1,engineOn:true,automatic:true,collision:false,distance:500,x:0,z:0,stop:'cafe'}}));
+  expect(screen.getByText(/Coffee and something/)).toBeInTheDocument();
+  await user.click(screen.getByRole('button',{name:'A flat white, please'}));
+  fireEvent(host,new CustomEvent('car-visit',{detail:{phase:'idle',coffee:true,stop:null}}));
+  expect(screen.getByText('One flat white.')).toBeInTheDocument();
+  await user.click(screen.getByRole('button',{name:'Open the laptop'}));
+  expect(scene.openLaptop).toHaveBeenCalledOnce();
+});
+
+// On a narrow viewport the optional-stop card covered the whole scenery band
+// while driving. It collapses to a disclosure that still carries every action.
+it('collapses the driving optional stop into a disclosure on a narrow viewport',async()=>{
+  history.replaceState({},'', '/?town');
+  mockMobileViewport(true);
+  const user=userEvent.setup();render(<Entrance/>);
+  await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));await finishIntro(user);
+  const host=screen.getByLabelText('Porsche cabin').parentElement!;
+  fireEvent(host,new CustomEvent('car-drive',{detail:{phase:'driving',overlook:false}}));
+  fireEvent(host,new CustomEvent('car-telemetry',{detail:{speed:0,rpm:2800,gear:2,engineOn:true,automatic:true,collision:false,distance:325,x:0,z:0,stop:null}}));
+  const toggle=await screen.findByRole('button',{name:/Optional stop/});
+  expect(toggle).toHaveAttribute('aria-expanded','false');
+  expect(screen.queryByRole('button',{name:'Pull in'})).toBeNull();
+  expect(screen.queryByText('The young prodigy’s natural habitat.')).toBeNull();
+  await user.click(toggle);
+  expect(toggle).toHaveAttribute('aria-expanded','true');
+  expect(screen.getByText('The young prodigy’s natural habitat.')).toBeInTheDocument();
+  await waitFor(()=>expect(screen.getByRole('button',{name:/Optional stop/})).toHaveFocus());
+  expect(screen.getByRole('button',{name:'Keep going'})).toBeInTheDocument();
+  await user.click(screen.getByRole('button',{name:'Pull in'}));
+  expect(scene.navigate).toHaveBeenCalledWith('tennis');
+});
+
+it('keeps the full optional stop card on a wide viewport',async()=>{
+  history.replaceState({},'', '/?town');
+  mockMobileViewport(false);
+  const user=userEvent.setup();render(<Entrance/>);
+  await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));await finishIntro(user);
+  const host=screen.getByLabelText('Porsche cabin').parentElement!;
+  fireEvent(host,new CustomEvent('car-drive',{detail:{phase:'driving',overlook:false}}));
+  fireEvent(host,new CustomEvent('car-telemetry',{detail:{speed:0,rpm:2800,gear:2,engineOn:true,automatic:true,collision:false,distance:325,x:0,z:0,stop:null}}));
+  expect(await screen.findByRole('button',{name:'Pull in'})).toBeInTheDocument();
+  expect(screen.getByText('The young prodigy’s natural habitat.')).toBeInTheDocument();
+  expect(screen.queryByRole('button',{name:/Optional stop/})).toBeNull();
 });

@@ -56,8 +56,10 @@ function graniteTexture(){
   return texture;
 }
 
-export function addScenicRocks(parent:THREE.Group,heightAt=(x:number,z:number)=>landHeight(x,z,true)){
-  const geometry=new THREE.DodecahedronGeometry(1,1),vertices=geometry.getAttribute('position');
+// The shore's own granite, so anything else standing on that beach is made of
+// the same rock as the boulders already lying on it.
+export function scenicRockGeometry(radius=1){
+  const geometry=new THREE.DodecahedronGeometry(radius,1),vertices=geometry.getAttribute('position');
   for(let i=0;i<vertices.count;i++){
     const x=vertices.getX(i),y=vertices.getY(i),z=vertices.getZ(i),shape=.88+.08*Math.sin(x*7+z*3)*Math.cos(y*5-z*4);
     vertices.setXYZ(i,x*shape,y*shape,z*shape);
@@ -73,7 +75,16 @@ export function addScenicRocks(parent:THREE.Group,heightAt=(x:number,z:number)=>
   }
   for(const normal of shared.values())normal.normalize();
   for(let i=0;i<vertices.count;i++){const normal=shared.get(keys[i])!;normals.setXYZ(i,normal.x,normal.y,normal.z);}
-  const material=new THREE.MeshStandardMaterial({color:'#bcb9b2',map:graniteTexture(),roughness:.92});
+  return geometry;
+}
+// A fresh material each time, so each owner disposes its own texture.
+export function scenicRockMaterial(){
+  return new THREE.MeshStandardMaterial({color:'#bcb9b2',map:graniteTexture(),roughness:.92});
+}
+
+export function addScenicRocks(parent:THREE.Group,heightAt=(x:number,z:number)=>landHeight(x,z,true)){
+  const geometry=scenicRockGeometry();
+  const material=scenicRockMaterial();
   const rocks=new THREE.InstancedMesh(geometry,material,672);rocks.name='Scattered granite';rocks.receiveShadow=true;
   const transform=new THREE.Object3D(),colour=new THREE.Color();let count=0;
   for(let i=0;i<600;i++){

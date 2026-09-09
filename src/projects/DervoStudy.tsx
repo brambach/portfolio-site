@@ -1,0 +1,22 @@
+import { useState } from 'react';
+import { InspectImage } from './InspectImage';
+const scenes=[
+  {name:'Understand',file:'decision',heading:'One decision needs you.',text:'The work is ready for a visual decision. Completed checks and remaining unknowns stay visible beside it.'},
+  {name:'Inspect',file:'evidence',heading:'Read what supports it.',text:'A receipt says what was checked, on which snapshot and in which environment. A passing check has a precise boundary.'},
+  {name:'Decide',file:'settled',heading:'Your decision changes the state.',text:'Accepting the sample baseline records a human decision. The revision moves forward, and the remaining unknowns stay visible.'},
+];
+export default function DervoStudy(){
+  const [step,setStep]=useState(0);const [accepted,setAccepted]=useState(false);
+  const scene=scenes[step];
+  const choose=(index:number)=>{setStep(index);if(index!==2)setAccepted(false);};
+  return <article className="ps-dervo">
+    <header className="ps-dervo__hero"><span className="ps-eyebrow">Dervo / Product & desktop prototype</span><div><h1 tabIndex={-1}>Come back<br/><em>knowing.</em></h1><p>Your agents kept working.<br/>Here’s where things stand.</p></div><div className="ps-dervo__signal"><span>Work reviewed</span><i/><span>Evidence recorded</span><i/><span className="is-waiting">Your decision</span></div></header>
+    <section className="ps-dervo__sequence" aria-label="Dervo sample decision"><div className="ps-sequence-nav">{scenes.map((item,index)=><button key={item.name} aria-pressed={step===index} onClick={()=>choose(index)}><small>0{index+1}</small>{item.name}</button>)}<span>Design experiment / sample state</span></div>
+      <div className="ps-dervo__screen"><img src={`/projects/dervo/${scene.file}.png`} alt={`Dervo design experiment: ${scene.heading}`}/></div>
+      <div className="ps-dervo__caption" aria-live="polite"><div><span className="ps-eyebrow">0{step+1} / 03</span><h2>{scene.heading}</h2></div><p>{scene.text}</p><p className="ps-sample-note">Local prototype. Screens show the app-v3 design experiment with fixture receipts, model labels and outcomes.</p><InspectImage src={`/projects/dervo/${scene.file}.png`} alt={`Dervo ${scene.name.toLowerCase()} screen`}/></div>
+      <div className="ps-dervo__decision"><div><span className="ps-eyebrow">Try a sample decision</span><p>{accepted?'Baseline accepted. Revision 15 is now shown.':'Accept this snapshot as the visual baseline?'}</p></div><button onClick={()=>{if(accepted){setAccepted(false);setStep(0);}else{setAccepted(true);setStep(2);}}}>{accepted?'Reset the example':'Accept sample baseline'} <span aria-hidden="true">+</span></button><small>No repository or live workspace is changed.</small></div>
+    </section>
+    <section className="ps-editorial"><span className="ps-eyebrow">The product idea</span><h2>Less reconstruction.<br/>More understanding.</h2><p>A conversation can contain every detail and still leave you wondering what’s true. Dervo explores a different return point: the intended outcome, evidence for what changed, and the decision that needs a person.</p><div className="ps-editorial__pair"><div><span className="ps-eyebrow">Design</span><h3>Keep the uncertainty visible.</h3><p>Reported work, checked work and human decisions have different meanings. The interface keeps those distinctions readable, even after a goal settles.</p></div><div><span className="ps-eyebrow">Engineering</span><h3>Make the state inspectable.</h3><p>The product explores shared project state for people and coding agents. The captured experiment uses a connected scenario to test review, evidence and decision flows.</p></div></div></section>
+    <footer className="ps-study-footer"><div>Product design & implementation<br/>Bryce Rambach</div><p>Local prototype. Screens show the app-v3 design experiment with fixture receipts, model labels and outcomes. They aren’t a live agent run.</p><details><summary>Design references & provenance</summary><p>The experiment includes adaptations and references from <a href="https://www.beautifului.dev/" target="_blank" rel="noreferrer">Beautiful UI</a>, <a href="https://twenty.com/" target="_blank" rel="noreferrer">Twenty</a>, <a href="https://midday.ai/" target="_blank" rel="noreferrer">Midday</a> and <a href="https://motion-primitives.com/" target="_blank" rel="noreferrer">Motion Primitives</a>. These are captures of that experiment. Its implementation hasn’t been transplanted into this portfolio.</p></details></footer>
+  </article>;
+}

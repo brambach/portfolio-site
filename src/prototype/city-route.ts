@@ -5,15 +5,49 @@ import type {RoadGeometry} from './road-geometry';
 import {journeyRoad,journeyAccess,type JourneyAccess,type JourneyStopId} from './journey-route';
 import {CityTraffic,type TrafficCar} from './city-traffic';
 import {manualYawRate,roadsideResponse,trafficResponse} from './driving-response';
-import {turboCruiseSpeed} from './cruise-pace';
+import {plannedCruiseSpeed,turboCruiseSpeed,type CruisePaceConfig} from './cruise-pace';
 import {EngineSound} from './engine-sound';
 import {BOULEVARD_PROFILE,type RoadProfile} from './road-profile';
+import {partRadius,routeDressingParts} from './route-dressing';
+import {fernPlacements} from './roadside-ferns';
+import {townBuildingSites,townSiteFootprint} from './town-layout';
 export {CITY_LENGTH,CITY_STOP,CITY_HALF_WIDTH,cityFrame,nearestCityRoad} from './city-path';
+
+export type DrivingComfortConfig={
+  pace:CruisePaceConfig;
+  releaseEaseSeconds:number;
+  releaseInitialAcceleration:number;
+  releaseMaxAcceleration:number;
+  automaticBrakeMax:number;
+};
 
 export class CityDrive {
   readonly traffic:CityTraffic;
-  constructor(readonly road:RoadGeometry=cityRoad,readonly cruiseSpeed=19,readonly accessRoads:readonly JourneyAccess[]=road===journeyRoad?journeyAccess:[],readonly profile:RoadProfile=BOULEVARD_PROFILE) {
-    this.traffic=new CityTraffic(road,profile);this.lane=profile.cruiseLane;this.nextOverlook=road.cruiseStop;
+  constructor(readonly road:RoadGeometry=cityRoad,readonly cruiseSpeed=19,readonly accessRoads:readonly JourneyAccess[]=road===journeyRoad?journeyAccess:[],readonly profile:RoadProfile=BOULEVARD_PROFILE,readonly comfort:DrivingComfortConfig|null=null) {
+    const scenic=accessRoads.length>0&&profile===BOULEVARD_PROFILE?false:accessRoads.length>0;
+    const dressing=scenic?routeDressingParts():[];
+    const ferns=scenic?fernPlacements():[];
+    const townSites=scenic?townBuildingSites().map(site=>({site,footprint:townSiteFootprint(site),cosine:Math.cos(site.yaw),sine:Math.sin(site.yaw)})):[];
+    this.traffic=new CityTraffic(road,profile,{shoulderClear:(distance,lane)=>{
+      if(Math.abs(lane)>road.halfWidth-1.1)return false;
+      for(const offset of [-8,-4,0,4,8]){
+        const point=road.frame(distance+offset,lane).point;
+        if(accessRoads.some(access=>{
+          const nearest=access.road.nearest(point.x,point.z);
+          return nearest.distance>=-6&&nearest.distance<=access.road.length+6&&nearest.away<access.road.halfWidth+3.2;
+        }))return false;
+        if(dressing.some(part=>Math.hypot(part.point.x-point.x,part.point.z-point.z)<partRadius(part)+2.2))return false;
+        if(ferns.some(fern=>Math.hypot(fern.point.x-point.x,fern.point.z-point.z)<fern.height+1.3))return false;
+        if(townSites.some(({site,footprint,cosine,sine})=>{
+          const dx=point.x-site.point.x,dz=point.z-site.point.z;
+          const x=cosine*dx-sine*dz,z=sine*dx+cosine*dz;
+          const alongX=Math.max(0,footprint.minX-x,x-footprint.maxX);
+          const alongZ=Math.max(0,footprint.minZ-z,z-footprint.maxZ);
+          return Math.hypot(alongX,alongZ)<2.2;
+        }))return false;
+      }
+      return true;
+    }});this.lane=profile.cruiseLane;this.nextOverlook=road.cruiseStop;
     this.position=road.frame(0,profile.cruiseLane).point;this.yaw=road.frame(0).yaw;
   }
   access:JourneyAccess|null=null;
@@ -29,11 +63,23 @@ export class CityDrive {
     this.syncMainPosition();this.phase='parked';this.speed=0;
   }
   resetAtLake(){
+    this.resetComfortTransient();
     this.clearInput();this.requiredStop=null;this.requiredApproach=false;this.destination=null;
     this.speedHold=null;this.turbo=false;this.steering=0;this.heading=0;this.acceleration=0;
     this.appliedThrottle=0;this.blip=0;this.collisionTime=0;this.lastContact=null;this.contactCooldown=0;
     this.engine.reset();this.engineState={rpm:0,gear:1,load:0};this.engineOn=false;
     this.reviewAt('lake');
+  }
+  arriveAtStop(id:JourneyStopId,{preserveRequiredStop=false}:{preserveRequiredStop?:boolean}={}) {
+    this.resetComfortTransient();
+    const keepRequired=preserveRequiredStop&&this.requiredStop!==id?this.requiredStop:null;
+    this.requiredStop=keepRequired;this.requiredApproach=false;this.destination=null;
+    this.speedHold=null;this.stop=null;this.turbo=false;this.clearInput();
+    this.steering=0;this.heading=0;this.acceleration=0;this.appliedThrottle=0;this.blip=0;
+    this.collisionTime=0;this.lastContact=null;this.contactCooldown=0;
+    this.reviewAt(id);
+    this.engine.setState(this.engine.rpm,1,0);
+    this.engineOn=true;this.automatic=true;this.engineState={rpm:this.engine.rpm,gear:1,load:this.engine.load};
   }
   private syncMainPosition(){const pose=this.road.nearest(this.position.x,this.position.z);this.distance+=MathUtils.euclideanModulo(pose.distance-this.distance+this.road.length/2,this.road.length)-this.road.length/2;this.lane=pose.lane;}
   private selectedAccess(){const destination=MathUtils.euclideanModulo(this.destination??this.road.cruiseStop,this.road.length);return this.accessRoads.find(access=>Math.abs(access.centre-destination)<1)??null;}
@@ -61,6 +107,10 @@ export class CityDrive {
   engineState={rpm:0,gear:1,load:0};
   private appliedThrottle=0;
   private blip=0;
+  private lastBrake=false;
+  private brakeReleaseEase=0;
+  private comfortActive(){return Boolean(this.comfort&&this.tourAutopilot&&this.automatic&&!this.turbo);}
+  private resetComfortTransient(){this.lastBrake=false;this.brakeReleaseEase=0;}
   collisionTime=0;
   private lastContact:TrafficCar|null=null;
   private contactCooldown=0;
@@ -106,12 +156,14 @@ export class CityDrive {
   }
   start() {
     if (['starting','driving','parking'].includes(this.phase)) return;
+    this.resetComfortTransient();
     this.speedHold=null;this.phase='starting';this.startup=0;this.acceleration=0;
     if(!this.requiredApproach)this.nextOverlook=this.planNextStop();
   }
   stopEngine(){if(this.phase!=="parked"&&this.phase!=="off")return false;this.engineOn=false;this.clearInput();return true;}
   clearInput() {for(const key of Object.keys(this.controls) as DriveInput[]) this.controls[key]=false;}
   park() {
+    this.resetComfortTransient();
     this.speedHold=null;
     this.clearInput();
     if (this.phase==='starting' || this.speed<.05) {
@@ -130,12 +182,45 @@ export class CityDrive {
     const duration=Math.max(2.5,1.5*this.speed/7,10*laneShift/Math.max(this.speed+creep,.05));
     return {creep,duration};
   }
+  private advanceParking(dt:number) {
+    if(this.phase!=='parking'||!this.stop)return false;
+    const stop=this.stop;
+    stop.time=Math.min(stop.duration,stop.time+dt);
+    const t=stop.time/stop.duration;
+    this.speed=stop.speed*(1-3*t*t+2*t*t*t)+stop.creep*Math.sin(Math.PI*t)**2;
+    this.acceleration=(-6*stop.speed*t*(1-t)+stop.creep*Math.PI*Math.sin(2*Math.PI*t))/stop.duration;
+    this.appliedThrottle=this.acceleration>0?Math.min(.3,this.acceleration/4):0;
+    const distance=stop.distance+stop.speed*stop.duration*(t-t*t*t+.5*t*t*t*t)+stop.creep*stop.duration*(t/2-Math.sin(2*Math.PI*t)/(4*Math.PI));
+    const lane=MathUtils.lerp(stop.lane,stop.access ? .7 : this.profile.parkingLane,MathUtils.smootherstep(t,0,.78));
+    let pose;
+    if(stop.access&&distance<stop.access.road.length){
+      this.access=stop.access;this.accessDistance=distance;this.accessLane=lane;
+      pose=this.access.road.frame(distance,lane);
+    }else{
+      const passed=stop.access?distance-stop.access.road.length:0;
+      this.access=null;this.distance=stop.access?stop.exitDistance+passed:distance;
+      this.lane=stop.access?MathUtils.lerp(this.profile.approachLane+lane,this.profile.parkingLane,MathUtils.smoothstep(passed,0,20)):lane;
+      pose=this.road.frame(this.distance,this.lane);
+    }
+    const dx=pose.point.x-this.position.x,dz=pose.point.z-this.position.z,previousYaw=this.yaw;
+    const pathYaw=Math.hypot(dx,dz)>.00001?Math.atan2(dx,dz):pose.yaw;
+    const pathHeading=Math.atan2(Math.sin(pathYaw-pose.yaw),Math.cos(pathYaw-pose.yaw));
+    this.heading=MathUtils.lerp(stop.heading,pathHeading,MathUtils.smoothstep(t,0,.16));
+    this.yaw=pose.yaw+this.heading;
+    const turn=Math.atan2(Math.sin(this.yaw-previousYaw),Math.cos(this.yaw-previousYaw))/dt;
+    const wheel=Math.atan(turn*2.45/Math.max(this.speed,.5))/(.48/(1+this.speed*.085));
+    this.steering=MathUtils.damp(this.steering,MathUtils.clamp(wheel,-1,1),12,dt);
+    this.position.copy(pose.point);
+    if(this.access)this.syncMainPosition();
+    if(t===1){this.phase='parked';this.speed=this.acceleration=this.heading=this.steering=0;}
+    return true;
+  }
   update(dt: number, ready=true, reduced=false) {
     let remaining=MathUtils.clamp(dt,0,.25);
     while(remaining>.000001) {
       const step=Math.min(remaining,1/120);
       this.appliedThrottle=0;
-      if(this.phase!=="off")this.traffic.update(step,this);
+      if(this.phase!=="off")this.traffic.update(step,{distance:this.distance,lane:this.lane,speed:this.speed,automatic:this.automatic,access:Boolean(this.access),phase:this.phase,cruiseSpeed:this.cruiseSpeed});
       this.step(step,ready,reduced);
       this.blip=Math.max(0,this.blip-step);
       this.collisionTime=Math.max(0,this.collisionTime-step);
@@ -158,38 +243,7 @@ export class CityDrive {
       }
       this.phase='driving';
     }
-    if(this.phase==='parking' && this.stop) {
-      const stop=this.stop;
-      stop.time=Math.min(stop.duration,stop.time+dt);
-      const t=stop.time/stop.duration;
-      this.speed=stop.speed*(1-3*t*t+2*t*t*t)+stop.creep*Math.sin(Math.PI*t)**2;
-      this.acceleration=(-6*stop.speed*t*(1-t)+stop.creep*Math.PI*Math.sin(2*Math.PI*t))/stop.duration;
-      this.appliedThrottle=this.acceleration>0?Math.min(.3,this.acceleration/4):0;
-      const distance=stop.distance+stop.speed*stop.duration*(t-t*t*t+.5*t*t*t*t)+stop.creep*stop.duration*(t/2-Math.sin(2*Math.PI*t)/(4*Math.PI));
-      const lane=MathUtils.lerp(stop.lane,stop.access ? .7 : this.profile.parkingLane,MathUtils.smootherstep(t,0,.78));
-      let pose;
-      if(stop.access&&distance<stop.access.road.length){
-        this.access=stop.access;this.accessDistance=distance;this.accessLane=lane;
-        pose=this.access.road.frame(distance,lane);
-      }else{
-        const passed=stop.access?distance-stop.access.road.length:0;
-        this.access=null;this.distance=stop.access?stop.exitDistance+passed:distance;
-        this.lane=stop.access?MathUtils.lerp(this.profile.approachLane+lane,this.profile.parkingLane,MathUtils.smoothstep(passed,0,20)):lane;
-        pose=this.road.frame(this.distance,this.lane);
-      }
-      const dx=pose.point.x-this.position.x,dz=pose.point.z-this.position.z,previousYaw=this.yaw;
-      const pathYaw=Math.hypot(dx,dz)>.00001?Math.atan2(dx,dz):pose.yaw;
-      const pathHeading=Math.atan2(Math.sin(pathYaw-pose.yaw),Math.cos(pathYaw-pose.yaw));
-      this.heading=MathUtils.lerp(stop.heading,pathHeading,MathUtils.smoothstep(t,0,.16));
-      this.yaw=pose.yaw+this.heading;
-      const turn=Math.atan2(Math.sin(this.yaw-previousYaw),Math.cos(this.yaw-previousYaw))/dt;
-      const wheel=Math.atan(turn*2.45/Math.max(this.speed,.5))/(.48/(1+this.speed*.085));
-      this.steering=MathUtils.damp(this.steering,MathUtils.clamp(wheel,-1,1),12,dt);
-      this.position.copy(pose.point);
-      if(this.access)this.syncMainPosition();
-      if(t===1){this.phase='parked';this.speed=this.acceleration=this.heading=this.steering=0;}
-      return;
-    }
+    if(this.advanceParking(dt))return;
     if(this.phase!=='driving')return;
     if(this.tourAutopilot){this.automatic=true;this.speedHold=null;this.controls.gas=this.controls.left=this.controls.right=false;}
     if(this.requiredStop){
@@ -212,6 +266,12 @@ export class CityDrive {
     let desiredSteer=Number(this.controls.left)-Number(this.controls.right);
     const brake=this.controls.brake;
     let automaticBrake=0;
+    const comfortActive=this.comfortActive();
+    if(comfortActive){
+      if(this.lastBrake&&!brake)this.brakeReleaseEase=this.comfort.releaseEaseSeconds;
+      if(brake)this.brakeReleaseEase=0;
+      else this.brakeReleaseEase=Math.max(0,this.brakeReleaseEase-dt);
+    }else this.brakeReleaseEase=0;
     if(this.controls.gas||brake)this.speedHold=null;
     if(this.speedHold!==null){
       throttle=MathUtils.clamp((.55+this.speed*this.speed*.0025)/9.2+(this.speedHold-this.speed)*.7,0,1);
@@ -219,7 +279,7 @@ export class CityDrive {
     }
     if(this.automatic) {
       const approaching=selected&&untilEntry<110&&untilEntry>-30&&this.nextOverlook-this.distance<this.road.length/2;
-      const cruiseLimit=this.turbo?turboCruiseSpeed(activeRoad,activeDistance,this.speed):this.cruiseSpeed;
+      const cruiseLimit=this.turbo?turboCruiseSpeed(activeRoad,activeDistance,this.speed):comfortActive?plannedCruiseSpeed(activeRoad,activeDistance,this.speed,{...this.comfort!.pace,topSpeed:this.cruiseSpeed}):this.cruiseSpeed;
       const lookahead=this.access?10:this.turbo?MathUtils.clamp(this.speed*.9,20,32):20;
       let targetLane=approaching?this.profile.approachLane:this.profile.cruiseLane;
       if(!this.access&&Math.abs(targetLane-this.lane)>1.8&&!this.traffic.mergeClear(this.distance+this.speed,targetLane,1,this.speed))targetLane=this.lane;
@@ -230,7 +290,13 @@ export class CityDrive {
       const curvature=Math.abs(Math.atan2(Math.sin(ahead.yaw-road.yaw),Math.cos(ahead.yaw-road.yaw)))/lookahead;
       const traffic=this.traffic.forwardGap(this.distance,this.lane);
       const followSpeed=traffic.gap<12+this.speed*1.5?Math.max(0,traffic.speed+(traffic.gap-12)*.45):cruiseLimit;
-      let targetSpeed=Math.min(this.access||approaching?8:cruiseLimit,followSpeed,Math.sqrt(4/Math.max(curvature,.002)));
+      let accessLimit=this.access||approaching?8:cruiseLimit;
+      if(comfortActive&&selected&&!this.access&&untilEntry>0&&this.nextOverlook-this.distance<this.road.length/2){
+        const targetEntrySpeed=8,metresBeforeLaneCommit=110;
+        const brakingRoom=Math.max(0,untilEntry-metresBeforeLaneCommit);
+        accessLimit=Math.min(accessLimit,Math.sqrt(targetEntrySpeed*targetEntrySpeed+2*this.comfort!.pace.longitudinalDeceleration*Math.max(0,brakingRoom)));
+      }
+      let targetSpeed=Math.min(accessLimit,followSpeed,Math.sqrt(4/Math.max(curvature,.002)));
       if(this.turbo)targetSpeed=Math.min(targetSpeed,Math.sqrt(traffic.speed*traffic.speed+10*Math.max(0,traffic.gap-12)));
       let yieldGap=Infinity;
       if(this.access){
@@ -244,16 +310,21 @@ export class CityDrive {
         }
       }
       throttle=brake?0:MathUtils.clamp((targetSpeed-this.speed)*.35,0,1);
-      automaticBrake=MathUtils.clamp((this.speed-targetSpeed)*2,0,8);
+      automaticBrake=MathUtils.clamp((this.speed-targetSpeed)*2,0,comfortActive?this.comfort!.automaticBrakeMax:8);
       if(Number.isFinite(yieldGap))automaticBrake=Math.max(automaticBrake,Math.min(8,this.speed*this.speed/(2*Math.max(.2,yieldGap-1))));
       const parking=this.parkingMotion();
       const stoppingDistance=(this.speed+parking.creep)*parking.duration/2;
       const stopGap=this.access?(selected?.id===this.access.id&&this.nextOverlook-this.distance<this.road.length/2?this.access.parking-this.accessDistance:Infinity):selected?Infinity:this.nextOverlook-this.distance;
-      if(stopGap<=Math.max(.5,stoppingDistance)) {this.park();return;}
+      if(stopGap<=Math.max(.5,stoppingDistance)) {this.park();this.advanceParking(dt);return;}
     }
     this.appliedThrottle=throttle;
     const drag=.55+this.speed*this.speed*.0025+(!throttle&&this.speedHold===null?this.speed*.018*(6-this.engine.gear):0);
     let desired=throttle*9.2-drag-(brake?13:0)-automaticBrake;
+    if(comfortActive&&this.brakeReleaseEase>0&&!brake){
+      const progress=1-this.brakeReleaseEase/this.comfort.releaseEaseSeconds;
+      const eased=MathUtils.smoothstep(progress,0,1);
+      desired=Math.min(desired,MathUtils.lerp(this.comfort.releaseInitialAcceleration,this.comfort.releaseMaxAcceleration,eased));
+    }
     if(this.automatic && !throttle && this.speed>(this.turbo?28:this.cruiseSpeed))desired-=3;
     this.acceleration=MathUtils.damp(this.acceleration,desired,9,dt);
     this.speed=MathUtils.clamp(this.speed+this.acceleration*dt,0,Math.min(58,this.engine.speedLimit));
@@ -296,5 +367,6 @@ export class CityDrive {
       if(impulse){this.acceleration=Math.min(0,this.acceleration);this.contactCooldown=.3;this.lastContact=trafficHit;}
       this.collisionTime=.35;
     }
+    this.lastBrake=brake;
   }
 }

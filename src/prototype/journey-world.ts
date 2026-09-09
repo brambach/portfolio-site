@@ -15,6 +15,7 @@ import {stopLocalPoint,landHeight,trailPoint,trailSamples,nearTrail,lakeFrame,sc
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {MeshoptDecoder} from 'three/addons/libs/meshopt_decoder.module.js';
 import {createCityWorld} from './city-world';
+import {createRouteDressing,routeDressingParts} from './route-dressing';
 import {journeyRoad,JOURNEY_STOPS,journeyAccess,nearAccess,STOP_OFFSET,stopDistance} from './journey-route';
 import type {SceneResources} from './scene-resources';
 
@@ -231,7 +232,13 @@ export async function createJourneyWorld(scene:THREE.Scene,resources:SceneResour
     }
     if(scenic)batchPlace(place);
   }
-  if(scenic)group.add(createTownStreet(townPalette!));
+  if(scenic){
+    group.add(createTownStreet(townPalette!));
+    // Stone courses, timber rails and planting carry the street's materials out
+    // of town, along the valley and down to the lake shore.
+    const dressing=createRouteDressing(routeDressingParts(surfaceHeight));
+    resources.object(dressing);group.add(dressing);
+  }
   const lookout=trailPoint(1);
   const bench=new THREE.Group();bench.position.copy(lookout);bench.visible=!scenic;group.add(bench);
   box(bench,timber,0,.5,1,2.4,.12,.65);for(const x of [-.9,.9])box(bench,timber,x,.22,1,.13,.44,.45);
@@ -272,12 +279,14 @@ export async function createJourneyWorld(scene:THREE.Scene,resources:SceneResour
   waterMaterial.customProgramCacheKey=()=> scenic?'scenic-lake-shore-ripples-v3':'journey-lake-shore-ripples-v2';
   const water=new THREE.Mesh(new THREE.PlaneGeometry(450,660),waterMaterial);
   water.rotation.set(-Math.PI/2,lake.yaw,0,'YXZ');water.position.copy(lake.point).setY(LAKE_LEVEL);group.add(water);
+  let canopyAt=performance.now();
   return {group,setCoffee(visible:boolean){counterCoffee.visible=visible;},update(car:THREE.Vector3,viewer:THREE.Vector3=car,treeBudget=4){
     world.update(car,viewer);
-    canopy.update(treePoints,viewer,treeBudget);
+    const now=performance.now(),elapsed=(now-canopyAt)/1000;canopyAt=now;
+    canopy.update(treePoints,viewer,treeBudget,elapsed);
     if(roadside?.mesh.visible)roadside.update(viewer);
     if(grass?.mesh.visible)grass.update(viewer);
     const fraction=THREE.MathUtils.euclideanModulo(journeyRoad.nearest(car.x,car.z).distance,journeyRoad.length)/journeyRoad.length;
-    furthest=Math.max(furthest,fraction);const warmth=1-THREE.MathUtils.smoothstep(furthest,scenic?SCENIC_START_FRACTION:.12,scenic?.61:.85)*.78;world.setDaylight(warmth);if(scenic)journeyFog.color.copy(eveningFog).lerp(afternoonFog,warmth);return warmth;
+    furthest=Math.max(furthest,fraction);const warmth=1-THREE.MathUtils.smoothstep(furthest,scenic?SCENIC_START_FRACTION:.12,scenic?.61:.85)*.78;world.setDaylight(warmth);if(scenic){journeyFog.color.copy(eveningFog).lerp(afternoonFog,warmth);world.setHorizonFog(journeyFog.color);}return warmth;
   }};
 }

@@ -2,11 +2,12 @@ import * as THREE from 'three';
 
 // Small deterministic surface maps are generated locally and owned by SceneResources.
 export function townMaterial(kind:string,color:string){
-  const material=new THREE.MeshStandardMaterial({color,roughness:kind==='glass'?.24:.86,metalness:kind==='glass'?.24:0});
+  const surfaceColor=kind==='plaster'?'#cdbb9e':kind==='glass'?'#1b2a30':color;
+  const material=new THREE.MeshStandardMaterial({color:surfaceColor,roughness:kind==='glass'?.3:kind==='plaster'?.92:.86,metalness:kind==='glass'?.24:0});
   if(kind==='glass'||kind==='trim')return material;
   const canvas=document.createElement('canvas');canvas.width=canvas.height=256;
   const context=canvas.getContext('2d')!;
-  context.fillStyle='#d1cfc8';context.fillRect(0,0,256,256);
+  context.fillStyle='#efefef';context.fillRect(0,0,256,256);
   let seed=37;
   const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
   for(let i=0;i<2600;i++){

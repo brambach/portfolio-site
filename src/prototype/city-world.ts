@@ -5,23 +5,12 @@ import {journeyAccess,nearAccess} from './journey-route';
 import type {RoadGeometry} from './road-geometry';
 import {BOULEVARD_PROFILE,SCENIC_PROFILE} from './road-profile';
 
-export async function createCityWorld(scene: THREE.Scene, resources?:SceneResources,road:RoadGeometry=cityRoad,journey=false,scenic=false) {
-  const {length:CITY_LENGTH,frame:cityFrame,nearest:nearestCityRoad}=road;
-  const profile=scenic?SCENIC_PROFILE:BOULEVARD_PROFILE;
-  const CITY_HALF_WIDTH=profile.pavedHalfWidth;
-  const [panorama,asphalt]=await Promise.all([
-    scenic?new THREE.TextureLoader().loadAsync('/images/entrance/alpine-panorama-v1.png').then(texture=>resources?resources.track(texture):texture).catch(()=>null):Promise.resolve(null),
-    new THREE.TextureLoader().loadAsync('/models/entrance/asphalt.jpg').then(texture=>resources?resources.track(texture):texture),
-  ]);
-  resources?.assertActive();
-  if(panorama){panorama.colorSpace=THREE.SRGBColorSpace;panorama.wrapS=THREE.RepeatWrapping;}
-  const group=new THREE.Group();group.name='Midnight boulevard';scene.add(group);
-  scene.fog=new THREE.FogExp2('#171c30',.0025);
-  const sky=new THREE.Mesh(new THREE.SphereGeometry(380,24,12),new THREE.ShaderMaterial({
+export function createScenicSkyMaterial(panorama:THREE.Texture|null,daylight=0,landscape=0) {
+  const material=new THREE.ShaderMaterial({
     side:THREE.BackSide,depthWrite:false,
-    uniforms:{daylight:{value:journey?1:0},landscape:{value:scenic?1:0},panorama:{value:panorama},hasPanorama:{value:panorama?1:0}},
+    uniforms:{daylight:{value:daylight},landscape:{value:landscape},panorama:{value:panorama},hasPanorama:{value:panorama?1:0},fogHorizonColour:{value:new THREE.Color('#93a6ad')}},
     vertexShader:'varying vec3 direction; void main(){ direction=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
-    fragmentShader:`varying vec3 direction; uniform float daylight; uniform float landscape; uniform sampler2D panorama; uniform float hasPanorama;
+    fragmentShader:`varying vec3 direction; uniform float daylight; uniform float landscape; uniform sampler2D panorama; uniform float hasPanorama; uniform vec3 fogHorizonColour;
       float ridgeDetail(float az,float offset){
         return .0035*sin(az*47.+offset)+.0018*sin(az*89.-offset)+.0008*sin(az*173.+offset);
       }
@@ -56,20 +45,39 @@ export async function createCityWorld(scene: THREE.Scene, resources?:SceneResour
         colour=mix(colour,nearColour,1.-smoothstep(nearRidge-.0009,nearRidge+.0009,d.y));
         if(hasPanorama>.5){
           vec2 panoramaUv=vec2(az/6.28318530718+.5,clamp(.453+asin(clamp(d.y,-1.,1.))/3.14159265359,.001,.999));
-          // Longitude wraps by one texture width. Keep its derivatives local so
-          // the wrap doesn't select coarse mip levels in a dashed vertical strip.
           vec2 panoramaDx=dFdx(panoramaUv),panoramaDy=dFdy(panoramaUv);
           panoramaDx.x-=floor(panoramaDx.x+.5);
           panoramaDy.x-=floor(panoramaDy.x+.5);
           vec3 panoramaColour=textureGrad(panorama,panoramaUv,panoramaDx,panoramaDy).rgb;
           colour=panoramaColour*mix(vec3(.68,.58,.69),vec3(1.08,1.02,.94),daylight);
+          float horizonBlend=1.-smoothstep(.035,.13,d.y);
+          colour=mix(colour,fogHorizonColour,horizonBlend*.58);
         }
       }
       gl_FragColor=vec4(colour,1.);
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
       }`,
-  }));sky.frustumCulled=false;group.add(sky);
+  });
+  material.customProgramCacheKey=()=> 'scenic-sky-horizon-blend-v1';
+  return material;
+}
+
+export async function createCityWorld(scene: THREE.Scene, resources?:SceneResources,road:RoadGeometry=cityRoad,journey=false,scenic=false) {
+  const {length:CITY_LENGTH,frame:cityFrame,nearest:nearestCityRoad}=road;
+  const profile=scenic?SCENIC_PROFILE:BOULEVARD_PROFILE;
+  const CITY_HALF_WIDTH=profile.pavedHalfWidth;
+  const [panorama,asphalt]=await Promise.all([
+    scenic?new THREE.TextureLoader().loadAsync('/images/entrance/alpine-panorama-v1.png').then(texture=>resources?resources.track(texture):texture).catch(()=>null):Promise.resolve(null),
+    new THREE.TextureLoader().loadAsync('/models/entrance/asphalt.jpg').then(texture=>resources?resources.track(texture):texture),
+  ]);
+  resources?.assertActive();
+  if(panorama){panorama.colorSpace=THREE.SRGBColorSpace;panorama.wrapS=THREE.RepeatWrapping;}
+  const group=new THREE.Group();group.name='Midnight boulevard';scene.add(group);
+  scene.fog=new THREE.FogExp2('#171c30',.0025);
+  const skyMaterial=createScenicSkyMaterial(panorama,journey?1:0,scenic?1:0);
+  const sky=new THREE.Mesh(new THREE.SphereGeometry(380,24,12),skyMaterial);
+  sky.frustumCulled=false;group.add(sky);
   asphalt.colorSpace=THREE.SRGBColorSpace;asphalt.wrapS=asphalt.wrapT=THREE.RepeatWrapping;asphalt.repeat.set(3,1);asphalt.anisotropy=4;
   const ground=new THREE.Mesh(new THREE.PlaneGeometry(2000,2000),new THREE.MeshStandardMaterial({color:'#131621',roughness:.95}));
   ground.rotation.x=-Math.PI/2;ground.position.set(-230,-.16,180);ground.receiveShadow=true;ground.visible=!journey;group.add(ground);
@@ -162,7 +170,7 @@ export async function createCityWorld(scene: THREE.Scene, resources?:SceneResour
   batch(poolGeometry,new THREE.MeshBasicMaterial({map:poolTexture,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}),heads.map(h=>({...h,y:-.028,sx:17,sy:1,sz:29})));
   const lamps=[new THREE.PointLight('#ffd0a0',25,28,2),new THREE.PointLight('#ffd0a0',25,28,2)];lamps.forEach(l=>group.add(l));
   let lastLamp=-1;
-  return {group,asphalt,setDaylight(value:number){sky.material.uniforms.daylight.value=value;},update(car:THREE.Vector3,_viewer?:THREE.Vector3,_treeBudget?:number){
+  return {group,asphalt,setDaylight(value:number){skyMaterial.uniforms.daylight.value=value;},setHorizonFog(value:THREE.Color){skyMaterial.uniforms.fogHorizonColour.value.copy(value);},update(car:THREE.Vector3,_viewer?:THREE.Vector3,_treeBudget?:number){
     const viewer=_viewer??car;
     sky.position.copy(viewer);
     if(lastBuildingSort.distanceToSquared(viewer)>20**2){

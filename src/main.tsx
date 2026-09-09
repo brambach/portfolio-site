@@ -1,14 +1,15 @@
 import {lazy, StrictMode, Suspense} from 'react';
 import {createRoot} from 'react-dom/client';
 import './index.css';
+import {QuietIdleLoader} from './prototype/QuietIdleLoader';
 import {SiteAnalytics} from './lib/SiteAnalytics';
 
 const Garage=lazy(()=>import('./admin/Garage'));
 const showGarage=window.location.pathname.replace(/\/$/,'')==='/admin';
-const AgentSkyProject=lazy(()=>import('./prototype/AgentSkyProject.tsx'));
-const showAgentSky=window.location.pathname.replace(/\/$/,'')==='/projects/agentsky';
+const ProjectLab=lazy(()=>import('./project-lab/ProjectLab.tsx'));
+const showProjectLab=window.location.pathname.replace(/\/$/,'')==='/project-lab';
 const ProjectReader = lazy(() => import('./prototype/ProjectReader.tsx'));
-const showProjects = window.location.pathname.replace(/\/$/, '') === '/projects';
+const showProjects = /^\/projects(?:\/|$)/.test(window.location.pathname);
 const Entrance = lazy(() => import('./prototype/Entrance.tsx'));
 const PhotoEntrance = lazy(() => import('./prototype/PhotoEntrance.tsx'));
 const PreviousSite = lazy(() => import('./App.tsx'));
@@ -30,6 +31,6 @@ if(import.meta.hot){
 appRoot.render(
   <StrictMode>
     <SiteAnalytics/>
-    <Suspense fallback={<div style={{ background: '#24291d', minHeight: '100svh' }} />}>{showGarage?<Garage/>:showAgentSky?<AgentSkyProject/>:phoneReview?<div style={{padding:16,background:"#202520",minHeight:"100svh"}}><iframe title="Phone viewport review" src="/" style={{display:"block",border:0,width:phoneLandscape?660:390,height:phoneLandscape?390:660}}/></div>:drivingReview&&DrivingInputReview?<DrivingInputReview/>:lifecycleReview&&SceneLifecycleReview?<SceneLifecycleReview/>:showProjects ? <ProjectReader /> : showPrevious ? <PreviousSite /> : showPhotoEntrance ? <PhotoEntrance /> : <Entrance />}</Suspense>
+    <Suspense fallback={<QuietIdleLoader />}>{showGarage?<Garage/>:showProjectLab?<ProjectLab/>:phoneReview?<div style={{padding:16,background:"#202520",minHeight:"100svh"}}><iframe title="Phone viewport review" src="/" style={{display:"block",border:0,width:phoneLandscape?660:390,height:phoneLandscape?390:660}}/></div>:drivingReview&&DrivingInputReview?<DrivingInputReview/>:lifecycleReview&&SceneLifecycleReview?<SceneLifecycleReview/>:showProjects ? <ProjectReader /> : showPrevious ? <PreviousSite /> : showPhotoEntrance ? <PhotoEntrance /> : <Entrance />}</Suspense>
   </StrictMode>,
 );

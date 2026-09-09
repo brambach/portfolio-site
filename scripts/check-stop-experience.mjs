@@ -1,0 +1,44 @@
+import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
+import {mkdir} from 'node:fs/promises';
+await mkdir('output/stops',{recursive:true});
+const browser=await chromium.launch({args:['--use-angle=metal']});
+const page=await browser.newPage({viewport:{width:1440,height:1000}});
+const errors=[];page.on('pageerror',error=>errors.push(error.message));
+try{
+ await page.goto(process.env.PORTFOLIO_URL||'http://localhost:3000/');
+ await page.locator('.quiet-idle--ready').waitFor({state:'attached',timeout:60000});
+ await page.screenshot({path:'output/stops/door.png'});
+ const entry=page.getByRole('button',{name:'Get in the Porsche',exact:true});
+ assert.equal(await entry.evaluate(el=>getComputedStyle(el).opacity),'0');
+ await entry.focus();await page.keyboard.press('Enter');
+ await page.getByRole('button',{name:'Meet Bryce',exact:true}).click({timeout:30000});
+ await page.getByRole('button',{name:/Ready for the road/}).click();
+ await page.getByRole('button',{name:'Start the journey',exact:true}).click();
+ await page.waitForTimeout(1800);
+ await page.getByRole('button',{name:'Route map',exact:true}).click();
+ await page.getByRole('dialog').getByRole('button',{name:/^01.*Neighbourhood café/}).click();
+ await page.getByRole('button',{name:/Let’s go.*Neighbourhood café/}).click();
+ console.log('Driving to cafe');
+ await page.getByText(/Coffee and something/).waitFor({timeout:180000});
+ await page.screenshot({path:'output/stops/cafe.png'});
+ await page.getByRole('button',{name:'A flat white, please',exact:true}).click();
+ await page.getByText('One flat white.',{exact:true}).waitFor();
+ await page.waitForTimeout(700);
+ await page.screenshot({path:'output/stops/coffee.png'});
+ await page.getByRole('button',{name:'Open the laptop',exact:true}).click();
+ await page.getByRole('link',{name:'View Arro',exact:true}).waitFor();
+ await page.getByRole('button',{name:'Close laptop and return to seat'}).click();
+ await page.waitForTimeout(1500);
+ await page.getByRole('button',{name:'Continue to lake',exact:true}).click();
+ console.log('Driving to lake');
+ await page.getByRole('heading',{name:'Stay for a moment.'}).waitFor({timeout:360000});
+ await page.screenshot({path:'output/stops/lake.png'});
+ await page.getByRole('button',{name:'Take in the view',exact:true}).click();
+ await page.getByRole('button',{name:'Back to the lake stop'}).waitFor();
+ await page.waitForTimeout(800);
+ await page.screenshot({path:'output/stops/lake-view.png'});
+ assert.deepEqual(errors,[]);
+ console.log('PASS: real town trip, coffee order, physical laptop, lake arrival and view.');
+}catch(error){await page.screenshot({path:'output/stops/failure.png'});console.log((await page.locator('body').innerText()).slice(0,2000));throw error;}
+finally{await browser.close();}

@@ -1,5 +1,35 @@
 import { EngineSound } from "./engine-sound";
 
+const IDLE_REFERENCE_RPM=920;
+const PULL_REFERENCE_RPM=3200;
+const REDLINE_REFERENCE_RPM=3200;
+const ENGINE_PITCH_SLEW_SECONDS=.035;
+const PULL_LOOP_START_SECONDS=.3;
+const PULL_LOOP_END_SECONDS=2.3;
+const PULL_LOOP_CROSSFADE_SECONDS=.05;
+
+export function prepareStablePullLoop(context:Pick<AudioContext,'createBuffer'>,source:AudioBuffer,startSeconds=PULL_LOOP_START_SECONDS,endSeconds=PULL_LOOP_END_SECONDS,crossfadeSeconds=PULL_LOOP_CROSSFADE_SECONDS){
+  if(typeof source.getChannelData!=="function")return source;
+  const sampleRate=source.sampleRate;
+  const start=Math.max(0,Math.min(source.length-1,Math.floor(startSeconds*sampleRate)));
+  const end=Math.max(start+1,Math.min(source.length,Math.floor(endSeconds*sampleRate)));
+  const length=end-start;
+  const fade=Math.max(0,Math.min(Math.floor(crossfadeSeconds*sampleRate),Math.floor(length/4)));
+  const loopLength=length-fade;
+  const loop=context.createBuffer(source.numberOfChannels,loopLength,sampleRate);
+  for(let channel=0;channel<source.numberOfChannels;channel++){
+    const input=source.getChannelData(channel);
+    const output=loop.getChannelData(channel);
+    for(let i=0;i<loopLength;i++)output[i]=input[start+i];
+    // Overlap the tail into the head once. Trimming the overlap keeps both joins on adjacent source samples.
+    for(let i=0;i<fade;i++){
+      const mix=i/(fade-1||1);
+      output[i]=input[end-fade+i]*(1-mix)+input[start+i]*mix;
+    }
+  }
+  return loop;
+}
+
 export class CarAudio {
   private callGain: GainNode | null = null;
   private callUntil=0;
@@ -50,6 +80,11 @@ export class CarAudio {
     private onUnavailable: () => void,
     private onReady: () => void = () => {},
   ) {}
+  private safeFilterFrequency(value:number) {
+    if(!this.context)return value;
+    const finite=Number.isFinite(value)?value:0;
+    return Math.min(this.context.sampleRate/2,Math.max(0,finite));
+  }
   unlock() {
     if (this.disposed) return;
     try {
@@ -66,11 +101,11 @@ export class CarAudio {
         this.master.gain.value = this.muted ? 0 : this.volume;
         this.cabinFilter = this.context.createBiquadFilter();
         this.cabinFilter.type = "lowpass";
-        this.cabinFilter.frequency.value = 14000;
+        this.cabinFilter.frequency.value = this.safeFilterFrequency(14000);
         this.cabinFilter.connect(this.master);
         this.engineFilter = this.context.createBiquadFilter();
         this.engineFilter.type = "lowpass";
-        this.engineFilter.frequency.value = 7500;
+        this.engineFilter.frequency.value = this.safeFilterFrequency(7500);
         this.engineFilter.connect(this.master);
         this.pending = Promise.allSettled(
           [
@@ -96,7 +131,7 @@ export class CarAudio {
             const data=await response.arrayBuffer();
             if(this.disposed)return;
             const buffer = await this.context!.decodeAudioData(data);
-            if (!this.disposed) this.buffers.set(name, buffer);
+            if (!this.disposed) this.buffers.set(name, name==="911-pull"?prepareStablePullLoop(this.context!,buffer):buffer);
             })();
             this.loading.set(name, recording);
             return recording;
@@ -155,11 +190,11 @@ export class CarAudio {
   private startAmbience() {
     const roadFilter = this.context!.createBiquadFilter();
     roadFilter.type = "highpass";
-    roadFilter.frequency.value = 180;
+    roadFilter.frequency.value = this.safeFilterFrequency(180);
     roadFilter.connect(this.master!);
     const windFilter = this.context!.createBiquadFilter();
     windFilter.type = "lowpass";
-    windFilter.frequency.value = 1400;
+    windFilter.frequency.value = this.safeFilterFrequency(1400);
     windFilter.connect(this.master!);
     this.roadGain = this.play("road", 0, true, roadFilter)?.level ?? null;
     this.windGain = this.play("wind", 0, true, windFilter)?.level ?? null;
@@ -203,15 +238,14 @@ export class CarAudio {
   rev() {
     if(!this.running || !this.context || this.context.currentTime<this.revUntil) return;
     this.revUntil=this.context.currentTime+1.55;
-    this.play("911-blip",.7,false,this.engineFilter!);
   }
-  update(speed: number, running: boolean, inside: number, gas = false, brake = false, dt = 1/60, sharedState?: {rpm:number;gear:number;load:number}) {
+  update(speed: number, running: boolean, inside: number, gas: boolean|number = false, brake = false, dt = 1/60, sharedState?: {rpm:number;gear:number;load:number}) {
     this.running = running;
     const engineState=sharedState ?? this.engineMotion.update(speed,running,gas,brake,dt,!!this.context&&this.context.currentTime<this.revUntil);
     if (!this.context) return engineState;
     const now = this.context.currentTime;
     this.cabinFilter?.frequency.setTargetAtTime(
-      inside > 0.95 ? 1600 : 14000,
+      this.safeFilterFrequency(inside > 0.95 ? 1600 : 14000),
       now,
       0.25,
     );
@@ -225,7 +259,7 @@ export class CarAudio {
     const movement = Math.min(1, speed / 58);
     this.roadGain?.gain.setTargetAtTime(movement * 0.08, now, 0.35);
     this.windGain?.gain.setTargetAtTime(movement * movement * 0.026, now, 0.6);
-    this.engineFilter?.frequency.setTargetAtTime(inside>.95?10000:14000,now,.3);
+    this.engineFilter?.frequency.setTargetAtTime(this.safeFilterFrequency(inside>.95?10000:14000),now,.3);
     if (running && !this.engine) {
       const loop = this.play("911-idle", 0, true, this.engineFilter!);
       if (loop) {
@@ -242,14 +276,13 @@ export class CarAudio {
       if(loop){this.redline=loop.source;this.redlineGain=loop.level;}
     }
     const steady=this.redline?Math.min(1,Math.max(0,(engineState.rpm-5800)/800)):0;
-    const revving=now<this.revUntil;
     const blend=Math.min(1,Math.max(0,(engineState.rpm-1100)/1250));
-    this.engine?.playbackRate.setTargetAtTime(Math.max(.92,Math.min(1.8,engineState.rpm/920)),now,.2);
-    this.pull?.playbackRate.setTargetAtTime(Math.max(.48,Math.min(2.2,engineState.rpm/3200)),now,.065);
-    this.engineGain?.gain.setTargetAtTime(running?engineDuck*(revving?.035:.28)*Math.cos(blend*Math.PI/2):0,now,.18);
-    const pullLevel=running&&!revving?Math.sin(blend*Math.PI/2)*(.35+engineState.load*.85):0;
+    this.engine?.playbackRate.setTargetAtTime(Math.max(.92,Math.min(1.8,engineState.rpm/IDLE_REFERENCE_RPM)),now,ENGINE_PITCH_SLEW_SECONDS);
+    this.pull?.playbackRate.setTargetAtTime(Math.max(.48,Math.min(2.2,engineState.rpm/PULL_REFERENCE_RPM)),now,ENGINE_PITCH_SLEW_SECONDS);
+    this.engineGain?.gain.setTargetAtTime(running?engineDuck*.28*Math.cos(blend*Math.PI/2):0,now,.18);
+    const pullLevel=running?Math.sin(blend*Math.PI/2)*(.35+engineState.load*.85):0;
     this.pullGain?.gain.setTargetAtTime(engineDuck*pullLevel*Math.cos(steady*Math.PI/2),now,.16);
-    this.redline?.playbackRate.setTargetAtTime(Math.max(.48,Math.min(2.2,engineState.rpm/3200)),now,.065);
+    this.redline?.playbackRate.setTargetAtTime(Math.max(.48,Math.min(2.2,engineState.rpm/REDLINE_REFERENCE_RPM)),now,ENGINE_PITCH_SLEW_SECONDS);
     this.redlineGain?.gain.setTargetAtTime(engineDuck*pullLevel*Math.sin(steady*Math.PI/2),now,.16);
     return engineState;
   }

@@ -1,0 +1,50 @@
+import assert from 'node:assert/strict';
+import {chromium} from 'playwright';
+const origin=process.env.PORTFOLIO_URL||'http://localhost:3000';
+const browser=await chromium.launch({args:['--use-angle=metal']});const page=await browser.newPage({viewport:{width:1440,height:1000}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.goto(`${origin}/`);
+const enter=page.getByRole('button',{name:'Get in the Porsche',exact:true});
+await enter.waitFor({state:"attached",timeout:45000});await page.locator(".quiet-idle--ready").waitFor({state:"attached",timeout:45000});await enter.focus();await page.keyboard.press('Enter');
+await page.locator('.live-entrance--inside').waitFor({timeout:20000});
+await page.getByRole('button',{name:'Meet Bryce',exact:true}).click();
+await page.getByRole('button',{name:/Ready for the road/}).click();
+await page.getByRole('button',{name:'Start the journey',exact:true}).click();
+// Allow the physical contact card and entry pause to finish before picking up the laptop.
+await page.waitForTimeout(1800);
+await page.getByRole('button',{name:'Open site menu'}).click();
+await page.getByRole('button',{name:'Personal projects',exact:true}).click();
+const cover=page.getByRole('link',{name:'View AgentSky',exact:true});await cover.waitFor({timeout:20000}).catch(async error=>{await page.screenshot({path:'output/projects/laptop-failure.png'});console.log(await page.locator('body').innerText());throw error;});
+// Check opacity before focus, since focus itself can reveal a hidden card.
+for(const card of await page.locator('.physical-screen .ps-project').all()){
+  await card.scrollIntoViewIfNeeded();
+  await page.waitForFunction(id=>Number(getComputedStyle(document.querySelector(`.physical-screen [data-project="${id}"]`)).opacity)>.99,await card.getAttribute('data-project'));
+}
+await page.locator('.ps-laptop__body').evaluate(el=>el.scrollTop=0);
+await page.screenshot({path:'output/projects/physical-laptop.png'});
+await cover.focus();await cover.click();
+await page.getByRole('button',{name:/Watch the film/}).waitFor();
+assert.equal(await page.getByRole('dialog',{name:'AgentSky project',exact:true}).evaluate(el=>el.parentElement===document.body),true);
+await page.keyboard.press('k');
+await page.keyboard.press('Escape');await cover.waitFor();assert.equal(await cover.evaluate(el=>document.activeElement===el),true);
+await page.screenshot({path:'output/projects/physical-return.png'});
+await page.getByRole('button',{name:'Close laptop and return to seat'}).click();
+await page.locator('.physical-screen').waitFor({state:'hidden'});
+await page.waitForFunction(()=>document.querySelector('.live-entrance__scene canvas')?.getAttribute('tabindex')==='0');
+await page.getByRole('button',{name:'Open site menu'}).click();
+await page.getByRole('button',{name:'Personal projects',exact:true}).click();
+await cover.waitFor();
+await page.waitForFunction(()=>Number(getComputedStyle(document.querySelector('.physical-screen .ps-project')).opacity)>.99);
+await page.screenshot({path:'output/projects/physical-reopened.png'});
+await page.getByRole('button',{name:'Close laptop and return to seat'}).click();
+assert.deepEqual(errors,[]);
+const fallback=await browser.newPage({viewport:{width:390,height:844}});
+await fallback.route('**/*.glb',route=>route.abort());await fallback.goto(`${origin}/`);
+await fallback.getByText("The car couldn't load.").waitFor({timeout:30000});
+await fallback.getByRole('button',{name:'Open personal projects',exact:true}).click();
+await fallback.getByRole('link',{name:'View Arro',exact:true}).click();
+await fallback.getByRole('button',{name:/A milestone/}).click();
+await fallback.keyboard.press('Escape');
+await fallback.getByRole('button',{name:'Put down object'}).click();
+assert.equal(await fallback.locator('dialog[open]').count(),0);
+await fallback.waitForFunction(()=>document.activeElement?.textContent==='Open personal projects');
+await browser.close();console.log('PASS: real Porsche keyboard entry, physical collection, full-screen project, return focus, close laptop and mobile WebGL-failure fallback.');

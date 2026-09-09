@@ -1,6 +1,6 @@
 import {expect,it} from 'vitest';
 import {Vector3} from 'three';
-import {turboCruiseSpeed} from './cruise-pace';
+import {plannedCruiseSpeed,turboCruiseSpeed} from './cruise-pace';
 import type {RoadGeometry} from './road-geometry';
 import {createScenicDrive} from './scenic-drive';
 import {CityDrive} from './city-route';
@@ -11,6 +11,14 @@ it('allows fast straights and plans braking before a sharp bend',()=>{
  expect(turboCruiseSpeed(straight,100,28)).toBe(28);
  expect(turboCruiseSpeed(bend,170,28)).toBeLessThan(20);
  expect(turboCruiseSpeed(bend,210,20)).toBeLessThan(12);
+});
+it('keeps configured comfort plans separate from the turbo cache',()=>{
+ const bend={...straight,frame:(distance:number,lane=0)=>({...frame(distance,lane),yaw:Math.max(0,Math.min(80,distance-200))*.04})};
+ const comfort={topSpeed:18,lateralAcceleration:2.6,longitudinalDeceleration:3.1,lookaheadBase:72};
+ expect(plannedCruiseSpeed(straight,100,18,comfort)).toBe(18);
+ const comfortTarget=plannedCruiseSpeed(bend,170,18,comfort);
+ expect(comfortTarget).toBeLessThan(turboCruiseSpeed(bend,170,28));
+ expect(turboCruiseSpeed(straight,100,28)).toBe(28);
 });
 it('pulls over with heading following the arc, steering then straightening',()=>{
  const drive=new CityDrive(straight);drive.phase='driving';drive.engineOn=true;drive.speed=15;drive.traffic.cars.length=0;drive.park();

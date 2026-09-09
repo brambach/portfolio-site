@@ -24,6 +24,7 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { createCityWorld } from "./city-world";
 import {createJourneyWorld} from "./journey-world";
 import {journeyRoad,JOURNEY_STOPS,stopDistance,type JourneyStopId} from "./journey-route";
+import {estimatePlannedRoute,type RouteEstimate} from './route-estimate';
 import {cityRoad} from "./city-path";
 import {createTrafficMeshes} from "./city-traffic-mesh";
 const SUN_DIRECTION = new THREE.Vector3(-.6,.8,-.4).normalize();
@@ -57,6 +58,7 @@ export type CarScene = {
   enter: () => void;
   exit: () => void;
   look: (x: number, y: number) => void;
+  lookAtLake: () => void;
   center: () => void;
   openLaptop: () => void;
   closeLaptop: () => void;
@@ -83,6 +85,8 @@ export type CarScene = {
   skipApproach: () => void;
   dispose: () => void;
   openMap: () => void;
+  routePreview: (id:JourneyStopId) => RouteEstimate | null;
+  goStraightTo: (id:JourneyStopId) => void;
   visitCafe: () => void;
   visitTrail: () => void;
   returnToCar: () => void;
@@ -116,7 +120,7 @@ export async function createCarScene(
   renderer.shadowMap.autoUpdate = false;
   renderer.shadowMap.needsUpdate = true;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.0;
+  renderer.toneMappingExposure = landscapeMode ? 1.04 : 1.0;
   host.appendChild(renderer.domElement);
   function applyRenderRatio(ratio:number){
     if(!fixedViewport){renderer.setPixelRatio(ratio);return;}
@@ -161,7 +165,9 @@ export async function createCarScene(
   vehicle.name = "Porsche with cabin";
   vehicle.add(body, door);
   scene.add(vehicle);
-  const hemisphere = new THREE.HemisphereLight(0x9ba9e2, 0x252130, .7);
+  const hemisphere = landscapeMode
+    ? new THREE.HemisphereLight(0xbcc6dc, 0x4a3b2c, .34)
+    : new THREE.HemisphereLight(0x9ba9e2, 0x252130, .7);
   scene.add(hemisphere);
   const cabinFill = new THREE.PointLight(0xffe3bc, 0.45, 2.6, 1.3);
   cabinFill.position.set(0, 1.38, 0.3);
@@ -209,8 +215,8 @@ export async function createCarScene(
     Object.assign(drive.traffic.cars[0],{distance:drive.distance+(fast?500:18),lane:drive.lane,direction:-1,speed:0,targetSpeed:fast?0:6});
   }
   const visit=new StopVisit();
-  const coffee=journeyMode?createCoffeeCup():new THREE.Group();coffee.visible=false;coffee.position.set(-.25,.88,.64);vehicle.add(coffee);
-  if(journeyMode){
+  const coffee=(journeyMode||isTownJourney())?createCoffeeCup():new THREE.Group();coffee.visible=false;coffee.position.set(-.25,.88,.64);vehicle.add(coffee);
+  if(journeyMode||isTownJourney()){
   const holderMaterial=new THREE.MeshStandardMaterial({color:"#202724",roughness:.75});
   const cupRing=new THREE.Mesh(new THREE.TorusGeometry(.039,.004,8,24),holderMaterial);cupRing.rotation.x=Math.PI/2;cupRing.position.y=.035;coffee.add(cupRing);
   const cupBracket=new THREE.Mesh(new THREE.BoxGeometry(.07,.016,.13),holderMaterial);cupBracket.position.set(0,.006,.045);coffee.add(cupBracket);
@@ -253,6 +259,7 @@ export async function createCarScene(
   let laptopProgress = 0,
     laptopDestination = 0;
   let laptopPhase: LaptopPhase = "idle";
+  let pendingLaptopIntent = false;
   let racketProgress = 0, racketDestination = 0;
   let cardProgress=0,cardDestination=0;
   let cardPrepared=false,cardPreparing=false,cardRequested=false;
@@ -285,10 +292,38 @@ export async function createCarScene(
   deviceMotion.addEventListener('change',motionChanged);
   function putAwayThen(action: () => void) {
     if (laptopPhase === "idle" && racketProgress === 0 && racketDestination === 0 && cardProgress===0 && cardDestination===0) return false;
-    afterPutDown = action;
     closeLaptop();
+    afterPutDown = action;
     putDownObject();
     return true;
+  }
+  function cancelLaptopIntent() {
+    pendingLaptopIntent = false;
+    if (queuedAction === openLaptop) queuedAction = null;
+    if (afterPutDown === openLaptop) afterPutDown = null;
+  }
+  function requestLaptopWhenSafe() {
+    if (disposed) return;
+    pendingLaptopIntent = true;
+    requestRender();
+  }
+  function openPendingLaptopIntent() {
+    if (disposed || !pendingLaptopIntent) return;
+    if (moving || progress !== 1 || laptopPhase !== "idle" || arrivalPause > 0)
+      return;
+    if (
+      drive.phase === "driving" ||
+      drive.phase === "parking" ||
+      drive.phase === "starting"
+    ) {
+      if (queuedAction !== openLaptop) {
+        queuedAction = openLaptop;
+        drive.park();
+        requestRender();
+      }
+      return;
+    }
+    openLaptop();
   }
   function rev() {
     if (progress !== 1 || drive.phase !== "parked") return;
@@ -300,19 +335,32 @@ export async function createCarScene(
   }
   function openLaptop() {
     cardRequested=false;
-    if (moving || progress !== 1 || laptopPhase !== "idle" || arrivalPause > 0)
+    if (moving || progress !== 1)
       return;
+    if (laptopPhase === "closing") {
+      requestLaptopWhenSafe();
+      return;
+    }
+    if (laptopPhase !== "idle") return;
+    if (arrivalPause > 0) {
+      requestLaptopWhenSafe();
+      return;
+    }
     if (
       drive.phase === "driving" ||
       drive.phase === "parking" ||
       drive.phase === "starting"
     ) {
-      queuedAction = openLaptop;
-      drive.park();
-      requestRender();
+      requestLaptopWhenSafe();
+      if (queuedAction !== openLaptop) {
+        queuedAction = openLaptop;
+        drive.park();
+        requestRender();
+      }
       return;
     }
     if (putAwayThen(openLaptop)) return;
+    pendingLaptopIntent = false;
     down = null;
     targetYaw = yaw;
     targetPitch = pitch;
@@ -323,6 +371,7 @@ export async function createCarScene(
     requestRender();
   }
   function closeLaptop() {
+    cancelLaptopIntent();
     if (laptopPhase !== "reading" && laptopPhase !== "opening") return;
     laptopDestination = 0;
     laptopState("closing");
@@ -331,6 +380,7 @@ export async function createCarScene(
   }
   function openMap() {
     cardRequested=false;
+    cancelLaptopIntent();
     if((!journeyMode&&!isTownJourney()) || visit.phase!=="idle" || moving || progress!==1)return;
     if(drive.phase==="driving" || drive.phase==="starting" || drive.phase==="parking"){
       queuedAction=openMap;drive.park();requestRender();return;
@@ -342,6 +392,7 @@ export async function createCarScene(
   }
   function inspect(item: CabinObject) {
     cardRequested=item==='card';
+    cancelLaptopIntent();
     if (moving) return;
     if (
       drive.phase === "driving" ||
@@ -418,6 +469,7 @@ export async function createCarScene(
   }
   function exit() {
     cardRequested=false;
+    cancelLaptopIntent();
     if (moving || preparingMotion || progress === 0) return;
     if (putAwayThen(exit)) return;
     if (
@@ -449,6 +501,7 @@ export async function createCarScene(
       drive.phase === "parking"
     )
       return;
+    cancelLaptopIntent();
     sound.unlock();
     preparingMotion=true;
     try{if(!reducedMotion.matches)await prepareShadows('ignition');}
@@ -587,7 +640,7 @@ export async function createCarScene(
     requestRender();
   }
   let hornCount=0,lastHornEgg=0;
-  function honk(){if(performance.now()-lastHornEgg>500){lastHornEgg=performance.now();hornCount++;if(hornCount===3)host.dispatchEvent(new CustomEvent("car-egg",{detail:"Three honks. You’re officially comfortable in someone else’s car."}));}sound.honk();const acknowledged=drive.phase!=="off"&&drive.traffic.honk(drive.pose());profile.stage(acknowledged?"horn-acknowledged":"horn-no-response");requestRender();}
+  function honk(){if(performance.now()-lastHornEgg>500){lastHornEgg=performance.now();hornCount++;if(hornCount===3)host.dispatchEvent(new CustomEvent("car-egg",{detail:"Three honks. You’re officially comfortable in someone else’s car."}));}sound.honk();const acknowledged=drive.phase!=="off"&&!race.active&&drive.traffic.honk(drive.pose(),{distance:drive.distance,lane:drive.lane,speed:drive.speed,automatic:drive.automatic,access:Boolean(drive.access),phase:drive.phase,cruiseSpeed:drive.cruiseSpeed,race:race.active});profile.stage(acknowledged?"horn-acknowledged":"horn-no-response");requestRender();}
   function keyDown(e: KeyboardEvent) {
     if(e.metaKey||e.ctrlKey||e.altKey)return;
     if (race.state.phase==="countdown")return;
@@ -695,6 +748,8 @@ export async function createCarScene(
   function dispose() {
     if(disposed)return;
     disposed = true;
+    cancelLaptopIntent();
+    afterPutDown = null;
     renderer.domElement.removeEventListener('webglcontextlost',contextLost);
     cancelAnimationFrame(frame);
     observer.disconnect();
@@ -785,8 +840,8 @@ export async function createCarScene(
       const warmth = forest.update(vehicle.position,camera.position,reviewTreeBudget??quality.treeBudget);
       sun.position.copy(vehicle.position).addScaledVector(SUN_DIRECTION, 45);
       sun.target.position.copy(vehicle.position);
-      sun.intensity = landscapeMode?1+warmth*1.2:1.1;
-      if(landscapeMode){sun.color.setRGB(1,.68+warmth*.2,.5+warmth*.28);hemisphere.intensity=.5+warmth*.25;}
+      sun.intensity = landscapeMode?1.62+warmth*.9:1.1;
+      if(landscapeMode){sun.color.setRGB(1,.77+warmth*.11,.555+warmth*.19);hemisphere.intensity=.34+warmth*.12;}
     }
     const motionPhaseNow=()=>moving?(destination===1?'entry':'exit'):approaching?'approach':laptopPhase==='opening'||laptopPhase==='closing'||racketProgress!==racketDestination||cardProgress!==cardDestination?'object':drive.phase==='starting'?'ignition':drive.phase==='parking'?'parking':null;
     function render(now: number) {
@@ -869,10 +924,10 @@ export async function createCarScene(
           queuedAction = null;
           action();
         } else if (drive.phase === "parked") {
-          if(scenicMode&&drive.stoppedAt){
-            const view=drive.stoppedAt==="lake"?scenicLakeFrame.point:drive.access!.place;
+          if(scenicMode&&drive.stoppedAt&&drive.stoppedAt!=="lake"){
+            const view=drive.access!.place;
             const parked=drive.pose(),relative=Math.atan2(view.x-parked.point.x,view.z-parked.point.z)-parked.yaw;
-            const toward=drive.stoppedAt!=="lake"&&camera.aspect>1.1?Math.atan2(Math.sin(relative),Math.cos(relative))*.8:relative;
+            const toward=camera.aspect>1.1?Math.atan2(Math.sin(relative),Math.cos(relative))*.8:relative;
             targetYaw=yaw+Math.atan2(Math.sin(toward-yaw),Math.cos(toward-yaw));targetPitch=.1;
             if(reducedMotion.matches){yaw=targetYaw;pitch=targetPitch;}
           }
@@ -902,7 +957,8 @@ export async function createCarScene(
       if (now-telemetryAt>100) {
         telemetryAt=now;
         host.dispatchEvent(new CustomEvent('car-race',{detail:{...race.state}}));
-        host.dispatchEvent(new CustomEvent('car-telemetry',{detail:{speed:Math.round(drive.speed*3.6),rpm:Math.round(engineState.rpm/50)*50,gear:engineState.gear,approach:drive.requiredApproach,automatic:drive.automatic,turbo:drive.turbo,speedHold:drive.speedHold,collision:drive.collisionTime>0,distance:drive.distance,x:drive.position.x,z:drive.position.z,stop:drive.stoppedAt,engineOn:drive.engineOn}}));
+        const trafficContext={distance:drive.distance,lane:drive.lane,speed:drive.speed,automatic:drive.automatic,access:Boolean(drive.access),phase:drive.phase,cruiseSpeed:drive.cruiseSpeed,race:race.active};
+        host.dispatchEvent(new CustomEvent('car-telemetry',{detail:{speed:Math.round(drive.speed*3.6),rpm:Math.round(engineState.rpm/50)*50,gear:engineState.gear,approach:drive.requiredApproach,automatic:drive.automatic,turbo:drive.turbo,speedHold:drive.speedHold,collision:drive.collisionTime>0,distance:drive.distance,x:drive.position.x,z:drive.position.z,stop:drive.stoppedAt,engineOn:drive.engineOn,hornPrompt:!race.active&&drive.traffic.hornPrompt(trafficContext),trafficEncounter:!race.active?drive.traffic.trafficEncounter(trafficContext):null}}));
       }
       instruments.update(drive.speed, drive.steering + (drive.phase==="driving"?THREE.MathUtils.clamp(curvature*6,-.4,.4):0), drive.engineOn, engineState.rpm);
       profile.mark('audio-instruments');
@@ -920,6 +976,7 @@ export async function createCarScene(
             renderer.domElement.focus({ preventScroll: true });
         }
       }
+      openPendingLaptopIntent();
       if (racketProgress !== racketDestination) {
         racketProgress = THREE.MathUtils.clamp(racketProgress + (racketDestination ? 1 : -1) * dt / 1.25, 0, 1);
         renderer.shadowMap.needsUpdate = true;
@@ -1109,9 +1166,40 @@ export async function createCarScene(
       if(!visit.begin("cafe"))return;drive.engineOn=false;drive.clearInput();exit();requestRender();
     },
     returnToCar() {visit.back();requestRender();},
-    orderCoffee() {visit.order();requestRender();},
+    orderCoffee() {
+      if(isTownJourney()&&drive.phase==='parked'&&drive.stoppedAt==='cafe'){
+        visit.hasCoffee=true;renderer.shadowMap.needsUpdate=true;
+      }else visit.order();
+      requestRender();
+    },
     openMap,
-    navigate(id) {if(race.active)race.cancel();drive.navigate(stopDistance(id));if(drive.phase!=="driving")startDrive();requestRender();},
+     routePreview(id) {
+       const access=drive.accessRoads.find(candidate=>candidate.id===id);
+       if(!access)return null;
+       return {...estimatePlannedRoute({id,distance:drive.distance,destination:access.centre,roadLength:drive.road.length,accessRoads:drive.accessRoads,currentAccessId:drive.access?.id??null,currentAccessDistance:drive.accessDistance,cruiseSpeed:drive.cruiseSpeed}),alreadyAtStop:drive.stoppedAt===id};
+     },
+    goStraightTo(id) {
+      cancelLaptopIntent();
+      if(race.active)race.cancel();
+      const access=drive.accessRoads.find(candidate=>candidate.id===id);
+      if(!access)return;
+      ignitionAllowed=true;
+      drive.arriveAtStop(id,{preserveRequiredStop:drive.requiredStop!==id});
+      renderer.domElement.focus({preventScroll:true});
+      requestRender();
+    },
+     navigate(id) {
+       cancelLaptopIntent();
+       if(race.active)race.cancel();
+       if(drive.stoppedAt===id){renderer.domElement.focus({preventScroll:true});requestRender();return;}
+       if(drive.requiredApproach&&drive.requiredStop&&id!==drive.requiredStop){
+         host.dispatchEvent(new CustomEvent('car-route-blocked',{detail:{requested:id,required:drive.requiredStop}}));
+         return;
+      }
+      drive.navigate(stopDistance(id));
+      if(drive.phase!=="driving")startDrive();
+      requestRender();
+    },
     openLaptop,
     closeLaptop,
     inspect,
@@ -1144,6 +1232,13 @@ export async function createCarScene(
     skipApproach: () => {
       approaching = false;
       progress = 0.56;
+      requestRender();
+    },
+    lookAtLake: () => {
+      if(drive.stoppedAt!=="lake")return;
+      const parked=drive.pose();
+      const toward=Math.atan2(scenicLakeFrame.point.x-parked.point.x,scenicLakeFrame.point.z-parked.point.z)-parked.yaw;
+      targetYaw=yaw+Math.atan2(Math.sin(toward-yaw),Math.cos(toward-yaw));targetPitch=.1;
       requestRender();
     },
     look: (x, y) => {

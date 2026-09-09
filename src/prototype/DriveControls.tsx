@@ -4,10 +4,12 @@ import type { DriveInput } from "./forest-route";
 export function DriveControls({
   input,
   park,
+  honk,
   assisted=false,
 }: {
   input: (key: DriveInput, pressed: boolean) => void;
   park: () => void;
+  honk?: () => void;
   assisted?: boolean;
 }) {
   const held=useRef(new Set<DriveInput>()),latestInput=useRef(input);
@@ -51,6 +53,7 @@ export function DriveControls({
         {pedal("right", "Steer right", "→")}
       </div>
       <div>
+        {honk&&<button aria-label="Honk horn touch control" aria-keyshortcuts="H" onClick={honk}>H</button>}
         <button aria-label="Pull over" onClick={park}>
           P
         </button>

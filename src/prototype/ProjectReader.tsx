@@ -1,17 +1,34 @@
-import {useEffect} from 'react';
-import {trackJourney} from '../lib/journey-stats';
-import {ContactLinks} from './ContactLinks';
-import { ProjectLaptop } from './ProjectLaptop';
-import './live-entrance.css';
-import './project-reader.css';
-import './cabin-objects.css';
+import { useEffect, useRef, useState } from 'react';
+import { ProjectCollection } from '../projects/ProjectCollection';
+import { ProjectViewer } from '../projects/ProjectViewer';
+import { projectFromPath, type ProjectId } from '../projects/catalog';
 
 export default function ProjectReader() {
-  useEffect(()=>{trackJourney('project_opened');},[]);
-  return <main className="project-reader" aria-label="Bryce Rambach's personal portfolio">
-    <header className="project-reader__header"><a href="/">← Back to the Porsche</a><a href="mailto:bryce.rambach@gmail.com">Say hello ↗</a></header>
-    <section className="project-reader__intro" aria-label="About Bryce"><h1>Bryce Rambach.</h1><p>I build software, connect systems, and make little tools for the people around me.</p><p>At the consultancy, I work across payroll, HR, and finance with an integration platform, a payroll system, a rostering system, and the finance system.</p></section>
-    <section className="project-reader__pages" aria-label="Personal projects"><ProjectLaptop /></section>
-    <footer className="project-reader__footer"><span>Bryce Rambach. Designer & engineer.</span><a href="https://github.com/brambach" target="_blank" rel="noreferrer">GitHub ↗</a><ContactLinks/></footer>
+  const [project,setProject]=useState(projectFromPath);
+  const [selected,setSelected]=useState<ProjectId|undefined>(project?.id);
+  const root=useRef<HTMLElement>(null);
+  useEffect(()=>{
+    const change=()=>setProject(projectFromPath());
+    window.addEventListener('popstate',change);
+    return ()=>window.removeEventListener('popstate',change);
+  },[]);
+  useEffect(()=>{
+    if(project)setSelected(project.id);
+    else if(selected)requestAnimationFrame(()=>{const cover=root.current?.querySelector<HTMLAnchorElement>(`[data-project="${selected}"]`);cover?.focus({preventScroll:true});cover?.scrollIntoView?.({block:'nearest',inline:'nearest'});});
+  },[project,selected]);
+  const open=(id:ProjectId)=>{
+    const path=`/projects/${id}`;
+    if(project)history.replaceState(history.state,'',path);
+    else history.pushState({portfolioViewer:true},'',path);
+    setProject(projectFromPath());
+  };
+  const close=()=>{
+    if(history.state?.portfolioViewer)history.back();
+    else {history.replaceState(null,'','/projects');setProject(undefined);}
+  };
+  return <main ref={root} className="ps-page" aria-label="Bryce Rambach's portfolio">
+    <header className="ps-page__nav"><a href="/">← Back to the Porsche</a><span>Bryce Rambach</span><a href="mailto:bryce.rambach@gmail.com">Say hello ↗</a></header>
+    <ProjectCollection open={open} selected={selected}/>
+    {project&&<ProjectViewer project={project} close={close} choose={open}/>}
   </main>;
 }

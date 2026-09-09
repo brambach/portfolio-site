@@ -1,3 +1,4 @@
+import {QuietIdleLoader} from "./QuietIdleLoader";
 import {readJourneyMemory,rememberJourney,rememberDiscovery,resetJourneyMemory} from './journey-memory';
 import {trackJourney,recordSceneReady} from '../lib/journey-stats';
 import {ContactLinks} from './ContactLinks';
@@ -5,10 +6,11 @@ import {RaceTimes,TimeToBeat} from "./RaceTimes";
 import {readRaceResult,type SavedRace} from "./race-result";
 import {idleRace,type RaceState} from "./return-race";
 import {RacePanel} from "./RacePanel";
-import {scenicAccess} from './scenic-route';
+import {RoadNotes,useIsMobileViewport} from './RoadNotes';
+import {scenicAccess,scenicRoad} from './scenic-route';
 import {stopInvitation} from './stop-invitation';
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { createPortal,flushSync } from "react-dom";
 import { createCarScene, type CarScene, type LaptopPhase } from "./car-scene";
 import { CabinObjects, type CabinObject } from "./CabinObjects";
 import { ProjectLaptop } from "./ProjectLaptop";
@@ -22,6 +24,7 @@ import "./entrance.css";
 import "./live-entrance.css";
 import "./cabin-objects.css";
 import "./journey-finish.css";
+import "./journey-touch.css";
 
 import { readSoundPreferences, saveSoundPreferences } from "./sound-preferences";
 import {readMotionPreference,saveMotionPreference} from './motion-preferences';
@@ -45,23 +48,32 @@ export default function Entrance() {
   const [raceTimes,setRaceTimes]=useState(false);
   const [raceAttempt,setRaceAttempt]=useState(0);
   const [lastResult,setLastResult]=useState<SavedRace|null>(null);
-  const [loadingStep,setLoadingStep]=useState(0);
   const [openingFinished,setOpeningFinished]=useState(false);
   const [returnVisit]=useState(()=>{try{return memory.onboarded||sessionStorage.getItem("bryce-arrived")==="yes";}catch{return false;}});
   const [egg,setEgg]=useState("");
   const [race,setRace]=useState<RaceState>({...idleRace});
   const tourAutopilot=townMode && race.phase==="idle";
   const raceActive=race.phase==="racing"||race.phase==="countdown";
+  const [lakeView,setLakeView]=useState(false);
   const [lakeDismissed,setLakeDismissed] = useState(false);
   const [visit,setVisit]=useState<{phase:VisitPhase;coffee:boolean;stop:JourneyStopId|null}>({phase:"idle",coffee:false,stop:null});
   const visitRegion=useRef<HTMLElement>(null);
   const [routeMap,setRouteMap]=useState(false);
+  const [routeJump,setRouteJump]=useState<{label:string}|null>(null);
+  const [routeBlocked,setRouteBlocked]=useState<{requested:JourneyStopId;required:JourneyStopId}|null>(null);
   const [visited,setVisited]=useState<JourneyStopId[]>(()=>memory.discoveries.filter((item):item is JourneyStopId=>["cafe","tennis","lake"].includes(item)));
   const hostRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<CarScene | null>(null);
   const enterRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLButtonElement>(null);
+  const raceTimesReturnFocusRef=useRef<HTMLElement|null>(null);
   const failureRef = useRef<HTMLElement>(null);
+  const stopInvitationActionRef=useRef<HTMLButtonElement>(null);
+  const stopInvitationDismissRef=useRef<HTMLButtonElement>(null);
+  const stopInvitationToggleRef=useRef<HTMLButtonElement>(null);
+  const hornButtonRef=useRef<HTMLButtonElement>(null);
+  const narrowViewport=useIsMobileViewport();
+  const [invitationOpen,setInvitationOpen]=useState(false);
   const [phase, setPhase] = useState<Phase>("outside");
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -81,7 +93,7 @@ export default function Entrance() {
     phase: "off",
     overlook: false,
   });
-  const [telemetry,setTelemetry] = useState({speed:0,rpm:0,gear:1,engineOn:false,automatic:false,turbo:false,speedHold:null as number|null,approach:false,collision:false,distance:0,x:0,z:0,stop:null as JourneyStopId|null});
+  const [telemetry,setTelemetry] = useState({speed:0,rpm:0,gear:1,engineOn:false,automatic:false,turbo:false,speedHold:null as number|null,approach:false,collision:false,distance:0,x:0,z:0,stop:null as JourneyStopId|null,hornPrompt:false,trafficEncounter:null as null|{phase:string;carIndex:number;distance:number;lane:number;speed:number;homeLane:number}});
   const [preferences] = useState(readSoundPreferences);
   const [muted, setMuted] = useState(preferences.muted);
   const [music,setMusic]=useState(()=>{try{return localStorage.getItem("bryce-portfolio-radio")!=="off";}catch{return true;}});
@@ -116,9 +128,8 @@ export default function Entrance() {
       setFailureMessage('The car stopped rendering. You can still read the projects.');setFailed(true);
     };
     host.addEventListener('car-unavailable',unavailable);
-    const loading=(event:Event)=>setLoadingStep((event as CustomEvent<number>).detail);
     const easterEgg=(event:Event)=>setEgg((event as CustomEvent<string>).detail);
-    host.addEventListener("car-loading",loading);host.addEventListener("car-egg",easterEgg);
+    host.addEventListener("car-egg",easterEgg);
     const title = document.title;
     document.title = "Bryce Rambach";
     const started = () => {
@@ -134,12 +145,16 @@ export default function Entrance() {
     host.addEventListener("car-visit",visitChanged);
     const showMap=()=>setRouteMap(true);
     host.addEventListener("car-map",showMap);
+    const blockedRoute=(event:Event)=>setRouteBlocked((event as CustomEvent<{requested:JourneyStopId;required:JourneyStopId}>).detail);
+    host.addEventListener("car-route-blocked",blockedRoute);
     const raceChanged=(event:Event)=>setRace((event as CustomEvent<RaceState>).detail);
     host.addEventListener("car-race",raceChanged);
     const telemetryChanged = (event: Event) => {
       const detail=(event as CustomEvent<typeof telemetry>).detail;
-      const next={...detail,approach:detail.approach??false,turbo:detail.turbo??false,speedHold:detail.speedHold??null};
-      setTelemetry(previous=>previous.approach===next.approach && previous.speed===next.speed && previous.rpm===next.rpm && previous.gear===next.gear && previous.automatic===next.automatic && previous.turbo===next.turbo && previous.speedHold===next.speedHold && previous.collision===next.collision && previous.distance===next.distance && previous.x===next.x && previous.z===next.z && previous.stop===next.stop && previous.engineOn===next.engineOn?previous:next);
+      const next={...detail,approach:detail.approach??false,turbo:detail.turbo??false,speedHold:detail.speedHold??null,hornPrompt:detail.hornPrompt??false,trafficEncounter:detail.trafficEncounter??null};
+      const restoreHornFocus=document.activeElement===hornButtonRef.current;
+      setTelemetry(previous=>previous.approach===next.approach && previous.speed===next.speed && previous.rpm===next.rpm && previous.gear===next.gear && previous.automatic===next.automatic && previous.turbo===next.turbo && previous.speedHold===next.speedHold && previous.collision===next.collision && previous.distance===next.distance && previous.x===next.x && previous.z===next.z && previous.stop===next.stop && previous.engineOn===next.engineOn && previous.hornPrompt===next.hornPrompt && previous.trafficEncounter===next.trafficEncounter?previous:next);
+      if(restoreHornFocus)queueMicrotask(()=>hornButtonRef.current?.focus({preventScroll:true}));
     };
     const audioUnavailable = () => setAudioFailed(true);
     const hoverObject = (event: Event) =>
@@ -198,9 +213,10 @@ export default function Entrance() {
       cancelled = true;
       controller.abort();
       host.removeEventListener('car-unavailable',unavailable);
-      host.removeEventListener("car-loading",loading);host.removeEventListener("car-egg",easterEgg);
+      host.removeEventListener("car-egg",easterEgg);
       host.removeEventListener("car-visit",visitChanged);
       host.removeEventListener("car-map",showMap);
+      host.removeEventListener("car-route-blocked",blockedRoute);
       host.removeEventListener("car-enter", started);
       host.removeEventListener("car-drive", journey);
       host.removeEventListener("car-telemetry",telemetryChanged);
@@ -266,10 +282,26 @@ export default function Entrance() {
   useEffect(()=>{if(phase==="inside")trackJourney("car_entered");},[phase]);
   useEffect(()=>{if(telemetry.stop==="lake"&&drive.phase==="parked"){trackJourney("lake_reached");setMemory(rememberJourney({lake:true}));}},[telemetry.stop,drive.phase]);
   useEffect(()=>{if(race.phase==="racing")trackJourney("race_started");if(race.phase==="finished")trackJourney("race_finished");},[race.phase]);
+  useEffect(()=>{
+    if(drive.phase!=="parked"||telemetry.stop!=="lake"||race.phase!=="idle")setLakeView(false);
+  },[drive.phase,telemetry.stop,race.phase]);
   const lakeArrival = scenicMode && intro === "done" && telemetry.stop === "lake" && drive.phase === "parked" && !lakeDismissed;
   const invitation = townMode && phase === "inside" && intro === "done" && (drive.phase === "driving" || drive.phase === "off" || drive.phase === "parked") && !telemetry.approach ? stopInvitation(scenicAccess,telemetry.distance,telemetry.speed,[...visited,...dismissedStops]) : null;
+  // Collapsed only where it actually blocks the view: narrow viewport, car
+  // moving. Wide viewports and stationary states keep the full card.
+  const compactInvitation=Boolean(invitation)&&narrowViewport&&drive.phase==="driving";
+  const invitationId=invitation?.id??null;
+  useEffect(()=>{setInvitationOpen(false);},[invitationId,compactInvitation]);
   const retryRace=()=>{if(sceneRef.current?.replayRace()){trackJourney('race_retried');setLastResult(null);setRace({...idleRace,phase:"countdown",countdown:3});setRaceAttempt(value=>value+1);setLakeDismissed(true);focusCabin();}};
   const focusCabin=()=>hostRef.current?.querySelector("canvas")?.focus({preventScroll:true});
+  const goStraight=(id:JourneyStopId)=>{
+    const stop=JOURNEY_STOPS.find(candidate=>candidate.id===id);
+    flushSync(()=>{setRouteMap(false);setMenu(false);setRouteBlocked(null);setLakeDismissed(id!=="lake");setRouteJump({label:stop?.name??'the stop'});});
+    sceneRef.current?.goStraightTo(id);
+    focusCabin();
+    window.setTimeout(()=>setRouteJump(null),900);
+  };
+  const focusStopInvitation=()=>{(stopInvitationToggleRef.current??stopInvitationActionRef.current??stopInvitationDismissRef.current)?.focus({preventScroll:true});};
   const callAvailable=phase==="inside"&&!object&&laptop==="idle"&&!menu&&!routeMap&&!raceTimes&&!lastResult;
   const callDistance=townMode?950:scenicAccess.find(access=>access.id==="lake")!.entry-620;
   useEffect(()=>{
@@ -329,11 +361,12 @@ export default function Entrance() {
       )}
       {menu && !moving && (
         <nav className="simulation-menu" aria-label="Site menu">
-          <button onClick={()=>{setMenu(false);setRaceTimes(true);}}>Race times</button>
+          <button onClick={()=>{raceTimesReturnFocusRef.current=menuRef.current;setMenu(false);setRaceTimes(true);}}>Race times</button>
           {readRaceResult()&&<button onClick={()=>{setMenu(false);setLastResult(readRaceResult());}}>Your last time</button>}
           <button aria-pressed={music} onClick={()=>setMusic(!music)}>Radio music {music?"on":"off"}</button>
           <p className="simulation-menu-note">{music?"Passenger gets aux privileges.":"The engine gets the solo."}</p>
           {(journeyMode||townMode) && phase === "inside" && visit.phase === "idle" && <button onClick={()=>{setMenu(false);sceneRef.current?.openMap();}}>Route map</button>}
+          {townMode && phase === "inside" && visit.phase === "idle" && <button onClick={()=>goStraight('lake')}>Go straight to the lake</button>}
           <button onClick={() => open("laptop")}>Personal projects</button>
           <button onClick={() => open("racket")}>Tennis racket</button>
           <button onClick={() => open("journal")}>Off the clock</button>
@@ -428,6 +461,7 @@ export default function Entrance() {
           </a>
         </nav>
       )}
+      {phase === "outside" && ready && (openingFinished||returnVisit||reduceMotion) && !failed && visit.phase==="idle" && <div className="door-invitation" aria-hidden="true"><span className="door-invitation__line"/><span>Open the door</span><small>Touch the Porsche to get in</small></div>}
       {phase === "outside" && !failed && visit.phase==="idle" && (
         <button
           ref={enterRef}
@@ -439,7 +473,7 @@ export default function Entrance() {
             sceneRef.current?.enter();
           }}
         >
-          <span className="entry-label">Get in <span aria-hidden="true">↗</span></span>
+          <span className="entry-label">Open the door <kbd>Enter</kbd></span>
           <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
             <path
               d="M7 24V11l7-5h11v18H7Z M17 6v18 M11 16h3"
@@ -451,14 +485,16 @@ export default function Entrance() {
         </button>
       )}
       {ready && !openingFinished && !returnVisit && !reduceMotion && phase==="outside" && <div className="arrival-film" aria-hidden="true" onAnimationEnd={event=>{if(event.target===event.currentTarget)setOpeningFinished(true);}}><div className="arrival-film__title"><span>BRYCE RAMBACH / AN INTERACTIVE ROAD TRIP</span><strong>Take the<br/><em>long way.</em></strong><small>A few things about me. A Porsche. Your way home.</small></div></div>}
-      {!failed && <div className={`journey-loading ${ready?'journey-loading--ready':''} ${returnVisit?'journey-loading--return':''}`} aria-hidden={ready||undefined}><div><span>BRYCE RAMBACH</span><strong>The long way.</strong><p role={ready?undefined:"status"}>{["Getting the car ready.","Unpacking the cabin.","Finding the light.","One last look at the road."][Math.min(3,loadingStep)]}</p><div className="journey-loading__stages" aria-hidden="true">{[0,1,2,3].map(step=><i key={step} className={step<=loadingStep?'is-done':''}/>)}</div><a href="/projects" tabIndex={ready?-1:0}>Straight to the projects ↗</a></div></div>}
+      {!failed && <QuietIdleLoader ready={ready}/>}
       {failed && (
         <section ref={failureRef} tabIndex={-1} aria-label="Scene unavailable" className="simulation-failure">
           <p>{failureMessage}</p>
-          <button onClick={() => window.location.reload()}>Try again</button>
-          <button onClick={() => open("laptop")}>Open personal projects</button>
-          <a href="/projects">Read without the scene</a>
-          <a href="mailto:bryce.rambach@gmail.com">Contact Bryce</a>
+          <div className="simulation-failure__actions" role="group" aria-label="Scene recovery actions">
+            <button onClick={() => window.location.reload()}>Try again</button>
+            <button onClick={() => open("laptop")}>Open personal projects</button>
+            <a href="/projects">Read without the scene</a>
+            <a href="mailto:bryce.rambach@gmail.com">Contact Bryce</a>
+          </div>
         </section>
       )}
       {!scenicMode && ready && phase === "outside" && !menu && (
@@ -501,27 +537,28 @@ export default function Entrance() {
           </svg>
         </button>
       )}
-      {phase === "inside" && intro === "done" && race.phase!=="countdown" && race.phase!=="finished" && !lastResult && !lakeArrival && !object && laptop === "idle" && !menu && visit.phase==="idle" && (
+      {phase === "inside" && intro === "done" && race.phase!=="countdown" && race.phase!=="finished" && !lastResult && !lakeArrival && !lakeView && !object && laptop === "idle" && !menu && visit.phase==="idle" && (
         <>
           {!scenicMode && !travelling && (
             <section className="city-invitation" aria-label="Choose your next stop">
               <span className="city-eyebrow">{journeyMode?"BRYCE RAMBACH / THE LONG WAY":"BRYCE RAMBACH / AFTER HOURS"}</span>
               <h1>{currentStop?currentStop.name:drive.phase === "parked" ? (journeyMode?"Stay a little longer.":"The night's still young.") : "Take the long way."}</h1>
-              <button className="city-start" onClick={ignite}>{drive.phase === "parked" ? "Back on the road" : "Start driving"}<span aria-hidden="true">↗</span></button>
-              {currentStop?.id==="cafe" && <button className="stop-visit-action" onClick={()=>sceneRef.current?.visitCafe()}>Step out for a flat white ↗</button>}
-              {currentStop?.id==="cafe" && <button onClick={()=>open("laptop")}>What I’m building ↗</button>}
-              {currentStop?.id==="tennis" && <button onClick={()=>open("racket")}>About that racket ↗</button>}
-              {currentStop?.id==="trailhead" && <button className="stop-visit-action" onClick={()=>sceneRef.current?.visitTrail()}>Take the short trail ↗</button>}
+              <button className="city-start" onClick={ignite}>{drive.phase === "parked" ? "Back on the road" : "Start driving"}</button>
+              {currentStop?.id==="cafe" && <button className="stop-visit-action" onClick={()=>sceneRef.current?.visitCafe()}>Step out for a flat white</button>}
+              {currentStop?.id==="cafe" && <button onClick={()=>open("laptop")}>What I’m building</button>}
+              {currentStop?.id==="tennis" && <button onClick={()=>open("racket")}>About that racket</button>}
+              {currentStop?.id==="trailhead" && <button className="stop-visit-action" onClick={()=>sceneRef.current?.visitTrail()}>Take the short trail</button>}
               <p>{currentStop?"The route map is on the dashboard. Pick your next stop whenever you’re ready.":journeyMode?"Coffee, forest roads and a little more time.":"You steer. The city keeps going."}</p>
             </section>
           )}
           {scenicMode && !travelling && <section className="scenic-ignition" aria-label="Ignition">
-            {drive.phase === "parked" && (currentStop||drive.overlook) && <h1>{currentStop?.name??"Lakeside"}.</h1>}
+            {drive.phase === "parked" && (currentStop||drive.overlook) && <><span className="stop-ticket-label">PARKED / {currentStop?.id==='cafe'?'01':currentStop?.id==='tennis'?'02':'03'}</span><h1>{currentStop?.name??"Lakeside"}.</h1><p className="stop-guidance">{currentStop?.id==='cafe'?"Coffee and something to get into. Order a flat white, then open the laptop.":currentStop?.id==='tennis'?"A small detour. Pick up the racket for the story, then head back to the road.":"Take in the lake, explore the projects, or take the wheel for the drive home."}</p></>}
             {townMode && <button onClick={()=>setRouteMap(true)}>Route map</button>}
-            {currentStop?.id==="cafe"&&<button onClick={()=>open("laptop")}>What I’m building ↗</button>}
-            {currentStop?.id==="tennis"&&<button onClick={()=>open("racket")}>About that racket ↗</button>}
-            <button onClick={()=>{if(townMode&&currentStop&&currentStop.id!=="lake")sceneRef.current?.navigate("lake");else ignite();}}>{drive.phase === "parked" ? townMode&&currentStop&&currentStop.id!=="lake"?"Continue to lake":"Back on the road" : "Turn the ignition key"}<span aria-hidden="true"> ↗</span></button>
-            {townMode && currentStop?.id==="lake" && race.phase==="idle" && <button onClick={()=>{if(sceneRef.current?.startRace()){setLakeDismissed(true);focusCabin();}}}>Race back to the start ↗</button>}
+            {currentStop?.id==="cafe"&&<>{visit.coffee?<div className="coffee-receipt" role="status"><span>ON THE HOUSE</span><strong>One flat white.</strong><p>It’s in the cup holder. Find something good on the laptop.</p></div>:<button onClick={()=>sceneRef.current?.orderCoffee()}>A flat white, please</button>}<button onClick={()=>open("laptop")}>Open the laptop</button></>}
+            {currentStop?.id==="tennis"&&<button onClick={()=>open("racket")}>About that racket</button>}
+            <button onClick={()=>{if(townMode&&currentStop&&currentStop.id!=="lake")sceneRef.current?.navigate("lake");else ignite();}}>{drive.phase === "parked" ? townMode&&currentStop&&currentStop.id!=="lake"?"Continue to lake":"Back on the road" : "Turn the ignition key"}</button>
+            {townMode && currentStop?.id==="lake" && <button onClick={()=>{setLakeView(true);sceneRef.current?.stopEngine();sceneRef.current?.lookAtLake();focusCabin();}}>Take in the view</button>}
+            {townMode && currentStop?.id==="lake" && race.phase==="idle" && <button onClick={()=>{if(sceneRef.current?.startRace()){setLakeDismissed(true);focusCabin();}}}>Race back to the start</button>}
             {drive.phase === "parked" && <button disabled={!telemetry.engineOn} onClick={()=>{sceneRef.current?.stopEngine();hostRef.current?.querySelector('canvas')?.focus();}}>{telemetry.engineOn ? "Turn engine off" : "Engine off"}</button>}
           </section>}
           {scenicMode && hint && intro === "done" && !travelling && <p className="cabin-exploration-hint">Open the laptop for projects. Pick up the racket or contact card to learn more.</p>}
@@ -550,15 +587,16 @@ export default function Entrance() {
               <button disabled={tourAutopilot||raceActive||telemetry.approach} aria-pressed={telemetry.automatic&&telemetry.turbo} onClick={()=>sceneRef.current?.setTurbo(!(telemetry.automatic&&telemetry.turbo))}>Turbo cruise {telemetry.automatic&&telemetry.turbo?"on":"off"}</button>
               <button aria-label={telemetry.speedHold!==null?"Release speed hold":"Hold current speed"} aria-keyshortcuts="C" aria-describedby="driving-mode-help" disabled={tourAutopilot || telemetry.approach || drive.phase!=="driving" || (telemetry.speedHold===null && telemetry.speed<11)} aria-pressed={telemetry.speedHold!==null} onClick={()=>sceneRef.current?.setSpeedHold(telemetry.speedHold===null)}>{telemetry.speedHold!==null?`Holding ${Math.round(telemetry.speedHold*3.6)} km/h`:`Hold ${telemetry.speed} km/h`} · C</button>
               </>}
-              <button onClick={()=>sceneRef.current?.honk()} aria-label="Honk horn" aria-keyshortcuts="H">H · Honk</button>
+              <button ref={hornButtonRef} onClick={()=>sceneRef.current?.honk()} aria-label="Honk horn" aria-keyshortcuts="H">H · Honk</button>
               {!tourAutopilot && <div className="city-gears"><button disabled={tourAutopilot} aria-label="Downshift" onClick={() => sceneRef.current?.shift(-1)}>Q <span>− gear</span></button><button disabled={tourAutopilot} aria-label="Upshift" onClick={() => sceneRef.current?.shift(1)}>E <span>+ gear</span></button></div>}
               <span id="driving-mode-help">{raceActive?"W / ↑ gas · S / ↓ brake · A / D steer · Q / E shift":tourAutopilot?"I’ll handle the road. Look around, honk, or choose a stop. You get the wheel for the race.":telemetry.approach?"The car is steering. You can still brake or pull over.":drive.phase==="starting"?"Starting the engine.":drive.phase==="parking"?"Pulling over.":telemetry.automatic&&telemetry.turbo?"Faster straights, slower bends. Steer, accelerate or brake to take control.":telemetry.speedHold!==null?"You steer. Gas, brake or C releases speed hold.":telemetry.speed<11?"Reach 11 km/h to hold your speed. A / D steer.":"C holds speed · W / ↑ gas · S / ↓ brake · A / D steer"}</span>
             </div>
           )}
+          {travelling && telemetry.hornPrompt && !raceActive && !telemetry.approach && !object && laptop==="idle" && !menu && <button className="horn-prompt" aria-label="Honk to ask the car ahead for room" aria-keyshortcuts="H" onClick={()=>sceneRef.current?.honk()}>Honk for room</button>}
         </>
       )}
       {drive.phase === "driving" && !object && laptop === "idle" && !menu && (
-        <DriveControls assisted={tourAutopilot||telemetry.approach||race.phase==="countdown"} input={(key, pressed) => sceneRef.current?.input(key, pressed)} park={() => sceneRef.current?.park()} />
+        <DriveControls assisted={tourAutopilot||telemetry.approach||race.phase==="countdown"} input={(key, pressed) => sceneRef.current?.input(key, pressed)} park={() => sceneRef.current?.park()} honk={()=>sceneRef.current?.honk()} />
       )}
       {journeyMode && visit.phase!=="idle" && <section ref={visitRegion} tabIndex={-1} className="stop-visit-panel" aria-label={visit.stop==='trailhead'?"Forest walk":"Café visit"}>
         <span>{visit.stop==='trailhead'?"THE LONG WAY / FOREST TRAIL":"THE LONG WAY / COFFEE STOP"}</span>
@@ -569,39 +607,50 @@ export default function Entrance() {
         </>}
         {(visit.phase==='walking'||visit.phase==='exploring') && <button onClick={()=>sceneRef.current?.returnToCar()}>{visit.stop==='cafe' && visit.coffee?'Take coffee back to the car':'Back to the car'}</button>}
       </section>}
-      {phase === "inside" && intro === "returning" && <section className="journey-note" aria-label="Welcome back"><span>THE LONG WAY / BACK AGAIN</span><h1>You know where the keys are.</h1><p>Your introduction is saved. Take another trip, or head straight to the work.</p><button onClick={()=>{sceneRef.current?.allowIgnition();setIntro("done");setHint(false);}}>Take another drive ↗</button>{memory.lake&&townMode&&<button onClick={()=>{if(sceneRef.current?.replayRace()){setIntro("done");setLakeDismissed(true);setHint(false);focusCabin();}}}>Back to the race ↗</button>}<a href="/projects">Open my projects ↗</a><button onClick={()=>setIntro("welcome")}>Show me around again</button></section>}
+      {phase === "inside" && intro === "returning" && <section className="journey-note" aria-label="Welcome back"><span>THE LONG WAY / BACK AGAIN</span><h1>You know where the keys are.</h1><p>Your introduction is saved. Take another trip, or head straight to the work.</p><button onClick={()=>{sceneRef.current?.allowIgnition();setIntro("done");setHint(false);}}>Take another drive</button>{memory.lake&&townMode&&<button onClick={()=>{if(sceneRef.current?.replayRace()){setIntro("done");setLakeDismissed(true);setHint(false);focusCabin();}}}>Back to the race</button>}<a href="/projects">Open my projects ↗</a><button onClick={()=>setIntro("welcome")}>Show me around again</button></section>}
       {phase === "inside" && (intro === "welcome" || intro === "ready") && <section className="journey-note" aria-label="Before we go">
         <span>BRYCE RAMBACH / {intro === "welcome" ? "BEFORE WE GO" : "YOUR TURN"}</span>
-        <h1>{intro === "welcome" ? "A tiny toll before the keys." : "Okay. Have fun."}</h1>
-        <p>{intro === "welcome" ? "A quick introduction first. I did build a whole car to get you here. The rest of my stuff is coming along for the ride." : "Turn the key. I’ll handle the road while you look around. At the lake, you can take the wheel for a race home."}</p>
-        <button onClick={() => { if (intro === "welcome") setIntro("card"); else { sceneRef.current?.allowIgnition(); setMemory(rememberJourney({onboarded:true})); trackJourney("intro_completed"); setIntro("done"); setHint(false); } }}>{intro === "welcome" ? "Fine, show me your stuff" : "Hand over the keys"}</button>
-        <a href="/projects">Just here for the work?</a>
+        <h1>{intro === "welcome" ? "Before we go." : "The road is yours."}</h1>
+        <p>{intro === "welcome" ? "I’m Bryce, a designer and engineer. A short introduction, then a drive through my work." : "Turn the key. I’ll handle the road while you look around. At the lake, you can take the wheel for a race home."}</p>
+        <button onClick={() => { if (intro === "welcome") setIntro("card"); else { sceneRef.current?.allowIgnition(); setMemory(rememberJourney({onboarded:true})); trackJourney("intro_completed"); setIntro("done"); setHint(false); } }}>{intro === "welcome" ? "Meet Bryce" : "Start the journey"}</button>
+        <a href="/projects">View projects</a>
       </section>}
       {(call==="ringing"||call==="answered") && phase==="inside" && !object && laptop==="idle" && !menu && <aside className="journey-call" aria-label="Car phone">
         <span>{call==="ringing"?"INCOMING CALL":"BRYCE / CONNECTED"}</span><strong>{call==="ringing"?"Bryce":"Still there?"}</strong>
         {call==="answered"?<p>Just checking you haven’t forgotten this is a portfolio.</p>:<div><button onClick={()=>{sceneRef.current?.stopCall();setCall("answered");focusCabin();}}>Answer</button><button onClick={()=>{sceneRef.current?.stopCall();setCall("done");focusCabin();}}>Ignore</button></div>}
       </aside>}
-      {invitation && !object && laptop === "idle" && !menu && <aside className="stop-invitation" aria-label={invitation.id === "cafe" ? "Café ahead" : "Tennis courts ahead"}>
-        <div><span>OPTIONAL STOP</span><strong>{invitation.id === "cafe" ? "Flat white?" : "One more set?"}</strong><p>{invitation.id === "cafe" ? "The Long Way café is just ahead." : "The young prodigy’s natural habitat."}</p></div>
-        <button onClick={()=>{setDismissedStops(previous=>[...previous,invitation.id]);sceneRef.current?.navigate(invitation.id);}}>Pull in ↗</button>
-        <button className="stop-invitation__dismiss" aria-label="Keep going" onClick={()=>{setDismissedStops(previous=>[...previous,invitation.id]);focusCabin();}}>×</button>
+      {invitation && !object && laptop === "idle" && !menu && <aside className={`stop-invitation${compactInvitation?" stop-invitation--compact":""}${compactInvitation&&!invitationOpen?" is-collapsed":""}`} aria-label={invitation.id === "cafe" ? "Café ahead" : "Tennis courts ahead"}>
+        {/* While driving on a narrow viewport the full card covered the whole
+            scenery band. It becomes a disclosure: the same heading, and every
+            action still there once it is open. */}
+        {compactInvitation && <button ref={stopInvitationToggleRef} className="stop-invitation__toggle" aria-expanded={invitationOpen} aria-controls="stop-invitation-details" onClick={()=>setInvitationOpen(open=>!open)}>Optional stop · {invitation.id === "cafe" ? "Flat white?" : "One more set?"}</button>}
+        {(!compactInvitation||invitationOpen) && <>
+          <div id="stop-invitation-details"><span>OPTIONAL STOP</span><strong>{invitation.id === "cafe" ? "Flat white?" : "One more set?"}</strong><p>{invitation.id === "cafe" ? "The Long Way café is just ahead." : "The young prodigy’s natural habitat."}</p></div>
+          <button ref={stopInvitationActionRef} onClick={()=>{setDismissedStops(previous=>[...previous,invitation.id]);sceneRef.current?.navigate(invitation.id);}}>Pull in</button>
+          <button ref={stopInvitationDismissRef} className="stop-invitation__dismiss" aria-label="Keep going" onClick={()=>{setDismissedStops(previous=>[...previous,invitation.id]);focusCabin();}}>×</button>
+        </>}
       </aside>}
+      {townMode&&travelling&&intro==="done"&&race.phase==="idle"&&!object&&laptop==="idle"&&!menu&&!routeMap&&!lakeApproach&&call!=="ringing"&&call!=="answered"&&<RoadNotes progress={telemetry.distance/scenicRoad.length} deferred={Boolean(invitation)} onFocusHidden={focusStopInvitation}/>}
       {lakeApproach && !object && laptop === "idle" && <aside className="journey-caption" role="status"><strong>One stop I don’t want you to miss.</strong><span>The car will guide you into the lake turnout.</span></aside>}
       {lakeArrival && !object && laptop === "idle" && <section className="journey-note journey-note--finish" aria-label="the lake turnout">
-        <span>THE LAST STOP / A LITTLE CLOSER TO HOME</span><h1>This one’s for the lake.</h1>
-        <p>My family lives by the lake. It’s beautiful. This little stretch of road is my nod to it.</p>
-        <p>{previousStops.lake?"You came back for the view. Or the leaderboard. I’ll take either.":"That’s the trip. Fancy taking the wheel for the way back?"}</p>
-        {townMode&&<TimeToBeat open={()=>setRaceTimes(true)}/>}
-        {townMode && <button onClick={()=>{if(sceneRef.current?.startRace()){setLakeDismissed(true);focusCabin();}}}>Race back to the start ↗</button>}
+        <span>03 / THE LAKE</span><h1>Stay for a moment.</h1>
+        <p>the lake means a lot to me. This little stretch of road is my nod to it.</p>
+        <p>{previousStops.lake?"Take another look around. The road home is here when you’re ready.":"The drive can wait. Take in the view, open the laptop, or race the road home."}</p>
+        <button onClick={()=>{setLakeDismissed(true);setLakeView(true);sceneRef.current?.stopEngine();sceneRef.current?.lookAtLake();focusCabin();}}>Take in the view</button>
+        {townMode&&<TimeToBeat open={()=>{raceTimesReturnFocusRef.current=document.activeElement instanceof HTMLElement?document.activeElement:null;setRaceTimes(true);}}/>}
+        {townMode && <button onClick={()=>{if(sceneRef.current?.startRace()){setLakeDismissed(true);focusCabin();}}}>Race back to the start</button>}
         <button onClick={() => { setLakeDismissed(true); open("laptop"); }}>Open my projects</button>
         <div className="journey-finish-links"><a href="/projects">Read the full portfolio ↗</a><a href="mailto:bryce.rambach@gmail.com">Say hello ↗</a></div><ContactLinks/>
         <button onClick={() => {setLakeDismissed(true);focusCabin();}}>Stay a little longer</button>
       </section>}
-      {raceTimes&&<RaceTimes close={()=>{setRaceTimes(false);focusCabin();}}/>}
+      {lakeView&&phase==='inside'&&!object&&laptop==='idle'&&<aside className="lake-view-note"><span>THE LAKE / NO HURRY</span><p>Drag to look around. Stay as long as you like.</p><button onClick={()=>{setLakeView(false);setLakeDismissed(false);sceneRef.current?.center();}}>Back to the lake stop</button></aside>}
+      {routeBlocked&&!object&&laptop==='idle'&&!routeMap&&<aside className="route-blocked-note" role="status"><span>LAKE APPROACH</span><p>The car is already committed to the lake turnout. Stay with the scenic approach, or go straight to {JOURNEY_STOPS.find(stop=>stop.id===routeBlocked.requested)?.name??'that stop'}.</p><button onClick={()=>goStraight(routeBlocked.requested)}>Go straight to {JOURNEY_STOPS.find(stop=>stop.id===routeBlocked.requested)?.name??'that stop'}</button><button onClick={()=>{setRouteBlocked(null);focusCabin();}}>Stay on the approach</button></aside>}
+      {routeJump&&<aside className="route-jump-cover" role="status" aria-live="polite"><span>SHORT ROUTE</span><strong>Heading to {routeJump.label}.</strong></aside>}
+      {raceTimes&&<RaceTimes returnFocusRef={raceTimesReturnFocusRef} close={()=>setRaceTimes(false)}/>}
       {lastResult&&<RacePanel retry={phase==="inside"&&memory.lake?retryRace:undefined} race={{...idleRace,phase:"finished",elapsed:lastResult.elapsed}} resume={lastResult} cancel={()=>{setLastResult(null);focusCabin();}}/>}
       {egg&&!object&&!menu&&!raceTimes&&race.phase!=="finished"&&<aside className="journey-egg" role="status">{egg}</aside>}
       {race.phase!=="idle" && !lastResult && <RacePanel key={raceAttempt} retry={memory.lake?retryRace:undefined} race={race} cancel={()=>{sceneRef.current?.cancelRace();focusCabin();}}/>}
-      {(journeyMode||townMode) && routeMap && <JourneyMap firstTrip={scenicMode&&!visited.includes("lake")} stops={townMode?JOURNEY_STOPS.filter(stop=>["cafe","tennis","lake"].includes(stop.id)):undefined} accessRoads={townMode?scenicAccess:undefined} position={{x:telemetry.x,z:telemetry.z}} restoreFocus={()=>hostRef.current?.querySelector("canvas")?.focus()} distance={telemetry.distance} visited={visited} close={()=>setRouteMap(false)} navigate={id=>{setRouteMap(false);sceneRef.current?.navigate(id);}}/>}
+      {(journeyMode||townMode) && routeMap && <JourneyMap firstTrip={scenicMode&&!visited.includes("lake")} stops={townMode?JOURNEY_STOPS.filter(stop=>["cafe","tennis","lake"].includes(stop.id)):undefined} accessRoads={townMode?scenicAccess:undefined} position={{x:telemetry.x,z:telemetry.z}} restoreFocus={()=>hostRef.current?.querySelector("canvas")?.focus()} distance={telemetry.distance} visited={visited} close={()=>setRouteMap(false)} navigate={id=>{setRouteMap(false);setRouteBlocked(null);sceneRef.current?.navigate(id);}} goStraight={townMode?goStraight:undefined} routePreview={id=>sceneRef.current?.routePreview(id)} roadLength={scenicRoad.length}/>}
       {object && (
         <CabinObjects
           key={object}

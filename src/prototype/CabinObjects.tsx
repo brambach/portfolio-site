@@ -5,15 +5,18 @@ import { ProjectLaptop } from './ProjectLaptop';
 export type CabinObject = 'laptop' | 'journal' | 'card' | 'racket';
 export function CabinObjects({ object, close, physical = false, nextLabel }: { nextLabel?: string; object: CabinObject; close: () => void; physical?: boolean }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const previousFocus = useRef(document.activeElement);
   useEffect(() => {
     const element = dialog.current!;
-    const previous = document.activeElement;
+    const previous = previousFocus.current;
     element.showModal();
     return () => {
+      requestAnimationFrame(() => {
       const target = previous instanceof HTMLElement && previous.isConnected && previous !== document.body
         ? previous
         : document.querySelector<HTMLElement>(".live-entrance__scene canvas");
       target?.focus({ preventScroll: true });
+      });
     };
   }, []);
   return <dialog ref={dialog} className={`cabin-object cabin-object--${object} ${physical && (object === 'racket' || object === 'card') ? `cabin-object--physical-${object}` : ''}`} onClose={close} onClick={e => { if (e.target === e.currentTarget) close(); }} aria-label={object === 'laptop' ? 'Project laptop' : object === 'journal' ? 'Field notes' : object === 'racket' ? 'Tennis racket' : 'Contact card'}>

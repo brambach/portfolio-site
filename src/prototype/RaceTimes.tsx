@@ -1,4 +1,4 @@
-import {useEffect,useRef,useState} from 'react';
+import {type RefObject,useEffect,useRef,useState} from 'react';
 import {raceTime} from './return-race';
 export type RaceEntry={id:string;name:string;elapsed:number};
 export function useRaceTimes(){
@@ -12,10 +12,11 @@ export function useRaceTimes(){
   },[revision]);
   return {entries,target,challenge,status,retry:()=>reload(value=>value+1)};
 }
-export function RaceTimes({close}:{close:()=>void}){
+export function RaceTimes({close,returnFocusRef}:{close:()=>void;returnFocusRef?:RefObject<HTMLElement|null>}){
   const {entries,status,retry}=useRaceTimes(),dialog=useRef<HTMLDialogElement>(null);
-  useEffect(()=>{const previous=document.activeElement as HTMLElement|null;dialog.current?.showModal();return()=>{if(previous?.isConnected)previous.focus();};},[]);
-  return <dialog ref={dialog} className="race-times" aria-labelledby="race-times-title" onCancel={event=>{event.preventDefault();close();}}><header><span>THE LONG WAY / CLUB TIMES</span><button aria-label="Close race times" onClick={close}>×</button></header><h1 id="race-times-title">Race times.</h1><p>the lake to the start. One car. Your best shot.</p>{status==='loading'&&<p role="status">Checking the board…</p>}{status==='error'&&<div role="status"><p>The board is taking a breather.</p><button onClick={retry}>Try again</button></div>}{status==='ready'&&(entries.length?<ol>{entries.map(entry=><li key={entry.id}><span>{entry.name}</span><strong>{raceTime(entry.elapsed)}</strong></li>)}</ol>:<p>No times yet. The first lap is up for grabs.</p>)}<p className="race-times__note">The race starts at the lake, after the tour. Astra’s time is an AI exhibition using direct road knowledge.</p></dialog>;
+  useEffect(()=>{const previous=document.activeElement as HTMLElement|null;dialog.current?.showModal();return()=>{queueMicrotask(()=>{const target=returnFocusRef?.current?.isConnected?returnFocusRef.current:previous?.isConnected?previous:null;target?.focus({preventScroll:true});});};},[]);
+  const dismiss=()=>{dialog.current?.close();close();};
+  return <dialog ref={dialog} className="race-times" aria-labelledby="race-times-title" onCancel={event=>{event.preventDefault();dismiss();}}><header><span>THE LONG WAY / CLUB TIMES</span><button aria-label="Close race times" onClick={dismiss}>×</button></header><h1 id="race-times-title">Race times.</h1><p>the lake to the start. One car. Your best shot.</p>{status==='loading'&&<p role="status">Checking the board…</p>}{status==='error'&&<div role="status"><p>The board is taking a breather.</p><button onClick={retry}>Try again</button></div>}{status==='ready'&&(entries.length?<ol>{entries.map(entry=><li key={entry.id}><span>{entry.name}</span><strong>{raceTime(entry.elapsed)}</strong></li>)}</ol>:<p>No times yet. The first lap is up for grabs.</p>)}<p className="race-times__note">The race starts at the lake, after the tour. Astra’s time is an AI exhibition using direct road knowledge.</p></dialog>;
 }
 export function TimeToBeat({open}:{open:()=>void}){
   const {entries,target,challenge,status}=useRaceTimes();
