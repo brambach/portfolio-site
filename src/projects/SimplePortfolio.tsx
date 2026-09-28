@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FocusEvent, type RefObject } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FocusEvent, type MouseEvent, type RefObject } from 'react';
 import {
   motion, useMotionTemplate, useMotionValueEvent, useReducedMotion, useScroll, useSpring,
   useTransform, useVelocity, type MotionValue,
@@ -8,6 +8,7 @@ import { SmoothScroll } from '../components/SmoothScroll';
 import { archive, projectById, type Project } from './catalog';
 import { email } from '../lib/site';
 import './simple.css';
+import { Car } from './FlatCar';
 
 const covers: Partial<Record<Project['id'], string>> = {
   agentsky: '/project-lab/sky.png',
@@ -33,6 +34,24 @@ const skyStops = [0, 0.3, 0.62, 0.84, 1];
 const carCentre = () => window.innerWidth * 0.08 + Math.min(380, Math.max(200, window.innerWidth * 0.3)) / 2;
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 
+// the 3D drive picks up at the overlook when it sees this
+const DRIVE = '/?from=work';
+
+// Warm up the drive once someone is well down the road: its code, and the car model on desktops.
+// Phones and data-saver visitors only get the code, since the model alone is about 17 MB.
+let drivePreloaded = false;
+function preloadDrive() {
+  if (drivePreloaded) return;
+  drivePreloaded = true;
+  void import('../prototype/Entrance.tsx').catch(() => { drivePreloaded = false; });
+  const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData;
+  if (saveData || !window.matchMedia('(pointer: fine)').matches) return;
+  const link = document.createElement('link');
+  link.rel = 'prefetch';
+  link.href = '/models/entrance/porsche-1975.glb';
+  document.head.append(link);
+}
+
 export default function SimplePortfolio() {
   const reduced = useReducedMotion() ?? false;
   useEffect(() => {
@@ -57,7 +76,7 @@ export default function SimplePortfolio() {
       <footer className="sp-foot">
         <p>Want to make something together?</p>
         <a className="sp-foot__hello" href={`mailto:${email}`}>Say hello</a>
-        <a href="/">Or take the Porsche out <span aria-hidden="true">→</span></a>
+        <a href={DRIVE}>Or take the Porsche out <span aria-hidden="true">→</span></a>
       </footer>
     </main>
   </SmoothScroll>;
@@ -121,6 +140,7 @@ function Drive() {
   const dashes = useMotionTemplate`${trackX}px 50%`;
 
   useMotionValueEvent(progress, 'change', p => {
+    if (p > 0.55) preloadDrive();
     const el = track.current;
     if (!el) return;
     const middle = p * travel + window.innerWidth * 0.5;
@@ -140,6 +160,25 @@ function Drive() {
   };
 
   const current = stop >= 0 && stop < road.length ? road[stop] : null;
+
+  // "Take the wheel": zoom through the car's side window into the drive
+  const [zoom, setZoom] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+  useEffect(() => {
+    // coming back with the browser's back button restores the page mid-zoom, so clear it
+    const reset = (event: PageTransitionEvent) => { if (event.persisted) { setZoom(null); setRevving(false); } };
+    window.addEventListener('pageshow', reset);
+    return () => window.removeEventListener('pageshow', reset);
+  }, []);
+  const takeTheWheel = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+    event.preventDefault();
+    const href = event.currentTarget.href;
+    preloadDrive();
+    const glass = document.querySelector('.sp-drive .sp-car__glass')?.getBoundingClientRect();
+    setZoom(glass ? { left: glass.left, top: glass.top, width: glass.width, height: glass.height } : { left: innerWidth / 2, top: innerHeight / 2, width: 0, height: 0 });
+    setRevving(true);
+    window.setTimeout(() => window.location.assign(href), 950);
+  };
   const layer = (position: MotionValue<string>) => ({ backgroundPosition: position });
 
   return <section ref={section} className="sp-drive" style={{ height: `calc(${travel}px + 100svh)` }} aria-label="Selected work">
@@ -169,7 +208,7 @@ function Drive() {
           <h2>Want to drive it yourself?</h2>
           <p>The rest of the road is in 3D. Open the door, turn the key, take it to the lake.</p>
           <div className="sp-overlook__actions">
-            <a className="sp-foot__hello" href="/" onFocus={bringIntoView} onMouseEnter={() => setRevving(true)} onMouseLeave={() => setRevving(false)}>Take the wheel <span aria-hidden="true">→</span></a>
+            <a className="sp-foot__hello" href={DRIVE} onClick={takeTheWheel} onFocus={bringIntoView} onMouseEnter={() => setRevving(true)} onMouseLeave={() => zoom || setRevving(false)}>Take the wheel <span aria-hidden="true">→</span></a>
             <a href={`mailto:${email}`}>Or just say hello</a>
           </div>
         </div>
@@ -185,6 +224,11 @@ function Drive() {
         <span>that’s me</span>
         <svg viewBox="0 0 44 40"><path d="M4 6 C 20 2, 34 10, 34 30 M26 24 L34 32 L40 22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </motion.div>
+
+      {zoom && <motion.div className="sp-zoom" aria-hidden="true"
+        initial={{ ...zoom, borderRadius: '60% 40% 6px 6px', backgroundColor: '#dfe6dc' }}
+        animate={{ left: 0, top: 0, width: window.innerWidth, height: window.innerHeight, borderRadius: '0% 0% 0px 0px', backgroundColor: '#1f2838' }}
+        transition={{ duration: 0.85, ease: [0.7, 0, 0.2, 1] }} />}
 
       <div className="sp-dash" aria-hidden="true">
         <span className="sp-dash__speed"><motion.span>{mph}</motion.span> mph</span>
@@ -347,66 +391,6 @@ function Word({ word, distance, speed, order }: Motion & { word: string; order: 
     transition={{ type: 'spring', stiffness: 260, damping: 13, delay: 0.15 + order * 0.06 }}>
     <motion.span className="sp-word" style={{ y, rotate }}>{word}</motion.span>
   </motion.span>;
-}
-
-type CarProps = { pitch: MotionValue<number>; wheel: MotionValue<number>; blur: MotionValue<number>; exhaust: MotionValue<number>; lights: MotionValue<number>; revving: boolean };
-
-// A flat side-on 911, facing right. Wheels turn with distance; the body rides on the springs.
-// Paint, glass and rims come from the look's CSS variables.
-function Car({ pitch, wheel, blur, exhaust, lights, revving }: CarProps) {
-  return <div className={revving ? 'sp-car sp-car--rev' : 'sp-car'}>
-    <motion.div className="sp-car__beam" style={{ opacity: lights }} />
-    <motion.div className="sp-car__exhaust" style={{ opacity: exhaust }}><i /><i /><i /></motion.div>
-    <svg viewBox="0 0 320 120" role="img">
-      <defs>
-        <linearGradient id="sp-paint" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" className="sp-paint-hi" />
-          <stop offset="0.55" className="sp-paint" />
-          <stop offset="1" className="sp-paint-lo" />
-        </linearGradient>
-        <linearGradient id="sp-glass" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" className="sp-glass-hi" />
-          <stop offset="1" className="sp-glass" />
-        </linearGradient>
-        <radialGradient id="sp-shadow"><stop offset="0" className="sp-shadow" /><stop offset="1" className="sp-shadow" stopOpacity="0" /></radialGradient>
-      </defs>
-      <ellipse cx="160" cy="108" rx="150" ry="8" fill="url(#sp-shadow)" />
-      <motion.g className="sp-car__body" style={{ rotate: pitch, originX: '50%', originY: '90%' }}>
-        <g className="sp-car__idle">
-          <path fill="url(#sp-paint)" d="M24 90 C14 89 9 82 11 73 C13 64 22 57 36 51 C60 39 92 23 128 18 C150 15 170 16 184 22 C196 28 206 38 215 46 L238 50 C260 52 282 56 297 62 C306 66 310 74 308 82 C306 88 300 90 292 90 Z" />
-          <path fill="url(#sp-paint)" d="M236 60 C244 44 276 42 292 58 Z" />
-          <path className="sp-car__duck" fill="url(#sp-paint)" d="M34 52 L20 45 L44 42 Z" />
-          <path className="sp-car__crease" fill="none" strokeWidth="2" strokeLinecap="round" d="M44 46 C70 32 100 21 130 19 C152 17 170 18 182 24" />
-          <path fill="url(#sp-glass)" d="M98 44 C120 30 146 23 170 23 C184 23 194 30 203 42 L203 44 Z" />
-          <path className="sp-car__pillar" strokeWidth="5" d="M160 23 L158 45" />
-          <path className="sp-car__seam" fill="none" strokeWidth="1.2" d="M158 49 L156 82 M210 46 C214 60 214 74 210 84" />
-          <rect className="sp-car__seam-fill" x="186" y="56" width="14" height="2.5" rx="1.25" />
-          <path fill="url(#sp-paint)" d="M204 41 C206 36 214 34 217 38 L214 42 Z" />
-          <ellipse className="sp-car__lamp" cx="278" cy="52" rx="7" ry="6" transform="rotate(-18 278 52)" />
-          <circle className="sp-car__lamp-core" cx="279" cy="52" r="2.5" />
-          <rect className="sp-car__tail" x="10" y="70" width="12" height="4" rx="2" />
-          <rect className="sp-car__stripe" x="100" y="75" width="112" height="2" rx="1" />
-          <circle className="sp-car__arch" cx="72" cy="90" r="25" />
-          <circle className="sp-car__arch" cx="250" cy="90" r="25" />
-        </g>
-      </motion.g>
-      <Wheel cx={72} rotate={wheel} blur={blur} />
-      <Wheel cx={250} rotate={wheel} blur={blur} />
-    </svg>
-  </div>;
-}
-
-function Wheel({ cx, rotate, blur }: { cx: number; rotate: MotionValue<number>; blur: MotionValue<number> }) {
-  return <g transform={`translate(${cx} 90)`}>
-    <circle className="sp-tyre" r="20" />
-    <motion.g style={{ rotate }}>
-      <circle className="sp-rim" r="12.5" />
-      {[0, 72, 144, 216, 288].map(a => <path key={a} className="sp-spoke" transform={`rotate(${a})`} d="M-3 -2 L-2 -11 L2 -11 L3 -2 Z" />)}
-      <circle className="sp-hub" r="3" />
-    </motion.g>
-    {/* at speed the spokes smear into a disc */}
-    <motion.circle className="sp-rim-blur" r="12.5" style={{ opacity: blur }} />
-  </g>;
 }
 
 /* Reduced motion gets the plain pinned-up grid instead of the drive. */
