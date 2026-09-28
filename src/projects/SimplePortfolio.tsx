@@ -20,24 +20,47 @@ const covers: Partial<Record<Project['id'], string>> = {
 // small alternating tilts so the grid feels pinned up, not printed
 const tilts = [-1.6, 1.2, -0.8, 1.8, -1.2, 0.9];
 
-// morning to blue hour across the length of the drive
+/* Design directions under exploration. Each look sets its type, colour and car paint in simple.css;
+   the sky and sun change with scroll, so their colours live here. */
+const looks = {
+  daylight: { label: 'Daylight', sky: ['#e9eff6', '#f4f6f9', '#f5eee4', '#e8cfc3', '#1b2231'], sun: ['#ffd7a6', '#fff3d1', '#ffae86', '#e8e6ef'] },
+  graphite: { label: 'Graphite', sky: ['#2b2e34', '#2a2d32', '#302d31', '#2d2733', '#141519'], sun: ['#6b6f76', '#8a8e95', '#8a6f66', '#d9d9d6'] },
+  paper: { label: 'Paper', sky: ['#f2ebdf', '#eee8db', '#ecdabc', '#dcab8f', '#2b2833'], sun: ['#e6a468', '#f2d79d', '#d9683f', '#efe6d0'] },
+  original: { label: 'Original', sky: ['#f6dcc0', '#e9efe6', '#f0d49a', '#e59a6e', '#34445a'], sun: ['#f2b66d', '#fbe7a6', '#e8733f', '#f1e6c8'] },
+} as const;
+type Look = keyof typeof looks;
 const skyStops = [0, 0.3, 0.62, 0.84, 1];
-const skyColours = ['#f6dcc0', '#e9efe6', '#f0d49a', '#e59a6e', '#34445a'];
+
+function lookFromUrl(): Look {
+  const look = new URLSearchParams(window.location.search).get('look');
+  return look && look in looks ? look as Look : 'daylight';
+}
 
 export default function SimplePortfolio() {
   const reduced = useReducedMotion() ?? false;
+  const [look, setLook] = useState<Look>(lookFromUrl);
   useEffect(() => {
     const title = document.title;
     document.title = 'Work / Bryce Rambach';
     return () => { document.title = title; };
   }, []);
+  const choose = (next: Look) => {
+    setLook(next);
+    const url = new URL(window.location.href);
+    url.searchParams.set('look', next);
+    window.history.replaceState(null, '', url);
+  };
   return <SmoothScroll>
-    <main className="sp-page" aria-label="Bryce Rambach's work">
+    <main className="sp-page" data-look={look} aria-label="Bryce Rambach's work">
       <header className="sp-nav">
         <span className="sp-nav__name">Bryce Rambach</span>
+        <div className="sp-looks" role="radiogroup" aria-label="Design direction">
+          {(Object.keys(looks) as Look[]).map(key => <button key={key} type="button" role="radio" aria-checked={look === key} onClick={() => choose(key)}>{looks[key].label}</button>)}
+        </div>
         <a href="/">Skip to the drive <span aria-hidden="true">→</span></a>
       </header>
-      {reduced ? <StaticWork /> : <Drive />}
+      {/* keyed so the sky palette is rebuilt when the look changes */}
+      {reduced ? <StaticWork /> : <Drive key={look} look={look} />}
       <section className="sp-more" aria-labelledby="sp-more-title">
         <h2 id="sp-more-title">Also in the glovebox</h2>
         <ul>{archive.map(item => <li key={item.name}><strong>{item.name}</strong><span>{item.kind}</span></li>)}</ul>
@@ -52,11 +75,12 @@ export default function SimplePortfolio() {
 }
 
 /* The drive: vertical scroll moves a horizontal road past the car. */
-function Drive() {
+function Drive({ look }: { look: Look }) {
   const section = useRef<HTMLElement>(null);
   const track = useRef<HTMLDivElement>(null);
   const [travel, setTravel] = useState(0);
   const [stop, setStop] = useState(-1);
+  const [revving, setRevving] = useState(false);
   const lenis = useLenis();
 
   useLayoutEffect(() => {
@@ -87,15 +111,16 @@ function Drive() {
   const lines = useTransform(speed, [300, 2500], [0, 0.8]);
   // the car holds its lane, then rolls forward and parks under the overlook sign
   const carX = useTransform(progress, [0, 0.9, 1], ['0vw', '0vw', '26vw']);
-  const [revving, setRevving] = useState(false);
 
-  const sky = useTransform(progress, skyStops, skyColours);
+  const sky = useTransform(progress, skyStops, [...looks[look].sky]);
   const sunX = useTransform(progress, [0, 1], ['8%', '92%']);
   const sunY = useTransform(progress, p => `${62 - Math.sin(p * Math.PI) * 48}%`);
-  const sunColour = useTransform(progress, [0, 0.5, 0.85, 1], ['#f2b66d', '#fbe7a6', '#e8733f', '#f1e6c8']);
-  const night = useTransform(progress, [0.7, 1], [0, 0.5]);
+  const sunColour = useTransform(progress, [0, 0.5, 0.85, 1], [...looks[look].sun]);
+  const night = useTransform(progress, [0.7, 1], [0, 1]);
   const stars = useTransform(progress, [0.85, 1], [0, 1]);
   const lights = useTransform(progress, [0.72, 0.85], [0, 1]);
+  // the road and verges sit in front of the dusk overlay, so they darken on their own
+  const dim = useTransform(night, n => `brightness(${1 - n * 0.5})`);
 
   const far = useMotionTemplate`${useTransform(distance, d => -d * 0.12)}px 100%`;
   const mid = useMotionTemplate`${useTransform(distance, d => -d * 0.35)}px 100%`;
@@ -122,25 +147,28 @@ function Drive() {
   };
 
   const current = stop >= 0 && stop < projects.length ? projects[stop] : null;
+  // the parallax layers are background tiles in Original and masked silhouettes in the other looks
+  const layer = (position: MotionValue<string>) => ({ backgroundPosition: position, maskPosition: position, WebkitMaskPosition: position });
 
   return <section ref={section} className="sp-drive" style={{ height: `calc(${travel}px + 100svh)` }} aria-label="Selected work">
     <motion.div className="sp-scene" style={{ backgroundColor: sky }}>
       <motion.div className="sp-stars" style={{ opacity: stars }} aria-hidden="true" />
       <motion.div className="sp-sun" style={{ left: sunX, top: sunY, backgroundColor: sunColour }} aria-hidden="true" />
-      <motion.div className="sp-layer sp-layer--far" style={{ backgroundPosition: far }} aria-hidden="true" />
-      <motion.div className="sp-layer sp-layer--mid" style={{ backgroundPosition: mid }} aria-hidden="true" />
+      <motion.div className="sp-layer sp-layer--far" style={layer(far)} aria-hidden="true" />
+      <motion.div className="sp-layer sp-layer--mid" style={layer(mid)} aria-hidden="true" />
 
       {/* dusk dims the land, not the lit billboards */}
       <motion.div className="sp-night" style={{ opacity: night }} aria-hidden="true" />
       <motion.div ref={track} className="sp-track" style={{ x: trackX }}>
         <div className="sp-panel sp-panel--hello">
+          <span className="sp-eyebrow">Portfolio · 2026</span>
           <h1>Hi, I’m Bryce.<br/><em>I design and build software you can feel.</em></h1>
           <p>Six projects down the road. Scroll to drive.</p>
-          <span className="sp-hint" aria-hidden="true">Scroll <span>↓</span></span>
+          <span className="sp-hint" aria-hidden="true"><span className="sp-hint__line" />Scroll</span>
         </div>
         {projects.map((project, i) => <Billboard key={project.id} project={project} index={i} onFocus={bringIntoView} />)}
         <div className="sp-panel sp-panel--overlook">
-          <div className="sp-signpost" aria-hidden="true"><span>Tahoe overlook</span><span>▲ 1 mi</span></div>
+          <div className="sp-signpost" aria-hidden="true"><span>Tahoe overlook</span><span>1 mi</span></div>
           <h2>Want to drive it yourself?</h2>
           <p>The rest of the road is in 3D. Open the door, turn the key, take it to the lake.</p>
           <div className="sp-overlook__actions">
@@ -150,16 +178,16 @@ function Drive() {
         </div>
       </motion.div>
 
-      <div className="sp-road" aria-hidden="true"><motion.div className="sp-road__dashes" style={{ backgroundPosition: dashes }} /></div>
+      <motion.div className="sp-road" style={{ filter: dim }} aria-hidden="true"><motion.div className="sp-road__dashes" style={{ backgroundPosition: dashes }} /></motion.div>
       <motion.div className="sp-car-lane" style={{ x: carX }} aria-hidden="true">
         <motion.div className="sp-speedlines" style={{ opacity: lines }} />
         <Car pitch={pitch} wheel={wheel} blur={blur} exhaust={exhaust} lights={lights} revving={revving} />
       </motion.div>
-      <motion.div className="sp-layer sp-layer--near" style={{ backgroundPosition: near }} aria-hidden="true" />
+      <motion.div className="sp-layer sp-layer--near" style={{ ...layer(near), filter: dim }} aria-hidden="true" />
 
       <div className="sp-dash" aria-hidden="true">
         <span className="sp-dash__speed"><motion.span>{mph}</motion.span> mph</span>
-        <span className="sp-dash__stop">{current ? <>Mile {String(stop + 1).padStart(2, '0')} · {current.name}</> : stop === -1 ? 'Engine on' : 'Overlook ahead'}</span>
+        <span className="sp-dash__stop">{current ? <><b>{String(stop + 1).padStart(2, '0')}</b> {current.name}</> : stop === -1 ? 'Engine on' : 'Overlook ahead'}</span>
       </div>
     </motion.div>
   </section>;
@@ -186,29 +214,42 @@ function Billboard({ project, index, onFocus }: { project: Project; index: numbe
 type CarProps = { pitch: MotionValue<number>; wheel: MotionValue<number>; blur: MotionValue<number>; exhaust: MotionValue<number>; lights: MotionValue<number>; revving: boolean };
 
 // A flat side-on 911, facing right. Wheels turn with distance; the body rides on the springs.
+// Paint, glass and rims come from the look's CSS variables.
 function Car({ pitch, wheel, blur, exhaust, lights, revving }: CarProps) {
   return <div className={revving ? 'sp-car sp-car--rev' : 'sp-car'}>
     <motion.div className="sp-car__beam" style={{ opacity: lights }} />
     <motion.div className="sp-car__exhaust" style={{ opacity: exhaust }}><i /><i /><i /></motion.div>
     <svg viewBox="0 0 320 120" role="img">
-      <ellipse cx="160" cy="108" rx="140" ry="6" fill="rgb(31 42 34 / 0.22)" />
+      <defs>
+        <linearGradient id="sp-paint" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" className="sp-paint-hi" />
+          <stop offset="0.55" className="sp-paint" />
+          <stop offset="1" className="sp-paint-lo" />
+        </linearGradient>
+        <linearGradient id="sp-glass" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" className="sp-glass-hi" />
+          <stop offset="1" className="sp-glass" />
+        </linearGradient>
+        <radialGradient id="sp-shadow"><stop offset="0" className="sp-shadow" /><stop offset="1" className="sp-shadow" stopOpacity="0" /></radialGradient>
+      </defs>
+      <ellipse cx="160" cy="108" rx="150" ry="8" fill="url(#sp-shadow)" />
       <motion.g className="sp-car__body" style={{ rotate: pitch, originX: '50%', originY: '90%' }}>
         <g className="sp-car__idle">
-          <path fill="#2f5d3a" d="M24 90 C14 89 9 82 11 73 C13 64 22 57 36 51 C60 39 92 23 128 18 C150 15 170 16 184 22 C196 28 206 38 215 46 L238 50 C260 52 282 56 297 62 C306 66 310 74 308 82 C306 88 300 90 292 90 Z" />
-          <path fill="#2f5d3a" d="M236 60 C244 44 276 42 292 58 Z" />
-          <path fill="#2f5d3a" d="M34 52 L20 45 L44 42 Z" />
-          <path fill="none" stroke="#4b8a5c" strokeWidth="3" strokeLinecap="round" d="M44 46 C70 32 100 21 130 19 C152 17 170 18 182 24" />
-          <path fill="#dfe6dc" opacity="0.92" d="M98 44 C120 30 146 23 170 23 C184 23 194 30 203 42 L203 44 Z" />
-          <path stroke="#2f5d3a" strokeWidth="5" d="M160 23 L158 45" />
-          <path fill="none" stroke="#1f2a22" strokeOpacity="0.35" strokeWidth="1.5" d="M158 49 L156 82 M210 46 C214 60 214 74 210 84" />
-          <rect x="186" y="56" width="14" height="3" rx="1.5" fill="#1f2a22" opacity="0.45" />
-          <path fill="#2f5d3a" d="M205 40 l11 -5 l2 7 z" />
-          <ellipse cx="278" cy="52" rx="7" ry="6" fill="#f4efe4" transform="rotate(-18 278 52)" />
-          <circle cx="279" cy="52" r="2.5" fill="#e8d48a" />
-          <rect x="10" y="70" width="12" height="5" rx="2.5" fill="#d9683f" />
-          <rect x="100" y="74" width="112" height="3" rx="1.5" fill="#f4efe4" opacity="0.6" />
-          <circle cx="72" cy="90" r="25" fill="#1f2a22" />
-          <circle cx="250" cy="90" r="25" fill="#1f2a22" />
+          <path fill="url(#sp-paint)" d="M24 90 C14 89 9 82 11 73 C13 64 22 57 36 51 C60 39 92 23 128 18 C150 15 170 16 184 22 C196 28 206 38 215 46 L238 50 C260 52 282 56 297 62 C306 66 310 74 308 82 C306 88 300 90 292 90 Z" />
+          <path fill="url(#sp-paint)" d="M236 60 C244 44 276 42 292 58 Z" />
+          <path className="sp-car__duck" fill="url(#sp-paint)" d="M34 52 L20 45 L44 42 Z" />
+          <path className="sp-car__crease" fill="none" strokeWidth="2" strokeLinecap="round" d="M44 46 C70 32 100 21 130 19 C152 17 170 18 182 24" />
+          <path fill="url(#sp-glass)" d="M98 44 C120 30 146 23 170 23 C184 23 194 30 203 42 L203 44 Z" />
+          <path className="sp-car__pillar" strokeWidth="5" d="M160 23 L158 45" />
+          <path className="sp-car__seam" fill="none" strokeWidth="1.2" d="M158 49 L156 82 M210 46 C214 60 214 74 210 84" />
+          <rect className="sp-car__seam-fill" x="186" y="56" width="14" height="2.5" rx="1.25" />
+          <path fill="url(#sp-paint)" d="M204 41 C206 36 214 34 217 38 L214 42 Z" />
+          <ellipse className="sp-car__lamp" cx="278" cy="52" rx="7" ry="6" transform="rotate(-18 278 52)" />
+          <circle className="sp-car__lamp-core" cx="279" cy="52" r="2.5" />
+          <rect className="sp-car__tail" x="10" y="70" width="12" height="4" rx="2" />
+          <rect className="sp-car__stripe" x="100" y="75" width="112" height="2" rx="1" />
+          <circle className="sp-car__arch" cx="72" cy="90" r="25" />
+          <circle className="sp-car__arch" cx="250" cy="90" r="25" />
         </g>
       </motion.g>
       <Wheel cx={72} rotate={wheel} blur={blur} />
@@ -219,14 +260,14 @@ function Car({ pitch, wheel, blur, exhaust, lights, revving }: CarProps) {
 
 function Wheel({ cx, rotate, blur }: { cx: number; rotate: MotionValue<number>; blur: MotionValue<number> }) {
   return <g transform={`translate(${cx} 90)`}>
-    <circle r="20" fill="#161d18" />
+    <circle className="sp-tyre" r="20" />
     <motion.g style={{ rotate }}>
-      <circle r="12" fill="#f4efe4" />
-      {[0, 72, 144, 216, 288].map(a => <path key={a} transform={`rotate(${a})`} d="M-3 -2 L-2 -11 L2 -11 L3 -2 Z" fill="#2f5d3a" />)}
-      <circle r="3" fill="#1f2a22" />
+      <circle className="sp-rim" r="12.5" />
+      {[0, 72, 144, 216, 288].map(a => <path key={a} className="sp-spoke" transform={`rotate(${a})`} d="M-3 -2 L-2 -11 L2 -11 L3 -2 Z" />)}
+      <circle className="sp-hub" r="3" />
     </motion.g>
     {/* at speed the spokes smear into a disc */}
-    <motion.circle r="12" fill="#c9cfc3" style={{ opacity: blur }} />
+    <motion.circle className="sp-rim-blur" r="12.5" style={{ opacity: blur }} />
   </g>;
 }
 
