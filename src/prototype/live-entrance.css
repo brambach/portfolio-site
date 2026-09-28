@@ -202,14 +202,14 @@
 .live-entrance .stop-visit-action{display:block;background:transparent;color:#eee4d0;border:1px solid #c1aa8077;padding:12px 18px;margin-top:10px;font:inherit;font-size:12px;border-radius:3px;cursor:pointer}
 .stop-visit-panel{position:absolute;z-index:7;left:clamp(20px,4vw,60px);bottom:36px;max-width:390px;background:#182921e8;border:1px solid #bdaf8666;border-radius:5px;padding:24px;color:#ece3cc;box-shadow:0 15px 60px #0005}
 .stop-visit-panel>span{font-size:9px;letter-spacing:.16em}
-.stop-visit-panel h2{font:400 29px/1.2 Georgia,serif;margin:12px 0}
+.stop-visit-panel h2{font:400 29px/1.2 'Fraunces Variable',Georgia,serif;margin:12px 0}
 .stop-visit-panel p{font-size:13px;line-height:1.65;margin:12px 0}
 .live-entrance .stop-visit-panel button{display:block;width:100%;text-align:left;padding:13px 15px;margin-top:10px;color:#1d3429;background:#dfcca4;border:1px solid #d6c29c;border-radius:3px;cursor:pointer;font-size:12px}
 .stop-visit-panel button:focus-visible,.stop-visit-action:focus-visible{outline:2px solid #f4e2bc;outline-offset:3px}
 @media(max-width:600px){.stop-visit-panel{left:18px;right:18px;bottom:18px;padding:18px}.stop-visit-panel h2{font-size:25px}}
 
 .scenic-ignition { position:absolute; right:28px; bottom:28px; color:#ede5d5; text-align:right; display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; max-width:calc(100% - 56px); }
-.scenic-ignition h1 { flex-basis:100%; margin:0 0 2px; font:400 28px/1.1 Georgia,serif; }
+.scenic-ignition h1 { flex-basis:100%; margin:0 0 2px; font:400 28px/1.1 'Fraunces Variable',Georgia,serif; }
 .live-entrance .scenic-ignition button { min-height:44px; padding:10px 14px; border:1px solid #ddceb666; border-radius:5px; background:#18221bd9; color:#ede5d5; font-size:12px; cursor:pointer; }
 .cabin-exploration-hint { position:absolute; left:24px; bottom:32px; max-width:300px; margin:0; color:#ede5d5; font-size:12px; line-height:1.6; text-shadow:0 1px 8px #000; pointer-events:none; animation:cabin-hint 7.2s both; }
 @keyframes cabin-hint { 0% { opacity:0; } 12%,80% { opacity:1; } 100% { opacity:0; } }

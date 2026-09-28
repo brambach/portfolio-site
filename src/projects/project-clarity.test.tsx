@@ -21,10 +21,10 @@ it('places the AgentSky recording boundary beside the first sample action', () =
   expect(within(sampleSection as HTMLElement).getByText("Recorded from an illustrative prototype. AgentSky’s service and agent execution aren't connected.")).toBeInTheDocument();
 });
 
-it('places the Dervo fixture boundary beside the first sample decision', () => {
+it('places the Dervo example-project boundary beside the first screen', () => {
   render(<DervoStudy />);
-  const sampleSection = screen.getByRole('region', { name: 'Dervo sample decision' });
-  expect(within(sampleSection).getByText('Local prototype. Screens show the app-v3 design experiment with fixture receipts, model labels and outcomes.')).toBeInTheDocument();
+  const sampleSection = screen.getByRole('region', { name: 'Dervo sample catch up' });
+  expect(within(sampleSection).getByText('Private beta. Screens show example projects from the design review and the landing page, not a tester’s work.')).toBeInTheDocument();
 });
 
 it('places Lucid fixture confidence language beside the first brief and selected mapping fields', async () => {
