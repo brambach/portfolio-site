@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FocusEvent } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FocusEvent } from 'react';
 import {
   motion, useMotionTemplate, useMotionValueEvent, useReducedMotion, useScroll, useSpring,
   useTransform, useVelocity, type MotionValue,
@@ -23,6 +23,7 @@ const tilts = [-1.6, 1.2, -0.8, 1.8, -1.2, 0.9];
 /* Design directions under exploration. Each look sets its type, colour and car paint in simple.css;
    the sky and sun change with scroll, so their colours live here. */
 const looks = {
+  plus: { label: 'Original+', sky: ['#f6dcc0', '#e9efe6', '#f0d49a', '#e59a6e', '#34445a'], sun: ['#f2b66d', '#fbe7a6', '#e8733f', '#f1e6c8'] },
   daylight: { label: 'Daylight', sky: ['#e9eff6', '#f4f6f9', '#f5eee4', '#e8cfc3', '#1b2231'], sun: ['#ffd7a6', '#fff3d1', '#ffae86', '#e8e6ef'] },
   graphite: { label: 'Graphite', sky: ['#2b2e34', '#2a2d32', '#302d31', '#2d2733', '#141519'], sun: ['#6b6f76', '#8a8e95', '#8a6f66', '#d9d9d6'] },
   paper: { label: 'Paper', sky: ['#f2ebdf', '#eee8db', '#ecdabc', '#dcab8f', '#2b2833'], sun: ['#e6a468', '#f2d79d', '#d9683f', '#efe6d0'] },
@@ -31,9 +32,13 @@ const looks = {
 type Look = keyof typeof looks;
 const skyStops = [0, 0.3, 0.62, 0.84, 1];
 
+// where the middle of the car sits on screen; matches .sp-car-lane in simple.css
+const carCentre = () => window.innerWidth * 0.08 + Math.min(380, Math.max(200, window.innerWidth * 0.3)) / 2;
+const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
+
 function lookFromUrl(): Look {
   const look = new URLSearchParams(window.location.search).get('look');
-  return look && look in looks ? look as Look : 'daylight';
+  return look && look in looks ? look as Look : 'plus';
 }
 
 export default function SimplePortfolio() {
@@ -122,6 +127,11 @@ function Drive({ look }: { look: Look }) {
   // the road and verges sit in front of the dusk overlay, so they darken on their own
   const dim = useTransform(night, n => `brightness(${1 - n * 0.5})`);
 
+  // Original+ only: the headline leans into the car's draft and words hop as the car passes under them
+  const playful = look === 'plus';
+  const lean = useSpring(useTransform(velocity, v => playful ? clamp(-v / 260, -9, 9) : 0), { stiffness: 160, damping: 14 });
+  const note = useTransform(progress, [0, 0.03], [1, 0]);
+
   const far = useMotionTemplate`${useTransform(distance, d => -d * 0.12)}px 100%`;
   const mid = useMotionTemplate`${useTransform(distance, d => -d * 0.35)}px 100%`;
   const near = useMotionTemplate`${useTransform(distance, d => -d * 1.35)}px 100%`;
@@ -162,11 +172,17 @@ function Drive({ look }: { look: Look }) {
       <motion.div ref={track} className="sp-track" style={{ x: trackX }}>
         <div className="sp-panel sp-panel--hello">
           <span className="sp-eyebrow">Portfolio · 2026</span>
-          <h1>Hi, I’m Bryce.<br/><em>I design and build software you can feel.</em></h1>
+          {playful
+            ? <motion.h1 className="sp-headline" aria-label="Hi, I’m Bryce. I design and build software you can feel." style={{ skewX: lean }}>
+                <Words text="Hi, I’m Bryce." distance={distance} speed={speed} first={0} />
+                <br/>
+                <em><Words text="I design and build software you can feel." distance={distance} speed={speed} first={3} /></em>
+              </motion.h1>
+            : <h1>Hi, I’m Bryce.<br/><em>I design and build software you can feel.</em></h1>}
           <p>Six projects down the road. Scroll to drive.</p>
           <span className="sp-hint" aria-hidden="true"><span className="sp-hint__line" />Scroll</span>
         </div>
-        {projects.map((project, i) => <Billboard key={project.id} project={project} index={i} onFocus={bringIntoView} />)}
+        {projects.map((project, i) => <Billboard key={project.id} project={project} index={i} onFocus={bringIntoView} playful={playful} active={stop === i} distance={distance} speed={speed} />)}
         <div className="sp-panel sp-panel--overlook">
           <div className="sp-signpost" aria-hidden="true"><span>Tahoe overlook</span><span>1 mi</span></div>
           <h2>Want to drive it yourself?</h2>
@@ -184,6 +200,10 @@ function Drive({ look }: { look: Look }) {
         <Car pitch={pitch} wheel={wheel} blur={blur} exhaust={exhaust} lights={lights} revving={revving} />
       </motion.div>
       <motion.div className="sp-layer sp-layer--near" style={{ ...layer(near), filter: dim }} aria-hidden="true" />
+      {playful && <motion.div className="sp-note" style={{ opacity: note }} aria-hidden="true">
+        <span>that’s me</span>
+        <svg viewBox="0 0 44 40"><path d="M4 6 C 20 2, 34 10, 34 30 M26 24 L34 32 L40 22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      </motion.div>}
 
       <div className="sp-dash" aria-hidden="true">
         <span className="sp-dash__speed"><motion.span>{mph}</motion.span> mph</span>
@@ -193,22 +213,81 @@ function Drive({ look }: { look: Look }) {
   </section>;
 }
 
-function Billboard({ project, index, onFocus }: { project: Project; index: number; onFocus: (event: FocusEvent<HTMLElement>) => void }) {
-  return <div className="sp-panel sp-panel--stop" data-stop style={{ '--tilt': `${tilts[index % tilts.length]}deg` } as CSSProperties}>
+type Motion = { distance: MotionValue<number>; speed: MotionValue<number> };
+
+function Billboard({ project, index, onFocus, playful, active, distance, speed }: Motion & {
+  project: Project; index: number; onFocus: (event: FocusEvent<HTMLElement>) => void; playful: boolean; active: boolean;
+}) {
+  const panel = useRef<HTMLDivElement>(null);
+  const centre = useRef(0);
+  useLayoutEffect(() => {
+    const measure = () => { if (panel.current) centre.current = panel.current.offsetLeft + panel.current.offsetWidth / 2; };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
+  // the car's draft rocks the board on its posts as it passes, harder the faster you go
+  const gust = useTransform(() => {
+    if (!playful) return 0;
+    const reach = Math.max(1, (panel.current?.offsetWidth ?? 500) * 0.8);
+    const near = Math.max(0, 1 - Math.abs(centre.current - distance.get() - carCentre()) / reach);
+    return near * Math.min(1, speed.get() / 2500) * -4;
+  });
+  const sway = useSpring(gust, { stiffness: 140, damping: 6 });
+  return <div ref={panel} className="sp-panel sp-panel--stop" data-stop style={{ '--tilt': `${tilts[index % tilts.length]}deg` } as CSSProperties}>
     <span className="sp-mile" aria-hidden="true">Mile {String(index + 1).padStart(2, '0')}</span>
-    <a className="sp-board" href={`/projects/${project.id}`} onFocus={onFocus} aria-label={`${project.name}: ${project.line}`}>
-      <div className={`sp-board__art sp-card__art--${project.id}`} aria-hidden="true">
-        {covers[project.id] ? <img src={covers[project.id]} alt="" loading="lazy"/> : <span className="sp-card__line"/>}
-      </div>
-      <div className="sp-board__text">
-        <span className="sp-card__tag">{project.category}</span>
-        <h2>{project.name}</h2>
-        <p>{project.line}</p>
-        <span className="sp-board__go">Pull over <span aria-hidden="true">→</span></span>
-      </div>
-    </a>
+    <motion.div className="sp-sway" style={{ rotate: sway }}>
+      <a className="sp-board" href={`/projects/${project.id}`} onFocus={onFocus} aria-label={`${project.name}: ${project.line}`}>
+        <div className={`sp-board__art sp-card__art--${project.id}`} aria-hidden="true">
+          {covers[project.id] ? <img src={covers[project.id]} alt="" loading="lazy"/> : <span className="sp-card__line"/>}
+        </div>
+        <div className="sp-board__text">
+          <span className="sp-card__tag">{project.category}</span>
+          {/* in Original+ the name does a little wave when you pull up to it */}
+          <h2>{playful
+            ? <span className="sp-board__name">{[...project.name].map((letter, i) => <motion.span key={i} animate={active ? { y: [0, -7, 0], rotate: [0, -4, 0] } : { y: 0, rotate: 0 }} transition={{ duration: 0.45, delay: i * 0.035, ease: 'easeOut' }}>{letter}</motion.span>)}</span>
+            : project.name}</h2>
+          <p>{project.line}</p>
+          <span className="sp-board__go">Pull over <span aria-hidden="true">→</span></span>
+        </div>
+      </a>
+    </motion.div>
     <span className="sp-posts" aria-hidden="true" />
   </div>;
+}
+
+/* Headline words that settle in on load, then hop as the car drives under them. */
+function Words({ text, distance, speed, first }: Motion & { text: string; first: number }) {
+  const words = text.split(' ');
+  return <>{words.map((word, i) => <Fragment key={i}>
+    <Word word={word} distance={distance} speed={speed} order={first + i} />
+    {i < words.length - 1 ? ' ' : null}
+  </Fragment>)}</>;
+}
+
+function Word({ word, distance, speed, order }: Motion & { word: string; order: number }) {
+  const el = useRef<HTMLSpanElement>(null);
+  const centre = useRef(0);
+  useLayoutEffect(() => {
+    const measure = () => { if (el.current) centre.current = el.current.offsetLeft + el.current.offsetWidth / 2; };
+    measure();
+    document.fonts?.ready.then(measure);
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
+  const lift = useTransform(() => {
+    const near = Math.max(0, 1 - Math.abs(centre.current - distance.get() - carCentre()) / 170);
+    return near * Math.min(1, speed.get() / 1100) * -24;
+  });
+  const y = useSpring(lift, { stiffness: 420, damping: 11 });
+  const rotate = useTransform(y, v => v * 0.25);
+  // the outer span pops the word in on load; the inner one does the hop
+  return <motion.span ref={el} className="sp-word" aria-hidden="true"
+    initial={{ opacity: 0, scale: 0.6, rotate: order % 2 ? 8 : -8 }}
+    animate={{ opacity: 1, scale: 1, rotate: 0 }}
+    transition={{ type: 'spring', stiffness: 260, damping: 13, delay: 0.15 + order * 0.06 }}>
+    <motion.span className="sp-word" style={{ y, rotate }}>{word}</motion.span>
+  </motion.span>;
 }
 
 type CarProps = { pitch: MotionValue<number>; wheel: MotionValue<number>; blur: MotionValue<number>; exhaust: MotionValue<number>; lights: MotionValue<number>; revving: boolean };
