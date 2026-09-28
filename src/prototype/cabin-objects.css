@@ -31,7 +31,7 @@
 .cabin-object--racket .cabin-object__surface { border:1px solid #c5bca5; border-radius:1px; background:#ded8c4; box-shadow:3px 5px 0 #bbb09a,0 18px 45px #0004; transform:rotate(.8deg); }
 .cabin-object--racket .cabin-object__bar { border-bottom:1px solid #b1b29b; padding:4px 14px 4px 24px; text-transform:none; letter-spacing:0; color:#747865; font:13px 'IBM Plex Mono',monospace; }
 .tennis-note { padding:24px 27px 30px; background:repeating-linear-gradient(transparent 0 31px,#868d7120 31px 32px); }
-.tennis-note h1 { font:italic 24px Georgia,serif; letter-spacing:-.5px; margin:0 0 22px; }
+.tennis-note h1 { font:italic 24px 'Fraunces Variable',Georgia,serif; letter-spacing:-.5px; margin:0 0 22px; }
 .tennis-note p { font-size:16px; line-height:1.7; color:#545c4d; margin:0 0 20px; }
 .tennis-note p.tennis-note__nickname { font-size:13px; color:#757b67; margin:0; }
 .tennis-note__nickname span { display:block; margin-top:2px; font:30px 'Caveat Variable',cursive; color:#43523b; }

@@ -7,7 +7,7 @@ import { ArchiveClip } from './ArchiveClip';
 export function ProjectCover({project}:{project:Project}) {
   return <div className={`ps-cover ps-cover--${project.id}`} aria-hidden="true">
     {project.id === 'agentsky' && <img src="/project-lab/sky.png" alt=""/>}
-    {project.id === 'dervo' && <img className="ps-cover__product" src="/projects/dervo/decision.png" alt="" loading="lazy"/>}
+    {project.id === 'dervo' && <img className="ps-cover__product" src="/projects/dervo/catch-up.jpg" alt="" loading="lazy"/>}
     {project.id === 'lucid' && <img className="ps-cover__product" src="/projects/lucid/spec.png" alt="" loading="lazy"/>}
     {project.id === 'arro' && <img className="ps-cover__product" src="/projects/arro/today-sample.png" alt="" loading="lazy"/>}
     {project.id === 'port' && <div className="ps-port-line"/>}

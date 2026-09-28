@@ -6,7 +6,7 @@
 .case-study article{max-width:1200px;margin:auto;}
 .case-study__intro{padding:66px 0 42px;max-width:1000px;}
 .case-study__eyebrow,.case-study__section-heading>span{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:#657468;}
-.case-study h1{font:400 clamp(64px,10vw,132px)/1 Georgia,serif;letter-spacing:-.055em;margin:24px 0;}
+.case-study h1{font:400 clamp(64px,10vw,132px)/1 'Fraunces Variable',Georgia,serif;letter-spacing:-.055em;margin:24px 0;}
 .case-study__lead{font-size:clamp(24px,3.1vw,40px);line-height:1.2;max-width:770px;margin:0 0 22px;letter-spacing:-.025em;}
 .case-study__summary{max-width:620px;font-size:18px;line-height:1.6;color:#5c685e;}
 .case-study__facts{display:flex;gap:56px;flex-wrap:wrap;padding-top:28px;margin:0;}
@@ -16,7 +16,7 @@
 .case-study img{display:block;width:100%;height:auto;border:1px solid #d8ded7;border-radius:8px;}
 .case-study figcaption{font-size:13px;line-height:1.5;color:#69746b;padding-top:14px;}
 .case-study__section{padding:76px 0;border-bottom:1px solid #d3d9d1;}
-.case-study h2{font:400 clamp(28px,3.3vw,42px)/1.15 Georgia,serif;letter-spacing:-.025em;margin:14px 0 20px;}
+.case-study h2{font:400 clamp(28px,3.3vw,42px)/1.15 'Fraunces Variable',Georgia,serif;letter-spacing:-.025em;margin:14px 0 20px;}
 .case-study__section p:not(.case-study__eyebrow){font-size:17px;line-height:1.75;color:#556357;max-width:700px;}
 .case-study__section-heading{max-width:740px;margin-bottom:32px;}
 .case-study__opening{display:grid;grid-template-columns:1fr 2fr;gap:48px;}

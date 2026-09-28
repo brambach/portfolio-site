@@ -1,6 +1,20 @@
 # One road: making /work and the drive one website
 
-Status: plan, not built. Written 2026-09-28.
+Status: in progress. Written 2026-09-28.
+
+Decided (Bryce left these to judgement, 2026-09-28):
+- The flat road becomes `/`, and the 3D drive moves to `/drive`. The switch happens last, once the handoff works.
+- Arriving from the page, the 3D drive starts at the Tahoe overlook at dusk.
+- AgentSky moves to the glovebox, and Dervo leads everywhere as the headline project.
+
+Done so far:
+- `/work` has one look (Original+) and no switcher.
+- Dervo is Mile 01 on a wide board. Its live Catch up card resolves as the board settles in front of you.
+- The Dervo study and catalog entry now describe the current Mac app, using the live trydervo.com headline.
+- The catalog is ordered with Dervo first.
+- The 3D overlays use Fraunces instead of plain Georgia.
+
+Still to do from Phase 0: the shared token file, the shared menu and the flat-car loader.
 
 Today `/work` (flat, scroll-driven, `src/projects/SimplePortfolio.tsx`) and `/` (3D, `src/prototype/Entrance.tsx`) look and behave like two sites. They share no style tokens, the 3D menu never mentions `/work`, and "Take the wheel" drops you back at a daytime walk-up to the car in town.
 

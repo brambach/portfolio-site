@@ -1,74 +1,58 @@
-import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FocusEvent } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FocusEvent, type RefObject } from 'react';
 import {
   motion, useMotionTemplate, useMotionValueEvent, useReducedMotion, useScroll, useSpring,
   useTransform, useVelocity, type MotionValue,
 } from 'motion/react';
 import { useLenis } from 'lenis/react';
 import { SmoothScroll } from '../components/SmoothScroll';
-import { archive, projects, type Project } from './catalog';
+import { archive, projectById, type Project } from './catalog';
 import { email } from '../lib/site';
 import './simple.css';
 
 const covers: Partial<Record<Project['id'], string>> = {
   agentsky: '/project-lab/sky.png',
-  dervo: '/projects/dervo/decision.png',
+  dervo: '/projects/dervo/sunrise.jpg',
   lucid: '/projects/lucid/spec.png',
   arro: '/projects/arro/today-sample.png',
   'integration-portal': '/projects/portal/hub.png',
 };
 
+// Dervo leads; AgentSky rides in the glovebox
+const road = (['dervo', 'integration-portal', 'lucid', 'arro', 'port'] as const).map(id => projectById(id)!);
+const agentsky = projectById('agentsky')!;
+
 // small alternating tilts so the grid feels pinned up, not printed
 const tilts = [-1.6, 1.2, -0.8, 1.8, -1.2, 0.9];
 
-/* Design directions under exploration. Each look sets its type, colour and car paint in simple.css;
-   the sky and sun change with scroll, so their colours live here. */
-const looks = {
-  plus: { label: 'Original+', sky: ['#f6dcc0', '#e9efe6', '#f0d49a', '#e59a6e', '#34445a'], sun: ['#f2b66d', '#fbe7a6', '#e8733f', '#f1e6c8'] },
-  daylight: { label: 'Daylight', sky: ['#e9eff6', '#f4f6f9', '#f5eee4', '#e8cfc3', '#1b2231'], sun: ['#ffd7a6', '#fff3d1', '#ffae86', '#e8e6ef'] },
-  graphite: { label: 'Graphite', sky: ['#2b2e34', '#2a2d32', '#302d31', '#2d2733', '#141519'], sun: ['#6b6f76', '#8a8e95', '#8a6f66', '#d9d9d6'] },
-  paper: { label: 'Paper', sky: ['#f2ebdf', '#eee8db', '#ecdabc', '#dcab8f', '#2b2833'], sun: ['#e6a468', '#f2d79d', '#d9683f', '#efe6d0'] },
-  original: { label: 'Original', sky: ['#f6dcc0', '#e9efe6', '#f0d49a', '#e59a6e', '#34445a'], sun: ['#f2b66d', '#fbe7a6', '#e8733f', '#f1e6c8'] },
-} as const;
-type Look = keyof typeof looks;
+// morning to blue hour across the length of the drive
+const sky = ['#f6dcc0', '#e9efe6', '#f0d49a', '#e59a6e', '#34445a'];
+const sun = ['#f2b66d', '#fbe7a6', '#e8733f', '#f1e6c8'];
 const skyStops = [0, 0.3, 0.62, 0.84, 1];
 
 // where the middle of the car sits on screen; matches .sp-car-lane in simple.css
 const carCentre = () => window.innerWidth * 0.08 + Math.min(380, Math.max(200, window.innerWidth * 0.3)) / 2;
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 
-function lookFromUrl(): Look {
-  const look = new URLSearchParams(window.location.search).get('look');
-  return look && look in looks ? look as Look : 'plus';
-}
-
 export default function SimplePortfolio() {
   const reduced = useReducedMotion() ?? false;
-  const [look, setLook] = useState<Look>(lookFromUrl);
   useEffect(() => {
     const title = document.title;
     document.title = 'Work / Bryce Rambach';
     return () => { document.title = title; };
   }, []);
-  const choose = (next: Look) => {
-    setLook(next);
-    const url = new URL(window.location.href);
-    url.searchParams.set('look', next);
-    window.history.replaceState(null, '', url);
-  };
   return <SmoothScroll>
-    <main className="sp-page" data-look={look} aria-label="Bryce Rambach's work">
+    <main className="sp-page" aria-label="Bryce Rambach's work">
       <header className="sp-nav">
         <span className="sp-nav__name">Bryce Rambach</span>
-        <div className="sp-looks" role="radiogroup" aria-label="Design direction">
-          {(Object.keys(looks) as Look[]).map(key => <button key={key} type="button" role="radio" aria-checked={look === key} onClick={() => choose(key)}>{looks[key].label}</button>)}
-        </div>
         <a href="/">Skip to the drive <span aria-hidden="true">→</span></a>
       </header>
-      {/* keyed so the sky palette is rebuilt when the look changes */}
-      {reduced ? <StaticWork /> : <Drive key={look} look={look} />}
+      {reduced ? <StaticWork /> : <Drive />}
       <section className="sp-more" aria-labelledby="sp-more-title">
         <h2 id="sp-more-title">Also in the glovebox</h2>
-        <ul>{archive.map(item => <li key={item.name}><strong>{item.name}</strong><span>{item.kind}</span></li>)}</ul>
+        <ul>
+          <li><a href={`/projects/${agentsky.id}`}><strong>{agentsky.name}</strong><span>Design study, with a film</span></a></li>
+          {archive.map(item => <li key={item.name}><strong>{item.name}</strong><span>{item.kind}</span></li>)}
+        </ul>
       </section>
       <footer className="sp-foot">
         <p>Want to make something together?</p>
@@ -80,7 +64,7 @@ export default function SimplePortfolio() {
 }
 
 /* The drive: vertical scroll moves a horizontal road past the car. */
-function Drive({ look }: { look: Look }) {
+function Drive() {
   const section = useRef<HTMLElement>(null);
   const track = useRef<HTMLDivElement>(null);
   const [travel, setTravel] = useState(0);
@@ -117,19 +101,18 @@ function Drive({ look }: { look: Look }) {
   // the car holds its lane, then rolls forward and parks under the overlook sign
   const carX = useTransform(progress, [0, 0.9, 1], ['0vw', '0vw', '26vw']);
 
-  const sky = useTransform(progress, skyStops, [...looks[look].sky]);
+  const skyColour = useTransform(progress, skyStops, sky);
   const sunX = useTransform(progress, [0, 1], ['8%', '92%']);
   const sunY = useTransform(progress, p => `${62 - Math.sin(p * Math.PI) * 48}%`);
-  const sunColour = useTransform(progress, [0, 0.5, 0.85, 1], [...looks[look].sun]);
+  const sunColour = useTransform(progress, [0, 0.5, 0.85, 1], sun);
   const night = useTransform(progress, [0.7, 1], [0, 1]);
   const stars = useTransform(progress, [0.85, 1], [0, 1]);
   const lights = useTransform(progress, [0.72, 0.85], [0, 1]);
   // the road and verges sit in front of the dusk overlay, so they darken on their own
   const dim = useTransform(night, n => `brightness(${1 - n * 0.5})`);
 
-  // Original+ only: the headline leans into the car's draft and words hop as the car passes under them
-  const playful = look === 'plus';
-  const lean = useSpring(useTransform(velocity, v => playful ? clamp(-v / 260, -9, 9) : 0), { stiffness: 160, damping: 14 });
+  // the headline leans into the car's draft and words hop as the car passes under them
+  const lean = useSpring(useTransform(velocity, v => clamp(-v / 260, -9, 9)), { stiffness: 160, damping: 14 });
   const note = useTransform(progress, [0, 0.03], [1, 0]);
 
   const far = useMotionTemplate`${useTransform(distance, d => -d * 0.12)}px 100%`;
@@ -156,12 +139,11 @@ function Drive({ look }: { look: Look }) {
     else window.scrollTo({ top: clamped });
   };
 
-  const current = stop >= 0 && stop < projects.length ? projects[stop] : null;
-  // the parallax layers are background tiles in Original and masked silhouettes in the other looks
-  const layer = (position: MotionValue<string>) => ({ backgroundPosition: position, maskPosition: position, WebkitMaskPosition: position });
+  const current = stop >= 0 && stop < road.length ? road[stop] : null;
+  const layer = (position: MotionValue<string>) => ({ backgroundPosition: position });
 
   return <section ref={section} className="sp-drive" style={{ height: `calc(${travel}px + 100svh)` }} aria-label="Selected work">
-    <motion.div className="sp-scene" style={{ backgroundColor: sky }}>
+    <motion.div className="sp-scene" style={{ backgroundColor: skyColour }}>
       <motion.div className="sp-stars" style={{ opacity: stars }} aria-hidden="true" />
       <motion.div className="sp-sun" style={{ left: sunX, top: sunY, backgroundColor: sunColour }} aria-hidden="true" />
       <motion.div className="sp-layer sp-layer--far" style={layer(far)} aria-hidden="true" />
@@ -171,18 +153,17 @@ function Drive({ look }: { look: Look }) {
       <motion.div className="sp-night" style={{ opacity: night }} aria-hidden="true" />
       <motion.div ref={track} className="sp-track" style={{ x: trackX }}>
         <div className="sp-panel sp-panel--hello">
-          <span className="sp-eyebrow">Portfolio · 2026</span>
-          {playful
-            ? <motion.h1 className="sp-headline" aria-label="Hi, I’m Bryce. I design and build software you can feel." style={{ skewX: lean }}>
-                <Words text="Hi, I’m Bryce." distance={distance} speed={speed} first={0} />
-                <br/>
-                <em><Words text="I design and build software you can feel." distance={distance} speed={speed} first={3} /></em>
-              </motion.h1>
-            : <h1>Hi, I’m Bryce.<br/><em>I design and build software you can feel.</em></h1>}
-          <p>Six projects down the road. Scroll to drive.</p>
+          <motion.h1 className="sp-headline" aria-label="Hi, I’m Bryce. I design and build software you can feel." style={{ skewX: lean }}>
+            <Words text="Hi, I’m Bryce." distance={distance} speed={speed} first={0} />
+            <br/>
+            <em><Words text="I design and build software you can feel." distance={distance} speed={speed} first={3} /></em>
+          </motion.h1>
+          <p>Five projects down the road. The first stop is the one I’m building now.</p>
           <span className="sp-hint" aria-hidden="true"><span className="sp-hint__line" />Scroll</span>
         </div>
-        {projects.map((project, i) => <Billboard key={project.id} project={project} index={i} onFocus={bringIntoView} playful={playful} active={stop === i} distance={distance} speed={speed} />)}
+        {road.map((project, i) => i === 0
+          ? <Headliner key={project.id} project={project} onFocus={bringIntoView} active={stop === 0} distance={distance} speed={speed} />
+          : <Billboard key={project.id} project={project} index={i} onFocus={bringIntoView} active={stop === i} distance={distance} speed={speed} />)}
         <div className="sp-panel sp-panel--overlook">
           <div className="sp-signpost" aria-hidden="true"><span>Tahoe overlook</span><span>1 mi</span></div>
           <h2>Want to drive it yourself?</h2>
@@ -200,10 +181,10 @@ function Drive({ look }: { look: Look }) {
         <Car pitch={pitch} wheel={wheel} blur={blur} exhaust={exhaust} lights={lights} revving={revving} />
       </motion.div>
       <motion.div className="sp-layer sp-layer--near" style={{ ...layer(near), filter: dim }} aria-hidden="true" />
-      {playful && <motion.div className="sp-note" style={{ opacity: note }} aria-hidden="true">
+      <motion.div className="sp-note" style={{ opacity: note }} aria-hidden="true">
         <span>that’s me</span>
         <svg viewBox="0 0 44 40"><path d="M4 6 C 20 2, 34 10, 34 30 M26 24 L34 32 L40 22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-      </motion.div>}
+      </motion.div>
 
       <div className="sp-dash" aria-hidden="true">
         <span className="sp-dash__speed"><motion.span>{mph}</motion.span> mph</span>
@@ -215,25 +196,33 @@ function Drive({ look }: { look: Look }) {
 
 type Motion = { distance: MotionValue<number>; speed: MotionValue<number> };
 
-function Billboard({ project, index, onFocus, playful, active, distance, speed }: Motion & {
-  project: Project; index: number; onFocus: (event: FocusEvent<HTMLElement>) => void; playful: boolean; active: boolean;
-}) {
-  const panel = useRef<HTMLDivElement>(null);
+/* The car's draft rocks a board on its posts as it passes, harder the faster you go. */
+function useSway(panel: RefObject<HTMLDivElement | null>, { distance, speed }: Motion) {
   const centre = useRef(0);
   useLayoutEffect(() => {
     const measure = () => { if (panel.current) centre.current = panel.current.offsetLeft + panel.current.offsetWidth / 2; };
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
-  }, []);
-  // the car's draft rocks the board on its posts as it passes, harder the faster you go
-  const gust = useTransform(() => {
-    if (!playful) return 0;
+  }, [panel]);
+  const nearness = useTransform(() => {
     const reach = Math.max(1, (panel.current?.offsetWidth ?? 500) * 0.8);
-    const near = Math.max(0, 1 - Math.abs(centre.current - distance.get() - carCentre()) / reach);
-    return near * Math.min(1, speed.get() / 2500) * -4;
+    return Math.max(0, 1 - Math.abs(centre.current - distance.get() - carCentre()) / reach);
   });
-  const sway = useSpring(gust, { stiffness: 140, damping: 6 });
+  const gust = useTransform(() => nearness.get() * Math.min(1, speed.get() / 2500) * -4);
+  return { sway: useSpring(gust, { stiffness: 140, damping: 6 }), centre };
+}
+
+// the name does a little wave when you pull up to it
+function WavingName({ name, active }: { name: string; active: boolean }) {
+  return <span className="sp-board__name">{[...name].map((letter, i) => <motion.span key={i} animate={active ? { y: [0, -7, 0], rotate: [0, -4, 0] } : { y: 0, rotate: 0 }} transition={{ duration: 0.45, delay: i * 0.035, ease: 'easeOut' }}>{letter}</motion.span>)}</span>;
+}
+
+type StopProps = Motion & { project: Project; onFocus: (event: FocusEvent<HTMLElement>) => void; active: boolean };
+
+function Billboard({ project, index, onFocus, active, distance, speed }: StopProps & { index: number }) {
+  const panel = useRef<HTMLDivElement>(null);
+  const { sway } = useSway(panel, { distance, speed });
   return <div ref={panel} className="sp-panel sp-panel--stop" data-stop style={{ '--tilt': `${tilts[index % tilts.length]}deg` } as CSSProperties}>
     <span className="sp-mile" aria-hidden="true">Mile {String(index + 1).padStart(2, '0')}</span>
     <motion.div className="sp-sway" style={{ rotate: sway }}>
@@ -243,16 +232,86 @@ function Billboard({ project, index, onFocus, playful, active, distance, speed }
         </div>
         <div className="sp-board__text">
           <span className="sp-card__tag">{project.category}</span>
-          {/* in Original+ the name does a little wave when you pull up to it */}
-          <h2>{playful
-            ? <span className="sp-board__name">{[...project.name].map((letter, i) => <motion.span key={i} animate={active ? { y: [0, -7, 0], rotate: [0, -4, 0] } : { y: 0, rotate: 0 }} transition={{ duration: 0.45, delay: i * 0.035, ease: 'easeOut' }}>{letter}</motion.span>)}</span>
-            : project.name}</h2>
+          <h2><WavingName name={project.name} active={active} /></h2>
           <p>{project.line}</p>
           <span className="sp-board__go">Pull over <span aria-hidden="true">→</span></span>
         </div>
       </a>
     </motion.div>
     <span className="sp-posts" aria-hidden="true" />
+  </div>;
+}
+
+/* Dervo gets the big board. Its Catch up card is still running as you approach,
+   then everything resolves as the car pulls up: you come back to where your agents left off. */
+function Headliner({ project, onFocus, active, distance, speed }: StopProps) {
+  const panel = useRef<HTMLDivElement>(null);
+  const { sway, centre } = useSway(panel, { distance, speed });
+  // how close the board is to the middle of the screen, where people read it
+  const centred = useTransform(() => Math.max(0, 1 - Math.abs(centre.current - distance.get() - window.innerWidth / 2) / (window.innerWidth * 0.45)));
+  // the dotted sun behind the card rises as you arrive, like the one on Dervo's own site
+  const sunrise = useTransform(centred, [0, 1], ['78%', '4%']);
+  // resolves as the board settles in front of you, and replays if you back up and arrive again
+  const [arrived, setArrived] = useState(false);
+  useMotionValueEvent(centred, 'change', n => {
+    if (n > 0.8) setArrived(true);
+    else if (n < 0.2) setArrived(false);
+  });
+  return <div ref={panel} className="sp-panel sp-panel--stop sp-panel--lead" data-stop>
+    <span className="sp-mile" aria-hidden="true">Mile 01 · Now building</span>
+    <motion.div className="sp-sway" style={{ rotate: sway }}>
+      <div className="sp-board sp-board--lead">
+        <div className="sp-lead__text">
+          <span className="sp-card__tag">{project.status}</span>
+          <h2><WavingName name={project.name} active={active} /></h2>
+          <p className="sp-lead__line">{project.line}</p>
+          <p className="sp-lead__pitch">Claude Code and Codex, side by side on your Mac. Dervo tells you what finished, what’s stuck and what needs you.</p>
+          <p className="sp-lead__role">I’m building all of it: the design, the Mac app, the agent backend and the website.</p>
+          <div className="sp-lead__links">
+            <a className="sp-board__go" href={`/projects/${project.id}`} onFocus={onFocus} aria-label={`${project.name}: ${project.line}`}>Pull over <span aria-hidden="true">→</span></a>
+            <a href="https://trydervo.com" target="_blank" rel="noreferrer" onFocus={onFocus}>trydervo.com <span aria-hidden="true">↗</span></a>
+          </div>
+        </div>
+        <CatchUp resolved={arrived} sunrise={sunrise} />
+      </div>
+    </motion.div>
+    <span className="sp-posts" aria-hidden="true" />
+  </div>;
+}
+
+const threads = [
+  { name: 'Apple Pay to checkout', state: 'needs', note: '“Use Stripe’s Payment Element, or keep the Apple Pay button?”' },
+  { name: 'Welcome email for signups', state: 'done', note: 'Ready for review · 12 tests pass' },
+  { name: 'Image uploads fail', state: 'done', note: 'Finished · Changed 3 files' },
+] as const;
+
+// A small, rebuilt Catch up from Dervo's example project. Nothing here talks to the real app.
+function CatchUp({ resolved, sunrise }: { resolved: boolean; sunrise: MotionValue<string> }) {
+  const [answered, setAnswered] = useState(false);
+  return <div className="sp-catchup" role="group" aria-label="Dervo Catch up, example project">
+    <motion.span className="sp-catchup__sun" style={{ top: sunrise }} aria-hidden="true" />
+    <div className="sp-catchup__window">
+      <div className="sp-catchup__bar" aria-hidden="true"><i /><i /><i /><span><b>tideline</b> Home</span></div>
+      <div className="sp-catchup__body">
+        <div className="sp-catchup__head"><strong>{resolved ? 'Catch up' : 'Running · 3'}</strong><span>{resolved ? 'Since 11:20 PM · 3 threads moved' : 'Working while you’re away'}</span></div>
+        <motion.p className="sp-catchup__summary" initial={false} animate={{ opacity: resolved ? 1 : 0, y: resolved ? 0 : 6 }} transition={{ duration: 0.5, delay: resolved ? 0.9 : 0 }}>
+          Two finished overnight. <b>Apple Pay to checkout</b> needs one answer.
+        </motion.p>
+        <ul>
+          {threads.map((thread, i) => {
+            const state = resolved ? thread.state : 'running';
+            return <li key={thread.name} className={`is-${state}`}>
+              <motion.span className="sp-catchup__dot" aria-hidden="true" key={state} initial={{ scale: 0.4 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 500, damping: 14, delay: resolved ? 0.25 + i * 0.18 : 0 }} />
+              <div>
+                <strong>{thread.name}</strong>
+                <span>{state === 'running' ? 'Running…' : state === 'needs' && answered ? 'Answered · carrying on' : thread.note}</span>
+                {state === 'needs' && !answered && <button type="button" onClick={() => setAnswered(true)}>Answer</button>}
+              </div>
+            </li>;
+          })}
+        </ul>
+      </div>
+    </div>
   </div>;
 }
 
@@ -358,7 +417,7 @@ function StaticWork() {
       <p>Interfaces, systems and small rituals. Here’s what I’ve been making.</p>
     </section>
     <section className="sp-grid" aria-label="Selected work">
-      {projects.map((project, i) => <a key={project.id} className="sp-card" href={`/projects/${project.id}`} style={{ '--tilt': `${tilts[i % tilts.length]}deg` } as CSSProperties} aria-label={`${project.name}: ${project.line}`}>
+      {road.map((project, i) => <a key={project.id} className={i === 0 ? 'sp-card sp-card--lead' : 'sp-card'} href={`/projects/${project.id}`} style={{ '--tilt': `${tilts[i % tilts.length]}deg` } as CSSProperties} aria-label={`${project.name}: ${project.line}`}>
         <div className={`sp-card__art sp-card__art--${project.id}`} aria-hidden="true">
           {covers[project.id] ? <img src={covers[project.id]} alt="" loading="lazy"/> : <span className="sp-card__line"/>}
         </div>

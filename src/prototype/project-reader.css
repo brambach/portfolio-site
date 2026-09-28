@@ -9,5 +9,5 @@
 @media(max-width:600px) { .project-reader { padding:16px; }.project-reader .laptop-os { min-height:580px; height:auto; font-size:18px; }.project-reader__footer { align-items:flex-start; } }
 
 .project-reader__intro { max-width:600px; margin:48px 0 32px; }
-.project-reader__intro h1 { font:400 clamp(32px,6vw,48px)/1.1 Georgia,serif; margin:0 0 22px; }
+.project-reader__intro h1 { font:400 clamp(32px,6vw,48px)/1.1 'Fraunces Variable',Georgia,serif; margin:0 0 22px; }
 .project-reader__intro p { font-size:16px; line-height:1.7; }
