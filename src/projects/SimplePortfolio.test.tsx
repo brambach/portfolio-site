@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import SimplePortfolio from './SimplePortfolio';
 import { projects } from './catalog';
@@ -14,5 +14,17 @@ describe('SimplePortfolio', () => {
   it('ends the drive with a way into the 3D Porsche', () => {
     render(<SimplePortfolio />);
     expect(screen.getByRole('link', { name: /take the wheel/i })).toHaveAttribute('href', '/');
+  });
+});
+
+describe('SimplePortfolio design directions', () => {
+  it('switches the look from the direction picker and keeps it in the URL', () => {
+    render(<SimplePortfolio />);
+    const page = screen.getByRole('main');
+    expect(page).toHaveAttribute('data-look', 'daylight');
+    fireEvent.click(screen.getByRole('radio', { name: 'Graphite' }));
+    expect(page).toHaveAttribute('data-look', 'graphite');
+    expect(window.location.search).toContain('look=graphite');
+    window.history.replaceState(null, '', '/');
   });
 });
