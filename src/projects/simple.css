@@ -662,3 +662,35 @@
   .sp-card__line, .sp-foot__hello { transition: none; }
   .sp-car__idle, .sp-car__exhaust i, .sp-hint__line::after, .sp-catchup .is-running .sp-catchup__dot { animation: none; }
 }
+
+/* ---------- Arrival cover in the 3D drive, when you come from /work ---------- */
+.sp-page.sp-arrival {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  min-height: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(#1f2838, #34445a 70%);
+  color: #f4efe4;
+  transition: opacity 900ms var(--sp-ease), visibility 0s linear 900ms;
+}
+.sp-arrival--ready { opacity: 0; visibility: hidden; }
+.sp-arrival .sp-stars { opacity: 1; }
+.sp-arrival__copy { position: relative; z-index: 2; display: grid; justify-items: center; gap: 16px; margin-bottom: 18svh; }
+.sp-arrival__copy .sp-signpost { margin: 0; align-self: auto; }
+.sp-arrival__copy p { margin: 0; font: 400 clamp(28px, 4vw, 48px)/1.1 var(--sp-display); font-variation-settings: 'SOFT' 100, 'WONK' 1; letter-spacing: -0.02em; }
+.sp-arrival__road {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 23%;
+  background: linear-gradient(#1b2119 0 17%, #26302a 17%);
+  border-top: 3px solid #6f6a5a;
+}
+.sp-arrival .sp-arrival__car { left: 50%; bottom: 26%; translate: -50% 0; }
+
+/* the window-zoom into the drive */
+.sp-zoom { position: fixed; z-index: 30; pointer-events: none; }

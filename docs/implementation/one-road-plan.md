@@ -14,7 +14,15 @@ Done so far:
 - The catalog is ordered with Dervo first.
 - The 3D overlays use Fraunces instead of plain Georgia.
 
-Still to do from Phase 0: the shared token file, the shared menu and the flat-car loader.
+- Phase 2 handoff:
+  - Past 55% of `/work`, the page preloads the drive's code, and on desktops it also prefetches the car model.
+  - "Take the wheel" zooms through the flat car's window to `/?from=work`, which skips the walk-up and intro.
+  - A dusk cover (`src/prototype/WorkArrival.tsx`) shows the flat car while loading.
+  - The drive then parks you at the lake and gets in.
+  - The drive's "Read without the scene" and "Read the full portfolio" links now go to `/work`.
+  - The flat car lives in `src/projects/FlatCar.tsx`.
+
+Still to do from Phase 0: the shared token file, the shared menu and the flat-car loader for ordinary visits.
 
 Today `/work` (flat, scroll-driven, `src/projects/SimplePortfolio.tsx`) and `/` (3D, `src/prototype/Entrance.tsx`) look and behave like two sites. They share no style tokens, the 3D menu never mentions `/work`, and "Take the wheel" drops you back at a daytime walk-up to the car in town.
 

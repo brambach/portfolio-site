@@ -1,4 +1,5 @@
 import {QuietIdleLoader} from "./QuietIdleLoader";
+import {WorkArrival} from "./WorkArrival";
 import {readJourneyMemory,rememberJourney,rememberDiscovery,resetJourneyMemory} from './journey-memory';
 import {trackJourney,recordSceneReady} from '../lib/journey-stats';
 import {ContactLinks} from './ContactLinks';
@@ -38,10 +39,12 @@ export default function Entrance() {
   const journeyMode = experience === "journey";
   const scenicMode = experience === "scenic";
   const townMode=isTownJourney();
+  // Arriving from the flat road on /work: skip the walk-up and the intro, and pick up at the overlook where the page ended.
+  const [fromWork]=useState(()=>{const yes=scenicMode&&new URLSearchParams(location.search).get('from')==='work';if(yes){try{sessionStorage.setItem("bryce-arrived","yes");}catch{}}return yes;});
   const [memory,setMemory]=useState(readJourneyMemory);
   const [previousStops]=useState(()=>({coffee:memory.discoveries.includes('coffee'),lake:memory.tahoe}));
   const [resetPrompt,setResetPrompt]=useState(false);
-  const [intro,setIntro] = useState<IntroStep>(scenicMode ? memory.onboarded ? "returning" : "welcome" : "done");
+  const [intro,setIntro] = useState<IntroStep>(scenicMode ? fromWork ? "done" : memory.onboarded ? "returning" : "welcome" : "done");
   const introLaptopSeen = useRef(false);
   const [call,setCall]=useState<"idle"|"ringing"|"answered"|"done">("idle");
   const [dismissedStops,setDismissedStops]=useState<JourneyStopId[]>([]);
@@ -280,6 +283,17 @@ export default function Entrance() {
     if (laptop === "idle" && introLaptopSeen.current) setIntro("ready");
   }, [intro, laptop]);
   useEffect(()=>{if(phase==="inside")trackJourney("car_entered");},[phase]);
+  const arrivedFromWork=useRef(false);
+  useEffect(()=>{
+    const scene=sceneRef.current;
+    if(!fromWork||arrivedFromWork.current||!ready||!scene)return;
+    arrivedFromWork.current=true;
+    setLakeDismissed(false);
+    scene.goStraightTo("lake");
+    scene.enter();
+    // a reload after this should be an ordinary visit
+    const url=new URL(location.href);url.searchParams.delete('from');history.replaceState(history.state,'',url);
+  },[fromWork,ready,screenElement]);
   useEffect(()=>{if(telemetry.stop==="lake"&&drive.phase==="parked"){trackJourney("tahoe_reached");setMemory(rememberJourney({tahoe:true}));}},[telemetry.stop,drive.phase]);
   useEffect(()=>{if(race.phase==="racing")trackJourney("race_started");if(race.phase==="finished")trackJourney("race_finished");},[race.phase]);
   useEffect(()=>{
@@ -419,7 +433,7 @@ export default function Entrance() {
               </button>
             </>
           )}
-          <a href="/projects">Read without the scene</a>
+          <a href="/work">Read without the scene</a>
           <label className="simulation-motion">Movement
             <select aria-label="Movement" value={reduceMotion?'reduce':'device'} onChange={event=>{
               const reduce=event.target.value==='reduce';motionRef.current=reduce;setReduceMotion(reduce);saveMotionPreference(reduce);sceneRef.current?.reduceMotion(reduce);
@@ -485,14 +499,14 @@ export default function Entrance() {
         </button>
       )}
       {ready && !openingFinished && !returnVisit && !reduceMotion && phase==="outside" && <div className="arrival-film" aria-hidden="true" onAnimationEnd={event=>{if(event.target===event.currentTarget)setOpeningFinished(true);}}><div className="arrival-film__title"><span>BRYCE RAMBACH / AN INTERACTIVE ROAD TRIP</span><strong>Take the<br/><em>long way.</em></strong><small>A few things about me. A Porsche. Your way home.</small></div></div>}
-      {!failed && <QuietIdleLoader ready={ready}/>}
+      {!failed && (fromWork ? <WorkArrival ready={ready}/> : <QuietIdleLoader ready={ready}/>)}
       {failed && (
         <section ref={failureRef} tabIndex={-1} aria-label="Scene unavailable" className="simulation-failure">
           <p>{failureMessage}</p>
           <div className="simulation-failure__actions" role="group" aria-label="Scene recovery actions">
             <button onClick={() => window.location.reload()}>Try again</button>
             <button onClick={() => open("laptop")}>Open personal projects</button>
-            <a href="/projects">Read without the scene</a>
+            <a href="/work">Read without the scene</a>
             <a href="mailto:bryce.rambach@gmail.com">Contact Bryce</a>
           </div>
         </section>
@@ -640,7 +654,7 @@ export default function Entrance() {
         {townMode&&<TimeToBeat open={()=>{raceTimesReturnFocusRef.current=document.activeElement instanceof HTMLElement?document.activeElement:null;setRaceTimes(true);}}/>}
         {townMode && <button onClick={()=>{if(sceneRef.current?.startRace()){setLakeDismissed(true);focusCabin();}}}>Race back to the start</button>}
         <button onClick={() => { setLakeDismissed(true); open("laptop"); }}>Open my projects</button>
-        <div className="journey-finish-links"><a href="/projects">Read the full portfolio ↗</a><a href="mailto:bryce.rambach@gmail.com">Say hello ↗</a></div><ContactLinks/>
+        <div className="journey-finish-links"><a href="/work">Read the full portfolio ↗</a><a href="mailto:bryce.rambach@gmail.com">Say hello ↗</a></div><ContactLinks/>
         <button onClick={() => {setLakeDismissed(true);focusCabin();}}>Stay a little longer</button>
       </section>}
       {lakeView&&phase==='inside'&&!object&&laptop==='idle'&&<aside className="lake-view-note"><span>LAKE TAHOE / NO HURRY</span><p>Drag to look around. Stay as long as you like.</p><button onClick={()=>{setLakeView(false);setLakeDismissed(false);sceneRef.current?.center();}}>Back to the lake stop</button></aside>}
