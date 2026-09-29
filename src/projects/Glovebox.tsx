@@ -5,12 +5,20 @@ import { archive, projectById } from './catalog';
 
 const agentsky = projectById('agentsky')!;
 
-// Everything that didn't fit on a billboard. Each card turns over to what actually survives of it.
-const items = [
-  { name: agentsky.name, kind: 'Design study, with a film', text: agentsky.introduction, href: `/projects/${agentsky.id}` },
-  ...archive.map(item => ({ name: item.name, kind: item.kind, text: item.text, href: undefined as string | undefined })),
+// Everything that didn't fit on a billboard. The kind of material decides how a card looks and how it opens,
+// so the pile isn't eleven copies of one card. Each opens onto the honest note about what survives.
+type Variant = 'film' | 'source' | 'redacted' | 'note' | 'sky';
+const variantOf = (availability: string): Variant =>
+  availability === 'recording' ? 'film' : availability === 'source-note' ? 'source' : availability === 'withheld-note' ? 'redacted' : 'note';
+const items: { name: string; kind: string; text: string; href?: string; variant: Variant }[] = [
+  { name: agentsky.name, kind: 'Design study, with a film', text: agentsky.introduction, href: `/projects/${agentsky.id}`, variant: 'sky' },
+  ...archive.map(item => ({ name: item.name, kind: item.kind, text: item.text, variant: variantOf(item.availability) })),
 ];
 const tilts = [-3, 2, -1.5, 3, -2, 1.5, -3.5, 2.5];
+// terminals and sticky notes each come in a few colours, so a run of the same kind isn't a copy
+const COMMANDS = ['cat', 'less', 'head', 'tail'];
+const ACCENTS: Partial<Record<Variant, string[]>> = { source: ['#8fd19e', '#e6c07a', '#8fc6e6'], note: ['#f3dc79', '#f4b8c4', '#b9e0c9'] };
+const slug = (name: string) => name.toLowerCase().replace(/\W+/g, '-').replace(/^-|-$/g, '');
 
 const ticker = 'Thanks for driving · Mile 06 · No more road · Beep beep · ';
 
@@ -26,14 +34,25 @@ export function Glovebox({ email, drive }: { email: string; drive: string }) {
       <ul className="sp-glove__cards">
         {items.map((item, i) => {
           const tilt = tilts[i % tilts.length];
+          const { variant } = item;
           const face = <>
-            <span className="sp-item__front"><span className="sp-item__kind">{item.kind}</span><strong>{item.name}</strong></span>
-            <span className="sp-item__back"><span className="sp-item__kind">{item.name}</span>{item.text}</span>
+            <span className="sp-item__back">
+              <span className="sp-item__kind">{item.name}</span>
+              <span className="sp-item__text">{item.text}</span>
+            </span>
+            <span className="sp-item__front">
+              {variant === 'film' && <span className="sp-item__deco" aria-hidden="true"><b>●</b> rec</span>}
+              {variant === 'source' && <span className="sp-item__deco" aria-hidden="true">$ {COMMANDS[i % COMMANDS.length]} {slug(item.name)}.md<u /></span>}
+              {variant === 'redacted' && <span className="sp-item__stamp" aria-hidden="true">Private</span>}
+              {variant === 'sky' && <span className="sp-item__cloud" aria-hidden="true" />}
+              <span className="sp-item__kind">{item.kind}</span>
+              <strong>{item.name}</strong>
+            </span>
           </>;
           return <motion.li
             key={item.name}
-            className="sp-item"
-            style={{ '--tilt': `${tilt}deg`, '--i': i } as CSSProperties}
+            className={`sp-item sp-item--${item.variant}`}
+            style={{ '--tilt': `${tilt}deg`, '--i': i, '--acc': ACCENTS[item.variant]?.[i % 3] } as CSSProperties}
             initial={reduced ? false : { opacity: 0, y: 90, scale: 0.86, rotate: tilt * 3 }}
             whileInView={{ opacity: 1, y: 0, scale: 1, rotate: tilt }}
             viewport={{ once: true, amount: 0.3 }}
