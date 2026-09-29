@@ -222,8 +222,16 @@ function Drive() {
             <br/>
             <em><Words text="I design and build software you can feel." distance={distance} speed={speed} first={3} /></em>
           </motion.h1>
-          <p>Five projects down the road. Coffee first, then the one I’m building now.</p>
-          <span className="sp-hint" aria-hidden="true"><span className="sp-hint__line" />Scroll</span>
+          <p className="sp-sub" aria-label="Five projects down the road. Coffee first, then the one I’m building now.">
+            <Words text="Five projects down the road." distance={distance} speed={speed} first={9} />
+            <span className="sp-sub__aside" aria-hidden="true">coffee first, then the one I’m building now.</span>
+          </p>
+          <motion.div className="sp-cue" style={{ opacity: note }} aria-hidden="true">
+            <span className="sp-cue__pill"><span className="sp-cue__road" />Scroll to drive</span>
+            <span className="sp-cue__note">your scroll wheel is the gas pedal
+              <svg viewBox="0 0 60 44"><path d="M6 4 C 4 26, 24 38, 50 34 M42 24 L52 34 L40 40" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </span>
+          </motion.div>
         </div>
         {/* the same stops the 3D drive passes on its way out of town */}
         <Roadside kind="cafe" distance={distance} speed={speed} />
