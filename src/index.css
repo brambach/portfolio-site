@@ -360,6 +360,7 @@ html[data-arc="dark"] .day-clock {
   .ps-lucid__demo > nav button,
   .ps-lucid__fields > button,
   .ps-next,
+  .pt-opt,
   .driving-touch button
 ) {
   --poke-lift: 0px;
@@ -416,6 +417,12 @@ html[data-arc="dark"] .day-clock {
   .race-finish a,
   .journey-map__straight,
   .entrance__enter,
+  .pt-btn,
+  .pt-link,
+  .pt-back,
+  .pt-opt,
+  .pt-steps button,
+  .pt-tabs button,
   .driving-touch button
 ) {
   transition:

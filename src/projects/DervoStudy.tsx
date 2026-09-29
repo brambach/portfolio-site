@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { InspectImage } from './InspectImage';
+import { K } from './StudyKit';
 const boundary='Private beta. Screens show example projects from the design review and the landing page, not a tester’s work.';
 const scenes=[
   {name:'Catch up',file:'catch-up',heading:'Come back to a few sentences.',text:'Catch up says what finished, what’s stuck and what needs you since you last looked. Answer one question and the thread carries on.'},
@@ -10,7 +11,7 @@ export default function DervoStudy(){
   const [step,setStep]=useState(0);const [handedOff,setHandedOff]=useState(false);
   const scene=scenes[step];
   return <article className="ps-dervo">
-    <header className="ps-dervo__hero"><span className="ps-eyebrow">Dervo / Mac app, private beta</span><div><h1 tabIndex={-1}>Run more agents<br/><em>than you can watch.</em></h1><p>Claude Code and Codex, side by side on your Mac.<br/>Come back to what finished, what’s stuck and what needs you.</p></div><div className="ps-dervo__signal"><span>Running</span><i/><span>Finished</span><i/><span className="is-waiting">Needs you</span></div></header>
+    <header className="ps-dervo__hero"><div className="pd-sun" aria-hidden="true"/><span className="ps-eyebrow">Dervo / Mac app, private beta</span><div><h1 tabIndex={-1}><K>Run more agents</K><br/><em><K at={3}>than you can watch.</K></em></h1><p>Claude Code and Codex, side by side on your Mac.<br/>Come back to what finished, what’s stuck and what needs you.</p></div><div className="ps-dervo__signal"><span>Running</span><i/><span>Finished</span><i/><span className="is-waiting">Needs you</span></div></header>
     <section className="ps-dervo__sequence" aria-label="Dervo sample catch up"><div className="ps-sequence-nav">{scenes.map((item,index)=><button key={item.name} aria-pressed={step===index} onClick={()=>setStep(index)}><small>0{index+1}</small>{item.name}</button>)}<span>Example projects</span></div>
       <div className="ps-dervo__screen"><img src={`/projects/dervo/${scene.file}.jpg`} alt={`Dervo: ${scene.heading}`}/></div>
       <div className="ps-dervo__caption" aria-live="polite"><div><span className="ps-eyebrow">0{step+1} / 03</span><h2>{scene.heading}</h2></div><p>{scene.text}</p><p className="ps-sample-note">{boundary}</p><InspectImage src={`/projects/dervo/${scene.file}.jpg`} alt={`Dervo ${scene.name.toLowerCase()} screen`}/></div>

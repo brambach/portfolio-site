@@ -2,6 +2,7 @@ import {useStudyReveal} from './useStudyReveal';
 import { lazy, Suspense, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { projects, type Project, type ProjectId } from './catalog';
+import { ScrollRoad, useStudyMotion } from './StudyKit';
 import './projects.css';
 
 const LucidStudy = lazy(() => import('./LucidStudy'));
@@ -17,6 +18,8 @@ export function ProjectViewer({project,close,choose}:{project:Project;close:()=>
   const content=useRef<HTMLDivElement>(null);
   const closeButton=useRef<HTMLButtonElement>(null);
   useStudyReveal(content,project.id);
+  useStudyMotion(dialog,content,project.id);
+  const tape=`${project.category} · ${project.status} · ${project.role} · `.repeat(4);
   const next=projects[(projects.indexOf(project)+1)%projects.length];
   useEffect(()=>{
     const overflow=document.body.style.overflow;
@@ -40,11 +43,12 @@ export function ProjectViewer({project,close,choose}:{project:Project;close:()=>
     return ()=>{document.title=title;};
   },[project.id,project.name]);
   return createPortal(<dialog ref={dialog} className={`ps-viewer pl-root ${project.id==='agentsky'?'pl-root--screening':''}`} aria-label={`${project.name} project`} onKeyDown={event=>event.stopPropagation()} onCancel={event=>{event.preventDefault();event.stopPropagation();close();}}>
-    <nav className="ps-viewer__nav" aria-label="Project navigation"><button ref={closeButton} onClick={close}>← All projects</button><span>{String(projects.indexOf(project)+1).padStart(2,'0')} / {String(projects.length).padStart(2,'0')} <b>{project.name}</b></span><a className="ink-link" href={`/projects/${project.id}`} aria-label={`Direct link to ${project.name}`}>Direct link</a></nav>
+    <nav className="ps-viewer__nav" aria-label="Project navigation"><ScrollRoad/><button ref={closeButton} onClick={close}>← All projects</button><span>{String(projects.indexOf(project)+1).padStart(2,'0')} / {String(projects.length).padStart(2,'0')} <b>{project.name}</b></span><a className="ink-link" href={`/projects/${project.id}`} aria-label={`Direct link to ${project.name}`}>Direct link</a></nav>
     <div ref={content} className="ps-viewer__scroll" key={project.id}>
       <Suspense fallback={<div className="ps-opening" role="status">Opening {project.name}…</div>}>
         {project.id==='agentsky'?<AgentSky/>:project.id==='port'?<PortStudy/>:project.id==='dervo'?<DervoStudy/>:project.id==='arro'?<ArroStudy/>:project.id==='lucid'?<LucidStudy/>:<PortalStudy/>}
       </Suspense>
+      <div className="ps-tape" aria-hidden="true"><span>{tape}</span><span>{tape}</span></div>
       <button className="ps-next" onClick={()=>choose(next.id)}><span className="ps-eyebrow">Next project</span><strong>{next.name}</strong><span aria-hidden="true">→</span></button>
     </div>
   </dialog>,document.body);

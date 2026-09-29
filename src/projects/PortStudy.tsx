@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'motion/react';
+import { K } from './StudyKit';
 
 export default function PortStudy() {
   const [phase,setPhase]=useState<'open'|'holding'|'closing'|'closed'>('open');
@@ -40,7 +41,7 @@ export default function PortStudy() {
     if(sound)stopAudio();setSound(!sound);
   };
   return <article className="ps-port">
-    <header className="ps-port__hero"><div className="ps-port__title"><span className="ps-eyebrow">Port / Native interaction study</span><h1 tabIndex={-1}>A moment<br/>to <em>close.</em></h1><p>One deliberate gesture.<br/>Then a little less everything.</p><span className="ps-port__hint">Try the ritual</span></div>
+    <header className="ps-port__hero"><div className="ps-port__title"><span className="ps-eyebrow">Port / Native interaction study</span><h1 tabIndex={-1}><K>A moment</K><br/><K at={2}>to</K> <em><K at={3}>close.</K></em></h1><p>One deliberate gesture.<br/>Then a little less everything.</p><span className="ps-port__hint">Try the ritual</span></div>
       <div className="ps-port__demo"><div className={`ps-port__screen is-${phase}`}><div className="ps-port__band"/><div className="ps-port__horizon"/><span className="ps-port__status" role="status">{phase==='closed'?'Port closed':phase==='closing'?'':'Port open'}</span><button ref={action} className="ps-port__action" disabled={phase==='closing'} onPointerDown={event=>{if(event.button===0)startHold();}} onPointerUp={releasePointer} onPointerCancel={()=>abandonPointer()} onPointerLeave={()=>abandonPointer(false)} onBlur={()=>abandonPointer(false)} onKeyDown={event=>{if(!activationKey(event.key))return;if(event.repeat){event.preventDefault();return;}ignoreReleaseClick.current=false;}} onClick={event=>{if(ignoreReleaseClick.current){ignoreReleaseClick.current=false;return;}if(phase==='closed'){stopAudio();setPhase('open');}else if(event.detail===0&&phase==='open'){ignoreReleaseClick.current=false;close();}}} aria-label={phase==='closed'?'Open Port':'Close Port'} aria-describedby="port-instructions">{phase==='closed'?'Open port':phase==='holding'?'Hold…':'Close port'}</button></div>
         <div className="ps-port__controls"><span id="port-instructions">Hold for one second.<br/>Keyboard: press Enter to close.</span><button aria-pressed={sound} onClick={toggleSound}>Sound {sound?'on':'off'}</button></div>{audioFailed&&<p className="ps-port__audio-note" role="status">Sound couldn’t play in this browser. The visual ritual still works.</p>}
       </div>
