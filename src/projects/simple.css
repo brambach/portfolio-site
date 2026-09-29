@@ -845,37 +845,101 @@
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   gap: clamp(22px, 3vw, 40px) clamp(18px, 2.4vw, 32px);
 }
-.sp-item { perspective: 900px; }
-.sp-item__float { display: block; animation: sp-bob 7s ease-in-out infinite; animation-delay: calc(var(--i) * -0.9s); }
+/* The pile. Every card opens onto the honest note, but how depends on what it is made of.
+   The hover lives on the still <li>, never on the thing that moves, so nothing slides out
+   from under the pointer and flips back. */
+.sp-item { position: relative; }
+.sp-item:is(:hover, :has(:focus-visible)) { z-index: 2; }
+.sp-item__float { display: block; perspective: 900px; animation: sp-bob 7s ease-in-out infinite; animation-delay: calc(var(--i) * -0.9s); }
 @keyframes sp-bob { 50% { translate: 0 -7px; } }
 .sp-item__card {
   position: relative;
   display: block;
-  aspect-ratio: 5 / 4;
+  aspect-ratio: 1;
   color: inherit;
   text-decoration: none;
+  border-radius: 6px;
+  box-shadow: 0 18px 30px -18px rgb(0 0 0 / 0.7);
   transform-style: preserve-3d;
-  transition: transform 700ms var(--ease-stamp);
+  outline-offset: 6px;
 }
-.sp-item__card:is(:hover, :focus-visible) { transform: rotateY(180deg); }
-.sp-item__card:focus-visible { outline-offset: 6px; }
+a.sp-item__card { cursor: pointer; }
 .sp-item__front, .sp-item__back {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
   gap: 8px;
   padding: 20px;
   border-radius: 6px;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  box-shadow: 0 18px 30px -18px rgb(0 0 0 / 0.7);
+  overflow: hidden;
 }
-.sp-item__front { background: #efe3c8; color: #1f2a22; }
-.sp-item__front strong { font: 500 clamp(22px, 2.2vw, 28px)/1.05 var(--sp-display); font-variation-settings: var(--display-axes); letter-spacing: -0.02em; }
-.sp-item__back { transform: rotateY(180deg); justify-content: flex-start; background: #243c34; color: #e9dfc5; font-size: 13.5px; line-height: 1.5; overflow: hidden; }
+.sp-item__front { justify-content: flex-end; z-index: 1; }
+.sp-item__back { justify-content: flex-start; font-size: 13px; line-height: 1.5; }
+.sp-item__text { display: block; }
 .sp-item__kind { font: 500 var(--label-size)/1.3 var(--font-mono); letter-spacing: var(--label-track); text-transform: uppercase; opacity: 0.7; }
+.sp-item__front strong { font: 500 clamp(22px, 2.2vw, 28px)/1.05 var(--sp-display); font-variation-settings: var(--display-axes); letter-spacing: -0.02em; }
+
+/* film (recordings): a strip with sprocket holes. Flips like a reel. */
+.sp-item--film .sp-item__card { transition: transform 700ms var(--ease-stamp); }
+.sp-item--film:is(:hover, :has(:focus-visible)) .sp-item__card { transform: rotateY(180deg); }
+.sp-item--film .sp-item__front, .sp-item--film .sp-item__back { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.sp-item--film .sp-item__back { transform: rotateY(180deg); background: #efe3c8; color: #1f2a22; }
+.sp-item--film .sp-item__front {
+  padding-inline: 34px;
+  background:
+    radial-gradient(circle 3.5px at 15px 12px, #efe3c8 98%, transparent) 0 0 / 30px 26px repeat-y,
+    radial-gradient(circle 3.5px at 15px 12px, #efe3c8 98%, transparent) 100% 0 / 30px 26px repeat-y,
+    #171b18;
+  color: #efe3c8;
+}
+.sp-item__deco { position: absolute; top: 18px; left: 34px; font: 500 var(--label-size)/1 var(--font-mono); letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.85; }
+.sp-item--film .sp-item__deco b { color: #e0503a; animation: sp-rec 1.4s steps(2) infinite; }
+@keyframes sp-rec { 50% { opacity: 0.15; } }
+
+/* source: a terminal window. The window drops away like a drawer, and the printout is underneath. */
+.sp-item--source .sp-item__card { overflow: hidden; }
+.sp-item--source .sp-item__back { background: #f6f1e3; color: #1f2a22; padding-bottom: 46px; }
+.sp-item--source .sp-item__front { justify-content: flex-start; padding-top: 52px; background: #0d1712; color: #dfe9d3; transition: transform 650ms var(--ease-stamp); }
+.sp-item--source .sp-item__front::before { content: ''; position: absolute; top: 15px; left: 18px; width: 9px; height: 9px; border-radius: 50%; background: #e0503a; box-shadow: 16px 0 #e6bf77, 32px 0 #63cc9d; }
+.sp-item--source .sp-item__deco { top: 13px; left: 88px; color: var(--acc, #8fd19e); text-transform: none; letter-spacing: 0.02em; }
+.sp-item--source .sp-item__deco u { display: inline-block; width: 7px; height: 12px; margin-left: 4px; vertical-align: -2px; background: var(--acc, #8fd19e); animation: sp-rec 1s steps(2) infinite; }
+.sp-item--source .sp-item__kind { color: var(--acc, #8fd19e); opacity: 0.85; }
+.sp-item--source:is(:hover, :has(:focus-visible)) .sp-item__front { transform: translateY(calc(100% - 40px)); }
+
+/* private: a manila folder. The text sits under black bars that wipe away. */
+.sp-item--redacted .sp-item__back { background: #e9dbb7; color: #3a3327; padding-bottom: 96px; }
+.sp-item--redacted .sp-item__text {
+  font-size: 12.5px;
+  line-height: 18px;
+  color: transparent;
+  background: repeating-linear-gradient(#1d1b16 0 13px, transparent 13px 18px) 100% 0 / 100% 100% no-repeat;
+  transition: color 300ms ease-out 250ms, background-size 520ms var(--ease-stamp);
+}
+.sp-item--redacted:is(:hover, :has(:focus-visible)) .sp-item__text { color: #3a3327; background-size: 0% 100%; }
+.sp-item--redacted .sp-item__front { background: linear-gradient(transparent 62%, #d2b884 62%); color: #2f2a1e; }
+.sp-item--redacted .sp-item__kind { opacity: 0.75; }
+.sp-item__stamp { position: absolute; top: 16px; right: 16px; padding: 5px 11px; border: 2px solid #b8382b; border-radius: 3px; color: #b8382b; font: 600 12px/1 var(--font-mono); letter-spacing: 0.2em; text-transform: uppercase; rotate: 7deg; opacity: 0.85; }
+
+/* concept: a sticky note that flips over head first */
+.sp-item--note .sp-item__card { transition: transform 700ms var(--ease-stamp); }
+.sp-item--note:is(:hover, :has(:focus-visible)) .sp-item__card { transform: rotateX(180deg); }
+.sp-item--note .sp-item__front, .sp-item--note .sp-item__back { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.sp-item--note .sp-item__back { transform: rotateX(180deg); background: color-mix(in srgb, var(--acc, #f3dc79) 55%, #fffdf7); color: #3e3510; }
+.sp-item--note .sp-item__front { background: var(--acc, #f3dc79); color: #3e3510; }
+.sp-item--note .sp-item__front::before { content: ''; position: absolute; top: -10px; left: 50%; width: 72px; height: 20px; translate: -50% 0; rotate: -3deg; background: rgb(255 253 247 / 0.55); box-shadow: 0 1px 2px rgb(31 42 34 / 0.2); }
+.sp-item--note .sp-item__front strong { font: 600 clamp(30px, 3vw, 38px)/1 var(--font-hand); letter-spacing: 0; }
+.sp-item--note .sp-item__kind { opacity: 0.6; }
+
+/* AgentSky: a window onto the sky, and the blind goes up */
+.sp-item--sky .sp-item__card { overflow: hidden; }
+.sp-item--sky .sp-item__back { background: #16283a; color: #dbe7f0; }
+.sp-item--sky .sp-item__front { background: linear-gradient(#6f9fca, #dbe8f1 78%); color: #fff; transition: transform 800ms var(--ease-stamp); }
+.sp-item--sky .sp-item__front strong { font-style: italic; font-weight: 420; text-shadow: 0 2px 14px rgb(31 60 90 / 0.4); }
+.sp-item--sky .sp-item__kind { opacity: 0.9; }
+.sp-item__cloud { position: absolute; left: -10%; top: 18%; width: 60%; height: 34%; border-radius: 50%; background: #fff; box-shadow: 46px -18px 0 4px #fff, 110px 6px 0 -2px #fff, 60px 16px 0 6px #fff; opacity: 0.85; filter: blur(1px); animation: sp-cloud 18s ease-in-out infinite alternate; }
+@keyframes sp-cloud { to { translate: 26% 0; } }
+.sp-item--sky:is(:hover, :has(:focus-visible)) .sp-item__front { transform: translateY(-104%); }
 .sp-glove__finale { margin-top: clamp(90px, 13vw, 180px); padding-bottom: clamp(56px, 8vw, 96px); }
 .sp-glove__finale p {
   margin: 0;
@@ -903,8 +967,8 @@
 .sp-glove__tape span { flex: none; animation: sp-tape 60s linear infinite; }
 @keyframes sp-tape { to { translate: -100% 0; } }
 @media (prefers-reduced-motion: reduce) {
-  .sp-item__float, .sp-glove__tape span { animation: none; }
-  .sp-item__card { transition: none; }
+  .sp-item__float, .sp-glove__tape span, .sp-item__cloud, .sp-item--film .sp-item__deco b { animation: none; }
+  .sp-item__card, .sp-item__front, .sp-item__bars i { transition: none; }
 }
 
 /* ---------- The opening: a note taped to the sky, and a scroll cue that is the road itself ---------- */
