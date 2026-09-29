@@ -38,3 +38,20 @@ it('opens a direct project link and closes without leaving the portfolio',async(
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   expect(document.querySelector('canvas')).toBeNull();
 });
+
+it('keeps the focus ring quiet on the close button until a key is pressed',async()=>{
+  history.replaceState(null,'','/projects/dervo');
+  render(<ProjectReader/>);
+  const viewer=screen.getByRole('dialog',{name:'Dervo project'});
+  expect(screen.getByRole('button',{name:'← All projects'})).toHaveFocus();
+  expect(viewer).toHaveAttribute('data-quiet-focus');
+  await userEvent.keyboard('{Tab}');
+  expect(viewer).not.toHaveAttribute('data-quiet-focus');
+});
+
+it('counts the projects in the viewer nav and ends on a next-project arrow',async()=>{
+  history.replaceState(null,'','/projects/dervo');
+  render(<ProjectReader/>);
+  expect(screen.getByRole('navigation',{name:'Project navigation'})).toHaveTextContent('01 / 06');
+  expect(document.querySelector('.ps-next')).toHaveTextContent('→');
+});

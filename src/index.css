@@ -8,7 +8,9 @@
 @import "@fontsource/ibm-plex-mono/500.css";
 @import "@fontsource/ibm-plex-mono/400-italic.css";
 
-@theme {
+/* static: emit every token as a CSS variable, so the plain stylesheets
+   (projects.css, simple.css, the game's) can use var(--font-display) too. */
+@theme static {
   --color-paper: #f2ebdd;
   --color-paperwarm: #f7f3ea;
   --color-oak: #1c3527;
@@ -60,6 +62,24 @@
   /* Not interaction: the day arc washing the page from dawn to dark. Slow on
      purpose, so the change is noticed rather than watched. */
   --dur-daywash: 0.6s;
+}
+
+/* --- type roles ------------------------------------------------------------
+   Each face has one job on every page of the site.
+   Fraunces speaks: h1, h2, project names, big numerals. Roman for the plain
+   line, italic for the turn of phrase.
+   Hanken Grotesk carries the text and the interface.
+   Plex Mono labels and counts: eyebrows, mile signs, readouts. Never under 11px.
+   Caveat is the margin note, once per view.
+   -------------------------------------------------------------------------- */
+:root {
+  --display-axes: "SOFT" 100, "WONK" 1;
+  --display-track: -0.03em;
+  /* Italics need their word spaces back: a tight roman tracking inherited by
+     Fraunces italic runs the words together. */
+  --display-italic-track: -0.01em;
+  --label-size: 11px;
+  --label-track: 0.08em;
 }
 
 /* Fraunces speaks with its axes: optical sizing on, corners softened a
@@ -128,7 +148,6 @@ p {
 :focus-visible {
   outline: 2px solid var(--color-clay);
   outline-offset: 3px;
-  border-radius: 2px;
 }
 
 /* Paper grain, one fixed sheet over everything. Neutral warm values so it
@@ -284,6 +303,171 @@ html[data-arc="dark"] .day-clock {
 .wm-letter:hover {
   transform: translateY(-0.05em) rotate(-1.4deg);
   transition: transform var(--dur-utility) var(--ease-stamp);
+}
+
+/* --- one poke, one stamp ---------------------------------------------------
+   The whole site presses with two moves and no others.
+
+   Poke, on hover: the control rises a couple of pixels and turns a hair,
+   arriving with the signature overshoot and leaving quickly. The wordmark
+   letters above are the original. Keyboard focus gets the clay ring and no
+   movement, so a control focused by script never looks caught mid-hop.
+
+   Stamp, on press: it drives down past where it started and its hard edge
+   flattens, like a stamp meeting paper. Letting go springs it back.
+
+   Both use the individual `translate` and `rotate` properties, so they stack
+   on any `transform` a component already owns. A control with a hard edge
+   draws it as `box-shadow: 0 var(--edge-y) 0 <ink>`; poke and stamp move
+   --edge-y and the edge follows. To add a control, give it the `poke` class or
+   add its selector to the one list below. Do not write a hover or press
+   style for a control anywhere else. Text links keep the ink underline. Cards
+   lift and settle level; the soft shadow under them may deepen with the lift.
+   -------------------------------------------------------------------------- */
+@property --edge-y {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 2px;
+}
+
+:root {
+  --poke-lift: 2px;
+  --poke-turn: -1deg;
+  --stamp-depth: 2px;
+}
+
+/* Cards lift and settle level instead of turning. */
+:where(.ps-project) {
+  --poke-lift: 6px;
+  --poke-turn: 0deg;
+}
+:where(.sp-board:not(.sp-board--lead), .sp-card) {
+  --poke-lift: 8px;
+  --poke-turn: calc(var(--tilt, 0deg) * var(--sp-tilt-scale, 1) * -1);
+}
+:where(.project-folders button) {
+  --poke-lift: 3px;
+  --poke-turn: 0deg;
+}
+/* Segmented controls share a pill: lift, no turn. */
+:where(.simulation-console button, .city-cabin-nav button) {
+  --poke-turn: 0deg;
+}
+/* Tabs, rows and bars already show their state, and touch pedals have no
+   hover: they only get the stamp. */
+:where(
+  .ps-sequence-nav button,
+  .ps-lucid__demo > nav button,
+  .ps-lucid__fields > button,
+  .ps-next,
+  .driving-touch button
+) {
+  --poke-lift: 0px;
+  --poke-turn: 0deg;
+}
+
+:where(
+  .poke,
+  /* project pages */
+  .ps-project,
+  .ps-viewer__nav button,
+  .ps-laptop__bar button,
+  .ps-inspect-trigger,
+  .ps-arro__tabs button,
+  .ps-portal__perspectives > nav button,
+  .ps-sequence-nav button,
+  .ps-lucid__demo > nav button,
+  .ps-lucid__fields > button,
+  .ps-dervo__decision > button,
+  .ps-lucid__brief > button,
+  .ps-lucid__review > button,
+  .ps-lucid__mapping aside > button,
+  .ps-portal__task > button,
+  .ps-arro__milestone button,
+  .ps-port__controls button,
+  .ps-next,
+  .ps-viewer .pl-cinema__actions button,
+  /* the road: Dervo's board is a stage for its own buttons, so it stays put */
+  .sp-board:not(.sp-board--lead),
+  .sp-card,
+  .sp-foot__hello,
+  .sp-catchup li button,
+  /* the drive */
+  .simulation-menu-button,
+  .simulation-sound,
+  .simulation-enter,
+  .simulation-console button,
+  .city-start,
+  .city-cabin-nav button,
+  .city-drive-mode button,
+  .stop-visit-action,
+  .stop-visit-panel button,
+  .scenic-ignition button,
+  .journey-note button,
+  .cabin-tour-next,
+  .cabin-back,
+  .cabin-object__bar button,
+  .laptop-os__bar button,
+  .project-folders button,
+  .simulation-failure__actions button,
+  .simulation-failure__actions a,
+  .race-countdown button,
+  .race-finish button,
+  .race-finish a,
+  .journey-map__straight,
+  .entrance__enter,
+  .driving-touch button
+) {
+  transition:
+    translate var(--dur-exit) var(--ease-exit),
+    rotate var(--dur-exit) var(--ease-exit),
+    box-shadow var(--dur-exit) var(--ease-exit),
+    background-color var(--dur-utility) ease-out,
+    border-color var(--dur-utility) ease-out,
+    color var(--dur-utility) ease-out;
+
+  @media (hover: hover) {
+    &:hover:not(:disabled, [aria-disabled="true"]) {
+      translate: 0 calc(var(--poke-lift) * -1);
+      rotate: var(--poke-turn);
+      --edge-y: calc(2px + var(--poke-lift));
+      transition:
+        translate var(--dur-utility) var(--ease-stamp),
+        rotate var(--dur-utility) var(--ease-stamp),
+        box-shadow var(--dur-utility) var(--ease-stamp),
+        background-color var(--dur-utility) ease-out,
+        border-color var(--dur-utility) ease-out,
+        color var(--dur-utility) ease-out;
+    }
+  }
+
+  /* Last, so a press wins over a hover. Rotation eases most of the way back
+     to level as it lands. */
+  &:active:not(:disabled, [aria-disabled="true"]) {
+    translate: 0 var(--stamp-depth);
+    rotate: calc(var(--poke-turn) * 0.4);
+    --edge-y: 0px;
+    transition:
+      translate var(--dur-exit) ease-out,
+      rotate var(--dur-exit) ease-out,
+      box-shadow var(--dur-exit) ease-out,
+      background-color var(--dur-utility) ease-out,
+      border-color var(--dur-utility) ease-out,
+      color var(--dur-utility) ease-out;
+  }
+}
+
+/* Reduced motion keeps the colour changes and drops the movement. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --poke-lift: 0px;
+    --poke-turn: 0deg;
+    --stamp-depth: 0px;
+  }
+  :where(.ps-project, .sp-board:not(.sp-board--lead), .sp-card, .project-folders button) {
+    --poke-lift: 0px;
+    --poke-turn: 0deg;
+  }
 }
 
 /* Pinboard prints: the browser's native image-drag must never swallow
