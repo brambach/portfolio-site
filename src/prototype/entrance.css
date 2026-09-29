@@ -17,9 +17,9 @@
 .entrance__camera img { position: absolute; width: 100%; height: 100%; object-fit: fill; }
 .entrance__real-road { opacity: 0; }
 .entrance__car { position: absolute; left: 39.5%; top: 21%; width: 22%; height: 69%; border: 0; border-radius: 35%; background: transparent; }
-.entrance__car-hint { position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 12px; white-space: nowrap; padding: 9px 18px 9px 10px; border: 1px solid #f4edd957; border-radius: 40px; background: #1d281ed6; box-shadow: 0 3px 24px #0004; transition: background .25s, transform .25s; }
+.entrance__car-hint { position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 12px; white-space: nowrap; padding: 9px 18px 9px 10px; border: 1px solid #f4edd957; border-radius: 40px; background: #1d281ed6; box-shadow: 0 3px 24px #0004; transition: translate var(--dur-exit) var(--ease-exit), rotate var(--dur-exit) var(--ease-exit), background-color var(--dur-utility) ease-out; }
 .entrance__car-hint > span { display: grid; place-items: center; border: 1px solid #f4edd959; width: 30px; height: 30px; border-radius: 50%; }
-.entrance__car:hover .entrance__car-hint { background: #38412b; transform: translate(-50%, -50%) scale(1.06); }
+.entrance__car:hover .entrance__car-hint { background: #38412b; translate: 0 calc(var(--poke-lift) * -1); rotate: var(--poke-turn); transition: translate var(--dur-utility) var(--ease-stamp), rotate var(--dur-utility) var(--ease-stamp), background-color var(--dur-utility) ease-out; }
 .entrance__cabin { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
 .entrance__cabin img { width: 100%; height: 100%; object-fit: cover; object-position: 43% center; }
 .entrance__shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg,#12180f70 0%,transparent 24%,transparent 53%,#0f170b9c 100%), linear-gradient(90deg,#111a0e60,transparent 55%); }

@@ -26,6 +26,13 @@ export function ProjectViewer({project,close,choose}:{project:Project;close:()=>
     return ()=>{document.body.style.overflow=overflow;requestAnimationFrame(()=>{if(prior.current?.isConnected)prior.current.focus({preventScroll:true});});};
   },[]);
   useEffect(()=>{
+    const element=dialog.current;
+    element?.setAttribute('data-quiet-focus','');
+    const wake=()=>element?.removeAttribute('data-quiet-focus');
+    window.addEventListener('keydown',wake,{capture:true,once:true});
+    return ()=>window.removeEventListener('keydown',wake,{capture:true});
+  },[]);
+  useEffect(()=>{
     const title=document.title;
     document.title=`${project.name} / Bryce Rambach`;
     content.current?.scrollTo?.({top:0});
@@ -33,12 +40,12 @@ export function ProjectViewer({project,close,choose}:{project:Project;close:()=>
     return ()=>{document.title=title;};
   },[project.id,project.name]);
   return createPortal(<dialog ref={dialog} className={`ps-viewer pl-root ${project.id==='agentsky'?'pl-root--screening':''}`} aria-label={`${project.name} project`} onKeyDown={event=>event.stopPropagation()} onCancel={event=>{event.preventDefault();event.stopPropagation();close();}}>
-    <nav className="ps-viewer__nav" aria-label="Project navigation"><button ref={closeButton} onClick={close}>← All projects</button><span>{String(projects.indexOf(project)+1).padStart(2,'0')} / 06 <b>{project.name}</b></span><a href={`/projects/${project.id}`} aria-label={`Direct link to ${project.name}`}>Direct link</a></nav>
+    <nav className="ps-viewer__nav" aria-label="Project navigation"><button ref={closeButton} onClick={close}>← All projects</button><span>{String(projects.indexOf(project)+1).padStart(2,'0')} / {String(projects.length).padStart(2,'0')} <b>{project.name}</b></span><a className="ink-link" href={`/projects/${project.id}`} aria-label={`Direct link to ${project.name}`}>Direct link</a></nav>
     <div ref={content} className="ps-viewer__scroll" key={project.id}>
       <Suspense fallback={<div className="ps-opening" role="status">Opening {project.name}…</div>}>
         {project.id==='agentsky'?<AgentSky/>:project.id==='port'?<PortStudy/>:project.id==='dervo'?<DervoStudy/>:project.id==='arro'?<ArroStudy/>:project.id==='lucid'?<LucidStudy/>:<PortalStudy/>}
       </Suspense>
-      <button className="ps-next" onClick={()=>choose(next.id)}><span className="ps-eyebrow">Next project</span><strong>{next.name}</strong><span aria-hidden="true">+</span></button>
+      <button className="ps-next" onClick={()=>choose(next.id)}><span className="ps-eyebrow">Next project</span><strong>{next.name}</strong><span aria-hidden="true">→</span></button>
     </div>
   </dialog>,document.body);
 }
