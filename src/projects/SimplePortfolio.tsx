@@ -9,6 +9,7 @@ import { archive, projectById, type Project } from './catalog';
 import { email } from '../lib/site';
 import './simple.css';
 import { Car } from './FlatCar';
+import { Glovebox } from './Glovebox';
 import { covers, mileLabel, roadProjects } from './road-lineup';
 
 const road = roadProjects;
@@ -64,18 +65,7 @@ export default function SimplePortfolio() {
         </nav>
       </header>
       {reduced ? <StaticWork /> : <Drive />}
-      <section className="sp-more" aria-labelledby="sp-more-title">
-        <h2 id="sp-more-title">Also in the glovebox</h2>
-        <ul>
-          <li><a href={`/projects/${agentsky.id}`}><strong>{agentsky.name}</strong><span>Design study, with a film</span></a></li>
-          {archive.map(item => <li key={item.name}><strong>{item.name}</strong><span>{item.kind}</span></li>)}
-        </ul>
-      </section>
-      <footer className="sp-foot">
-        <p>Want to make something together?</p>
-        <a className="sp-foot__hello" href={`mailto:${email}`}>Say hello</a>
-        <a href={DRIVE}>Or take the Porsche out <span aria-hidden="true">→</span></a>
-      </footer>
+      <Glovebox email={email} drive={DRIVE} />
     </main>
   </SmoothScroll>;
 }
