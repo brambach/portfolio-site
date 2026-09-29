@@ -55,3 +55,9 @@ it('counts the projects in the viewer nav and ends on a next-project arrow',asyn
   expect(screen.getByRole('navigation',{name:'Project navigation'})).toHaveTextContent('01 / 06');
   expect(document.querySelector('.ps-next')).toHaveTextContent('→');
 });
+
+it('sends you back to the mile of the study you were reading',async()=>{
+  history.replaceState(null,'','/projects/lucid');
+  render(<ProjectReader/>);
+  expect(screen.getByRole('link',{name:'← Back to the road'})).toHaveAttribute('href','/?mile=lucid');
+});

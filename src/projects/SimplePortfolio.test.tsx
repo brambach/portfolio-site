@@ -46,7 +46,7 @@ describe('SimplePortfolio', () => {
 
   it('ends the drive with a way into the 3D Porsche', () => {
     render(<SimplePortfolio />);
-    expect(screen.getByRole('link', { name: /take the wheel/i })).toHaveAttribute('href', '/?from=work');
+    expect(screen.getByRole('link', { name: /take the wheel/i })).toHaveAttribute('href', '/drive?from=work');
   });
 
   it('keeps the moving headline readable as one heading', () => {

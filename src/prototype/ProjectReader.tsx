@@ -27,7 +27,7 @@ export default function ProjectReader() {
     else {history.replaceState(null,'','/projects');setProject(undefined);}
   };
   return <main ref={root} className="ps-page" aria-label="Bryce Rambach's portfolio">
-    <header className="ps-page__nav"><a className="ink-link" href="/">← Back to the Porsche</a><span>Bryce Rambach</span><a className="ink-link" href="mailto:bryce.rambach@gmail.com">Say hello ↗</a></header>
+    <header className="ps-page__nav"><a className="ink-link" href={selected?`/?mile=${selected}`:'/'}>← Back to the road</a><span>Bryce Rambach</span><a className="ink-link" href="mailto:bryce.rambach@gmail.com">Say hello ↗</a></header>
     <ProjectCollection open={open} selected={selected}/>
     {project&&<ProjectViewer project={project} close={close} choose={open}/>}
   </main>;
