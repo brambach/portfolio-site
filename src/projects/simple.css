@@ -267,19 +267,6 @@
 }
 .sp-panel--hello h1 { max-width: 13em; font-size: clamp(36px, 5.6vw, 76px); }
 .sp-panel--hello p { margin: 20px 0 0; font-size: clamp(17px, 1.5vw, 21px); letter-spacing: -0.01em; color: var(--sp-soft); }
-.sp-hint {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 26px;
-  font: 500 var(--label-size)/1.3 var(--font-mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--sp-soft);
-}
-.sp-hint__line { position: relative; width: 36px; height: 1px; background: currentColor; opacity: 0.35; overflow: hidden; }
-.sp-hint__line::after { content: ''; position: absolute; inset: 0; background: var(--sp-ink); animation: sp-sweep 1.8s var(--sp-ease) infinite; }
-@keyframes sp-sweep { from { translate: -100% 0; } to { translate: 100% 0; } }
 
 .sp-panel--stop {
   width: min(540px, 78vw, 70svh);
@@ -663,7 +650,7 @@
 @media (prefers-reduced-motion: reduce) {
   .sp-card, .sp-board { transition: none; }
   .sp-card__line, .sp-foot__hello { transition: none; }
-  .sp-car__idle, .sp-car__exhaust i, .sp-hint__line::after, .sp-catchup .is-running .sp-catchup__dot { animation: none; }
+  .sp-car__idle, .sp-car__exhaust i, .sp-cue__road, .sp-cue__note svg path, .sp-catchup .is-running .sp-catchup__dot { animation: none; }
 }
 
 /* ---------- Arrival cover in the 3D drive, when you come from /work ---------- */
@@ -917,3 +904,60 @@
   .sp-item__float, .sp-glove__tape span { animation: none; }
   .sp-item__card { transition: none; }
 }
+
+/* ---------- The opening: a line with a voice, and a scroll cue that is the road itself ---------- */
+.sp-panel--hello .sp-sub {
+  margin: 26px 0 0;
+  max-width: 24em;
+  font: 500 clamp(24px, 2.8vw, 40px)/1.12 var(--sp-display);
+  font-variation-settings: var(--display-axes);
+  letter-spacing: var(--display-track);
+  color: var(--sp-ink);
+}
+.sp-sub__aside {
+  display: block;
+  margin-top: 6px;
+  font: 600 clamp(24px, 2.3vw, 32px)/1.1 var(--font-hand);
+  letter-spacing: 0;
+  color: var(--sp-green);
+  rotate: -1.5deg;
+  transform-origin: 0 50%;
+  text-decoration: underline wavy rgb(193 78 43 / 0.55) 1.5px;
+  text-underline-offset: 7px;
+}
+.sp-cue { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 4px; margin-top: 28px; }
+.sp-cue__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 18px 10px 14px;
+  border-radius: 999px;
+  background: var(--sp-ink);
+  color: var(--sp-paper);
+  font: 500 var(--label-size)/1 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  box-shadow: 0 3px 0 color-mix(in srgb, #000 40%, var(--sp-ink));
+  animation: sp-nudge 2.4s var(--ease-stamp) infinite;
+}
+.sp-cue__road {
+  width: 64px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--sp-dash) 0 55%, transparent 55%) 0 50% / 18px 100% repeat-x;
+  animation: sp-dashes 600ms linear infinite;
+}
+.sp-cue__note {
+  display: flex;
+  align-items: center;
+  flex-direction: row-reverse;
+  gap: 6px;
+  margin-left: 14px;
+  font: 600 clamp(20px, 1.8vw, 24px)/1.1 var(--font-hand);
+  color: var(--sp-soft);
+  rotate: -2deg;
+}
+.sp-cue__note svg { width: 40px; height: 30px; overflow: visible; scale: -1 -1; }
+@keyframes sp-dashes { to { background-position-x: -18px; } }
+@keyframes sp-nudge { 0%, 60%, 100% { translate: 0 0; } 75% { translate: 6px 0; } 88% { translate: 2px 0; } }
+@media (prefers-reduced-motion: reduce) { .sp-cue__pill { animation: none; } }
