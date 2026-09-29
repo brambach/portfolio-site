@@ -18,6 +18,7 @@ import {createCityWorld} from './city-world';
 import {createRouteDressing,routeDressingParts} from './route-dressing';
 import {journeyRoad,JOURNEY_STOPS,journeyAccess,nearAccess,STOP_OFFSET,stopDistance} from './journey-route';
 import type {SceneResources} from './scene-resources';
+import {addProjectBillboards} from './project-billboards';
 
 export async function createJourneyWorld(scene:THREE.Scene,resources:SceneResources,renderer:THREE.WebGLRenderer,signal:AbortSignal,scenic=false,stage:((name:string)=>void)=()=>{}) {
   const road=scenic?scenicRoad:journeyRoad,accessRoads=scenic?scenicAccess:journeyAccess;
@@ -238,6 +239,8 @@ export async function createJourneyWorld(scene:THREE.Scene,resources:SceneResour
     // of town, along the valley and down to the lake shore.
     const dressing=createRouteDressing(routeDressingParts(surfaceHeight));
     resources.object(dressing);group.add(dressing);
+    // the /work billboards, standing on the real road
+    addProjectBillboards(group,resources,surfaceHeight);
   }
   const lookout=trailPoint(1);
   const bench=new THREE.Group();bench.position.copy(lookout);bench.visible=!scenic;group.add(bench);

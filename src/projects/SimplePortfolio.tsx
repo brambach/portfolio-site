@@ -9,17 +9,9 @@ import { archive, projectById, type Project } from './catalog';
 import { email } from '../lib/site';
 import './simple.css';
 import { Car } from './FlatCar';
+import { covers, mileLabel, roadProjects } from './road-lineup';
 
-const covers: Partial<Record<Project['id'], string>> = {
-  agentsky: '/project-lab/sky.png',
-  dervo: '/projects/dervo/sunrise.jpg',
-  lucid: '/projects/lucid/spec.png',
-  arro: '/projects/arro/today-sample.png',
-  'integration-portal': '/projects/portal/hub.png',
-};
-
-// Dervo leads; AgentSky rides in the glovebox
-const road = (['dervo', 'integration-portal', 'lucid', 'arro', 'port'] as const).map(id => projectById(id)!);
+const road = roadProjects;
 const agentsky = projectById('agentsky')!;
 
 // small alternating tilts so the grid feels pinned up, not printed
@@ -197,13 +189,17 @@ function Drive() {
             <br/>
             <em><Words text="I design and build software you can feel." distance={distance} speed={speed} first={3} /></em>
           </motion.h1>
-          <p>Five projects down the road. The first stop is the one I’m building now.</p>
+          <p>Five projects down the road. Coffee first, then the one I’m building now.</p>
           <span className="sp-hint" aria-hidden="true"><span className="sp-hint__line" />Scroll</span>
         </div>
+        {/* the same stops the 3D drive passes on its way out of town */}
+        <Roadside kind="cafe" distance={distance} speed={speed} />
+        <Roadside kind="tennis" distance={distance} speed={speed} />
         {road.map((project, i) => i === 0
           ? <Headliner key={project.id} project={project} onFocus={bringIntoView} active={stop === 0} distance={distance} speed={speed} />
           : <Billboard key={project.id} project={project} index={i} onFocus={bringIntoView} active={stop === i} distance={distance} speed={speed} />)}
         <div className="sp-panel sp-panel--overlook">
+          <div className="sp-lakeside" aria-hidden="true"><b>Lakeside</b><span>Yes, this counts as looking at my site</span></div>
           <div className="sp-signpost" aria-hidden="true"><span>Tahoe overlook</span><span>1 mi</span></div>
           <h2>Want to drive it yourself?</h2>
           <p>The rest of the road is in 3D. Open the door, turn the key, take it to the lake.</p>
@@ -240,6 +236,33 @@ function Drive() {
 
 type Motion = { distance: MotionValue<number>; speed: MotionValue<number> };
 
+/* Flat versions of the 3D drive's first two stops, with the same signs.
+   The café's sign swings in the car's draft; the courts always have a rally going. */
+function Roadside({ kind, distance, speed }: Motion & { kind: 'cafe' | 'tennis' }) {
+  const panel = useRef<HTMLDivElement>(null);
+  const { sway } = useSway(panel, { distance, speed });
+  const swing = useTransform(sway, r => r * 3);
+  if (kind === 'cafe') return <div ref={panel} className="sp-panel sp-roadside sp-roadside--cafe" aria-hidden="true">
+    <div className="sp-cafe">
+      <span className="sp-cafe__steam"><i /><i /><i /></span>
+      <div className="sp-cafe__awning" />
+      <div className="sp-cafe__front">
+        <span className="sp-cafe__window"><span className="sp-cafe__cup" /></span>
+        <span className="sp-cafe__door" />
+      </div>
+      <motion.div className="sp-roadsign sp-roadsign--hanging" style={{ rotate: swing }}><b>The long way</b><span>Coffee · flat whites</span></motion.div>
+    </div>
+  </div>;
+  return <div ref={panel} className="sp-panel sp-roadside sp-roadside--tennis" aria-hidden="true">
+    <div className="sp-roadsign sp-roadsign--club"><b>Tennis club</b></div>
+    <div className="sp-court">
+      <span className="sp-court__net" />
+      <span className="sp-court__ball" />
+    </div>
+    <motion.div className="sp-roadsign sp-roadsign--post" style={{ rotate: sway }}><b>Young prodigy</b><span>Parking only</span></motion.div>
+  </div>;
+}
+
 /* The car's draft rocks a board on its posts as it passes, harder the faster you go. */
 function useSway(panel: RefObject<HTMLDivElement | null>, { distance, speed }: Motion) {
   const centre = useRef(0);
@@ -268,7 +291,7 @@ function Billboard({ project, index, onFocus, active, distance, speed }: StopPro
   const panel = useRef<HTMLDivElement>(null);
   const { sway } = useSway(panel, { distance, speed });
   return <div ref={panel} className="sp-panel sp-panel--stop" data-stop style={{ '--tilt': `${tilts[index % tilts.length]}deg` } as CSSProperties}>
-    <span className="sp-mile" aria-hidden="true">Mile {String(index + 1).padStart(2, '0')}</span>
+    <span className="sp-mile" aria-hidden="true">{mileLabel(index)}</span>
     <motion.div className="sp-sway" style={{ rotate: sway }}>
       <a className="sp-board" href={`/projects/${project.id}`} onFocus={onFocus} aria-label={`${project.name}: ${project.line}`}>
         <div className={`sp-board__art sp-card__art--${project.id}`} aria-hidden="true">
@@ -302,7 +325,7 @@ function Headliner({ project, onFocus, active, distance, speed }: StopProps) {
     else if (n < 0.2) setArrived(false);
   });
   return <div ref={panel} className="sp-panel sp-panel--stop sp-panel--lead" data-stop>
-    <span className="sp-mile" aria-hidden="true">Mile 01 · Now building</span>
+    <span className="sp-mile" aria-hidden="true">{mileLabel(0)}</span>
     <motion.div className="sp-sway" style={{ rotate: sway }}>
       <div className="sp-board sp-board--lead">
         <div className="sp-lead__text">

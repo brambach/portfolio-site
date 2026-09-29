@@ -3,6 +3,7 @@ import {scenicRoad,scenicAccess} from './scenic-route';
 import {nearAccess} from './journey-route';
 import {landHeight,LAKE_LEVEL} from './journey-land';
 import type {CanopyTree} from './tree-canopy';
+import {nearBillboard} from './project-billboards';
 
 export function scenicTreePlacements(heightAt=(x:number,z:number)=>landHeight(x,z,true)):CanopyTree[]{
   const trees:CanopyTree[]=[];
@@ -13,7 +14,7 @@ export function scenicTreePlacements(heightAt=(x:number,z:number)=>landHeight(x,
     const offset=14+150*spread*spread;
     const point=scenicRoad.frame(distance,(i%2?1:-1)*offset).point;
     point.y=heightAt(point.x,point.z);
-    if(inTown(point.x,point.z)||scenicRoad.nearest(point.x,point.z).away<11||nearAccess(point.x,point.z,7,scenicAccess)||scenicAccess.some(access=>access.place.distanceToSquared(point)<20**2)||point.y<LAKE_LEVEL+.1)continue;
+    if(inTown(point.x,point.z)||scenicRoad.nearest(point.x,point.z).away<11||nearAccess(point.x,point.z,7,scenicAccess)||scenicAccess.some(access=>access.place.distanceToSquared(point)<20**2)||point.y<LAKE_LEVEL+.1||nearBillboard(point.x,point.z))continue;
     trees.push({point,scale:.75+(i*7%17)/20,yaw:i*2.399});
   }
   // Young firs fill the bank below the taller canopy without a second model or atlas.
@@ -22,7 +23,7 @@ export function scenicTreePlacements(heightAt=(x:number,z:number)=>landHeight(x,
     const spread=(i*.754877666)%1,offset=11.5+10*spread;
     const point=scenicRoad.frame(distance,(i%2?1:-1)*offset).point;
     point.y=heightAt(point.x,point.z);
-    if(inTown(point.x,point.z)||scenicRoad.nearest(point.x,point.z).away<11||nearAccess(point.x,point.z,7,scenicAccess)||scenicAccess.some(access=>access.place.distanceToSquared(point)<20**2)||point.y<LAKE_LEVEL+.1)continue;
+    if(inTown(point.x,point.z)||scenicRoad.nearest(point.x,point.z).away<11||nearAccess(point.x,point.z,7,scenicAccess)||scenicAccess.some(access=>access.place.distanceToSquared(point)<20**2)||point.y<LAKE_LEVEL+.1||nearBillboard(point.x,point.z))continue;
     trees.push({point,scale:.19+(i*13%18)/100,yaw:i*1.618});
   }
   return trees;

@@ -12,6 +12,9 @@ export function CabinObjects({ object, close, physical = false, nextLabel }: { n
     element.showModal();
     return () => {
       requestAnimationFrame(() => {
+      // someone already moved focus on (the horn, a card): leave it there
+      const active = document.activeElement;
+      if (active instanceof HTMLElement && active !== document.body && active.isConnected && !element.contains(active)) return;
       const target = previous instanceof HTMLElement && previous.isConnected && previous !== document.body
         ? previous
         : document.querySelector<HTMLElement>(".live-entrance__scene canvas");
