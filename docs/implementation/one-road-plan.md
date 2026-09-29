@@ -22,6 +22,13 @@ Done so far:
   - The drive's "Read without the scene" and "Read the full portfolio" links now go to `/work`.
   - The flat car lives in `src/projects/FlatCar.tsx`.
 
+- Phase 3 drive:
+  - Gas or steering takes over from autopilot, and P or the "You're driving" chip hands it back (`city-route.ts` `takeOver`/`resumeAutopilot`).
+  - "Call it a night" on the lake card switches the engine off, leaves the radio alone, tilts the view up to the dusk sky and shows a sign-off card. There are no stars in the scene yet.
+  - The five /work boards stand on the 3D road past town (`src/prototype/project-billboards.ts`), in the order and with the covers and mile labels from `src/projects/road-lineup.ts`, which /work reads too. Stopping near one offers its case study.
+
+- Phase 1 on /work: a flat café ("THE LONG WAY", swinging sign, steam) and tennis club ("TENNIS CLUB", "YOUNG PRODIGY · PARKING ONLY", a rally going) sit between the hello panel and Dervo, and the "LAKESIDE · YES, THIS COUNTS AS LOOKING AT MY SITE" sign stands at the overlook. The sky timing isn't matched to the 3D dusk yet.
+
 Still to do from Phase 0: the shared token file, the shared menu and the flat-car loader for ordinary visits.
 
 Today `/work` (flat, scroll-driven, `src/projects/SimplePortfolio.tsx`) and `/` (3D, `src/prototype/Entrance.tsx`) look and behave like two sites. They share no style tokens, the 3D menu never mentions `/work`, and "Take the wheel" drops you back at a daytime walk-up to the car in town.

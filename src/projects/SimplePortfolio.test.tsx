@@ -34,6 +34,16 @@ describe('SimplePortfolio', () => {
     expect(within(glovebox).getByRole('link', { name: /AgentSky/ })).toHaveAttribute('href', '/projects/agentsky');
   });
 
+  it('passes the 3D drive’s stops in its order: café, courts, the work, then the lake', () => {
+    const { container } = render(<SimplePortfolio />);
+    const text = container.querySelector('.sp-track')!.textContent!;
+    const at = (words: string) => text.indexOf(words);
+    expect(at('The long way')).toBeGreaterThan(-1);
+    expect(at('The long way')).toBeLessThan(at('Tennis club'));
+    expect(at('Young prodigy')).toBeLessThan(at('Dervo'));
+    expect(at('Port')).toBeLessThan(at('Yes, this counts as looking at my site'));
+  });
+
   it('ends the drive with a way into the 3D Porsche', () => {
     render(<SimplePortfolio />);
     expect(screen.getByRole('link', { name: /take the wheel/i })).toHaveAttribute('href', '/?from=work');
