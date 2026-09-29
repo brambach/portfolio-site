@@ -14,6 +14,9 @@ import { covers, mileLabel, roadProjects } from './road-lineup';
 const road = roadProjects;
 const agentsky = projectById('agentsky')!;
 
+// words painted on the tarmac at each stop, the way real roads talk to you
+const paint = ['Now building', 'Keep clear', 'Slow · reading', 'One way', 'Pull over'];
+
 // small alternating tilts so the grid feels pinned up, not printed
 const tilts = [-1.6, 1.2, -0.8, 1.8, -1.2, 0.9];
 
@@ -55,7 +58,10 @@ export default function SimplePortfolio() {
     <main className="sp-page" aria-label="Bryce Rambach's work">
       <header className="sp-nav">
         <span className="sp-nav__name">Bryce Rambach</span>
-        <a href={DRIVE}>Skip to the drive <span aria-hidden="true">→</span></a>
+        <nav className="sp-mode" aria-label="How to browse">
+          <span aria-current="page">Road</span>
+          <a className="poke" href={DRIVE}>Drive <span aria-hidden="true">→</span></a>
+        </nav>
       </header>
       {reduced ? <StaticWork /> : <Drive />}
       <section className="sp-more" aria-labelledby="sp-more-title">
@@ -220,6 +226,7 @@ function Drive() {
       <motion.div className="sp-night" style={{ opacity: night }} aria-hidden="true" />
       <motion.div ref={track} className="sp-track" style={{ x: trackX }}>
         <div className="sp-panel sp-panel--hello">
+          <span className="sp-tarmac sp-tarmac--hello" aria-hidden="true">Hello</span>
           <motion.h1 className="sp-headline" aria-label="Hi, I’m Bryce. I design and build software you can feel." style={{ skewX: lean }}>
             <Words text="Hi, I’m Bryce." distance={distance} speed={speed} first={0} />
             <br/>
@@ -327,6 +334,8 @@ function Billboard({ project, index, onFocus, active, distance, speed }: StopPro
   const panel = useRef<HTMLDivElement>(null);
   const { sway } = useSway(panel, { distance, speed });
   return <div ref={panel} className="sp-panel sp-panel--stop" data-stop data-project={project.id} style={{ '--tilt': `${tilts[index % tilts.length]}deg` } as CSSProperties}>
+    <span className="sp-ghost" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+    <span className="sp-tarmac" aria-hidden="true">{paint[index % paint.length]}</span>
     <span className="sp-mile" aria-hidden="true">{mileLabel(index)}</span>
     <motion.div className="sp-sway" style={{ rotate: sway }}>
       <a className="sp-board" href={`/projects/${project.id}`} onFocus={onFocus} aria-label={`${project.name}: ${project.line}`}>
@@ -361,6 +370,8 @@ function Headliner({ project, onFocus, active, distance, speed }: StopProps) {
     else if (n < 0.2) setArrived(false);
   });
   return <div ref={panel} className="sp-panel sp-panel--stop sp-panel--lead" data-stop data-project={project.id}>
+    <span className="sp-ghost" aria-hidden="true">01</span>
+    <span className="sp-tarmac" aria-hidden="true">{paint[0]}</span>
     <span className="sp-mile" aria-hidden="true">{mileLabel(0)}</span>
     <motion.div className="sp-sway" style={{ rotate: sway }}>
       <div className="sp-board sp-board--lead">

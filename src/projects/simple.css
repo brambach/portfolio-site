@@ -91,7 +91,17 @@
   font-size: 15px;
 }
 .sp-nav__name { font-family: var(--sp-display); font-variation-settings: var(--display-axes); font-size: 19px; font-weight: 560; letter-spacing: -0.01em; }
-.sp-nav > a { text-decoration: none; border-bottom: 1px solid currentColor; }
+.sp-mode {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--sp-line);
+  border-radius: 999px;
+  font: 500 var(--label-size)/1 var(--font-mono);
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+}
+.sp-mode > * { padding: 8px 14px; border-radius: 999px; text-decoration: none; }
+.sp-mode > [aria-current] { background: var(--sp-ink); color: var(--sp-paper); }
 
 
 /* ---------- Static grid, for reduced motion ---------- */
@@ -236,6 +246,7 @@
 .sp-night { position: absolute; inset: 0; background: var(--sp-night); mix-blend-mode: multiply; pointer-events: none; }
 
 .sp-track {
+  z-index: 1;
   position: absolute;
   top: 0;
   bottom: 22%;
@@ -768,3 +779,36 @@
 @media (prefers-reduced-motion: reduce) {
   .sp-cafe__steam i, .sp-court__ball { animation: none; }
 }
+
+/* ---------- Type on the road: ghost mile numerals and words painted on the tarmac ---------- */
+.sp-panel--stop > .sp-sway { position: relative; z-index: 1; }
+.sp-ghost {
+  position: absolute;
+  left: -5%;
+  top: -24%;
+  font: 500 clamp(150px, 20vw, 290px)/1 var(--sp-display);
+  font-variation-settings: var(--display-axes);
+  letter-spacing: -0.04em;
+  color: transparent;
+  -webkit-text-stroke: 2px rgb(255 253 247 / 0.6);
+  pointer-events: none;
+  user-select: none;
+}
+.sp-tarmac {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-top: 12px;
+  translate: -50% 0;
+  font: 500 clamp(18px, 2.3vw, 30px)/1 var(--font-mono);
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgb(244 239 228 / 0.5);
+  /* laid flat on the asphalt, stretched the way road paint is */
+  transform: perspective(220px) rotateX(58deg) scaleY(1.9);
+  transform-origin: 50% 0;
+  pointer-events: none;
+}
+.sp-tarmac--hello { left: 62%; }
+@media (max-width: 700px) { .sp-ghost { font-size: 130px; top: -14%; } .sp-tarmac { font-size: 15px; } }
