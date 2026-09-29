@@ -36,9 +36,10 @@ The same RPM state feeds the tachometer, on-screen instruments and engine playba
 
 ## Pages and files
 
-- `/` opens the scenic first-version work.
-- `/?city` preserves the city prototype.
-- `/?journey` preserves the earlier multi-stop experiment.
+- `/` opens the flat road, the front door. `/work` is the same page.
+- `/drive` opens the 3D Porsche. `/drive?from=work` skips the walk-up and starts at the overlook. Old `/?town`, `/?forest` and `/?from=work` links still open it.
+- `/drive?city` preserves the city prototype.
+- `/drive?journey` preserves the earlier multi-stop experiment.
 - `/projects` opens project notes without the scene.
 - `/previous` keeps the earlier portfolio available.
 - `/entrance-still` opens the photographic entrance study.

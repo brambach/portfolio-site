@@ -45,6 +45,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/drive",
+      "destination": "/index.html"
+    },
+    {
       "source": "/admin",
       "destination": "/index.html"
     }

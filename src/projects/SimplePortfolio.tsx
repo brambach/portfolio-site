@@ -27,7 +27,7 @@ const carCentre = () => window.innerWidth * 0.08 + Math.min(380, Math.max(200, w
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 
 // the 3D drive picks up at the overlook when it sees this
-const DRIVE = '/?from=work';
+const DRIVE = '/drive?from=work';
 
 // Warm up the drive once someone is well down the road: its code, and the car model on desktops.
 // Phones and data-saver visitors only get the code, since the model alone is about 17 MB.
@@ -48,14 +48,14 @@ export default function SimplePortfolio() {
   const reduced = useReducedMotion() ?? false;
   useEffect(() => {
     const title = document.title;
-    document.title = 'Work / Bryce Rambach';
+    document.title = 'Bryce Rambach / Design and software you can feel';
     return () => { document.title = title; };
   }, []);
   return <SmoothScroll>
     <main className="sp-page" aria-label="Bryce Rambach's work">
       <header className="sp-nav">
         <span className="sp-nav__name">Bryce Rambach</span>
-        <a href="/">Skip to the drive <span aria-hidden="true">→</span></a>
+        <a href={DRIVE}>Skip to the drive <span aria-hidden="true">→</span></a>
       </header>
       {reduced ? <StaticWork /> : <Drive />}
       <section className="sp-more" aria-labelledby="sp-more-title">
@@ -150,6 +150,42 @@ function Drive() {
     if (lenis) lenis.scrollTo(clamped, { immediate: true });
     else window.scrollTo({ top: clamped });
   };
+
+  // Coming back from a study: /?mile=lucid parks the car at that billboard. Images and fonts
+  // keep stretching the road for a moment, so re-aim on each measure until the visitor moves.
+  const mile = useRef<string | null>(null);
+  const settling = useRef(true);
+  useEffect(() => {
+    // read once: React runs effects twice in development, and the first run clears the address
+    mile.current ??= new URLSearchParams(location.search).get('mile');
+    if (!mile.current) return;
+    const url = new URL(location.href);
+    url.searchParams.delete('mile');
+    history.replaceState(history.state, '', url);
+    const stop = () => { settling.current = false; };
+    const timer = window.setTimeout(stop, 2500);
+    window.addEventListener('wheel', stop, { once: true, passive: true });
+    window.addEventListener('touchstart', stop, { once: true, passive: true });
+    window.addEventListener('keydown', stop, { once: true });
+    return () => { window.clearTimeout(timer); window.removeEventListener('wheel', stop); window.removeEventListener('touchstart', stop); window.removeEventListener('keydown', stop); };
+  }, []);
+  useEffect(() => {
+    if (!mile.current || travel <= 0) return;
+    const aim = () => {
+      if (!settling.current) return;
+      const panel = track.current?.querySelector<HTMLElement>(`[data-project="${mile.current}"]`);
+      if (!panel) return;
+      const start = section.current?.offsetTop ?? 0;
+      const top = Math.max(start, Math.min(start + panel.offsetLeft + panel.offsetWidth / 2 - window.innerWidth / 2, start + travel));
+      // the page is taller than Lenis last measured, so tell it before asking it to scroll
+      lenis?.resize();
+      if (lenis) lenis.scrollTo(top, { immediate: true, force: true });
+      else window.scrollTo({ top });
+    };
+    aim();
+    const timers = [200, 600, 1400].map(ms => window.setTimeout(aim, ms));
+    return () => timers.forEach(window.clearTimeout);
+  }, [travel, lenis]);
 
   const current = stop >= 0 && stop < road.length ? road[stop] : null;
 
@@ -290,7 +326,7 @@ type StopProps = Motion & { project: Project; onFocus: (event: FocusEvent<HTMLEl
 function Billboard({ project, index, onFocus, active, distance, speed }: StopProps & { index: number }) {
   const panel = useRef<HTMLDivElement>(null);
   const { sway } = useSway(panel, { distance, speed });
-  return <div ref={panel} className="sp-panel sp-panel--stop" data-stop style={{ '--tilt': `${tilts[index % tilts.length]}deg` } as CSSProperties}>
+  return <div ref={panel} className="sp-panel sp-panel--stop" data-stop data-project={project.id} style={{ '--tilt': `${tilts[index % tilts.length]}deg` } as CSSProperties}>
     <span className="sp-mile" aria-hidden="true">{mileLabel(index)}</span>
     <motion.div className="sp-sway" style={{ rotate: sway }}>
       <a className="sp-board" href={`/projects/${project.id}`} onFocus={onFocus} aria-label={`${project.name}: ${project.line}`}>
@@ -324,7 +360,7 @@ function Headliner({ project, onFocus, active, distance, speed }: StopProps) {
     if (n > 0.8) setArrived(true);
     else if (n < 0.2) setArrived(false);
   });
-  return <div ref={panel} className="sp-panel sp-panel--stop sp-panel--lead" data-stop>
+  return <div ref={panel} className="sp-panel sp-panel--stop sp-panel--lead" data-stop data-project={project.id}>
     <span className="sp-mile" aria-hidden="true">{mileLabel(0)}</span>
     <motion.div className="sp-sway" style={{ rotate: sway }}>
       <div className="sp-board sp-board--lead">
