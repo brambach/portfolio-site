@@ -1,6 +1,8 @@
 import { motion, useReducedMotion } from 'motion/react';
 import type { CSSProperties } from 'react';
 import { Fireflies } from '../components/Fireflies';
+import { HareMark } from '../components/HareMark';
+import { streakDay, vibeCards } from '../lib/site';
 import { archive, projectById } from './catalog';
 
 const agentsky = projectById('agentsky')!;
@@ -17,10 +19,12 @@ const items: { name: string; kind: string; text: string; href?: string; variant:
 const tilts = [-3, 2, -1.5, 3, -2, 1.5, -3.5, 2.5];
 // terminals and sticky notes each come in a few colours, so a run of the same kind isn't a copy
 const COMMANDS = ['cat', 'less', 'head', 'tail'];
-const ACCENTS: Partial<Record<Variant, string[]>> = { source: ['#8fd19e', '#e6c07a', '#8fc6e6'], note: ['#f3dc79', '#f4b8c4', '#b9e0c9'] };
+// two-tone, on purpose: forest greens and cream paper. The one warm accent is spent on small marks.
+const ACCENTS: Partial<Record<Variant, string[]>> = { source: ['#8fd19e', '#cfe3c1', '#e9dfc5'], note: ['#f3dc79', '#f7e9a6', '#efe3c8'] };
+const prints = vibeCards.filter((card): card is Extract<typeof card, { kind: 'photo' }> => card.kind === 'photo');
 const slug = (name: string) => name.toLowerCase().replace(/\W+/g, '-').replace(/^-|-$/g, '');
 
-const ticker = 'Thanks for driving · Mile 06 · No more road · Beep beep · ';
+const ticker = 'Thanks for driving · Mile 06 · No more road · ';
 
 export function Glovebox({ email, drive }: { email: string; drive: string }) {
   const reduced = useReducedMotion() ?? false;
@@ -66,7 +70,28 @@ export function Glovebox({ email, drive }: { email: string; drive: string }) {
           </motion.li>;
         })}
       </ul>
+      <div className="sp-off">
+        <span className="sp-glove__eyebrow">Off the clock</span>
+        <ul className="sp-prints">
+          {prints.map((print, i) => <motion.li
+            key={print.src}
+            className="sp-print"
+            style={{ '--tilt': `${print.rotate}deg` } as CSSProperties}
+            initial={reduced ? false : { opacity: 0, y: 60, rotate: print.rotate * 3 }}
+            whileInView={{ opacity: 1, y: 0, rotate: print.rotate }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ type: 'spring', stiffness: 150, damping: 15, delay: i * 0.1 }}
+          >
+            <figure>
+              <span className={`sp-print__tape sp-print__tape--${print.tape ?? 'left'}`} aria-hidden="true" />
+              <img src={print.src} alt={print.alt} loading="lazy" />
+              <figcaption>{print.caption}{print.src.includes('meadow') && <small>day {streakDay} of the streak</small>}</figcaption>
+            </figure>
+          </motion.li>)}
+        </ul>
+      </div>
       <div className="sp-glove__finale">
+        <HareMark pose="sitting" className="sp-glove__hare" />
         <p>Want to make something together?</p>
         <div className="sp-glove__actions">
           <a className="sp-foot__hello" href={`mailto:${email}`}>Say hello</a>

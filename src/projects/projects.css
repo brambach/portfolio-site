@@ -26,16 +26,16 @@
 .ps-inspector__image.is-zoomed img{min-width:0}
 /* A cover lifts like a sheet. The study follows with a short, settled reveal. */
 .ps-cover{transition:box-shadow var(--dur-utility) var(--ease-stamp);isolation:isolate}.ps-project:hover .ps-cover{box-shadow:0 16px 24px -18px #14231888}
-.ps-cover__open{border:1px solid #ffffff40!important;border-radius:2px;padding:9px 15px!important;box-shadow:0 2px 0 #10211655;letter-spacing:.025em;background:#243d324d!important;backdrop-filter:none!important;}.ps-cover-tab{font:300 25px 'Hanken Grotesk Variable',sans-serif;width:30px;height:30px;border:1px solid #28362d35;text-align:center;line-height:27px;transition:rotate var(--dur-exit) var(--ease-exit)}.ps-project:hover .ps-cover-tab{rotate:90deg;transition:rotate var(--dur-utility) var(--ease-stamp)}
+.ps-cover__open{border:1px solid #ffffff40!important;border-radius:2px;padding:9px 15px!important;box-shadow:0 3px 8px -3px #10211677;letter-spacing:.025em;background:#243d324d!important;backdrop-filter:none!important;}.ps-cover-tab{font:300 25px 'Hanken Grotesk Variable',sans-serif;width:30px;height:30px;border:1px solid #28362d35;text-align:center;line-height:27px;transition:rotate var(--dur-exit) var(--ease-exit)}.ps-project:hover .ps-cover-tab{rotate:90deg;transition:rotate var(--dur-utility) var(--ease-stamp)}
 .ps-viewer[open]{animation:study-open .45s cubic-bezier(.2,.7,.2,1) both}.ps-viewer::backdrop{animation:study-backdrop .35s ease both}
-.ps-viewer__nav button,.ps-laptop__bar button,.ps-inspect-trigger,.ps-arro__tabs button{border:1px solid currentColor;border-radius:2px;padding:10px 16px;box-shadow:0 var(--edge-y) 0 color-mix(in srgb,currentColor 22%,transparent)}
+.ps-viewer__nav button,.ps-laptop__bar button,.ps-inspect-trigger,.ps-arro__tabs button{border:1px solid currentColor;border-radius:2px;padding:10px 16px;box-shadow:0 calc(var(--edge-y) * 1.4) calc(var(--edge-y) * 3) calc(var(--edge-y) * -0.8) color-mix(in srgb, color-mix(in srgb,currentColor 22%,transparent) 50%, transparent)}
 .ps-arro__phone{animation:arro-page .5s cubic-bezier(.2,.7,.2,1) both;transform-origin:bottom center}.ps-arro__family>span{animation:family-in .65s cubic-bezier(.2,.7,.2,1) both}.ps-arro__family>span:nth-child(2){animation-delay:.06s}.ps-arro__family>span:nth-child(3){animation-delay:.12s}.ps-arro__family>span:nth-child(4){animation-delay:.18s}.ps-arro__family>span:nth-child(5){animation-delay:.24s}
 /* Content stays visible if observation is delayed or unavailable. */
 [data-reveal]{opacity:1;translate:none}[data-revealed=true]{animation:study-section-in .65s cubic-bezier(.2,.7,.2,1) backwards}[data-reveal]:focus-within{animation:none}
 @keyframes study-section-in{from{opacity:.35;translate:0 16px}to{opacity:1;translate:0 0}}
 @keyframes study-open{from{opacity:1;translate:0 24px;scale:.985}to{opacity:1;translate:0 0;scale:1}}@keyframes study-backdrop{from{opacity:0}to{opacity:1}}@keyframes arro-page{from{opacity:.25;translate:0 12px;rotate:1deg}to{opacity:1;translate:0 0;rotate:0deg}}@keyframes family-in{from{opacity:0;translate:0 8px;scale:.85}to{opacity:1;translate:0 0;scale:1}}
 @media(prefers-reduced-motion:reduce){.ps-viewer[open],.ps-viewer::backdrop,.ps-arro__phone,.ps-arro__family>span{animation:none}[data-reveal]{opacity:1;translate:none;transition:none;animation:none}.ps-cover,.ps-cover-tab{transition:none}}
-.ps-viewer .pl-cinema__actions button{border-radius:3px;box-shadow:inset 0 1px #ffffff25,0 var(--edge-y) 0 #15292d99}.ps-viewer .pl-cinema__actions button:last-child>span{display:none}
+.ps-viewer .pl-cinema__actions button{border-radius:3px;box-shadow:inset 0 1px #ffffff25,0 calc(var(--edge-y) * 1.4) calc(var(--edge-y) * 3) calc(var(--edge-y) * -0.8) color-mix(in srgb, #15292d99 50%, transparent)}.ps-viewer .pl-cinema__actions button:last-child>span{display:none}
 /* Type roles,set in index.css: Fraunces speaks (h1,h2,project names),Hanken
    carries text and interface,Plex Mono labels,nothing under 11px. Italic
    turns of phrase get their word spaces back from the roman tracking. */
@@ -56,7 +56,7 @@
 
 /* Filled buttons draw the same hard edge as the outlined ones,in a darker
    shade of themselves. Poke and stamp are in index.css. */
-.ps-dervo__decision>button,.ps-lucid__brief>button,.ps-lucid__review>button,.ps-arro__milestone button,.ps-lucid__mapping aside>button{border-radius:2px;box-shadow:0 var(--edge-y) 0 color-mix(in srgb,#000 32%,var(--edge-base,currentColor))}
+.ps-dervo__decision>button,.ps-lucid__brief>button,.ps-lucid__review>button,.ps-arro__milestone button,.ps-lucid__mapping aside>button{border-radius:2px;box-shadow:0 calc(var(--edge-y) * 1.4) calc(var(--edge-y) * 3) calc(var(--edge-y) * -0.8) color-mix(in srgb, color-mix(in srgb,#000 32%,var(--edge-base,currentColor)) 50%, transparent)}
 .ps-dervo__decision>button{--edge-base:#cfdfb8}
 .ps-lucid__brief>button,.ps-lucid__review>button{--edge-base:#795291}
 
@@ -79,10 +79,7 @@
 .ps-viewer{--p:0}
 .ps-dervo__screen,.ps-arro__phone,.ps-lucid__capture img,.ps-port__screen,[data-tilt]{transform:perspective(1100px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform var(--dur-exit) var(--ease-exit)}
 [data-tilting]{transition:transform .12s ease-out !important}
-.ps-tape{display:flex;overflow:hidden;padding:16px 0;border-top:1px solid #7c8c7830;background:#ebe4d2;color:#1f2a22;font:500 var(--label-size)/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;white-space:nowrap}
-.ps-tape span{flex:none;animation:ps-tape 70s linear infinite}
-@keyframes ps-tape{to{translate:-100% 0}}
-@media(prefers-reduced-motion:reduce){.ps-tape span{animation:none}.k-word>span{animation:none}}
+@media(prefers-reduced-motion:reduce){.k-word>span{animation:none}}
 /* One centrepiece per study, on top of the shared layer. */
 /* Dervo: the dotted sunrise from its own site, rising behind the headline; the three states get live marks */
 .ps-dervo__hero{position:relative;overflow:hidden}

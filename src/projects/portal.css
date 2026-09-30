@@ -16,11 +16,6 @@
 .pt-app--hero{transform-origin:50% 0;animation:pt-rise 1.3s var(--ease-settle) .55s both;pointer-events:none}
 @keyframes pt-rise{from{opacity:0;transform:translateY(140px) rotateX(30deg)}to{opacity:1;transform:translateY(0) rotateX(14deg)}}
 @supports (animation-timeline:view()){.pt-app--hero{animation:pt-flatten linear both;animation-timeline:view();animation-range:entry 10% cover 45%}@keyframes pt-flatten{from{transform:translateY(90px) rotateX(26deg)}to{transform:translateY(0) rotateX(0)}}}
-.pt-float{position:absolute;z-index:3;padding:9px 18px;border-radius:999px;font:600 14px/1 var(--font-sans);box-shadow:0 18px 30px -12px #000a;animation:pt-bob 6s ease-in-out infinite}
-.pt-float--a{left:36%;top:12px;background:var(--purple);color:#fff}
-.pt-float--b{left:52%;top:4px;background:#dceee4;color:#1f6f4a;animation-delay:-2s}
-.pt-float--c{left:66%;top:16px;background:#f9e3e5;color:#a83545;animation-delay:-4s}
-@keyframes pt-bob{50%{translate:0 -12px}}
 
 /* sections */
 .pt-section{padding:clamp(64px,8vw,110px) clamp(16px,6vw,88px) clamp(48px,6vw,80px)}
@@ -33,9 +28,9 @@
 .pt-steps,.pt-tabs{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin:28px auto 0;max-width:1100px}
 .pt-tabs{justify-content:flex-start;margin-top:32px}
 .pt-steps__label{font:500 var(--label-size)/1 var(--font-mono);letter-spacing:var(--label-track);text-transform:uppercase;color:var(--ink-3);margin-right:6px}
-.pt-steps button,.pt-tabs button{display:inline-flex;gap:8px;align-items:center;padding:10px 16px;border:1px solid #c6c6ce;border-radius:999px;background:#fff;color:var(--ink);font:500 13px/1 var(--font-sans);box-shadow:0 var(--edge-y) 0 #c6c6ce}
+.pt-steps button,.pt-tabs button{display:inline-flex;gap:8px;align-items:center;padding:10px 16px;border:1px solid #c6c6ce;border-radius:999px;background:#fff;color:var(--ink);font:500 13px/1 var(--font-sans);box-shadow:0 calc(var(--edge-y) * 1.4) calc(var(--edge-y) * 3) calc(var(--edge-y) * -0.8) color-mix(in srgb, #c6c6ce 50%, transparent)}
 .pt-steps small{font:500 11px/1 var(--font-mono);color:var(--ink-3)}
-.pt-steps button[aria-pressed=true],.pt-tabs button[aria-pressed=true]{background:var(--purple);border-color:var(--purple);color:#fff;box-shadow:0 var(--edge-y) 0 #4d0fb0}
+.pt-steps button[aria-pressed=true],.pt-tabs button[aria-pressed=true]{background:var(--purple);border-color:var(--purple);color:#fff;box-shadow:0 calc(var(--edge-y) * 1.4) calc(var(--edge-y) * 3) calc(var(--edge-y) * -0.8) color-mix(in srgb, #4d0fb0 50%, transparent)}
 .pt-steps button[aria-pressed=true] small{color:#dccbff}
 .pt-caption{display:grid;grid-template-columns:1fr 1fr;gap:40px;max-width:1100px;margin:34px auto 0}
 .pt-caption h3{font-family:var(--font-display);font-variation-settings:var(--display-axes);font-size:clamp(28px,3.2vw,42px);line-height:1.08;font-weight:440;letter-spacing:var(--display-track);margin:0}
@@ -71,7 +66,7 @@
 .pt-soft{color:var(--ink-3)}.pt-soft b{color:var(--ink)}.pt-mono{font-family:var(--font-mono)}
 .pt-lead{margin:0 0 20px;max-width:34em;font-size:17px;font-weight:600;line-height:1.4}
 .pt-note{margin-top:22px;font-size:13px}
-.pt-btn{padding:11px 20px;border:0;border-radius:10px;background:var(--purple);color:#fff;font:600 14px/1 var(--font-sans);box-shadow:0 var(--edge-y) 0 #4d0fb0;cursor:pointer}
+.pt-btn{padding:11px 20px;border:0;border-radius:10px;background:var(--purple);color:#fff;font:600 14px/1 var(--font-sans);box-shadow:0 calc(var(--edge-y) * 1.4) calc(var(--edge-y) * 3) calc(var(--edge-y) * -0.8) color-mix(in srgb, #4d0fb0 50%, transparent);cursor:pointer}
 .pt-btn:disabled{opacity:.35;box-shadow:none;cursor:not-allowed}
 .pt-link{border:0;background:none;padding:0;color:var(--purple);font:500 13.5px/1 var(--font-sans);cursor:pointer;white-space:nowrap}
 .pt-attn a{color:var(--purple);font-weight:500;font-size:13.5px;white-space:nowrap}
@@ -147,6 +142,6 @@
   .pt-attn li{grid-template-columns:10px 1fr;}.pt-attn li>span,.pt-attn li>a,.pt-attn li>button{grid-column:2;justify-self:start}
   .pt-timeline li{grid-template-columns:70px 12px 1fr;gap:0 10px}.pt-timeline li:not(:last-child)::after{left:calc(70px + 10px + 5px)}
   .pt-pick__pair{grid-template-columns:1fr}.pt-pick__pair i{display:none}
-  .pt-float{display:none}.pt-hero__stage{height:300px}
+  .pt-hero__stage{height:300px}
 }
-@media(prefers-reduced-motion:reduce){.pt-app--hero,.pt-float,.pt-hero__glow,.pt-live,.pt-bars i,.pt-timeline li,.pt-view{animation:none}}
+@media(prefers-reduced-motion:reduce){.pt-app--hero,.pt-hero__glow,.pt-live,.pt-bars i,.pt-timeline li,.pt-view{animation:none}}

@@ -313,13 +313,14 @@ html[data-arc="dark"] .day-clock {
    letters above are the original. Keyboard focus gets the clay ring and no
    movement, so a control focused by script never looks caught mid-hop.
 
-   Stamp, on press: it drives down past where it started and its hard edge
-   flattens, like a stamp meeting paper. Letting go springs it back.
+   Stamp, on press: it drives down past where it started and its shadow
+   closes up, like a stamp meeting paper. Letting go springs it back.
 
    Both use the individual `translate` and `rotate` properties, so they stack
-   on any `transform` a component already owns. A control with a hard edge
-   draws it as `box-shadow: 0 var(--edge-y) 0 <ink>`; poke and stamp move
-   --edge-y and the edge follows. To add a control, give it the `poke` class or
+   on any `transform` a component already owns. A control that lifts off the
+   page draws a soft shadow sized by --edge-y. Never a hard offset edge, which
+   is neubrutalism and not this taste. Poke and stamp move --edge-y and the
+   shadow follows. To add a control, give it the `poke` class or
    add its selector to the one list below. Do not write a hover or press
    style for a control anywhere else. Text links keep the ink underline. Cards
    lift and settle level; the soft shadow under them may deepen with the lift.
@@ -348,6 +349,10 @@ html[data-arc="dark"] .day-clock {
 :where(.project-folders button) {
   --poke-lift: 3px;
   --poke-turn: 0deg;
+}
+:where(.sp-print) {
+  --poke-lift: 8px;
+  --poke-turn: calc(var(--tilt, 0deg) * -1);
 }
 /* Segmented controls share a pill: lift, no turn. */
 :where(.simulation-console button, .city-cabin-nav button) {
@@ -391,6 +396,7 @@ html[data-arc="dark"] .day-clock {
   /* the road: Dervo's board is a stage for its own buttons, so it stays put */
   .sp-board:not(.sp-board--lead),
   .sp-card,
+  .sp-print,
   .sp-foot__hello,
   .sp-catchup li button,
   /* the drive */
@@ -471,7 +477,7 @@ html[data-arc="dark"] .day-clock {
     --poke-turn: 0deg;
     --stamp-depth: 0px;
   }
-  :where(.ps-project, .sp-board:not(.sp-board--lead), .sp-card, .project-folders button) {
+  :where(.ps-project, .sp-board:not(.sp-board--lead), .sp-card, .sp-print, .project-folders button) {
     --poke-lift: 0px;
     --poke-turn: 0deg;
   }
