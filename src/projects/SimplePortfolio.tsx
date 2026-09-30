@@ -10,7 +10,6 @@ import { email } from '../lib/site';
 import './simple.css';
 import { Car } from './FlatCar';
 import { Glovebox } from './Glovebox';
-import { HareMark } from '../components/HareMark';
 import { Grain } from '../components/Grain';
 import { covers, mileLabel, roadProjects } from './road-lineup';
 
@@ -255,7 +254,6 @@ function Drive() {
       </motion.div>
 
       <motion.div className="sp-road" style={{ filter: dim }} aria-hidden="true"><motion.div className="sp-road__dashes" style={{ backgroundPosition: dashes }} /></motion.div>
-      <RoadHare speed={speed} progress={progress} />
       <motion.div className="sp-car-lane" style={{ x: carX }} aria-hidden="true">
         <motion.div className="sp-speedlines" style={{ opacity: lines }} />
         <Car pitch={pitch} wheel={wheel} blur={blur} exhaust={exhaust} lights={lights} revving={revving} />
@@ -281,17 +279,6 @@ function Drive() {
 
 type Motion = { distance: MotionValue<number>; speed: MotionValue<number> };
 
-/* The hare from the old trail, on the verge ahead of the car. It sits and breathes until the road picks up,
-   then gallops with legs matched to the ground, and settles again when you stop: dash and rest. */
-function RoadHare({ speed, progress }: { speed: MotionValue<number>; progress: MotionValue<number> }) {
-  const [running, setRunning] = useState(false);
-  useMotionValueEvent(speed, 'change', v => setRunning(was => (was ? v > 140 : v > 420)));
-  const gait = useTransform(speed, [300, 3200], ['0.62s', '0.2s']);
-  const ink = useTransform(progress, [0.72, 0.9], ['#1f2a22', '#f4efe4']);
-  return <motion.div className={`sp-hare ${running ? 'is-running' : 'is-resting'}`} style={{ color: ink, '--gait': gait } as unknown as CSSProperties} aria-hidden="true">
-    <HareMark pose={running ? 'running' : 'sitting'} />
-  </motion.div>;
-}
 
 /* Flat versions of the 3D drive's first two stops, with the same signs.
    The café's sign swings in the car's draft; the courts always have a rally going. */

@@ -2,7 +2,7 @@
 
 Read from Bryce's own notes, not guessed: `claude-hub/personal-projects/design/TASTE.md` (28 saved references),
 `design/motion/default/README.md` (the motion rules), `claude-hub/voice.md` (house style), this repo's `/previous`
-site data (`src/lib/site.ts`) and its git history (the hare), and the DD portal case study. Employer-owned material
+site data (`src/lib/site.ts`) and its git history, and the DD portal case study. Employer-owned material
 stays anonymised.
 
 ## Look
@@ -17,9 +17,9 @@ stays anonymised.
 
 - One statement move per viewport, at most, and it plays once. Everything else is small.
 - The signature overshoot curve is for stamps, pokes and creatures. Hover and press stay cheap.
-- Ambient loops are slow. Name them after what they do (`hare-breath`, not `dot-3-updown`).
+- Ambient loops are slow. Name them after what they do (`card-drift`, not `dot-3-updown`).
 - Transform and opacity only. Ship the reduced-motion block.
-- The creature is the hare: engraved line, sits and breathes, flicks an ear, gallops with legs matched to the ground, rests.
+- No rabbit or hare. Bryce said so. If a creature comes back it should be his own idea.
 
 ## Voice
 

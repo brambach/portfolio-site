@@ -1049,28 +1049,8 @@ a.sp-item__card { cursor: pointer; }
 @keyframes sp-nudge { 0%, 88%, 100% { translate: 0 0; } 92% { translate: 6px 0; } 96% { translate: 2px 0; } }
 @media (prefers-reduced-motion: reduce) { .sp-cue__pill { animation: none; } }
 
-/* ---------- The hare: one creature, engraved, that reads alive ---------- */
-.hare-fB { visibility: hidden; }
-.sp-hare { position: absolute; z-index: 2; left: calc(8vw + clamp(200px, 30vw, 380px) + 5vw); bottom: calc(23% + 4px); width: clamp(60px, 6.4vw, 92px); pointer-events: none; }
-.sp-hare svg { display: block; width: 100%; overflow: visible; }
-.sp-hare.is-running .hare-fA { animation: hare-frame-stretch var(--gait, 0.4s) steps(1) infinite; }
-.sp-hare.is-running .hare-fB { animation: hare-frame-gather var(--gait, 0.4s) steps(1) infinite; }
-.sp-hare.is-running svg { animation: hare-bound var(--gait, 0.4s) ease-in-out infinite; }
-@keyframes hare-frame-stretch { 0% { visibility: visible; } 50% { visibility: hidden; } }
-@keyframes hare-frame-gather { 0% { visibility: hidden; } 50% { visibility: visible; } }
-@keyframes hare-bound { 50% { translate: 0 -5px; } }
-.hare-sit { transform-box: fill-box; transform-origin: 50% 100%; animation: hare-breath 3.6s ease-in-out infinite; }
-@keyframes hare-breath { 50% { transform: scale(1.008, 1.014); } }
-.hare-ears { transform-box: fill-box; transform-origin: 15% 90%; animation: hare-ear-flick 13s ease-in-out infinite; }
-@keyframes hare-ear-flick { 0%, 92%, 100% { transform: rotate(0deg); } 94% { transform: rotate(-9deg); } 96.5% { transform: rotate(3deg); } 98% { transform: rotate(-2deg); } }
-@keyframes hare-ear-hello { 0%, 60%, 100% { transform: rotate(0deg); } 12% { transform: rotate(-9deg); } 28% { transform: rotate(3deg); } 42% { transform: rotate(-2deg); } }
-@media (max-width: 700px) { .sp-hare { left: calc(8vw + 200px + 6vw); } }
-
-/* by the Say hello button, in the glovebox: it notices you reach for it */
+/* the finale sits in the glovebox */
 .sp-glove__finale { position: relative; }
-.sp-glove__hare { position: absolute; right: 2%; bottom: clamp(56px, 8vw, 96px); width: clamp(84px, 10vw, 140px); color: #f4efe4; opacity: 0.9; }
-.sp-glove__finale:has(.sp-foot__hello:hover, .sp-foot__hello:focus-visible) .hare-ears { animation: hare-ear-hello 0.9s ease-in-out; }
-@media (max-width: 700px) { .sp-glove__hare { display: none; } }
 
 /* ---------- Off the clock: photographs own the colour, the page stays quiet ---------- */
 .sp-off { margin-top: clamp(80px, 11vw, 150px); }
@@ -1083,5 +1063,4 @@ a.sp-item__card { cursor: pointer; }
 .sp-print__tape { position: absolute; z-index: 1; top: -9px; width: 64px; height: 18px; background: rgb(232 212 138 / 0.65); box-shadow: 0 1px 2px rgb(0 0 0 / 0.25); }
 .sp-print__tape--left { left: 14%; rotate: -5deg; }
 .sp-print__tape--right { right: 14%; rotate: 4deg; }
-@media (prefers-reduced-motion: reduce) { .hare-sit, .hare-ears, .sp-hare svg, .sp-hare .hare-fA, .sp-hare .hare-fB { animation: none; } }
 @media (max-width: 700px) { .sp-prints { grid-template-columns: repeat(2, 1fr); gap: 22px 14px; } .sp-print figure { padding: 7px 7px 0; } .sp-print figcaption { font-size: 20px; padding: 8px 2px 10px; } }
