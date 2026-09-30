@@ -1064,3 +1064,7 @@ a.sp-item__card { cursor: pointer; }
 .sp-print__tape--left { left: 14%; rotate: -5deg; }
 .sp-print__tape--right { right: 14%; rotate: 4deg; }
 @media (max-width: 700px) { .sp-prints { grid-template-columns: repeat(2, 1fr); gap: 22px 14px; } .sp-print figure { padding: 7px 7px 0; } .sp-print figcaption { font-size: 20px; padding: 8px 2px 10px; } }
+
+/* Phones rubber-band past the ends of the page and show whatever is behind it. On the road that used to be cream,
+   a pale strip under the night stop. Sky colour above, night colour below, and no bounce where the browser allows. */
+html:has(.sp-page) { background: linear-gradient(#f6dcc0 50%, #0d1712 50%); overscroll-behavior-y: none; }
