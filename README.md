@@ -1,21 +1,39 @@
-# brycerambach.com
+# Bryce Rambach
 
-Bryce Rambach's portfolio, explored from a classic green Porsche 911. The first version now focuses on three cabin objects, one short scenic drive and one Tahoe-inspired overlook. Visual and performance acceptance is still in progress.
+A portfolio you scroll like a road. A flat green 911 drives past a billboard for each project, and if you'd rather take the wheel yourself, there's a 3D Porsche one click away.
 
-## Local preview
+**Live at [brycerambach.com](https://brycerambach.com)**
 
-```bash
-npm ci
-npm run dev
-```
+![The road: scroll and the car drives the page](docs/readme/road.jpg)
 
-Vite defaults to port 3000. This worktree uses its own preview:
+## What's in it
 
-```bash
-npm run dev -- --port 3001 --strictPort
-```
+| Where | What it is |
+| --- | --- |
+| `/` | The road. Scrolling drives the car past a billboard per project, with Dervo first. Coffee shop and tennis club on the way, a night stop at the end with the archive as a pile of cards, and a few photos from off the clock. |
+| `/projects/<name>` | A study for each project: Dervo, the integration portal, Lucid, Arro, Port and AgentSky. Each one has something you can poke, not just screenshots. |
+| `/drive` | The 3D Porsche. Open the door, turn the key, drive from town to a Tahoe-style overlook. `/drive?from=work` skips the walk-up. |
+| `/previous` | The earlier version of the site, kept around. |
 
-Open http://localhost:3001, select the driver door, explore the cabin and turn the ignition key. Projects and contact are available immediately from the site menu.
+![Dervo's stop on the road](docs/readme/road-stop.jpg)
+
+### The end of the road
+
+The archive lives in the glovebox. Each card is made of what it is: recordings are film strips, source-only work is a terminal window, the private one is a folder with redaction bars, concepts are sticky notes. Hover or tab to one and it opens onto the honest note about what survives of it.
+
+![The glovebox](docs/readme/glovebox.jpg)
+
+![Off the clock](docs/readme/off-the-clock.jpg)
+
+### The studies
+
+![The Dervo study](docs/readme/study-dervo.jpg)
+
+Every study says what's real and what isn't. Dervo is in private beta and its screens show example projects. The integration portal is employer-owned work, so it's redrawn with a fictional cast and nothing in it talks to a backend. Nothing is presented as adoption or results that were never measured.
+
+### The drive
+
+![The 3D drive](docs/readme/drive.jpg)
 
 | Control | Action |
 | --- | --- |
@@ -25,50 +43,51 @@ Open http://localhost:3001, select the driver door, explore the cabin and turn t
 | Q / E | Downshift / upshift |
 | Space | Pull over |
 | K | Start the engine |
-| R, while parked | Rev the engine |
+| H | Horn |
 | Cruise button | Follow the road and traffic automatically |
 
-On-screen steering, pedals and gear buttons also work with touch. Pressing a pedal or steering takes over from Cruise. Selecting projects, the racket or contact while driving parks the car before opening the object.
+Touch controls work too. The scene credits (models, sounds, textures) are in the drive's menu.
 
-The scenic drive uses a two-lane arcade circuit with matching traffic, gravel shoulders and one overlook. Cruise reaches it in about 2 minutes 21 seconds in the current simulation. Visitors can turn the engine off while parked and resume without changing position abruptly. Manual gears stay selected for eight seconds, after which automatic shifting resumes. A downshift that would exceed the rev limit is ignored. The drivetrain tops out at 7,000 RPM and 56 metres per second, about 202 km/h. Traffic and bends affect the speed you can reach.
+## Built with
 
-The same RPM state feeds the tachometer, on-screen instruments and engine playback. The engine mix is louder under load. Saved mute and volume preferences are preserved.
+React 19, TypeScript, Vite 6 and Tailwind 4 for the pages, plus plain CSS where a component owns its look. [Motion](https://motion.dev) and Lenis for the movement, Three.js r185 for the drive, Vitest for tests. It deploys on Vercel, and the functions in `api/` back the race times and a private admin page.
 
-## Pages and files
-
-- `/` opens the flat road, the front door. `/work` is the same page.
-- `/drive` opens the 3D Porsche. `/drive?from=work` skips the walk-up and starts at the overlook. Old `/?town`, `/?forest` and `/?from=work` links still open it.
-- `/drive?city` preserves the city prototype.
-- `/drive?journey` preserves the earlier multi-stop experiment.
-- `/projects` opens project notes without the scene.
-- `/previous` keeps the earlier portfolio available.
-- `/entrance-still` opens the photographic entrance study.
-
-React 19, TypeScript, Vite 6 and Three.js r185.
-
-- `src/prototype/Entrance.tsx`: entry, accessible cabin controls and driving instruments.
-- `src/prototype/car-scene.ts`: renderer, car, camera and physical objects.
-- `src/prototype/city-path.ts`: boulevard geometry and road queries.
-- `src/prototype/city-route.ts`: manual driving, Cruise and parking.
-- `src/prototype/city-world.ts`: skyline, road, procedural windows and streetlights.
-- `src/prototype/city-traffic.ts` and `city-traffic-mesh.ts`: traffic behaviour and instanced cars.
-- `src/prototype/engine-sound.ts` and `car-audio.ts`: shared drivetrain state and recorded engine layers.
-- `src/prototype/render-quality.ts`: canvas resolution adjustment when frames run slow.
-
-The default homepage starts the complete guided town-to-Tahoe journey, including the mandatory cabin tour, optional café and tennis stops, route map and portfolio finish. `?town` remains a compatible preview URL. The older forest starting point is available at `?forest`; city and multi-stop walking experiments remain at `?city` and `?journey`. The finish line and acceptance evidence are recorded in `docs/implementation/porsche-journey-goal.md`.
-
-## Checks
+## Run it
 
 ```bash
-npm run lint
-npm test
-npm run build
+npm ci
+npm run dev
 ```
 
-See `src/prototype/VERIFICATION.md` for the latest results, browser checks and limits. Local development builds accept `?profile=journey` for sustained frame windows on the canvas's `data-scene-profile` attribute. The older bare `?profile` sampler covers only the original 25–150 metre interval and isn't suitable for the new forest starting point. It doesn't transmit data or run in production.
+The dev server starts on http://localhost:3000. To pick a port, `npm run dev -- --port 3001 --strictPort`.
 
-Nothing in this pass has been committed, pushed or deployed.
+```bash
+npm run lint    # tsc --noEmit
+npm test        # vitest
+npm run build   # vite build
+```
 
-### Preserved experiments
+The race times and admin functions need Upstash/KV environment variables that aren't in the repo. Everything else runs without them.
 
-The multi-stop route at `/?journey` includes its map, café visit, trail walk and access roads. These aren't required first-version features and shouldn't be expanded while finishing the focused experience. The future list and archived implementation history are in `docs/implementation/`. Nothing has been deployed.
+## Where things are
+
+| Path | What's there |
+| --- | --- |
+| `src/main.tsx` | Routing. It's path-based, with no router library. A new route also needs a rewrite in `vercel.json`. |
+| `src/projects/SimplePortfolio.tsx` | The road: the scroll-driven scene, billboards and stops. |
+| `src/projects/Glovebox.tsx` | The night stop at the end. |
+| `src/projects/catalog.ts` and `road-lineup.ts` | Project data, and the order and covers shared by the road and the 3D billboards. |
+| `src/projects/*Study.tsx` | One file per study. `StudyKit.tsx` holds the shared motion. |
+| `src/projects/PortalStudy.tsx` | The integration portal redraw (`portal.css`). |
+| `src/prototype/` | The 3D drive: scene, route, traffic, audio, the cabin objects. |
+| `src/index.css` | Design tokens, type roles, and the one poke and one stamp every control shares. |
+| `docs/site-personality.md` | The taste, motion and voice rules the site follows. |
+| `docs/implementation/` | Plans and history for the drive. |
+
+## How it's meant to feel
+
+One big type decision per screen in serif display. Photography carries the colour and the interface stays quiet. Forest and cream, with one warm accent spent on small marks. Paper, tape and handwriting so it feels made. One statement move per screen, ambient loops kept slow, and a reduced-motion setting that is respected. No hard offset shadows, no thick borders. The full version is in `docs/site-personality.md`.
+
+## Licence
+
+No open-source licence is attached, so treat it as all rights reserved. The 3D, audio and texture assets carry their own terms, credited in the drive. If you want to reuse something, ask.
