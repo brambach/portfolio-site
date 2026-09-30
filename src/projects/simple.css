@@ -849,7 +849,7 @@
    The hover lives on the still <li>, never on the thing that moves, so nothing slides out
    from under the pointer and flips back. */
 .sp-item { position: relative; }
-.sp-item:is(:hover, :has(:focus-visible)) { z-index: 2; }
+.sp-item:is(.is-open, :has(:focus-visible)) { z-index: 2; }
 .sp-item__float { display: block; perspective: 900px; animation: sp-bob 14s ease-in-out infinite; animation-delay: calc(var(--i) * -1.7s); }
 @keyframes sp-bob { 50% { translate: 0 -5px; } }
 .sp-item__card {
@@ -882,7 +882,7 @@ a.sp-item__card { cursor: pointer; }
 
 /* film (recordings): a strip with sprocket holes. Flips like a reel. */
 .sp-item--film .sp-item__card { transition: transform 700ms var(--ease-stamp); }
-.sp-item--film:is(:hover, :has(:focus-visible)) .sp-item__card { transform: rotateY(180deg); }
+.sp-item--film:is(.is-open, :has(:focus-visible)) .sp-item__card { transform: rotateY(180deg); }
 .sp-item--film .sp-item__front, .sp-item--film .sp-item__back { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
 .sp-item--film .sp-item__back { transform: rotateY(180deg); background: #efe3c8; color: #1f2a22; }
 .sp-item--film .sp-item__front {
@@ -905,7 +905,7 @@ a.sp-item__card { cursor: pointer; }
 .sp-item--source .sp-item__deco { top: 13px; left: 88px; color: var(--acc, #8fd19e); text-transform: none; letter-spacing: 0.02em; }
 .sp-item--source .sp-item__deco u { display: inline-block; width: 7px; height: 12px; margin-left: 4px; vertical-align: -2px; background: var(--acc, #8fd19e); animation: sp-rec 1s steps(2) infinite; }
 .sp-item--source .sp-item__kind { color: var(--acc, #8fd19e); opacity: 0.85; }
-.sp-item--source:is(:hover, :has(:focus-visible)) .sp-item__front { transform: translateY(calc(100% - 40px)); }
+.sp-item--source:is(.is-open, :has(:focus-visible)) .sp-item__front { transform: translateY(calc(100% - 40px)); }
 
 /* private: a manila folder. The text sits under black bars that wipe away. */
 .sp-item--redacted .sp-item__back { background: #e9dbb7; color: #3a3327; padding-bottom: 96px; }
@@ -916,14 +916,14 @@ a.sp-item__card { cursor: pointer; }
   background: repeating-linear-gradient(#1d1b16 0 13px, transparent 13px 18px) 100% 0 / 100% 100% no-repeat;
   transition: color 300ms ease-out 250ms, background-size 520ms var(--ease-stamp);
 }
-.sp-item--redacted:is(:hover, :has(:focus-visible)) .sp-item__text { color: #3a3327; background-size: 0% 100%; }
+.sp-item--redacted:is(.is-open, :has(:focus-visible)) .sp-item__text { color: #3a3327; background-size: 0% 100%; }
 .sp-item--redacted .sp-item__front { background: linear-gradient(transparent 62%, #d2b884 62%); color: #2f2a1e; }
 .sp-item--redacted .sp-item__kind { opacity: 0.75; }
 .sp-item__stamp { position: absolute; top: 16px; right: 16px; padding: 5px 11px; border: 2px solid #c14e2b; border-radius: 3px; color: #c14e2b; font: 600 12px/1 var(--font-mono); letter-spacing: 0.2em; text-transform: uppercase; rotate: 7deg; opacity: 0.85; }
 
 /* concept: a sticky note that flips over head first */
 .sp-item--note .sp-item__card { transition: transform 700ms var(--ease-stamp); }
-.sp-item--note:is(:hover, :has(:focus-visible)) .sp-item__card { transform: rotateX(180deg); }
+.sp-item--note:is(.is-open, :has(:focus-visible)) .sp-item__card { transform: rotateX(180deg); }
 .sp-item--note .sp-item__front, .sp-item--note .sp-item__back { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
 .sp-item--note .sp-item__back { transform: rotateX(180deg); background: color-mix(in srgb, var(--acc, #f3dc79) 55%, #fffdf7); color: #3e3510; }
 .sp-item--note .sp-item__front { background: var(--acc, #f3dc79); color: #3e3510; }
@@ -939,7 +939,7 @@ a.sp-item__card { cursor: pointer; }
 .sp-item--sky .sp-item__kind { opacity: 0.9; }
 .sp-item__cloud { position: absolute; left: -10%; top: 18%; width: 60%; height: 34%; border-radius: 50%; background: #fff; box-shadow: 46px -18px 0 4px #fff, 110px 6px 0 -2px #fff, 60px 16px 0 6px #fff; opacity: 0.85; filter: blur(1px); animation: sp-cloud 18s ease-in-out infinite alternate; }
 @keyframes sp-cloud { to { translate: 26% 0; } }
-.sp-item--sky:is(:hover, :has(:focus-visible)) .sp-item__front { transform: translateY(-104%); }
+.sp-item--sky:is(.is-open, :has(:focus-visible)) .sp-item__front { transform: translateY(-104%); }
 .sp-glove__finale { margin-top: clamp(90px, 13vw, 180px); padding-bottom: clamp(56px, 8vw, 96px); }
 .sp-glove__finale p {
   margin: 0;
@@ -1068,3 +1068,35 @@ a.sp-item__card { cursor: pointer; }
 /* Phones rubber-band past the ends of the page and show whatever is behind it. On the road that used to be cream,
    a pale strip under the night stop. Sky colour above, night colour below, and no bounce where the browser allows. */
 html:has(.sp-page) { background: linear-gradient(#f6dcc0 50%, #0d1712 50%); overscroll-behavior-y: none; }
+@media (max-width: 700px) {
+  .sp-glove__cards { grid-template-columns: 1fr; gap: 22px; }
+  .sp-item__card { aspect-ratio: 4 / 3; }
+  .sp-item--redacted .sp-item__card { aspect-ratio: 1 / 0.95; }
+}
+/* thumbs: the links that sit in a line of text get room to be hit */
+@media (pointer: coarse) {
+  .sp-mode > * { padding: 12px 16px; }
+  .sp-glove__actions a:not(.sp-foot__hello) { padding: 12px 6px; }
+}
+
+/* Phones on their side: the screen is wide but only 320 to 400px tall, so the road keeps the essentials. */
+@media (max-height: 520px) {
+  .sp-panel--hello { padding-top: 58px; }
+  .sp-panel--hello h1 { font-size: clamp(24px, 7.6svh, 40px); }
+  .sp-panel--hello .sp-sub { margin-top: 12px; padding: 9px 16px 11px; font-size: clamp(16px, 5.2svh, 22px); }
+  .sp-sub__aside, .sp-cue__note, .sp-note, .sp-lakeside, .sp-tarmac, .sp-ghost { display: none; }
+  .sp-cue { margin-top: 12px; }
+  .sp-cue__pill { padding: 8px 14px 8px 10px; }
+  .sp-dash { top: auto; bottom: calc(4% + 6px); }
+  .sp-panel--overlook { padding-top: 40px; }
+  .sp-panel--overlook h2 { font-size: clamp(22px, 7.4svh, 38px); }
+  .sp-panel--overlook p { margin: 8px 0 14px; font-size: 14px; max-width: 34em; }
+  .sp-signpost { margin-bottom: 10px; }
+  .sp-lead__pitch, .sp-lead__role { display: none; }
+  .sp-catchup { min-height: 0; padding-top: 22px; }
+  .sp-catchup li:nth-child(n+2), .sp-catchup__head span, .sp-catchup__summary, .sp-catchup__bar { display: none; }
+  .sp-lead__text h2 { font-size: clamp(28px, 9svh, 44px); }
+  .sp-lead__links { padding-top: 6px; }
+  .sp-glove { padding-top: 56px; }
+  .sp-glove h2 { font-size: clamp(32px, 11svh, 56px); }
+}
