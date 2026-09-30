@@ -1,3 +1,5 @@
+> **Not the live design system.** This is an older Apple-style reference. The site's real taste, voice and motion rules are in `docs/site-personality.md`, and its tokens are in `src/index.css`.
+
 # Design System Inspired by Apple
 
 ## 1. Visual Theme & Atmosphere

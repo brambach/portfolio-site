@@ -19,7 +19,6 @@ export function ProjectViewer({project,close,choose}:{project:Project;close:()=>
   const closeButton=useRef<HTMLButtonElement>(null);
   useStudyReveal(content,project.id);
   useStudyMotion(dialog,content,project.id);
-  const tape=`${project.category} · ${project.status} · ${project.role} · `.repeat(4);
   const next=projects[(projects.indexOf(project)+1)%projects.length];
   useEffect(()=>{
     const overflow=document.body.style.overflow;
@@ -48,7 +47,6 @@ export function ProjectViewer({project,close,choose}:{project:Project;close:()=>
       <Suspense fallback={<div className="ps-opening" role="status">Opening {project.name}…</div>}>
         {project.id==='agentsky'?<AgentSky/>:project.id==='port'?<PortStudy/>:project.id==='dervo'?<DervoStudy/>:project.id==='arro'?<ArroStudy/>:project.id==='lucid'?<LucidStudy/>:<PortalStudy/>}
       </Suspense>
-      <div className="ps-tape" aria-hidden="true"><span>{tape}</span><span>{tape}</span></div>
       <button className="ps-next" onClick={()=>choose(next.id)}><span className="ps-eyebrow">Next project</span><strong>{next.name}</strong><span aria-hidden="true">→</span></button>
     </div>
   </dialog>,document.body);

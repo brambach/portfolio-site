@@ -205,9 +205,6 @@ export default function PortalStudy() {
       <p className="pt-hero__sub">A clear path through<br />a complicated delivery.</p>
       <span className="pt-hero__role">Interface design &amp; frontend engineering<br />HR and payroll integrations</span>
       <div className="pt-hero__stage" aria-hidden="true">
-        <span className="pt-float pt-float--a">Your move</span>
-        <span className="pt-float pt-float--b">We’re on it</span>
-        <span className="pt-float pt-float--c">overdue 2d</span>
         <AppFrame staff nav={staffNav('Today')} crumb="Today" className="pt-app--hero"><Today /></AppFrame>
       </div>
     </header>

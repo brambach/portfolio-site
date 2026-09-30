@@ -190,7 +190,7 @@
   color: var(--sp-accent-ink) !important;
   text-decoration: none;
   font-weight: 600;
-  box-shadow: 0 var(--edge-y) 0 color-mix(in srgb, #000 30%, var(--edge-base, var(--sp-accent)));
+  box-shadow: 0 calc(var(--edge-y) * 1.4) calc(var(--edge-y) * 3) calc(var(--edge-y) * -0.8) color-mix(in srgb, color-mix(in srgb, #000 30%, var(--edge-base, var(--sp-accent))) 50%, transparent);
 }
 
 /* ---------- The drive: a flat road scene pinned while you scroll ---------- */
@@ -850,8 +850,8 @@
    from under the pointer and flips back. */
 .sp-item { position: relative; }
 .sp-item:is(:hover, :has(:focus-visible)) { z-index: 2; }
-.sp-item__float { display: block; perspective: 900px; animation: sp-bob 7s ease-in-out infinite; animation-delay: calc(var(--i) * -0.9s); }
-@keyframes sp-bob { 50% { translate: 0 -7px; } }
+.sp-item__float { display: block; perspective: 900px; animation: sp-bob 14s ease-in-out infinite; animation-delay: calc(var(--i) * -1.7s); }
+@keyframes sp-bob { 50% { translate: 0 -5px; } }
 .sp-item__card {
   position: relative;
   display: block;
@@ -894,14 +894,14 @@ a.sp-item__card { cursor: pointer; }
   color: #efe3c8;
 }
 .sp-item__deco { position: absolute; top: 18px; left: 34px; font: 500 var(--label-size)/1 var(--font-mono); letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.85; }
-.sp-item--film .sp-item__deco b { color: #e0503a; animation: sp-rec 1.4s steps(2) infinite; }
+.sp-item--film .sp-item__deco b { color: #c14e2b; animation: sp-rec 2.6s steps(2) infinite; }
 @keyframes sp-rec { 50% { opacity: 0.15; } }
 
 /* source: a terminal window. The window drops away like a drawer, and the printout is underneath. */
 .sp-item--source .sp-item__card { overflow: hidden; }
 .sp-item--source .sp-item__back { background: #f6f1e3; color: #1f2a22; padding-bottom: 46px; }
 .sp-item--source .sp-item__front { justify-content: flex-start; padding-top: 52px; background: #0d1712; color: #dfe9d3; transition: transform 650ms var(--ease-stamp); }
-.sp-item--source .sp-item__front::before { content: ''; position: absolute; top: 15px; left: 18px; width: 9px; height: 9px; border-radius: 50%; background: #e0503a; box-shadow: 16px 0 #e6bf77, 32px 0 #63cc9d; }
+.sp-item--source .sp-item__front::before { content: ''; position: absolute; top: 15px; left: 18px; width: 9px; height: 9px; border-radius: 50%; background: #c14e2b; box-shadow: 16px 0 rgb(233 223 197 / 0.35), 32px 0 rgb(233 223 197 / 0.35); }
 .sp-item--source .sp-item__deco { top: 13px; left: 88px; color: var(--acc, #8fd19e); text-transform: none; letter-spacing: 0.02em; }
 .sp-item--source .sp-item__deco u { display: inline-block; width: 7px; height: 12px; margin-left: 4px; vertical-align: -2px; background: var(--acc, #8fd19e); animation: sp-rec 1s steps(2) infinite; }
 .sp-item--source .sp-item__kind { color: var(--acc, #8fd19e); opacity: 0.85; }
@@ -919,7 +919,7 @@ a.sp-item__card { cursor: pointer; }
 .sp-item--redacted:is(:hover, :has(:focus-visible)) .sp-item__text { color: #3a3327; background-size: 0% 100%; }
 .sp-item--redacted .sp-item__front { background: linear-gradient(transparent 62%, #d2b884 62%); color: #2f2a1e; }
 .sp-item--redacted .sp-item__kind { opacity: 0.75; }
-.sp-item__stamp { position: absolute; top: 16px; right: 16px; padding: 5px 11px; border: 2px solid #b8382b; border-radius: 3px; color: #b8382b; font: 600 12px/1 var(--font-mono); letter-spacing: 0.2em; text-transform: uppercase; rotate: 7deg; opacity: 0.85; }
+.sp-item__stamp { position: absolute; top: 16px; right: 16px; padding: 5px 11px; border: 2px solid #c14e2b; border-radius: 3px; color: #c14e2b; font: 600 12px/1 var(--font-mono); letter-spacing: 0.2em; text-transform: uppercase; rotate: 7deg; opacity: 0.85; }
 
 /* concept: a sticky note that flips over head first */
 .sp-item--note .sp-item__card { transition: transform 700ms var(--ease-stamp); }
@@ -1021,15 +1021,15 @@ a.sp-item__card { cursor: pointer; }
   font: 500 var(--label-size)/1 var(--font-mono);
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  box-shadow: 0 3px 0 color-mix(in srgb, #000 40%, var(--sp-ink));
-  animation: sp-nudge 2.4s var(--ease-stamp) infinite;
+  box-shadow: 0 8px 16px -8px rgb(31 42 34 / 0.55);
+  animation: sp-nudge 11s var(--ease-stamp) infinite;
 }
 .sp-cue__road {
   width: 64px;
   height: 3px;
   border-radius: 2px;
   background: linear-gradient(90deg, var(--sp-dash) 0 55%, transparent 55%) 0 50% / 18px 100% repeat-x;
-  animation: sp-dashes 600ms linear infinite;
+  animation: sp-dashes 1.6s linear infinite;
 }
 .sp-cue__note {
   display: flex;
@@ -1046,5 +1046,42 @@ a.sp-item__card { cursor: pointer; }
 }
 .sp-cue__note svg { width: 34px; height: 26px; overflow: visible; scale: -1 -1; color: var(--sp-green); }
 @keyframes sp-dashes { to { background-position-x: -18px; } }
-@keyframes sp-nudge { 0%, 60%, 100% { translate: 0 0; } 75% { translate: 6px 0; } 88% { translate: 2px 0; } }
+@keyframes sp-nudge { 0%, 88%, 100% { translate: 0 0; } 92% { translate: 6px 0; } 96% { translate: 2px 0; } }
 @media (prefers-reduced-motion: reduce) { .sp-cue__pill { animation: none; } }
+
+/* ---------- The hare: one creature, engraved, that reads alive ---------- */
+.hare-fB { visibility: hidden; }
+.sp-hare { position: absolute; z-index: 2; left: calc(8vw + clamp(200px, 30vw, 380px) + 5vw); bottom: calc(23% + 4px); width: clamp(60px, 6.4vw, 92px); pointer-events: none; }
+.sp-hare svg { display: block; width: 100%; overflow: visible; }
+.sp-hare.is-running .hare-fA { animation: hare-frame-stretch var(--gait, 0.4s) steps(1) infinite; }
+.sp-hare.is-running .hare-fB { animation: hare-frame-gather var(--gait, 0.4s) steps(1) infinite; }
+.sp-hare.is-running svg { animation: hare-bound var(--gait, 0.4s) ease-in-out infinite; }
+@keyframes hare-frame-stretch { 0% { visibility: visible; } 50% { visibility: hidden; } }
+@keyframes hare-frame-gather { 0% { visibility: hidden; } 50% { visibility: visible; } }
+@keyframes hare-bound { 50% { translate: 0 -5px; } }
+.hare-sit { transform-box: fill-box; transform-origin: 50% 100%; animation: hare-breath 3.6s ease-in-out infinite; }
+@keyframes hare-breath { 50% { transform: scale(1.008, 1.014); } }
+.hare-ears { transform-box: fill-box; transform-origin: 15% 90%; animation: hare-ear-flick 13s ease-in-out infinite; }
+@keyframes hare-ear-flick { 0%, 92%, 100% { transform: rotate(0deg); } 94% { transform: rotate(-9deg); } 96.5% { transform: rotate(3deg); } 98% { transform: rotate(-2deg); } }
+@keyframes hare-ear-hello { 0%, 60%, 100% { transform: rotate(0deg); } 12% { transform: rotate(-9deg); } 28% { transform: rotate(3deg); } 42% { transform: rotate(-2deg); } }
+@media (max-width: 700px) { .sp-hare { left: calc(8vw + 200px + 6vw); } }
+
+/* by the Say hello button, in the glovebox: it notices you reach for it */
+.sp-glove__finale { position: relative; }
+.sp-glove__hare { position: absolute; right: 2%; bottom: clamp(56px, 8vw, 96px); width: clamp(84px, 10vw, 140px); color: #f4efe4; opacity: 0.9; }
+.sp-glove__finale:has(.sp-foot__hello:hover, .sp-foot__hello:focus-visible) .hare-ears { animation: hare-ear-hello 0.9s ease-in-out; }
+@media (max-width: 700px) { .sp-glove__hare { display: none; } }
+
+/* ---------- Off the clock: photographs own the colour, the page stays quiet ---------- */
+.sp-off { margin-top: clamp(80px, 11vw, 150px); }
+.sp-prints { list-style: none; margin: 28px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: clamp(18px, 3vw, 40px); align-items: start; }
+.sp-print { position: relative; }
+.sp-print figure { position: relative; margin: 0; padding: 10px 10px 0; background: #f7f1e3; border-radius: 3px; box-shadow: 0 22px 32px -22px rgb(0 0 0 / 0.8); }
+.sp-print img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 1px; }
+.sp-print figcaption { display: flex; flex-direction: column; gap: 2px; padding: 10px 4px 14px; color: #2f3b31; font: 600 clamp(22px, 2vw, 26px)/1.05 var(--font-hand); }
+.sp-print figcaption small { font: 500 var(--label-size)/1.3 var(--font-mono); letter-spacing: var(--label-track); text-transform: uppercase; color: #6a7466; }
+.sp-print__tape { position: absolute; z-index: 1; top: -9px; width: 64px; height: 18px; background: rgb(232 212 138 / 0.65); box-shadow: 0 1px 2px rgb(0 0 0 / 0.25); }
+.sp-print__tape--left { left: 14%; rotate: -5deg; }
+.sp-print__tape--right { right: 14%; rotate: 4deg; }
+@media (prefers-reduced-motion: reduce) { .hare-sit, .hare-ears, .sp-hare svg, .sp-hare .hare-fA, .sp-hare .hare-fB { animation: none; } }
+@media (max-width: 700px) { .sp-prints { grid-template-columns: repeat(2, 1fr); gap: 22px 14px; } .sp-print figure { padding: 7px 7px 0; } .sp-print figcaption { font-size: 20px; padding: 8px 2px 10px; } }
