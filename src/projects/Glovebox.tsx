@@ -1,7 +1,6 @@
 import { motion, useReducedMotion } from 'motion/react';
 import type { CSSProperties } from 'react';
 import { Fireflies } from '../components/Fireflies';
-import { HareMark } from '../components/HareMark';
 import { streakDay, vibeCards } from '../lib/site';
 import { archive, projectById } from './catalog';
 
@@ -91,7 +90,6 @@ export function Glovebox({ email, drive }: { email: string; drive: string }) {
         </ul>
       </div>
       <div className="sp-glove__finale">
-        <HareMark pose="sitting" className="sp-glove__hare" />
         <p>Want to make something together?</p>
         <div className="sp-glove__actions">
           <a className="sp-foot__hello" href={`mailto:${email}`}>Say hello</a>
