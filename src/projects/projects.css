@@ -120,3 +120,5 @@
 @keyframes pp-breathe{50%{opacity:.35;scale:1.06}}
 @keyframes pp-glow{50%{box-shadow:0 0 60px 6px #a9bd8e22,0 40px 80px -40px #000}}
 @media(prefers-reduced-motion:reduce){.pd-sun,.pl-chip,.pa-trail path,.pa-trail circle,.ps-port__hero::before,.ps-port__screen{animation:none}.pa-trail path{stroke-dashoffset:0}}
+/* Touch: small text links and controls get a finger-sized hit area without changing how they look. */
+@media(pointer:coarse){.ps-study-footer a,.ps-collection__footer a,.ps-page__nav a,.ps-viewer__nav a{display:inline-block;padding:12px 0}.ps-port__controls button,.ps-viewer .pl-cinema__actions button,.ps-inspect-trigger{min-height:44px}.ps-viewer .pl-cinema a{display:inline-block;padding:12px 0}.ps-archive summary{min-height:48px}}

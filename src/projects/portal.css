@@ -145,3 +145,4 @@
   .pt-hero__stage{height:300px}
 }
 @media(prefers-reduced-motion:reduce){.pt-app--hero,.pt-hero__glow,.pt-live,.pt-bars i,.pt-timeline li,.pt-view{animation:none}}
+@media(pointer:coarse){.pt-link,.pt-attn a{display:inline-block;padding:11px 0}.pt-back{padding:12px 0}}

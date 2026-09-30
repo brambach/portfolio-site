@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from 'motion/react';
-import type { CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Fireflies } from '../components/Fireflies';
 import { streakDay, vibeCards } from '../lib/site';
 import { archive, projectById } from './catalog';
@@ -27,13 +27,23 @@ const ticker = 'Thanks for driving · Mile 06 · No more road · ';
 
 export function Glovebox({ email, drive }: { email: string; drive: string }) {
   const reduced = useReducedMotion() ?? false;
+  // One card open at a time. A mouse opens it by hovering, a finger by tapping, a keyboard by focusing.
+  // Hover alone can't do it: phones have none, and a card that flips under the pointer flickers.
+  const [open, setOpen] = useState<number | null>(null);
+  const touched = useRef(false);
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    const away = (event: PointerEvent) => { if (!(event.target as Element).closest('.sp-item')) setOpen(null); };
+    document.addEventListener('pointerdown', away);
+    return () => document.removeEventListener('pointerdown', away);
+  }, []);
   return <section className="sp-glove" aria-labelledby="sp-glove-title">
     <div className="sp-stars" aria-hidden="true" />
     <Fireflies className="sp-glove__flies" />
     <div className="sp-glove__inner">
       <span className="sp-glove__eyebrow">Mile 06 · Rest stop</span>
       <h2 id="sp-glove-title" aria-label="Also in the glovebox">Also in the glovebox<em aria-hidden="true">the stuff that didn’t fit on a billboard.</em></h2>
-      <p className="sp-glove__note">Hover or tab to a card and it turns over to the honest version of what survives.</p>
+      <p className="sp-glove__note">Tap, hover or tab to a card and it opens onto the honest version of what survives.</p>
       <ul className="sp-glove__cards">
         {items.map((item, i) => {
           const tilt = tilts[i % tilts.length];
@@ -54,7 +64,10 @@ export function Glovebox({ email, drive }: { email: string; drive: string }) {
           </>;
           return <motion.li
             key={item.name}
-            className={`sp-item sp-item--${item.variant}`}
+            className={`sp-item sp-item--${item.variant}${open === i ? ' is-open' : ''}`}
+            onPointerEnter={event => { if (event.pointerType === 'mouse') setOpen(i); }}
+            onPointerLeave={event => { if (event.pointerType === 'mouse') setOpen(now => (now === i ? null : now)); }}
+            onPointerUp={event => { touched.current = event.pointerType !== 'mouse'; wasOpen.current = open === i; if (touched.current) setOpen(now => (now === i ? null : i)); }}
             style={{ '--tilt': `${tilt}deg`, '--i': i, '--acc': ACCENTS[item.variant]?.[i % 3] } as CSSProperties}
             initial={reduced ? false : { opacity: 0, y: 90, scale: 0.86, rotate: tilt * 3 }}
             whileInView={{ opacity: 1, y: 0, scale: 1, rotate: tilt }}
@@ -63,7 +76,7 @@ export function Glovebox({ email, drive }: { email: string; drive: string }) {
           >
             <span className="sp-item__float">
               {item.href
-                ? <a className="sp-item__card" href={item.href}>{face}</a>
+                ? <a className="sp-item__card" href={item.href} onClick={event => { if (touched.current && !wasOpen.current) event.preventDefault(); }}>{face}</a>
                 : <span className="sp-item__card" tabIndex={0}>{face}</span>}
             </span>
           </motion.li>;
