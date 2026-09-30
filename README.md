@@ -1,8 +1,10 @@
-# Bryce Rambach
+# brycerambach.com
 
-A portfolio you scroll like a road. A flat green 911 drives past a billboard for each project, and if you'd rather take the wheel yourself, there's a 3D Porsche one click away.
+<a href="https://brycerambach.com"><img src="docs/readme/drive.webp" alt="Opening the door of a green Porsche 911, then driving out of town toward the mountains" width="100%"></a>
 
-**Live at [brycerambach.com](https://brycerambach.com)**
+My portfolio. You scroll down a road, and a flat green 911 drives past a billboard for each thing I've made. If you'd rather take the wheel yourself, there's a 3D Porsche one click away: you open the door, find a note in the glovebox, turn the key and drive out of town toward Lake Tahoe.
+
+**[Take the road](https://brycerambach.com)**, or skip to [the projects](https://brycerambach.com/projects), or [take the wheel](https://brycerambach.com/drive).
 
 ![The road: scroll and the car drives the page](docs/readme/road.jpg)
 
@@ -61,11 +63,15 @@ npm run dev
 
 The dev server starts on http://localhost:3000. To pick a port, `npm run dev -- --port 3001 --strictPort`.
 
+Before pushing:
+
 ```bash
 npm run lint    # tsc --noEmit
 npm test        # vitest
 npm run build   # vite build
 ```
+
+Every push to `main` deploys to brycerambach.com through Vercel, so a pull request is the safer way in: Vercel builds a preview of it first.
 
 The race times and admin functions need Upstash/KV environment variables that aren't in the repo. Everything else runs without them.
 
