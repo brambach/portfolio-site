@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bryce Rambach - Resume</title>
+<!--
+  Editable source for Bryce_Rambach_Resume.pdf.
+  Rebuild with: node resume/build.mjs (from the project root).
+  Facts come only from Bryce_Rambach_Resume_draft.md.
+-->
+<style>
+  @page { size: Letter; margin: 0.4in 0.5in; }
+
+  :root {
+    --ink: #1a1d21;
+    --muted: #555b63;
+    --accent: #1e3a5f;
+    --rule: #c9d2dd;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+    line-height: 1.2;
+    color: var(--ink);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  a { color: inherit; text-decoration: none; }
+  strong { font-weight: 700; }
+
+  header { margin-bottom: 6pt; }
+  .name-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12pt; margin-bottom: 3pt; }
+  h1 {
+    margin: 0;
+    font-size: 20pt;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: var(--accent);
+  }
+  .contact { margin: 0; font-size: 9.5pt; color: var(--muted); }
+  .contact span + span::before { content: " | "; color: var(--rule); }
+
+  .summary { margin: 0 0 2pt; }
+
+  section { margin-top: 7pt; }
+  h2 {
+    margin: 0 0 3pt;
+    padding-bottom: 1.5pt;
+    border-bottom: 0.75pt solid var(--rule);
+    font-size: 10pt;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .skills p { margin: 0 0 1pt; }
+  .skills strong { color: var(--accent); }
+
+  .entry { margin-bottom: 5pt; }
+  .entry:last-child { margin-bottom: 0; }
+  .entry-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12pt;
+  }
+  .entry-head h3 { margin: 0; font-size: 10.5pt; font-weight: 700; }
+  .entry-head h3 .org { color: var(--accent); }
+  .entry-head .when { font-size: 9.5pt; color: var(--muted); white-space: nowrap; }
+  .blurb { margin: 0.5pt 0 1pt; font-style: italic; color: var(--muted); }
+  .stack { font-weight: 400; font-style: italic; color: var(--muted); }
+
+  ul { margin: 1pt 0 0; padding-left: 12pt; }
+  li { margin: 0 0 1pt; padding-left: 1pt; }
+  li::marker { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="name-row">
+    <h1>Bryce Rambach</h1>
+    <p class="contact">Brisbane, Australia (US citizen, relocating to the US October 2026)</p>
+  </div>
+  <p class="contact">
+    <span><a href="mailto:bryce.rambach@gmail.com">bryce.rambach@gmail.com</a></span><span>(831) 236-1922</span><span><a href="https://linkedin.com/in/bryce-rambach">linkedin.com/in/bryce-rambach</a></span><span><a href="https://github.com/brambach">github.com/brambach</a></span><span><a href="https://brycerambach.com">brycerambach.com</a></span>
+  </p>
+</header>
+
+<p class="summary">Integration engineer and independent product builder. <strong>Sole technical hire</strong> across 6+ concurrent enterprise client engagements at an AI-native consultancy, owning everything from OAuth flows to <strong>real-time failure diagnosis</strong>. Built and launched <strong>Dervo</strong>, a macOS app for overseeing <strong>Claude Code and Codex agent sessions</strong>, now in private beta with active testers. Built a <strong>production LLM operations platform</strong> on the Claude API, adopted as the company's primary ops tool. Uses Claude Code and AI-assisted workflows daily.</p>
+
+<section class="skills">
+  <h2>Skills</h2>
+  <p><strong>Languages:</strong> Python, TypeScript, JavaScript/Node.js, SQL (PostgreSQL, SuiteQL)</p>
+  <p><strong>Integrations:</strong> REST APIs, OAuth 2.0, webhooks, data pipelines, routing and enrichment, queueing/retries, rate limiting, pagination, schema normalization, Workato, Postman</p>
+  <p><strong>AI / Product:</strong> Anthropic Claude API, OpenAI Codex, LLM-powered features, coding-agent tooling and session management, agent design, prompt engineering, eval-driven iteration, RAG, Claude Code</p>
+  <p><strong>Full-Stack:</strong> Next.js, React, Tailwind CSS, Drizzle ORM, Postgres, Clerk, Vercel</p>
+  <p><strong>Enterprise Platforms:</strong> HiBob, NetSuite, MYOB, KeyPay, Employment Hero, Deputy, Slack, Freshdesk, Resend</p>
+</section>
+
+<section>
+  <h2>Experience</h2>
+
+  <div class="entry">
+    <div class="entry-head">
+      <h3>Founder and Engineer, <span class="org">Dervo</span> (trydervo.com)</h3>
+      <span class="when">2026 - Present · Brisbane, Australia</span>
+    </div>
+    <p class="blurb">macOS app (Apple Silicon) giving developers a live board over their Claude Code and Codex runs (what finished, what is stuck, what needs them), with durable per-project working-state records so sessions can hand off across providers.</p>
+    <ul>
+      <li><strong>Designed and built Dervo solo, end to end:</strong> product concept, positioning, implementation, beta infrastructure, and support. Runs locally on the Claude Code and Codex subscriptions users already pay for.</li>
+      <li><strong>Launched a waitlist-only private beta</strong> (60+ builders on the waitlist); personally onboarded the first cohort of testers and iterate weekly on activation using real session and error data.</li>
+      <li>Dogfood it as a primary work tool: <strong>1,500+ tasks dispatched</strong>, median under 1 min, driving microtask dispatch design.</li>
+      <li>Recruited testers and advocates through personalized cold outreach to senior builders (nearly 40 emails), <strong>converting replies into beta users</strong> and product feedback.</li>
+    </ul>
+  </div>
+
+  <div class="entry">
+    <div class="entry-head">
+      <h3>Integration Specialist, <span class="org">Digital Directions</span></h3>
+      <span class="when">Mar 2025 - Oct 2026 · Brisbane, Australia</span>
+    </div>
+    <p class="blurb">AI-native HR tech consultancy: HiBob, KeyPay, NetSuite, MYOB, and Deputy integrations for ANZ enterprise clients.</p>
+    <ul>
+      <li><strong>Own 6+ enterprise client integrations end to end</strong> as the sole technical point of contact: scope, design, build, and debug failures in real time without waiting for direction.</li>
+      <li>Build and operate data pipelines handling 500+ records per sync cycle across systems with incompatible APIs, auth, and data formats, keeping production payroll, HR, and financial data reliable.</li>
+      <li><strong>Diagnose and resolve OAuth conflicts, webhook drops, serialization errors, and rate-limit failures</strong> across 10+ live integrations, often under active customer pressure on business-critical workflows.</li>
+      <li>Designed and built reusable TypeScript/Node.js connector frameworks from scratch: webhook routing, queueing, retries, and multi-step enrichment pipelines.</li>
+      <li><strong>Deployed production AI systems on the Claude API</strong> to automate integration monitoring and error triage across all live client environments, replacing manual work that took hours of team time daily.</li>
+      <li>Built monitoring dashboards for sync status, error rates, and data quality; <strong>own observability and alerting</strong> end to end.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Projects</h2>
+
+  <div class="entry">
+    <div class="entry-head">
+      <h3><span class="org">Digital Directions Client Portal</span> | Production AI Operations Platform</h3>
+      <span class="when">2025 - 2026</span>
+    </div>
+    <p class="blurb">TypeScript, Next.js 15, Postgres, Vercel, Anthropic Claude API</p>
+    <ul>
+      <li><strong>Solo-built a full-stack agentic operations platform</strong> on the Claude API, adopted as the company's primary ops dashboard, replacing manual ticket triage and fragmented Slack monitoring.</li>
+      <li>Synthesizes live signals from 10+ client integrations into real-time observability: sync health, error diagnostics, cron-based health checks, and automated alerting.</li>
+      <li><strong>Owned the outcome:</strong> spotted the gap, built it unprompted, shipped to production, iterated on real team usage.</li>
+    </ul>
+  </div>
+
+  <div class="entry">
+    <div class="entry-head">
+      <h3><span class="org">Throughline</span> | AI Engineering-Update Product <span class="stack">· TypeScript, Next.js, Claude API, GitHub and Slack OAuth</span></h3>
+      <span class="when">2026</span>
+    </div>
+    <ul>
+      <li>Built an AI workflow that reads GitHub and Slack activity and generates daily engineering updates organized by theme; implemented OAuth, per-user scheduling, timezone-aware dispatch, and channel/repo selection.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Education</h2>
+  <div class="entry">
+    <div class="entry-head">
+      <h3><span class="org">San Diego State University</span> | B.S. Computer Science</h3>
+      <span class="when">May 2026</span>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
