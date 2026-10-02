@@ -56,8 +56,32 @@ it('counts the projects in the viewer nav and ends on a next-project arrow',asyn
   expect(document.querySelector('.ps-next')).toHaveTextContent('→');
 });
 
-it('sends you back to the mile of the study you were reading',async()=>{
+it('wears the night look by default and sends you back to the home page',async()=>{
   history.replaceState(null,'','/projects/lucid');
   render(<ProjectReader/>);
-  expect(screen.getByRole('link',{name:'← Back to the road'})).toHaveAttribute('href','/?mile=lucid');
+  expect(screen.getByRole('dialog',{name:'Lucid project'})).toHaveAttribute('data-look','green');
+  expect(document.querySelector('.ps-page')).toHaveAttribute('data-look','green');
+  expect(screen.getByRole('link',{name:'← Back home'})).toHaveAttribute('href','/');
+  expect(screen.getByRole('link',{name:'Direct link to Lucid'})).toHaveAttribute('href','/projects/lucid');
+  expect(screen.getByRole('link',{name:'View Arro'})).toHaveAttribute('href','/projects/arro');
+  expect(document.querySelector('link[data-qi-font="sentient"]')).not.toBeNull();
+  expect(document.querySelector('meta[name="theme-color"]')).toHaveAttribute('content','#09130e');
+});
+
+it('carries an explicit look through its links and keeps it when you close a study',async()=>{
+  history.replaceState(null,'','/projects/dervo?look=bone');
+  render(<ProjectReader/>);
+  expect(screen.getByRole('dialog',{name:'Dervo project'})).toHaveAttribute('data-look','bone');
+  expect(screen.getByRole('link',{name:'Direct link to Dervo'})).toHaveAttribute('href','/projects/dervo?look=bone');
+  expect(screen.getByRole('link',{name:'← Back home'})).toHaveAttribute('href','/?look=bone');
+  expect(screen.getByRole('link',{name:'View Lucid'})).toHaveAttribute('href','/projects/lucid?look=bone');
+  await userEvent.click(screen.getByRole('button',{name:'← All projects'}));
+  expect(location.pathname+location.search).toBe('/projects?look=bone');
+});
+
+it('falls back to the green look when the look in the URL is unknown',()=>{
+  history.replaceState(null,'','/projects/dervo?look=paper');
+  render(<ProjectReader/>);
+  expect(screen.getByRole('dialog',{name:'Dervo project'})).toHaveAttribute('data-look','green');
+  expect(screen.getByRole('link',{name:'← Back home'})).toHaveAttribute('href','/');
 });

@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import QuietIndex from './QuietIndex';
+import { SENTIENT_CSS } from './look';
 import { projects } from './catalog';
 
 describe('QuietIndex', () => {
@@ -52,6 +53,28 @@ describe('QuietIndex', () => {
     window.history.pushState({}, '', '/next?look=nonsense');
     const odd = render(<QuietIndex />);
     expect(odd.container.querySelector('.qi')).toHaveAttribute('data-look', 'green');
+    window.history.pushState({}, '', '/');
+  });
+
+  it('loads Sentient once from Fontshare instead of hosting the font files', () => {
+    const first = render(<QuietIndex />);
+    first.unmount();
+    render(<QuietIndex />);
+    const links = document.querySelectorAll('link[data-qi-font="sentient"]');
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute('href', SENTIENT_CSS);
+    expect(SENTIENT_CSS).toContain('api.fontshare.com');
+  });
+
+  it('carries an explicit look into its links and tints the browser toolbar to match', () => {
+    window.history.pushState({}, '', '/?look=ink');
+    const { container } = render(<QuietIndex />);
+    expect(container.querySelector('.qi')).toHaveAttribute('data-look', 'ink');
+    const dervoLinks = screen.getAllByRole('link', { name: /^Dervo/ });
+    expect(dervoLinks.length).toBeGreaterThan(1);
+    for (const link of dervoLinks) expect(link).toHaveAttribute('href', '/projects/dervo?look=ink');
+    expect(screen.getByRole('link', { name: 'Bryce Rambach' })).toHaveAttribute('href', '/?look=ink');
+    expect(document.querySelector('meta[name="theme-color"]')).toHaveAttribute('content', '#0b0c0c');
     window.history.pushState({}, '', '/');
   });
 });
