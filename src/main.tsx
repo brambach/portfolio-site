@@ -11,13 +11,13 @@ const showProjectLab=window.location.pathname.replace(/\/$/,'')==='/project-lab'
 const ProjectReader = lazy(() => import('./prototype/ProjectReader.tsx'));
 const showProjects = /^\/projects(?:\/|$)/.test(window.location.pathname);
 const SimplePortfolio = lazy(() => import('./projects/SimplePortfolio.tsx'));
-// The quiet index is the front door. The flat road lives at /work and the 3D drive at /drive, and old
-// drive links (/?town, /?from=work and friends) keep opening the drive. /next stays as an alias.
+// The flat road is the front door. The 3D drive lives at /drive, and old drive links
+// (/?town, /?from=work and friends) keep opening it. The quiet index stays at /next.
 const path = window.location.pathname.replace(/\/$/, '');
 const driveQuery = ['from', 'town', 'city', 'journey', 'forest'].some(key => new URLSearchParams(window.location.search).has(key));
-const showWork = path === '/work';
+const showWork = path === '/work' || (path === '' && !driveQuery);
 const QuietIndex = lazy(() => import('./projects/QuietIndex.tsx'));
-const showQuiet = path === '/next' || (path === '' && !driveQuery);
+const showQuiet = path === '/next';
 const Entrance = lazy(() => import('./prototype/Entrance.tsx'));
 const PhotoEntrance = lazy(() => import('./prototype/PhotoEntrance.tsx'));
 const PreviousSite = lazy(() => import('./App.tsx'));

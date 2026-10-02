@@ -12,7 +12,7 @@ import { DEFAULT_LOOK, LOOK_BG, lookQuery, readLook, useSentient, useThemeColor,
 import './look.css';
 import './quiet.css';
 
-// The home page (/, and /next as an alias): a quiet index, one column of text at night.
+// /next: a quiet index, kept beside the road, one column of text at night.
 // The 911 is what moves: it drives in, and when you drag it over the words they step aside and light
 // up as it passes. The margin holds four plain photos.
 // The look is a set of tokens in look.css; ?look=ink or ?look=bone shows the others, and the links to
@@ -378,7 +378,7 @@ export default function QuietIndex() {
   return <SmoothScroll>
     <div className="qi" ref={page} data-look={look}>
       <header className="qi-nav">
-        <a className="qi-nav__name" href={`/${lookQuery(asked)}`}>Bryce Rambach</a>
+        <a className="qi-nav__name" href={`/next${lookQuery(asked)}`}>Bryce Rambach</a>
         <nav aria-label="Sections">
           <a className="ink-link" href="#work">work</a>
           <a className="ink-link" href="#now">now</a>
@@ -409,7 +409,7 @@ export default function QuietIndex() {
             <W>I </W><span className="qi-mark"><W>design</W></span><W> software, then I </W><span className="qi-mark qi-mark--late"><W>build</W></span><W> it.</W>
           </p>
           <p className="qi-in" style={at(1)}>
-            <W>Right now that's </W><a className="ink-link" href={`/projects/dervo${lookQuery(asked)}`}><W>Dervo</W></a><W>, a Mac app for running Claude Code and
+            <W>Right now that's </W><a className="ink-link" href={`/projects/dervo${lookQuery(look)}`}><W>Dervo</W></a><W>, a Mac app for running Claude Code and
             Codex side by side. It tells you what finished, what's stuck and what needs you. It's in private beta.</W>
           </p>
           <p className="qi-in" style={at(1.12)}>
@@ -426,7 +426,7 @@ export default function QuietIndex() {
 
         <section id="work" className="qi-work" aria-labelledby="qi-work">
           <motion.h2 id="qi-work" className="qi-label" {...rise()}>work</motion.h2>
-          <WorkList search={lookQuery(asked)} />
+          <WorkList search={lookQuery(look)} />
         </section>
 
         <section id="now" className="qi-now" aria-labelledby="qi-now">

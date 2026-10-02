@@ -671,3 +671,23 @@ html[data-arc="dark"] .day-clock {
     scroll-behavior: auto !important;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Page to page. The road, the studies and the drive are separate page loads;
+   browsers that support cross-document view transitions settle one into the
+   next instead of cutting. Others just navigate.
+   -------------------------------------------------------------------------- */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.45s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}

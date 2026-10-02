@@ -2,9 +2,9 @@
 
 <a href="https://brycerambach.com"><img src="docs/readme/drive.webp" alt="Opening the door of a green Porsche 911, then driving out of town toward the mountains" width="100%"></a>
 
-My portfolio. The front page is quiet: one column of text at night, with a flat green 911 you can drag around it. The words step aside and light up as it passes. The earlier site is still here. You can scroll down a road where the 911 drives past a billboard for each thing I've made, or take the wheel of a 3D Porsche, open the door, find a note in the glovebox, turn the key and drive out of town toward Lake Tahoe.
+My portfolio. You scroll down a road, and a flat green 911 drives past a billboard for each thing I've made. If you'd rather take the wheel yourself, there's a 3D Porsche one click away: you open the door, find a note in the glovebox, turn the key and drive out of town toward Lake Tahoe.
 
-**[Start at the front page](https://brycerambach.com)**, or skip to [the projects](https://brycerambach.com/projects), [take the road](https://brycerambach.com/work), or [take the wheel](https://brycerambach.com/drive).
+**[Take the road](https://brycerambach.com)**, or skip to [the projects](https://brycerambach.com/projects), or [take the wheel](https://brycerambach.com/drive).
 
 ![The road: scroll and the car drives the page](docs/readme/road.jpg)
 
@@ -12,9 +12,8 @@ My portfolio. The front page is quiet: one column of text at night, with a flat 
 
 | Where | What it is |
 | --- | --- |
-| `/` | The front page. One column of text on a deep green ground, set in Sentient, with the work list, a few photos and a flat 911 you can drag over the words. Tap the car and it says something. `/next` is an alias, and `?look=ink` or `?look=bone` shows the other two palettes. |
-| `/work` | The road. Scrolling drives the car past a billboard per project, with Dervo first. Coffee shop and tennis club on the way, a night stop at the end with the archive as a pile of cards, and a few photos from off the clock. |
-| `/projects/<name>` | A study for each project: Dervo, the integration portal, Lucid, Arro, Port and AgentSky. Each one has something you can poke, not just screenshots. They wear the front page's night look. |
+| `/` | The road. Scrolling drives the car past a billboard per project, with Dervo first. Coffee shop and tennis club on the way, a night stop at the end with the archive as a pile of cards, and a few photos from off the clock. |
+| `/projects/<name>` | A study for each project: Dervo, the integration portal, Lucid, Arro, Port and AgentSky. Each one has something you can poke, not just screenshots. Moving between pages cross-fades where the browser supports it. |
 | `/drive` | The 3D Porsche. Open the door, turn the key, drive from town to a Tahoe-style overlook. `/drive?from=work` skips the walk-up. |
 | `/previous` | The earlier version of the site, kept around. |
 
