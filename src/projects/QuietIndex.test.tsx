@@ -12,7 +12,7 @@ describe('QuietIndex', () => {
     expect(rows[0]).toHaveAccessibleName(/^Dervo/);
     expect(rows).toHaveLength(projects.length);
     for (const project of projects) {
-      expect(within(work).getByRole('link', { name: new RegExp(`^${project.name}`) })).toHaveAttribute('href', `/projects/${project.id}`);
+      expect(within(work).getByRole('link', { name: new RegExp(`^${project.name}`) })).toHaveAttribute('href', `/projects/${project.id}?look=green`);
     }
   });
 
@@ -73,7 +73,7 @@ describe('QuietIndex', () => {
     const dervoLinks = screen.getAllByRole('link', { name: /^Dervo/ });
     expect(dervoLinks.length).toBeGreaterThan(1);
     for (const link of dervoLinks) expect(link).toHaveAttribute('href', '/projects/dervo?look=ink');
-    expect(screen.getByRole('link', { name: 'Bryce Rambach' })).toHaveAttribute('href', '/?look=ink');
+    expect(screen.getByRole('link', { name: 'Bryce Rambach' })).toHaveAttribute('href', '/next?look=ink');
     expect(document.querySelector('meta[name="theme-color"]')).toHaveAttribute('content', '#0b0c0c');
     window.history.pushState({}, '', '/');
   });

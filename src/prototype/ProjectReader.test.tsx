@@ -56,32 +56,26 @@ it('counts the projects in the viewer nav and ends on a next-project arrow',asyn
   expect(document.querySelector('.ps-next')).toHaveTextContent('→');
 });
 
-it('wears the night look by default and sends you back to the home page',async()=>{
+it('sends you back to the mile of the study you were reading',()=>{
   history.replaceState(null,'','/projects/lucid');
   render(<ProjectReader/>);
-  expect(screen.getByRole('dialog',{name:'Lucid project'})).toHaveAttribute('data-look','green');
-  expect(document.querySelector('.ps-page')).toHaveAttribute('data-look','green');
-  expect(screen.getByRole('link',{name:'← Back home'})).toHaveAttribute('href','/');
-  expect(screen.getByRole('link',{name:'Direct link to Lucid'})).toHaveAttribute('href','/projects/lucid');
-  expect(screen.getByRole('link',{name:'View Arro'})).toHaveAttribute('href','/projects/arro');
-  expect(document.querySelector('link[data-qi-font="sentient"]')).not.toBeNull();
-  expect(document.querySelector('meta[name="theme-color"]')).toHaveAttribute('content','#09130e');
+  expect(screen.getByRole('link',{name:'← Back to the road'})).toHaveAttribute('href','/?mile=lucid');
 });
 
-it('carries an explicit look through its links and keeps it when you close a study',async()=>{
-  history.replaceState(null,'','/projects/dervo?look=bone');
+it('keeps the road\'s paper look when the URL has no look',()=>{
+  history.replaceState(null,'','/projects/dervo');
   render(<ProjectReader/>);
-  expect(screen.getByRole('dialog',{name:'Dervo project'})).toHaveAttribute('data-look','bone');
-  expect(screen.getByRole('link',{name:'Direct link to Dervo'})).toHaveAttribute('href','/projects/dervo?look=bone');
-  expect(screen.getByRole('link',{name:'← Back home'})).toHaveAttribute('href','/?look=bone');
-  expect(screen.getByRole('link',{name:'View Lucid'})).toHaveAttribute('href','/projects/lucid?look=bone');
-  await userEvent.click(screen.getByRole('button',{name:'← All projects'}));
-  expect(location.pathname+location.search).toBe('/projects?look=bone');
+  expect(screen.getByRole('dialog',{name:'Dervo project'})).not.toHaveAttribute('data-look');
+  expect(screen.getByRole('link',{name:'Direct link to Dervo'})).toHaveAttribute('href','/projects/dervo');
 });
 
-it('falls back to the green look when the look in the URL is unknown',()=>{
-  history.replaceState(null,'','/projects/dervo?look=paper');
+it('wears the night look and carries it through its links when opened from /next',async()=>{
+  history.replaceState(null,'','/projects/dervo?look=green');
   render(<ProjectReader/>);
   expect(screen.getByRole('dialog',{name:'Dervo project'})).toHaveAttribute('data-look','green');
-  expect(screen.getByRole('link',{name:'← Back home'})).toHaveAttribute('href','/');
+  expect(screen.getByRole('link',{name:'Direct link to Dervo'})).toHaveAttribute('href','/projects/dervo?look=green');
+  expect(screen.getByRole('link',{name:'← Back home'})).toHaveAttribute('href','/next?look=green');
+  expect(screen.getByRole('link',{name:'View Lucid'})).toHaveAttribute('href','/projects/lucid?look=green');
+  await userEvent.click(screen.getByRole('button',{name:'← All projects'}));
+  expect(location.pathname+location.search).toBe('/projects?look=green');
 });
