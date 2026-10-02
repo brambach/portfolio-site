@@ -1,16 +1,16 @@
-// Builds the brambach/brambach profile repo into github-profile/:
+// Builds the brambach/brambach profile repo into build/github-profile/ (git-ignored):
 // README.md (copied from docs/github-profile.md), assets/banner-light.svg and
 // assets/banner-dark.svg (the road banner, with the site's own fonts inlined so
 // GitHub draws them), and assets/dervo.jpg (a fresh shot of trydervo.com).
 // Run from the project root: node scripts/github-profile.mjs
-// Then copy everything in github-profile/ over the profile repo.
+// Then copy everything in build/github-profile/ over the profile repo.
 import { chromium } from 'playwright';
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-const outDir = path.join(root, 'github-profile');
+const outDir = path.join(root, 'build', 'github-profile');
 const assets = path.join(outDir, 'assets');
 mkdirSync(assets, { recursive: true });
 copyFileSync(path.join(root, 'docs/github-profile.md'), path.join(outDir, 'README.md'));
