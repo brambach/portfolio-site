@@ -1,0 +1,100 @@
+/* The night look for the project pages: the same deep green, ivory and brass as /next, and Sentient
+   for the headlines. It only applies when the URL carries ?look= (that sets data-look on .ps-page and
+   .ps-viewer), so the pages the road links to keep their paper look until /next replaces it.
+   Each study keeps its own colours; this restyles the shared frame around them (the top bar, the road,
+   the next-project card and the index page) and the display type. Tokens are in look.css. */
+html:has(.ps-page[data-look="green"]) { background: #09130e; }
+html:has(.ps-page[data-look="ink"]) { background: #0b0c0c; }
+html:has(.ps-page[data-look="bone"]) { background: #e8e6df; }
+
+.ps-viewer[data-look], .ps-page[data-look] {
+  --font-display: "Sentient", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+}
+.ps-viewer[data-look]:not([data-quiet-focus]) :focus-visible,
+.ps-page[data-look] :focus-visible { outline-color: var(--qi-accent); }
+
+/* ---------- Display type ---------- */
+/* Some headlines name Fraunces directly instead of the variable. Point them at the display font. */
+.ps-viewer[data-look] :is(
+  .ps-study__hero h1 em, .ps-study__notes h2, .ps-port__title h1 em, .ps-port__story h2, .ps-editorial h2,
+  .ps-dervo__hero h1 em, .ps-arro__title h1, .ps-arro__milestone > strong, .ps-arro__milestone > span:nth-of-type(2),
+  .ps-arro__moment h2, .ps-lucid__hero h1 em, .ps-lucid__mapping h2, .ps-lucid__review h2 em, .ps-lucid__capture h2
+),
+.ps-page[data-look] :is(.ps-collection__intro em, .ps-cover--lucid > strong, .ps-cover--arro > strong) {
+  font-family: var(--font-display);
+}
+/* Sentient is set light and a touch looser than Fraunces was. */
+:is(.ps-viewer, .ps-page)[data-look] :is(
+  .ps-collection__intro h1, .ps-dervo__hero h1, .ps-lucid__hero h1, .ps-port__title h1, .ps-arro__title h1,
+  .ps-study__hero h1, .pl-cinema__type h1, .pl-playable__intro h1, .pl-index__intro h1,
+  .ps-editorial h2, .ps-dervo__caption h2, .ps-lucid__brief h2, .ps-lucid__review h2, .ps-lucid__mapping h2,
+  .ps-lucid__capture h2, .ps-arro__moment h2, .ps-port__story h2, .ps-study__notes h2, .pt-section__head h2,
+  .ps-cover:not(.ps-cover--port) > strong, .ps-next > strong
+) {
+  font-weight: 300;
+  font-variation-settings: normal;
+  letter-spacing: -0.03em;
+}
+:is(.ps-viewer, .ps-page)[data-look] :is(h1 em, h2 em, .ps-collection h1 em) {
+  font-style: italic;
+  font-weight: 300;
+  font-variation-settings: normal;
+  letter-spacing: -0.02em;
+}
+:is(.ps-viewer, .ps-page)[data-look] :is(.ps-project__caption h2, .ps-archive__items h3, .pt-caption h3) {
+  font-weight: 400;
+  font-variation-settings: normal;
+  letter-spacing: -0.015em;
+}
+
+/* ---------- The top bar and the road ---------- */
+.ps-viewer[data-look] .ps-viewer__nav {
+  background: var(--qi-bg);
+  color: var(--qi-ink);
+  border-bottom-color: var(--qi-rule);
+}
+.ps-viewer[data-look] .ps-viewer__nav > span { color: var(--qi-soft); }
+.ps-viewer[data-look] .ps-viewer__nav b { color: var(--qi-ink); font-weight: 400; font-variation-settings: normal; }
+.ps-viewer[data-look] .ps-viewer__nav a,
+.ps-viewer[data-look] .ps-viewer__nav button { color: var(--qi-soft); }
+/* AgentSky sets its own button size; the bar reads the same on every page. */
+.ps-viewer[data-look] .ps-viewer__nav :is(a, button) { font-size: 13px; }
+.ps-viewer[data-look] .ps-viewer__nav a:hover,
+.ps-viewer[data-look] .ps-viewer__nav button:hover { color: var(--qi-ink); }
+/* "All projects" reads as a quiet link, not a boxed button. */
+.ps-viewer[data-look] .ps-viewer__nav button {
+  border: 0;
+  border-radius: 0;
+  padding: 10px 0;
+  background: none;
+  box-shadow: none;
+}
+.ps-viewer[data-look] .ps-road { color: var(--qi-accent); }
+.ps-viewer[data-look] .ps-road__car { color: #4aa56d; }
+.ps-viewer[data-look] .ps-road__car circle { fill: var(--qi-bg); stroke: var(--qi-ink); }
+
+/* ---------- The next-project card ---------- */
+.ps-viewer[data-look] .ps-next {
+  background: var(--qi-surface);
+  color: var(--qi-ink);
+  border-top-color: var(--qi-rule);
+}
+.ps-viewer[data-look] .ps-next > .ps-eyebrow { color: var(--qi-soft); }
+.ps-viewer[data-look] .ps-next > span:last-child { color: var(--qi-accent); }
+
+/* ---------- The index page behind the studies ---------- */
+.ps-page[data-look] {
+  background: radial-gradient(900px 520px at 50% -120px, var(--qi-halo), transparent 70%), var(--qi-bg);
+  color: var(--qi-ink);
+}
+.ps-page[data-look] .ps-page__nav { border-bottom-color: var(--qi-rule); }
+.ps-page[data-look] .ps-page__nav > span { color: var(--qi-ink); font-weight: 400; font-variation-settings: normal; }
+.ps-page[data-look] .ps-page__nav a { color: var(--qi-soft); }
+.ps-page[data-look] .ps-page__nav a:hover { color: var(--qi-ink); }
+.ps-page[data-look] :is(
+  .ps-collection__intro > p, .ps-project__caption p, .ps-collection__footer, .ps-collection__footer a,
+  .ps-archive__intro, .ps-archive__foot, .ps-archive summary small, .ps-eyebrow
+) { color: var(--qi-soft); }
+.ps-page[data-look] .ps-archive { border-color: var(--qi-rule); }
+.ps-page[data-look] .ps-archive__items article { border-color: var(--qi-rule); }
+.ps-page[data-look] .ps-archive__items p { color: var(--qi-soft); }
