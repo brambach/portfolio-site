@@ -1,0 +1,36 @@
+/* The colour tokens for the night look. They hang off data-look, which /next sets on .qi and the
+   project pages set on .ps-page and .ps-viewer, so one definition serves both. */
+[data-look] {
+  --qi-bg: #09130e;
+  --qi-surface: #0f1c15;
+  --qi-ink: #eee8d9;
+  --qi-accent: #d3ae6c;
+  --qi-accent-hi: #ecd29c;
+  --qi-road: rgb(211 174 108 / 0.5);
+  --qi-halo: rgb(211 174 108 / 0.09);
+  --qi-shadow: rgb(0 0 0 / 0.85);
+  --qi-glow: rgb(211 174 108 / 0.2);
+  --qi-soft: color-mix(in srgb, var(--qi-ink) 58%, transparent);
+  --qi-rule: color-mix(in srgb, var(--qi-ink) 14%, transparent);
+}
+[data-look="ink"] {
+  --qi-bg: #0b0c0c;
+  --qi-surface: #151717;
+  --qi-ink: #ecece8;
+  --qi-accent: #6fc790;
+  --qi-accent-hi: #a9e4c0;
+  --qi-road: rgb(111 199 144 / 0.45);
+  --qi-halo: rgb(111 199 144 / 0.07);
+  --qi-glow: rgb(111 199 144 / 0.2);
+}
+[data-look="bone"] {
+  --qi-bg: #e8e6df;
+  --qi-surface: #f3f1ec;
+  --qi-ink: #0f1c15;
+  --qi-accent: #1f5a3a;
+  --qi-accent-hi: #0e3a23;
+  --qi-road: rgb(15 28 21 / 0.28);
+  --qi-halo: rgb(255 255 255 / 0.7);
+  --qi-shadow: rgb(15 28 21 / 0.35);
+  --qi-glow: rgb(15 28 21 / 0.16);
+}

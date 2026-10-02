@@ -1,0 +1,350 @@
+/* /next: the quiet index, at night. A deep green ground, ivory type and one brass accent, set in
+   Sentient (a soft, sturdy serif from Fontshare) with Hanken for reading and Plex Mono for labels.
+   Sentient is loaded from Fontshare's own CDN by QuietIndex.tsx. Its licence doesn't allow the font
+   files in a public repo, so don't self-host them here.
+   Everything here is under .qi, so the road and the drive don't change. The look is only tokens (in
+   look.css, shared with the project pages):
+   /next is green, /next?look=ink is black with a green accent, /next?look=bone is light. */
+html:has(.qi[data-look="green"]), body:has(.qi[data-look="green"]) { background: #09130e; }
+html:has(.qi[data-look="ink"]), body:has(.qi[data-look="ink"]) { background: #0b0c0c; }
+html:has(.qi[data-look="bone"]), body:has(.qi[data-look="bone"]) { background: #e8e6df; }
+
+.qi {
+  --qi-display: "Sentient", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --qi-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --qi-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --qi-col: 36rem;
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
+  min-height: 100svh;
+  padding: clamp(20px, 4vw, 40px) clamp(20px, 5vw, 48px) 40px;
+  /* a faint pool of light above the page, like a street lamp over the road */
+  background: radial-gradient(900px 520px at 50% -120px, var(--qi-halo), transparent 70%), var(--qi-bg);
+  color: var(--qi-ink);
+  font-family: var(--font-sans);
+}
+.qi ::selection { background: var(--qi-accent); color: var(--qi-bg); }
+:where(.qi) a { color: var(--qi-accent); }
+:where(.qi) a:hover { color: var(--qi-accent-hi); }
+.qi a:focus-visible { outline: 2px solid var(--qi-accent); outline-offset: 3px; border-radius: 2px; }
+/* InkNote brings its own hand font; here the notes are a small italic serif. */
+.qi .font-hand {
+  font-family: var(--qi-display);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.qi-nav, .qi-main, .qi-foot { position: relative; z-index: 1; }
+
+.qi-label {
+  margin: 0 0 20px;
+  font: 500 var(--label-size)/1.4 var(--qi-mono);
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+  color: var(--qi-soft);
+}
+
+/* ---------- The opening sequence ---------- */
+/* Nav first, then the name settles letter by letter, then the lines under it, then the photos and
+   the car. One easing throughout, long and soft, nothing bounces. */
+@keyframes qi-fade { from { opacity: 0; } }
+@keyframes qi-rise { from { opacity: 0; translate: 0 22px; } }
+@keyframes qi-letter { from { opacity: 0; translate: 0 0.3em; filter: blur(10px); } }
+.qi-nav { animation: qi-fade 1.2s ease-out 0.1s both; }
+.qi-in { animation: qi-rise 1.2s var(--qi-ease) var(--d, 0s) both; }
+.qi-hello .qi-g { animation: qi-letter 1.3s var(--qi-ease) calc(0.3s + var(--i, 0) * 50ms) both; }
+
+/* ---------- Nav ---------- */
+.qi-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px 20px;
+  max-width: var(--qi-col);
+  margin: 0 auto;
+  font-size: 15px;
+}
+.qi-nav__name {
+  font-family: var(--qi-display);
+  font-size: 19px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--qi-ink);
+}
+.qi-nav nav { display: flex; gap: 18px; }
+.qi-nav nav a { color: var(--qi-soft); }
+.qi-nav__name:hover, .qi-nav nav a:hover { color: var(--qi-ink); }
+
+/* ---------- Layout: one column, photos in the right margin on wide screens ---------- */
+.qi-main {
+  display: grid;
+  grid-template-columns: minmax(0, var(--qi-col));
+  justify-content: center;
+  margin-top: clamp(40px, 9vh, 96px);
+}
+@media (min-width: 1240px) {
+  .qi-main { grid-template-columns: 1fr minmax(0, var(--qi-col)) 1fr; column-gap: 56px; }
+  .qi-main > * { grid-column: 2; }
+  .qi-main > .qi-margin { grid-column: 3; grid-row: 2 / span 2; align-self: start; }
+}
+
+/* ---------- The 911 and the road it parks on ---------- */
+.qi-car-spot { position: relative; height: 96px; margin-bottom: 20px; }
+/* One dashed centre line, edge to edge, level with the tyres. */
+.qi-road {
+  position: absolute;
+  top: 62px;
+  left: 50%;
+  width: 100vw;
+  height: 2px;
+  translate: -50% 0;
+  background: repeating-linear-gradient(90deg, var(--qi-road) 0 18px, transparent 18px 36px);
+  mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+}
+.qi-car {
+  /* FlatCar reads these. The same green 911 in every look. */
+  --sp-paint-hi: #4aa56d;
+  --sp-paint: #2f8a54;
+  --sp-paint-lo: #1f6b3f;
+  --sp-glass-hi: #c4d6d8;
+  --sp-glass: #8aa5ab;
+  --sp-crease: #7fd39d;
+  --sp-seam: rgb(0 0 0 / 0.38);
+  --sp-stripe: rgb(255 255 255 / 0.5);
+  --sp-duck: inline;
+  --sp-rim: #e8eae8;
+  --sp-spoke: #1f6b3f;
+  --sp-hub: #0c0d0e;
+  --sp-tyre: #26292c;
+  --sp-arch: #0c0d0e;
+  --sp-lamp: #f4f6f4;
+  --sp-lamp-core: #ffd22e;
+  --sp-tail: #ff4d3a;
+  --sp-exhaust: #8a9094;
+  --sp-shadow-car: var(--qi-glow);
+  position: relative;
+  z-index: 5;
+  width: 180px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.qi-car:active { cursor: grabbing; }
+.qi-car__face { transition: scale 0.5s var(--qi-ease); }
+.qi-car__face--left { scale: -1 1; }
+/* A tap on the car and it says something, in a small chip. */
+.qi-quip {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  translate: -50% 0;
+  margin-bottom: 6px;
+  padding: 4px 10px 5px;
+  border: 1px solid var(--qi-rule);
+  border-radius: 999px;
+  background: var(--qi-surface);
+  font: italic 400 15px/1.3 var(--qi-display);
+  color: var(--qi-accent);
+  white-space: nowrap;
+  pointer-events: none;
+}
+/* The nudge beside it, until the first time you pick it up. */
+.qi-grab { position: absolute; left: 194px; top: 2px; z-index: 6; pointer-events: none; }
+.qi-grab__note { color: var(--qi-accent); font-size: 18px; line-height: 1; white-space: nowrap; }
+.qi-grab__note svg, .qi-start svg { display: inline-block; vertical-align: middle; }
+.qi-grab__note svg { margin-right: 8px; }
+@media (max-width: 400px) { .qi-grab__more { display: none; } }
+@media (max-width: 340px) {
+  .qi-grab { left: 186px; }
+  .qi-grab__note svg { width: 26px; height: auto; margin-right: 5px; }
+}
+
+/* ---------- Intro ---------- */
+.qi-intro { font-size: 18px; line-height: 1.65; }
+.qi-intro p + p { margin-top: 16px; }
+.qi-intro > p { color: color-mix(in srgb, var(--qi-ink) 90%, transparent); }
+/* Each letter is its own box so the car can move it and light it. It lifts fast, then eases back
+   slowly, and the light fades out after the car has gone. */
+.qi-w { display: inline-block; white-space: nowrap; }
+.qi-g { display: inline-block; transition: transform 0.45s var(--qi-ease), color 0.9s ease-out; }
+.qi-hello {
+  margin: 0 0 18px;
+  font-family: var(--qi-display);
+  font-size: clamp(64px, 17vw, 124px);
+  font-weight: 300;
+  line-height: 0.96;
+  letter-spacing: -0.03em;
+  color: var(--qi-ink);
+}
+.qi-lede {
+  margin-bottom: 26px;
+  font-family: var(--qi-display);
+  font-size: clamp(26px, 4.4vw, 36px);
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  color: var(--qi-ink);
+}
+.qi-intro p.qi-lede + p { margin-top: 0; }
+/* Two words lean into italic and get a fine brass line drawn under them once, as the page settles. */
+.qi-mark { position: relative; display: inline-block; font-style: italic; }
+.qi-mark::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.04em;
+  height: max(1.5px, 0.035em);
+  background: var(--qi-accent);
+  transform-origin: left center;
+  transform: scaleX(0);
+  animation: qi-line 1.1s var(--qi-ease) 2.4s forwards;
+}
+.qi-mark--late::after { animation-delay: 2.7s; }
+@keyframes qi-line { to { transform: scaleX(1); } }
+.qi-hint {
+  font: italic 400 16px/1.6 var(--qi-display);
+}
+.qi-intro > p.qi-hint { color: var(--qi-soft); }
+.qi-hint a { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---------- Photos in the margin ---------- */
+/* On a phone they're a strip you swipe along. */
+.qi-margin {
+  display: flex;
+  gap: 18px;
+  margin: 44px -20px 0;
+  padding: 0 20px 4px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 20px;
+  scrollbar-width: none;
+}
+.qi-margin::-webkit-scrollbar { display: none; }
+.qi-shot { flex: none; width: 150px; margin: 0; scroll-snap-align: start; }
+.qi-shot__frame {
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border-radius: 3px;
+  transition: translate 0.7s var(--qi-ease);
+}
+.qi-shot__frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.qi-shot figcaption {
+  margin-top: 9px;
+  font: 400 var(--label-size)/1.4 var(--qi-mono);
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+  color: var(--qi-soft);
+}
+@media (hover: hover) { .qi-shot:hover .qi-shot__frame { translate: 0 -4px; } }
+@media (min-width: 1240px) {
+  .qi-margin { flex-direction: column; gap: 30px; margin: 28px 0 0; padding: 0; overflow: visible; }
+  .qi-shot { width: 200px; }
+}
+
+/* ---------- Work ---------- */
+.qi-work { margin-top: clamp(64px, 12vh, 120px); }
+.qi-work ol, .qi-now ul { list-style: none; margin: 0; padding: 0; display: grid; }
+.qi-work ol { gap: 24px; }
+.qi-work li { position: relative; }
+.qi-row { display: flex; align-items: baseline; gap: 12px; color: var(--qi-ink); }
+.qi-row:hover { color: var(--qi-ink); }
+.qi-row__name {
+  font-family: var(--qi-display);
+  font-size: 23px;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+.qi-row .leader-dots { flex: 1; min-width: 24px; align-self: center; opacity: 0.35; translate: 0 4px; }
+.qi-row__status {
+  font: 400 var(--label-size)/1.4 var(--qi-mono);
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+  text-align: right;
+  color: var(--qi-soft);
+}
+.qi-row__line { margin-top: 2px; font-size: 15.5px; color: var(--qi-soft); }
+/* Dervo leads, and says so. Under its line on a phone, out in the left margin on a wide screen. */
+.qi-start { margin-top: 6px; color: var(--qi-accent); font-size: 18px; line-height: 1; }
+.qi-start svg { display: none; margin-left: 8px; }
+@media (min-width: 1240px) {
+  .qi-start { position: absolute; right: calc(100% + 16px); top: 4px; margin-top: 0; white-space: nowrap; }
+  .qi-start svg { display: inline-block; }
+}
+@media (max-width: 520px) {
+  .qi-row { flex-wrap: wrap; gap: 2px 12px; }
+  .qi-row .leader-dots { display: none; }
+  .qi-row__status { flex-basis: 100%; text-align: left; }
+}
+
+/* The photo that follows the cursor over the work list. The frame draws down like a curtain,
+   and each cover settles in from slightly large as you move between rows. */
+@keyframes qi-curtain { from { clip-path: inset(0 0 100% 0); } }
+.qi-print { position: fixed; left: 0; top: 0; z-index: 60; width: 244px; pointer-events: none; }
+.qi-print__sheet {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--qi-rule);
+  border-radius: 6px;
+  background: var(--qi-surface);
+  box-shadow: 0 24px 48px -14px var(--qi-shadow);
+}
+.qi-print__art { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: #1d2022; animation: qi-curtain 0.7s var(--qi-ease) both; }
+.qi-print__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  opacity: 0;
+  transform: scale(1.07);
+  transition: opacity 0.35s ease-out, transform 0.9s var(--qi-ease);
+}
+.qi-print__img.is-on { opacity: 1; transform: scale(1); }
+.qi-print__img--dark { display: grid; place-items: center; background: #050606; }
+.qi-print__img--dark i { width: 48%; height: 3px; border-radius: 3px; background: #eceeed; }
+.qi-print figcaption {
+  padding: 9px 12px 10px;
+  font: 400 var(--label-size)/1.4 var(--qi-mono);
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+  color: var(--qi-soft);
+}
+
+/* ---------- Now ---------- */
+.qi-now { margin-top: 64px; }
+.qi-now ul { gap: 8px; font-size: 17px; }
+
+/* ---------- Footer: a sign-off, then the car's odometer ---------- */
+.qi-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 20px;
+  max-width: var(--qi-col);
+  margin: 96px auto 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--qi-rule);
+  font: 400 var(--label-size)/1.4 var(--qi-mono);
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+  color: var(--qi-soft);
+}
+.qi-foot__sign {
+  flex-basis: 100%;
+  margin: 0 0 6px;
+  font: italic 400 22px/1.3 var(--qi-display);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--qi-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qi-nav, .qi-in, .qi-hello .qi-g, .qi-print__art { animation: none; }
+  .qi-car__face, .qi-g, .qi-shot__frame, .qi-print__img { transition: none; }
+  .qi-mark::after { animation: none; transform: scaleX(1); }
+}

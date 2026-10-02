@@ -49,6 +49,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/next",
+      "destination": "/index.html"
+    },
+    {
       "source": "/admin",
       "destination": "/index.html"
     }
