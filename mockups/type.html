@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Headline type for /next</title>
+<!-- A throwaway chooser, not part of the site build (vite only builds index.html).
+     It loads the fonts from Google Fonts and Fontshare, so it needs internet.
+     Once one is picked it gets self-hosted and this page goes. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300,0,0;0,9..144,400,0,0;1,9..144,300,0,0;1,9..144,400,0,0&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400&family=Instrument+Serif:ital@0;1&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;1,6..96,400&family=Jost:ital,wght@0,300;0,400;1,300;1,400&family=Hanken+Grotesk:ital,wght@0,200;0,300;0,400;1,200;1,300;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=sentient@300,300i,400,400i,500&f[]=gambetta@300,300i,400,400i,500&f[]=satoshi@300,300i,400,400i,500&display=swap">
+<style>
+  /* The same three looks as /next: green is the default. */
+  body { --bg: #09130e; --surface: #0f1c15; --ink: #eee8d9; --accent: #d3ae6c; --halo: rgb(211 174 108 / 0.09); --page: #050b08; }
+  body[data-look="ink"] { --bg: #0b0c0c; --surface: #151717; --ink: #ecece8; --accent: #6fc790; --halo: rgb(111 199 144 / 0.07); --page: #050606; }
+  body[data-look="bone"] { --bg: #e8e6df; --surface: #f3f1ec; --ink: #0f1c15; --accent: #1f5a3a; --halo: rgb(255 255 255 / 0.7); --page: #d6d3cb; }
+
+  * { box-sizing: border-box; }
+  body {
+    --soft: color-mix(in srgb, var(--ink) 58%, transparent);
+    --rule: color-mix(in srgb, var(--ink) 14%, transparent);
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    margin: 0;
+    padding: 40px clamp(16px, 4vw, 56px) 72px;
+    background: var(--page);
+    color: var(--ink);
+    font: 400 16px/1.6 "Hanken Grotesk", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .top { max-width: 1280px; margin: 0 auto 36px; display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 20px 40px; }
+  .top h1 { margin: 0 0 6px; font: 500 12px/1.4 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--soft); }
+  .top p { margin: 0; max-width: 46ch; font-size: 17px; color: var(--ink); }
+  .looks { display: flex; gap: 8px; }
+  .looks button {
+    padding: 8px 14px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink);
+    font: 500 12px/1 var(--mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .looks button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  .grid { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 560px), 1fr)); gap: 28px; }
+  .card { display: flex; flex-direction: column; }
+  .meta { display: flex; align-items: baseline; gap: 12px; margin: 0 0 10px; font: 500 12px/1.4 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--soft); }
+  .meta .no { color: var(--ink); }
+  .meta .tag { margin-left: auto; padding: 2px 8px; border: 1px solid var(--accent); border-radius: 999px; color: var(--accent); }
+
+  /* One mini /next: nav, the name, the line under it, a paragraph, a work row and a note. */
+  .frame {
+    position: relative;
+    flex: 1;
+    padding: 28px 32px 34px;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    background: radial-gradient(520px 260px at 50% -60px, var(--halo), transparent 70%), var(--bg);
+    font-family: var(--f);
+  }
+  .nav { display: flex; justify-content: space-between; align-items: baseline; font-family: "Hanken Grotesk", sans-serif; font-size: 14px; color: var(--soft); }
+  .nav .nm { font-family: var(--f); font-size: 19px; font-weight: var(--nw); font-variation-settings: var(--fvs-s, normal); letter-spacing: -0.01em; color: var(--ink); }
+  .nav .links { display: flex; gap: 14px; }
+  .hello {
+    margin: 46px 0 14px;
+    font-family: var(--f);
+    font-weight: var(--hw);
+    font-size: calc(var(--hs, 1) * clamp(64px, 7.4vw, 104px));
+    font-variation-settings: var(--fvs-h, normal);
+    letter-spacing: var(--ht, -0.035em);
+    line-height: 0.98;
+    color: var(--ink);
+  }
+  .lede {
+    margin: 0 0 20px;
+    font-family: var(--f);
+    font-weight: var(--lw);
+    font-size: calc(var(--ls, 1) * 33px);
+    font-variation-settings: var(--fvs-l, normal);
+    letter-spacing: var(--lt, -0.02em);
+    line-height: 1.2;
+    color: var(--ink);
+  }
+  .lede em { position: relative; font-style: italic; }
+  .lede em::after { content: ''; position: absolute; left: 0; right: 0; bottom: -0.04em; height: max(1.5px, 0.035em); background: var(--accent); }
+  .body { margin: 0 0 26px; max-width: 46ch; font: 400 16.5px/1.65 "Hanken Grotesk", sans-serif; color: color-mix(in srgb, var(--ink) 90%, transparent); }
+  .body a { color: var(--accent); }
+  .row { display: flex; align-items: baseline; gap: 12px; }
+  .row .rn { font-family: var(--f); font-size: calc(var(--rs, 1) * 23px); font-weight: var(--rw); font-variation-settings: var(--fvs-s, normal); letter-spacing: -0.012em; }
+  .row .dots { flex: 1; align-self: center; height: 3px; opacity: 0.35; background: radial-gradient(circle, currentColor 1.1px, transparent 1.4px) 0 50% / 7px 3px repeat-x; translate: 0 4px; }
+  .row .st { font: 400 11px/1.4 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--soft); }
+  .rl { margin: 2px 0 18px; font: 400 15px/1.5 "Hanken Grotesk", sans-serif; color: var(--soft); }
+  .note { margin: 0; font-family: var(--f); font-style: italic; font-weight: var(--nw); font-size: calc(var(--ns, 1) * 18px); color: var(--accent); }
+
+  .why { margin: 12px 2px 0; font-size: 15px; line-height: 1.55; color: color-mix(in srgb, var(--ink) 82%, transparent); }
+  .src { margin: 4px 2px 0; font: 400 11px/1.4 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--soft); }
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>/next headline type · ten options</h1>
+    <p>Each card is the real /next top of page in that typeface, on the real palette. Say a number. Body text stays Hanken Grotesk so only the headline voice changes.</p>
+  </div>
+  <div class="looks" role="group" aria-label="Palette">
+    <button type="button" data-look="green" aria-pressed="true">green</button>
+    <button type="button" data-look="ink" aria-pressed="false">ink</button>
+    <button type="button" data-look="bone" aria-pressed="false">bone</button>
+  </div>
+</header>
+<main class="grid" id="grid"></main>
+
+<script>
+  // Each option: the family, and the weights and sizes that suit it. The CSS variables above read these.
+  const FONTS = [
+    { name: 'Fraunces Light', f: '"Fraunces", serif', tag: 'now', hw: 300, lw: 330, nw: 450, rw: 400, fvs: '"opsz" 144, "SOFT" 0, "WONK" 0', fvsL: '"opsz" 48, "SOFT" 0, "WONK" 0', fvsS: '"opsz" 24, "SOFT" 0, "WONK" 0', ht: '-0.04em',
+      why: 'What /next has now. Sharp hairlines and a long swash on the y. Shares a family with the road.', src: 'Google Fonts · already on the site' },
+    { name: 'Sentient', f: '"Sentient", serif', tag: 'my pick', hw: 300, lw: 300, nw: 400, rw: 400, ht: '-0.03em', hs: 1.02,
+      why: 'Soft, sturdy and warm. Sharper than a book serif, kinder than a fashion one. Feels premium without being precious.', src: 'Fontshare · free for commercial use' },
+    { name: 'Newsreader', f: '"Newsreader", serif', tag: 'my pick', hw: 300, lw: 300, nw: 400, rw: 400, ht: '-0.035em', fvs: '"opsz" 72', fvsL: '"opsz" 48', fvsS: '"opsz" 24', hs: 1.04,
+      why: 'A warm editorial serif drawn for screens. Calm, like a good magazine. The least showy option here.', src: 'Google Fonts · open licence' },
+    { name: 'Instrument Serif', f: '"Instrument Serif", serif', tag: 'my pick', hw: 400, lw: 400, nw: 400, rw: 400, ht: '-0.02em', hs: 1.1, ls: 1.08, rs: 1.06, ns: 1.05,
+      why: 'Tall and narrow with a crisp italic. The modern editorial look design portfolios keep reaching for.', src: 'Google Fonts · open licence' },
+    { name: 'Gambetta', f: '"Gambetta", serif', hw: 300, lw: 300, nw: 400, rw: 400, ht: '-0.03em', hs: 1.02,
+      why: 'A calligraphic, inky serif with real personality. The warmest of the serifs, closest to the road’s feel.', src: 'Fontshare · free for commercial use' },
+    { name: 'Cormorant Garamond', f: '"Cormorant Garamond", serif', hw: 300, lw: 400, nw: 500, rw: 500, ht: '-0.03em', hs: 1.12, ls: 1.1, rs: 1.08, ns: 1.08,
+      why: 'Airy classical Garamond. Very fine at big sizes, a little delicate small. Quietly luxurious.', src: 'Google Fonts · open licence' },
+    { name: 'Bodoni Moda', f: '"Bodoni Moda", serif', hw: 400, lw: 400, nw: 400, rw: 400, ht: '-0.01em', lt: '0em', fvs: '"opsz" 96', fvsL: '"opsz" 40', fvsS: '"opsz" 20', hs: 0.98,
+      why: 'Fashion-magazine Didone: hairline strokes against heavy stems. The most dramatic and the most luxurious. A big swing.', src: 'Google Fonts · open licence' },
+    { name: 'Satoshi', f: '"Satoshi", sans-serif', hw: 300, lw: 300, nw: 500, rw: 500, ht: '-0.05em', hs: 0.98,
+      why: 'Clean modern sans with a little personality. The current premium-tech default, and a calm break from serifs.', src: 'Fontshare · free for commercial use' },
+    { name: 'Jost', f: '"Jost", sans-serif', hw: 300, lw: 300, nw: 400, rw: 400, ht: '-0.04em', hs: 0.94, ls: 0.96,
+      why: 'Futura-style geometric sans. Light, wide and a bit luxury-brand, like a watch ad.', src: 'Google Fonts · open licence' },
+    { name: 'Hanken Grotesk ExtraLight', f: '"Hanken Grotesk", sans-serif', hw: 200, lw: 300, nw: 400, rw: 400, ht: '-0.05em',
+      why: 'Already on the site, so no new font. Hairline weight at huge size reads Swiss and minimal.', src: 'Google Fonts · already on the site' },
+  ];
+
+  const grid = document.getElementById('grid');
+  FONTS.forEach((o, i) => {
+    const card = document.createElement('article');
+    card.className = 'card';
+    const vars = {
+      '--f': o.f, '--hw': o.hw, '--lw': o.lw, '--nw': o.nw, '--rw': o.rw, '--ht': o.ht, '--lt': o.lt, '--hs': o.hs, '--ls': o.ls, '--rs': o.rs, '--ns': o.ns,
+      '--fvs-h': o.fvs, '--fvs-l': o.fvsL, '--fvs-s': o.fvsS,
+    };
+    card.innerHTML = `
+      <div class="meta"><span class="no">${String(i + 1).padStart(2, '0')}</span><span>${o.name}</span>${o.tag ? `<span class="tag">${o.tag}</span>` : ''}</div>
+      <div class="frame">
+        <div class="nav"><span class="nm">Bryce Rambach</span><span class="links"><span>work</span><span>now</span><span>the drive</span><span>the road</span></span></div>
+        <h2 class="hello">I’m Bryce.</h2>
+        <p class="lede">I <em>design</em> software, then I <em>build</em> it.</p>
+        <p class="body">Right now that's <a>Dervo</a>, a Mac app for running Claude Code and Codex side by side. It tells you what finished, what's stuck and what needs you.</p>
+        <div class="row"><span class="rn">Dervo</span><i class="dots"></i><span class="st">Private beta · macOS</span></div>
+        <p class="rl">Run more agents than you can watch.</p>
+        <div class="row"><span class="rn">Integration portal</span><i class="dots"></i><span class="st">Employee work</span></div>
+        <p class="rl">Make the complex legible.</p>
+        <p class="note">← grab it. go on.</p>
+      </div>
+      <p class="why">${o.why}</p>
+      <p class="src">${o.src}</p>`;
+    // set through the DOM, not a style attribute, because the family names carry quotes
+    const frame = card.querySelector('.frame');
+    for (const [k, v] of Object.entries(vars)) if (v !== undefined) frame.style.setProperty(k, String(v));
+    grid.appendChild(card);
+  });
+
+  const buttons = [...document.querySelectorAll('.looks button')];
+  const params = new URLSearchParams(location.search);
+  const setLook = look => {
+    document.body.dataset.look = look;
+    buttons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.look === look)));
+  };
+  buttons.forEach(b => b.addEventListener('click', () => setLook(b.dataset.look)));
+  setLook(['green', 'ink', 'bone'].includes(params.get('look')) ? params.get('look') : 'green');
+</script>
+</body>
+</html>
