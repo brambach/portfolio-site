@@ -1,0 +1,98 @@
+/* Shared styles for the clean portfolio mockups (clean-e.html and clean-e-project.html). Not part of the site build. */
+
+/* Moving between the list and a project is one continuous page: the browser keeps the sky, grows the preview
+   into the project's picture and carries the name into the title. Browsers without this just navigate. */
+@view-transition { navigation: auto; }
+
+:root {
+  --serif: "Sentient", Georgia, serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
+  --spring: cubic-bezier(0.34, 1.5, 0.64, 1);
+  /* Sky: pre-dawn navy at the top, a faint violet behind the sunrise, a quiet slate through the middle, dusk at the bottom. */
+  --bg0: oklch(0.17 0.028 262); --bg1: oklch(0.205 0.022 285); --bg2: oklch(0.205 0.014 262); --bg3: oklch(0.225 0.026 28);
+  --ink: #ecebe6; --soft: rgb(236 235 230 / 0.55); --faint: rgb(236 235 230 / 0.34); --rule: rgb(236 235 230 / 0.1);
+  --tile: oklch(0.255 0.014 262); --sun: #e9b860;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; color: var(--ink); background: linear-gradient(to bottom, var(--bg0) 0%, var(--bg1) 28%, var(--bg2) 72%, var(--bg3) 100%);
+  font: 400 15px/1.65 "Hanken Grotesk", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; }
+.col { position: relative; z-index: 1; max-width: 600px; margin: 0 auto; padding: 0 24px; }
+
+/* Entrances: letters rise out of a blur; blocks settle. */
+.ch { display: inline-block; }
+.in { opacity: 0; filter: blur(6px); translate: 0 8px; animation: settle 0.9s var(--ease) forwards; animation-delay: calc(var(--i, 0) * 80ms + 260ms); }
+@keyframes settle { to { opacity: 1; filter: none; translate: 0; } }
+@keyframes rise { to { opacity: 1; filter: none; translate: 0; rotate: 0deg; } }
+/* Only the middle is set, so letters start and end on the ink colour. */
+@keyframes glint { 40% { color: var(--sun); text-shadow: 0 0 14px rgb(233 184 96 / 0.45); } }
+
+/* Links underline in sunlight from left to right. Links that leave the site get a small arrow that nudges out. */
+.u { background: linear-gradient(var(--sun), var(--sun)) 0 100% / 0 1px no-repeat, linear-gradient(var(--rule), var(--rule)) 0 100% / 100% 1px no-repeat; transition: background-size 0.55s var(--ease); }
+.u:hover { background-size: 100% 1px, 100% 1px; }
+.ext::after { content: "↗"; display: inline-block; margin-left: 4px; font-size: 12px; color: var(--soft); transition: translate 0.45s var(--spring), color 0.3s var(--ease); }
+.ext:hover::after { translate: 2px -2px; color: var(--sun); }
+
+/* Section titles: serif italic rising letter by letter, then a halftone rule of dots draws out and fades toward a mono count. */
+.title { display: flex; align-items: center; gap: 14px; margin: 88px 0 12px; font-weight: 400; }
+.title .t { font: italic 400 24px/1.2 var(--serif); letter-spacing: -0.012em; white-space: nowrap; }
+.title .ch { opacity: 0; filter: blur(6px); translate: 0 0.45em; transition: opacity 0.8s var(--ease), filter 0.8s var(--ease), translate 0.9s var(--ease); transition-delay: calc(var(--k) * 28ms); }
+.title.seen .ch { opacity: 1; filter: none; translate: 0; }
+.title .rule { flex: 1; height: 4px; background: radial-gradient(circle, rgb(236 235 230 / 0.42) 0.85px, transparent 1.35px) 0 50% / 7px 4px repeat-x;
+  -webkit-mask: linear-gradient(to right, #000 40%, transparent); mask: linear-gradient(to right, #000 40%, transparent);
+  transform: scaleX(0); transform-origin: left; transition: transform 1.3s var(--ease) 0.25s; }
+.title.seen .rule { transform: none; }
+.title .meta { overflow: hidden; font: 400 11px/1.4 var(--mono); letter-spacing: 0.06em; color: var(--faint); opacity: 0; transition: opacity 0.6s var(--ease) 0.8s; }
+.title.seen .meta { opacity: 1; }
+.title .meta b { font-weight: 400; color: var(--soft); }
+
+[data-in] { --d: 0ms; }
+.links { list-style: none; margin: 0; padding: 0; }
+.links li { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 6px 0; }
+.links a { flex: none; }
+.links li[data-in], .fade[data-in] { opacity: 0; translate: 0 8px; transition: opacity 0.8s var(--ease) var(--d), translate 0.8s var(--ease) var(--d); }
+.links li.seen, .fade.seen { opacity: 1; translate: 0; }
+.links span { color: var(--soft); font-size: 13px; text-align: right; }
+.sign { color: var(--soft); font-size: 13px; }
+
+/* Screenshots, as used in the list preview and on the project pages. */
+.shot { position: relative; overflow: hidden; background: var(--tile); }
+.shot img { width: 100%; height: 100%; object-fit: cover; object-position: var(--pos, 0 0); display: block; }
+.shot.tall { background: #ece3d8; }
+.shot.tall img { width: 46%; height: auto; margin: 4% auto 0; border-radius: 12px 12px 0 0; box-shadow: 0 10px 30px -10px rgb(0 0 0 / 0.25); }
+.port-tile { position: absolute; inset: 0; display: grid; place-items: center; background: #141413; }
+.port-tile .ring { width: 56px; height: 56px; border-radius: 50%; border: 1px solid rgb(255 255 255 / 0.5); box-shadow: 0 0 0 10px rgb(255 255 255 / 0.04), 0 0 0 22px rgb(255 255 255 / 0.025); }
+.port-tile span { position: absolute; bottom: 12px; left: 0; right: 0; text-align: center; font: 500 10px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: rgb(255 255 255 / 0.5); }
+
+/* A horizon host: a screen (or strip) with a halftone canvas drawn behind its words. */
+.lit { position: relative; }
+.lit > canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; pointer-events: none; }
+
+/* Clicks anywhere leave a small ring of light that spreads and fades. */
+.ripples { position: fixed; inset: 0; pointer-events: none; z-index: 30; }
+
+/* The page-to-page transition. The old page stays solid underneath while the new one fades in over it, so the sky
+   never washes out mid-way; named pieces travel between them. */
+::view-transition-group(*) { animation-duration: 0.8s; animation-timing-function: cubic-bezier(0.2, 0.7, 0.1, 1); }
+::view-transition-old(root), ::view-transition-new(root) { mix-blend-mode: normal; }
+::view-transition-old(root) { animation: none; }
+::view-transition-new(root) { animation: 0.6s cubic-bezier(0.2, 0.7, 0.1, 1) 0.1s both vt-in; }
+::view-transition-old(shot), ::view-transition-new(shot) { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+@keyframes vt-in { from { opacity: 0; } }
+
+/* The bar: switch between the directions. */
+.bar { position: fixed; left: 50%; bottom: 20px; translate: -50% 0; z-index: 10; display: flex; align-items: center; gap: 2px; padding: 4px; border-radius: 999px;
+  background: rgb(48 50 56 / 0.88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); font: 500 11px/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+.bar a { flex: none; padding: 9px 12px; border-radius: 999px; color: rgb(255 255 255 / 0.6); transition: color 0.3s; }
+.bar a:hover { color: #fff; }
+.bar [aria-current] { background: #fff; color: #111; }
+
+@media (max-width: 560px) {
+  .title .t { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .in, .ch { animation: none !important; opacity: 1 !important; filter: none !important; translate: 0 !important; rotate: 0deg !important; }
+  *, *::before, *::after { transition-duration: 0s !important; transition-delay: 0s !important; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}

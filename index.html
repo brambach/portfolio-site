@@ -2,15 +2,38 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=forest-b" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=forest-b" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=forest-b" />
+    <script>
+      // Paint the sky before anything loads on the sky site's addresses, so there's no paper flash.
+      // Mirrors isSkyPath in src/sky/routes.ts.
+      (function () {
+        var path = location.pathname.replace(/\/$/, '');
+        var q = new URLSearchParams(location.search);
+        var drive = ['from', 'town', 'city', 'journey', 'forest'].some(function (k) { return q.has(k); });
+        var ids = ['dervo', 'integration-portal', 'lucid', 'arro', 'port', 'agentsky'];
+        var project = /^\/projects\/([^/]+)$/.exec(path);
+        var sky = !q.has('look') && ((path === '' && !q.has('mile') && !drive) || (project && ids.indexOf(project[1]) >= 0));
+        if (sky) document.documentElement.setAttribute('data-sky', '');
+      })();
+    </script>
+    <style>
+      :root[data-sky] { background: #090f1c; color-scheme: dark; }
+      :root[data-sky] body { background: linear-gradient(#090f1c, #161621 28%, #14171e 72%, #27171a); }
+    </style>
+    <link rel="icon" type="image/svg+xml" href="/favicon-sky.svg?v=sky" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-sky-32.png?v=sky" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon-sky.png?v=sky" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="A personal website you can drive through. Meet Bryce, explore the Porsche, and race from the lake to the start."
+      content="Bryce Rambach designs software, then builds it. Right now that's Dervo, a Mac app for running Claude Code and Codex side by side."
     />
-    <meta name="theme-color" content="#F2EBDD" />
+    <meta name="theme-color" content="#090f1c" />
+    <!-- Sentient, the display face, comes from Fontshare (its licence doesn't allow the files in a public repo).
+         Loaded without blocking the page; the stylesheets fall back to Georgia until it arrives. -->
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+    <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=sentient@400,400i&display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=sentient@400,400i&display=swap" /></noscript>
     <meta name="author" content="Bryce Rambach" />
     <script type="application/ld+json">
       {
@@ -23,24 +46,25 @@
         "address": { "@type": "PostalAddress", "addressLocality": "local" }
       }
     </script>
-    <meta property="og:title" content="The long way | Bryce Rambach" />
+    <meta property="og:title" content="Bryce Rambach" />
     <meta
       property="og:description"
-      content="A personal website you can drive through. Meet Bryce, explore the Porsche, and race from the lake to the start."
+      content="Designer and engineer. Same person, no handoff. Right now: Dervo, a Mac app for running Claude Code and Codex side by side."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://brycerambach.com/og.jpg?v=porsche" />
+    <meta property="og:image" content="https://brycerambach.com/og-sky.jpg?v=sky" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Bryce Rambach, over a halftone sunrise on water" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="The long way | Bryce Rambach" />
+    <meta name="twitter:title" content="Bryce Rambach" />
     <meta
       name="twitter:description"
-      content="A personal website you can drive through. Meet Bryce, explore the Porsche, and race from the lake to the start."
+      content="Designer and engineer. Same person, no handoff. Right now: Dervo, a Mac app for running Claude Code and Codex side by side."
     />
-    <meta name="twitter:image" content="https://brycerambach.com/og.jpg?v=porsche" />
+    <meta name="twitter:image" content="https://brycerambach.com/og-sky.jpg?v=sky" />
     <meta property="og:url" content="https://brycerambach.com" />
-    <title>The long way | Bryce Rambach</title>
+    <title>Bryce Rambach</title>
     <script>
       // Cross-page fades (see index.css) are a nicety: when the browser skips one, say nothing.
       for (const type of ['pageswap', 'pagereveal']) {

@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Project · Bryce Rambach</title>
+<!-- A throwaway project page for the clean portfolio mockup, not part of the site build. One page renders any project
+     from clean-e-data.js: clean-e-project.html?p=<id>. Arriving from the list, the hover card grows into the picture
+     and the name becomes the title. Fonts need internet; screenshots come from public/, so open it through the Vite
+     dev server. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=sentient@400,400i&display=swap">
+<link rel="stylesheet" href="clean-e.css">
+<style>
+  .top { display: flex; justify-content: space-between; align-items: baseline; padding-top: 32px; font-size: 13px; color: var(--soft); }
+  .back { display: inline-flex; gap: 8px; align-items: baseline; }
+  .back i { font-style: normal; transition: translate 0.45s var(--spring); }
+  .back:hover i { translate: -3px 0; }
+  .count { font: 400 11px/1 var(--mono); letter-spacing: 0.06em; color: var(--faint); }
+
+  .p-head { padding-top: 11vh; }
+  .p-meta { margin: 0; font: 400 11px/1.4 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+  .p-title { margin: 12px 0 0; width: fit-content; font: italic 400 clamp(40px, 6.4vw, 58px)/1.04 var(--serif); letter-spacing: -0.02em; view-transition-name: ptitle; }
+  .p-line { margin: 12px 0 0; font-size: 18px; color: var(--soft); }
+
+  /* The picture, and its reflection in halftone water underneath. */
+  .hero-wrap { width: min(880px, calc(100% - 48px)); margin: 56px auto 0; }
+  .hero { aspect-ratio: 16 / 10; border-radius: 10px; view-transition-name: shot; box-shadow: 0 40px 90px -50px rgb(0 0 0 / 0.8), 0 0 0 1px rgb(255 255 255 / 0.06); }
+  .reflect { display: block; width: 100%; height: 108px; margin-top: 3px; }
+  .cap { margin: 8px auto 0; font-size: 14px; color: var(--soft); }
+  .cap b, .g-t { font: italic 400 19px/1.3 var(--serif); color: var(--ink); letter-spacing: -0.01em; }
+  .cap b { display: block; margin-bottom: 4px; }
+
+  /* Arriving through the transition, the title and picture are already where they land; otherwise they settle in. */
+  .vt .p-title.in, .vt .hero.in { animation: none; opacity: 1; filter: none; translate: 0; }
+
+  /* Port has no screenshots, so its picture is the interaction itself: hold the circle and the screen closes. */
+  .hero.port { background: #141413; cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .hero.port .port-tile { transition: transform 0.6s cubic-bezier(0.6, 0, 0.2, 1), opacity 0.4s ease 0.3s; transform-origin: 50% 50%; }
+  .hero.port .ring { position: relative; width: 84px; height: 84px; }
+  .hero.port .ring::after { content: ""; position: absolute; inset: -7px; border-radius: 50%;
+    background: conic-gradient(var(--sun) calc(var(--p, 0) * 1turn), transparent 0); -webkit-mask: radial-gradient(closest-side, transparent 88%, #000 90%); mask: radial-gradient(closest-side, transparent 88%, #000 90%); }
+  .hero.port.closed .port-tile { transform: scaleY(0.004); opacity: 0; }
+  .hero.port .quiet { position: absolute; inset: 0; display: grid; place-items: center; font: italic 400 22px/1 var(--serif); color: rgb(255 255 255 / 0.5); opacity: 0; transition: opacity 0.8s ease 0.6s; pointer-events: none; }
+  .hero.port.closed .quiet { opacity: 1; }
+
+  .facts { display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; margin: 64px 0 0; padding-top: 16px; border-top: 1px solid var(--rule); }
+  .facts dt { font: 400 11px/1.4 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); }
+  .facts dd { margin: 6px 0 0; font-size: 14px; color: var(--soft); }
+  .lede { margin: 0; font: 400 clamp(20px, 2.8vw, 23px)/1.42 var(--serif); letter-spacing: -0.01em; }
+  .body { margin: 0; }
+  .quiet-text { color: var(--soft); }
+  main.col .title:first-of-type { margin-top: 72px; }
+
+  .gallery { width: min(880px, calc(100% - 48px)); margin: 88px auto 0; display: grid; gap: 72px; }
+  .g { margin: 0; }
+  .g .g-pic { border-radius: 10px; box-shadow: 0 30px 70px -45px rgb(0 0 0 / 0.8), 0 0 0 1px rgb(255 255 255 / 0.06); }
+  .g .g-pic img { height: auto; }
+  .g-tall .g-pic { height: min(560px, 72vh); }
+  .g-tall .g-pic img { width: auto; height: 94%; margin: 3% auto 0; }
+  .g figcaption { margin: 14px auto 0; font-size: 14px; color: var(--soft); }
+  .g-t { display: block; margin-bottom: 4px; }
+
+  /* The end: the next project, above a smaller sunset. */
+  .strip { margin-top: 120px; height: 380px; }
+  .next-label { font: 400 11px/1.4 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+  .next { display: inline-flex; align-items: baseline; gap: 14px; margin-top: 8px; font: italic 400 clamp(30px, 4.6vw, 40px)/1.1 var(--serif); letter-spacing: -0.015em; }
+  .next .nn { background: linear-gradient(var(--sun), var(--sun)) 0 100% / 0 1px no-repeat; transition: background-size 0.6s var(--ease); }
+  .next:hover .nn { background-size: 100% 1px; }
+  .next i { font-style: normal; font-size: 0.7em; color: var(--soft); transition: translate 0.5s var(--spring), color 0.3s; }
+  .next:hover i { translate: 6px 0; color: var(--sun); }
+  .next-line { margin: 6px 0 0; color: var(--soft); }
+  footer.col { padding: 8px 24px 140px; }
+
+  @media (max-width: 560px) {
+    /* The pictures already sit 24px in from the edge, so their captions line up with them rather than indenting again. */
+    .g figcaption.col, .hero-wrap .cap.col { padding: 0; }
+    .facts { grid-template-columns: 1fr; gap: 12px; }
+    .reflect { height: 80px; }
+    .strip { height: 320px; }
+    .gallery { gap: 56px; }
+  }
+</style>
+</head>
+<body>
+<div class="col top in" style="--i:0"><a class="back" href="clean-e.html#work" id="back"><i>←</i> Bryce Rambach</a><span class="count" id="count"></span></div>
+
+<header class="col p-head">
+  <p class="p-meta in" style="--i:1" id="meta"></p>
+  <h1 class="p-title in" style="--i:1" id="title"></h1>
+  <p class="p-line in" style="--i:2" id="line"></p>
+</header>
+
+<figure class="hero-wrap" style="margin-bottom:0">
+  <div class="hero shot in" style="--i:3" id="hero"></div>
+  <canvas class="reflect" id="reflect" aria-hidden="true"></canvas>
+  <figcaption class="col cap fade" data-in id="hero-cap"></figcaption>
+</figure>
+
+<main class="col">
+  <dl class="facts fade" data-in>
+    <div><dt>Role</dt><dd id="role"></dd></div>
+    <div><dt>Status</dt><dd id="status"></dd></div>
+  </dl>
+  <h2 class="title" data-in><span class="t">What it is</span><span class="rule"></span></h2>
+  <p class="lede fade" data-in id="intro"></p>
+  <h2 class="title" data-in><span class="t">The call</span><span class="rule"></span></h2>
+  <p class="body fade" data-in id="decision"></p>
+</main>
+
+<section class="gallery" id="gallery"></section>
+
+<main class="col">
+  <h2 class="title" data-in><span class="t">Under the hood</span><span class="rule"></span></h2>
+  <p class="body fade" data-in id="engineering"></p>
+  <h2 class="title" data-in><span class="t">The fine print</span><span class="rule"></span></h2>
+  <p class="body quiet-text fade" data-in id="boundary"></p>
+</main>
+
+<section class="lit strip" id="set">
+  <canvas aria-hidden="true"></canvas>
+  <div class="col">
+    <span class="next-label">Next</span><br>
+    <a class="next" id="next"><span class="nn" id="next-name"></span><i>→</i></a>
+    <p class="next-line" id="next-line"></p>
+  </div>
+</section>
+<footer class="col"><p class="sign">Say hello at <a class="u" href="mailto:bryce.rambach@gmail.com">bryce.rambach@gmail.com</a>, or on <a class="u ext" href="https://www.linkedin.com/in/bryce-rambach/" target="_blank" rel="noopener">LinkedIn</a> and <a class="u ext" href="https://x.com/brycerambach" target="_blank" rel="noopener">X</a>.</p></footer>
+
+<nav class="bar" aria-label="Directions"><a href="clean.html">All</a><a href="clean-d.html">D</a><a href="clean-e.html" aria-current="page">E</a></nav>
+
+<script src="clean-e-data.js"></script>
+<script src="clean-e-shared.js"></script>
+<script>
+  const { root, reduce, letters, watchIn, smoothScroll, horizon, clickRipples, reflection } = Sky;
+  const id = new URLSearchParams(location.search).get("p");
+  const index = Math.max(0, WORK.findIndex(p => p.id === id));
+  const p = WORK[index], next = WORK[(index + 1) % WORK.length];
+  const $ = s => document.getElementById(s);
+
+  document.title = `${p.name} · Bryce Rambach`;
+  $("count").textContent = `0${index + 1} / ${String(WORK.length).padStart(2, "0")}`;
+  $("meta").textContent = p.category;
+  $("title").textContent = p.name;
+  $("line").textContent = p.line;
+  ["role", "status", "intro", "decision", "engineering", "boundary"].forEach(k => $(k).textContent = p[k]);
+
+  // The picture: the same one the list previews, so the card can grow into it.
+  const hero = $("hero");
+  if (p.hero.tall) hero.classList.add("tall");
+  if (p.hero.port) { hero.classList.add("port"); hero.innerHTML = WORK_SHOT(p) + '<span class="quiet">Quiet.</span>'; hero.querySelector(".port-tile span").textContent = "Hold to close"; }
+  else hero.innerHTML = `<img src="${p.hero.src}" alt="${p.name}${p.hero.title ? ": " + p.hero.title : ""}" ${p.hero.pos ? `style="--pos:${p.hero.pos}"` : ""}>`;
+  $("hero-cap").innerHTML = p.hero.title ? `<b>${p.hero.title}</b>${p.hero.text}` : "";
+
+  $("gallery").innerHTML = p.gallery.map(g => `
+    <figure class="g ${g.tall ? "g-tall" : ""} fade" data-in>
+      <div class="g-pic shot ${g.tall ? "tall" : ""}"><img src="${g.src}" alt="${p.name}: ${g.title}" loading="lazy"></div>
+      <figcaption class="col"><span class="g-t">${g.title}</span>${g.text}</figcaption>
+    </figure>`).join("");
+  if (!p.gallery.length) $("gallery").remove();
+
+  $("next").href = `clean-e-project.html?p=${next.id}`;
+  $("next-name").textContent = next.name;
+  $("next-line").textContent = next.line;
+
+  document.querySelectorAll(".title .t").forEach(letters);
+
+  // Port: hold the circle for a moment and the screen compresses to a line and goes quiet, with the project's sound.
+  // Let go early and it springs back. Tap again to open it.
+  if (p.hero.port) {
+    const sound = new Audio("/projects/port/close.wav");
+    let start = 0, loop = 0;
+    const set = v => hero.style.setProperty("--p", v.toFixed(3));
+    const stop = () => { cancelAnimationFrame(loop); loop = 0; if (!hero.classList.contains("closed")) set(0); };
+    hero.addEventListener("pointerdown", e => {
+      if (hero.classList.contains("closed")) { hero.classList.remove("closed"); set(0); return; }
+      start = performance.now(); hero.setPointerCapture(e.pointerId);
+      (function grow(now) {
+        const v = Math.min(1, (now - start) / 1300); set(v);
+        if (v < 1) { loop = requestAnimationFrame(grow); return; }
+        loop = 0; hero.classList.add("closed"); sound.currentTime = 0; sound.play().catch(() => {});
+      })(start);
+    });
+    ["pointerup", "pointercancel", "pointerleave"].forEach(t => hero.addEventListener(t, stop));
+  }
+
+  // Leaving: back to the list lets the title fly back into its row; to the next project, the next name becomes
+  // the next title and this page's picture simply fades.
+  sessionStorage.setItem("from", p.id);
+  $("back").addEventListener("click", e => {
+    const ref = document.referrer;
+    if (ref && new URL(ref).pathname.endsWith("/clean-e.html") && history.length > 1) { e.preventDefault(); history.back(); }
+  });
+  $("next").addEventListener("click", () => {
+    hero.style.viewTransitionName = "none"; $("title").style.viewTransitionName = "none";
+    $("next-name").style.viewTransitionName = "ptitle";
+    sessionStorage.removeItem("from");
+  });
+  addEventListener("pageshow", e => { if (e.persisted) { hero.style.viewTransitionName = ""; $("title").style.viewTransitionName = ""; $("next-name").style.viewTransitionName = ""; } });
+  addEventListener("pagereveal", e => { if (e.viewTransition) root.classList.add("vt"); });
+
+  reflection(hero, $("reflect"));
+  horizon($("set"), "set", { R: 34, Rs: 24, water: 92, waters: 70, x: 0.68, xs: 0.7 });
+  clickRipples();
+  smoothScroll();
+  watchIn(400);
+</script>
+</body>
+</html>
