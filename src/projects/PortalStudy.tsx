@@ -190,13 +190,45 @@ const JOURNEY: { id: Stage; label: string }[] = [
   { id: 'move', label: 'Your move' }, { id: 'map', label: 'Matching' }, { id: 'onit', label: 'We’re on it' }, { id: 'live', label: 'Live' }, { id: 'issue', label: 'An issue' },
 ];
 
-export default function PortalStudy() {
+/** The client's side of one integration: the portal window, and buttons to skip between its stages.
+ *  Exported so the sky project page can show the same journey; render it inside an element with class `pt`. */
+export function PortalJourney() {
   const [stage, setStage] = useState<Stage>('move');
   const [choice, setChoice] = useState('');
-  const [perspective, setPerspective] = useState(0);
   const chosen = CHOICES.find(c => c.id === choice)?.name ?? 'the best guess';
   const go = (next: Stage) => { if (next !== 'map' && next !== 'move' && !choice) setChoice('a'); setStage(next); };
+  return <>
+    <div className="pt-window" aria-live="polite">
+      <AppFrame nav={CLIENT_NAV} crumb={stage === 'map' ? <>Your integration <s>/</s> <b>Matching your values</b></> : <b>HR → payroll integration</b>}>
+        {stage === 'map'
+          ? <Mapping choice={choice} setChoice={setChoice} onBack={() => setStage('move')} onConfirm={() => setStage('onit')} />
+          : <Hub stage={stage} choice={chosen} onReview={stage === 'move' ? () => setStage('map') : undefined} />}
+      </AppFrame>
+    </div>
+    <nav className="pt-steps" aria-label="Step through the integration">
+      <span className="pt-steps__label">Skip ahead</span>
+      {JOURNEY.map((step, i) => <button key={step.id} aria-pressed={stage === step.id} onClick={() => go(step.id)}><small>0{i + 1}</small>{step.label}</button>)}
+    </nav>
+  </>;
+}
+
+/** The same integration from three seats: the specialist's Today, the client's hub and an incident.
+ *  Exported for the sky project page too; render it inside an element with class `pt`. */
+export function PortalSeats() {
+  const [perspective, setPerspective] = useState(0);
   const frame = PERSPECTIVES[perspective];
+  return <>
+    <nav className="pt-tabs" aria-label="Portal perspectives">{PERSPECTIVES.map((item, i) => <button key={item.name} aria-pressed={perspective === i} onClick={() => setPerspective(i)}>{item.name}</button>)}</nav>
+    <div className="pt-window pt-window--tilt" data-tilt>
+      {perspective === 0 && <AppFrame staff nav={staffNav('Today')} crumb="Today"><Today onInvestigate={() => setPerspective(2)} /></AppFrame>}
+      {perspective === 1 && <AppFrame nav={CLIENT_NAV} crumb={<b>HR → payroll integration</b>}><Hub stage="onit" choice="the best guess" /></AppFrame>}
+      {perspective === 2 && <AppFrame staff nav={staffNav('Monitoring')} crumb={<>Monitoring <s>/</s> <b>Leave sync</b></>}><Incident /></AppFrame>}
+    </div>
+    <div className="pt-caption"><h3>{frame.heading}</h3><p>{frame.text}</p></div>
+  </>;
+}
+
+export default function PortalStudy() {
   return <article className="ps-portal pt">
     <header className="pt-hero">
       <div className="pt-hero__glow" aria-hidden="true" />
@@ -211,28 +243,12 @@ export default function PortalStudy() {
 
     <section className="pt-section">
       <header className="pt-section__head"><div><span className="ps-eyebrow">Follow a fictional integration</span><h2>One record.<br />A shared next step.</h2></div><p>Take the client’s turn. Confirm the mapping, then step ahead to see what the portal says while the work happens.</p></header>
-      <div className="pt-window" aria-live="polite">
-        <AppFrame nav={CLIENT_NAV} crumb={stage === 'map' ? <>Your integration <s>/</s> <b>Matching your values</b></> : <b>HR → payroll integration</b>}>
-          {stage === 'map'
-            ? <Mapping choice={choice} setChoice={setChoice} onBack={() => setStage('move')} onConfirm={() => setStage('onit')} />
-            : <Hub stage={stage} choice={chosen} onReview={stage === 'move' ? () => setStage('map') : undefined} />}
-        </AppFrame>
-      </div>
-      <nav className="pt-steps" aria-label="Step through the integration">
-        <span className="pt-steps__label">Skip ahead</span>
-        {JOURNEY.map((step, i) => <button key={step.id} aria-pressed={stage === step.id} onClick={() => go(step.id)}><small>0{i + 1}</small>{step.label}</button>)}
-      </nav>
+      <PortalJourney />
     </section>
 
     <section className="pt-section pt-section--alt">
       <header className="pt-section__head"><div><span className="ps-eyebrow">The interface, in context</span><h2>Same work.<br /><em>Different needs.</em></h2></div><p>The same integration seen from three seats. Try Investigate, then Retry.</p></header>
-      <nav className="pt-tabs" aria-label="Portal perspectives">{PERSPECTIVES.map((item, i) => <button key={item.name} aria-pressed={perspective === i} onClick={() => setPerspective(i)}>{item.name}</button>)}</nav>
-      <div className="pt-window pt-window--tilt" data-tilt>
-        {perspective === 0 && <AppFrame staff nav={staffNav('Today')} crumb="Today"><Today onInvestigate={() => setPerspective(2)} /></AppFrame>}
-        {perspective === 1 && <AppFrame nav={CLIENT_NAV} crumb={<b>HR → payroll integration</b>}><Hub stage="onit" choice="the best guess" /></AppFrame>}
-        {perspective === 2 && <AppFrame staff nav={staffNav('Monitoring')} crumb={<>Monitoring <s>/</s> <b>Leave sync</b></>}><Incident /></AppFrame>}
-      </div>
-      <div className="pt-caption"><h3>{frame.heading}</h3><p>{frame.text}</p></div>
+      <PortalSeats />
     </section>
 
     <section className="ps-editorial"><span className="ps-eyebrow">The product decision</span><h2>Let people follow<br />the work.</h2><p>Configuration is only one part of delivery. The interface also needs to say what’s waiting, who owns the next step and what a completed review means.</p><div className="ps-editorial__pair"><div><span className="ps-eyebrow">Design</span><h3>Different views, one record.</h3><p>A specialist needs to find the next intervention. A client needs to understand their next decision. The information architecture gives both a view of the same integration.</p></div><div><span className="ps-eyebrow">Engineering</span><h3>Carry decisions through delivery.</h3><p>The project spans two portal generations, with configuration, mapping, testing and support interfaces. This study presents their interaction model through fictional examples.</p></div></div></section>
