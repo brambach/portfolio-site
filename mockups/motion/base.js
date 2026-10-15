@@ -97,7 +97,10 @@
   // Capped at 30 frames a second, and only runs while something is on screen and something is happening (an
   // entrance, a ripple, or scrolling and pointing in the last few seconds). A painter is
   // { target, visible, layout(), paint(now), busy(now) }; add your own with Sky.addPainter.
-  const IDLE_MS = 5000, FRAME_MS = 31;
+  // A page can raise the cap with Sky.frameRate(60) when its sun moves and should glide.
+  const IDLE_MS = 5000;
+  let FRAME_MS = 31;
+  const frameRate = fps => { FRAME_MS = 1000 / fps - 2; };
   const painters = new Set();
   let raf = 0, lastDraw = 0, lastActive = performance.now();
   function frame(now) {
@@ -141,6 +144,8 @@
   //   night() -> bool           a silver moon instead of the sun
   //   light() -> 0..1           override how much light there is (default: from the sun's height)
   //   top() -> px               the highest row to draw (default: a few sun-widths above the sun or the line)
+  //   disc(s) -> px             the size of the disc and its glow, if it should differ from R (R still sets how
+  //                             wide the reflection is)
   function horizon(host, kind, opt = {}) {
     const canvas = host.querySelector("canvas");
     const ctx = canvas.getContext("2d");
@@ -175,28 +180,29 @@
       const night = opt.night ? opt.night() : false;
       const [mid, high] = night ? MOON : SUN[kind], base = BASE[kind];
       const light = opt.light ? opt.light(s) : clamp((hz - sy) / R + 1.1, 0.15, 1);
+      const Rd = opt.disc ? Math.max(0.01, opt.disc(s)) : R;
       const maxR = gap * 0.46, NB = 12;
       const dots = Array.from({ length: NB }, () => new Path2D()), dashes = Array.from({ length: NB }, () => new Path2D());
       s.ripples = s.ripples.filter(rp => t - rp.t0 < 2.8);
-      const top = opt.top ? opt.top(s) : Math.max(0, Math.min(hz, sy) - R * 4.5);
+      const top = opt.top ? opt.top(s) : Math.max(0, Math.min(hz, sy) - Math.max(Rd, 30) * 4.5);
       const y0 = gap / 2 + Math.ceil((top - gap / 2) / gap) * gap;
       ctx.clearRect(0, 0, W, H);
-      const wash = ctx.createRadialGradient(sx, sy, R * 0.6, sx, sy, R * 5);
+      const wash = ctx.createRadialGradient(sx, sy, Rd * 0.6, sx, sy, Rd * 5);
       wash.addColorStop(0, `rgb(${high.join(" ")} / ${(0.12 * light).toFixed(3)})`);
       wash.addColorStop(1, `rgb(${high.join(" ")} / 0)`);
       ctx.fillStyle = wash; ctx.fillRect(0, 0, W, hz);
       for (let y = y0, row = 0; y < H; y += gap, row++) {
         const water = y >= hz;
         const depth = water ? (y - hz) / (H - hz) : 0;
-        const up = water ? 1 - smooth(clamp((depth - 0.55) / 0.45, 0, 1)) : smooth(clamp((y - top) / (R * 2.5), 0, 1));
+        const up = water ? 1 - smooth(clamp((depth - 0.55) / 0.45, 0, 1)) : smooth(clamp((y - top) / (Math.max(Rd, 30) * 2.5), 0, 1));
         const offset = water && row % 2 ? gap / 2 : 0;
         for (let x = gap / 2 + offset; x < W; x += gap) {
           const dx = x - sx;
           let B;
           if (!water) {
             const d = Math.hypot(dx, y - sy);
-            const disc = d < R ? 1 : 0;
-            const glow = d >= R ? Math.exp(-(d - R) / (R * 1.4)) * 0.7 * light : 0;
+            const disc = d < Rd ? 1 : 0;
+            const glow = d >= Rd ? Math.exp(-(d - Rd) / (Rd * 1.4)) * 0.7 * light : 0;
             const band = 0.42 * Math.exp(-(hz - y) / 24) * Math.exp(-Math.abs(dx) / (W * 0.32)) * light;
             const haze = 0.05 * Math.exp(-(hz - y) / 70);
             B = Math.max(disc, (glow + band + haze) * up);
@@ -480,18 +486,19 @@
 
   // ---- The bar: switch between the directions (mockups only) --------------------------------------------------
   const DIRECTIONS = [
-    ["now.html", "Now"], ["a-day.html", "Day"], ["held-sun.html", "Sun"], ["print.html", "Print"], ["big-type.html", "Type"], ["one-horizon.html", "Horizon"],
+    ["now.html", "Now"], ["day-horizon.html", '<span class="long">Day + Horizon</span><span class="short">1+5</span>'],
+    ["a-day.html", "Day", 1], ["held-sun.html", "Sun", 2], ["print.html", "Print", 3], ["big-type.html", "Type", 4], ["one-horizon.html", "Horizon", 5],
   ];
   function bar(current) {
     const nav = document.createElement("nav");
     nav.className = "bar"; nav.setAttribute("aria-label", "Directions");
-    nav.innerHTML = `<a href="index.html">All</a>` + DIRECTIONS.map(([href, label], i) =>
-      `<a href="${href}"${href === current ? ' aria-current="page"' : ""}>${i ? `<b>${i}</b>` : ""}${label}</a>`).join("");
+    nav.innerHTML = `<a href="index.html">All</a>` + DIRECTIONS.map(([href, label, n]) =>
+      `<a href="${href}"${href === current ? ' aria-current="page"' : ""}>${n ? `<b>${n}</b>` : ""}${label}</a>`).join("");
     document.body.append(nav);
   }
 
   window.Sky = {
     root, reduce, fine, clamp, smooth, lerp, mix, rgb, oklch, pad, page, WORK, shot, SKY, SUN, MOON,
-    letters, watchIn, smoothScroll, scrolledFlag, addPainter, kick, wake, horizon, reflection, clickRipples, workList, inShort, bar,
+    letters, watchIn, smoothScroll, scrolledFlag, addPainter, kick, wake, frameRate, horizon, reflection, clickRipples, workList, inShort, bar,
   };
 })();
