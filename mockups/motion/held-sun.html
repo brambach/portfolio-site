@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>2 · Sun: one thing to hold</title>
+<!-- A throwaway mockup, not part of the site build. The live homepage with one thing to hold: the sun. Drag it and
+     the page changes time of day, brighter and more golden up high, a deep sunset near the line. Drop it in the
+     water and it sinks with a splash, the moon comes up on the other side, the gold turns silver and stars come
+     out. Drop the moon and the sun comes back. Built on base.css and base.js; see now.html for the starting page. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=sentient@1,2&display=swap">
+<link rel="stylesheet" href="base.css">
+<style>
+  /* The handle sits over the sun's disc on the canvas, which doesn't take the pointer itself. */
+  .sun-handle { position: absolute; z-index: 3; left: 0; top: 0; width: 92px; height: 92px; margin: 0; padding: 0; border: 0; border-radius: 50%; background: none;
+    cursor: grab; touch-action: none; -webkit-tap-highlight-color: transparent; }
+  .sun-handle:active, .held .sun-handle { cursor: grabbing; }
+  .sun-handle:focus-visible { outline: 1px solid var(--sun); outline-offset: 6px; border-radius: 50%; }
+  .held, .held * { user-select: none; -webkit-user-select: none; }
+  /* The hint waits until the sun is up, and goes for good once you've used it. */
+  /* A small pill, so it reads over the dots. */
+  .drag-hint { position: absolute; z-index: 3; left: 0; top: 0; padding: 7px 11px; border-radius: 999px; background: rgb(14 16 26 / 0.78); box-shadow: 0 0 0 1px rgb(255 255 255 / 0.07);
+    font: 400 11px/1 var(--mono); letter-spacing: 0.06em; color: var(--soft); white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.9s var(--ease); }
+  .drag-hint.on { opacity: 1; }
+  .stars { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: 0; }
+</style>
+</head>
+<body>
+<header class="lit hero" id="rise">
+  <canvas aria-hidden="true"></canvas>
+  <canvas class="stars" id="stars" aria-hidden="true"></canvas>
+  <button class="sun-handle" id="handle" type="button" role="slider" aria-label="The sun. Arrow keys move it; take it below the water for night." aria-valuemin="0" aria-valuemax="100"></button>
+  <span class="drag-hint" id="hint" aria-hidden="true">drag the sun</span>
+  <div class="col">
+    <h1 class="name" id="name">Bryce Rambach</h1>
+    <p class="sub in" style="--i:1">Designer and engineer. Same person, no handoff.</p>
+    <div class="intro">
+      <p class="in" style="--i:2">Right now I’m building <a class="u" href="/projects/dervo">Dervo</a>, a Mac app for running Claude Code and Codex side by side. You leave your agents working and come back to a few sentences about what finished, what’s stuck and what needs you, instead of four terminals. It’s in private beta. I build Dervo with Dervo.</p>
+      <p class="in" style="--i:3">Before that I designed and built an <a class="u" href="/projects/integration-portal">integration portal</a> for HR and payroll teams, where one wrong field mapping means someone gets paid wrong. Clear wasn’t optional.</p>
+    </div>
+  </div>
+  <a class="hint" href="#work" aria-label="Skip to the work"><i></i><i></i><i></i></a>
+</header>
+
+<main class="col">
+  <h2 class="title" id="work" data-in><span class="t">Selected work</span><span class="rule"></span><span class="meta" id="work-meta" aria-hidden="true"></span></h2>
+  <div class="list" id="list"></div>
+
+  <h2 class="title" data-in><span class="t">In short</span><span class="rule"></span></h2>
+  <p class="about" id="about">I like software that tells you what’s going on. <a href="/projects/dervo" data-peek="0">Agents</a>, <a href="/projects/integration-portal" data-peek="1">payroll</a>, <a href="/projects/arro" data-peek="3">a family’s running streak</a>: different problems, same job. Make the complicated part <em>easy to read</em>, then build it properly, from first sketch to signed release.</p>
+
+  <h2 class="title" data-in><span class="t">Side quests</span><span class="rule"></span><span class="meta" aria-hidden="true">02</span></h2>
+  <ul class="links">
+    <li data-in><a class="u" href="/drive">The drive</a><span>A 3D Porsche on Lake Tahoe. Sound on.</span></li>
+    <li data-in style="--d:70ms"><a class="u" href="/work">The road</a><span>The old homepage. Scroll and the Porsche drives.</span></li>
+  </ul>
+</main>
+
+<footer class="lit finale" id="set">
+  <canvas aria-hidden="true"></canvas>
+  <div class="col">
+    <h2 class="title" data-in><span class="t">Say hello</span><span class="rule"></span></h2>
+    <ul class="links">
+      <li data-in><a class="u" href="mailto:bryce.rambach@gmail.com">bryce.rambach@gmail.com</a><span>Email</span></li>
+      <li data-in style="--d:60ms"><a class="u ext" href="https://www.linkedin.com/in/bryce-rambach/" target="_blank" rel="noopener">LinkedIn</a><span>bryce-rambach</span></li>
+      <li data-in style="--d:120ms"><a class="u ext" href="https://x.com/brycerambach" target="_blank" rel="noopener">X</a><span>@brycerambach</span></li>
+      <li data-in style="--d:180ms"><a class="u ext" href="https://github.com/brambach" target="_blank" rel="noopener">GitHub</a><span>brambach</span></li>
+      <li data-in style="--d:240ms"><a class="u ext" href="/Bryce_Rambach_Resume.pdf" target="_blank" rel="noopener">Resume</a><span>PDF, one page</span></li>
+    </ul>
+    <p class="sign fade" data-in>Designed and built by me, which is sort of the point.</p>
+  </div>
+</footer>
+
+<script src="base.js"></script>
+<script>
+  const { root, reduce, clamp, smooth, lerp, mix, oklch, letters, watchIn, smoothScroll, scrolledFlag, horizon, clickRipples, workList, inShort, kick, wake, bar } = Sky;
+  letters(document.getElementById("name"));
+  document.querySelectorAll(".title .t").forEach(t => letters(t));
+  const peek = workList(document.getElementById("list"), document.getElementById("work-meta"));
+  inShort(document.getElementById("about"), peek);
+
+  const heroEl = document.getElementById("rise"), handle = document.getElementById("handle"), hint = document.getElementById("hint");
+  const starsEl = document.getElementById("stars"), intro = heroEl.querySelector(".intro");
+
+  // ---- What the page looks like at each time of day ---------------------------------------------------------
+  // Up is from 0 at the waterline to 1 at the highest the sun can go. The sky's four stops (--bg0..--bg3) and the
+  // accent are mixed from these. Night has its own look, mixed in by `night` (0 to 1) when the moon is out.
+  const DAY = [
+    [0.00, [[0.170, 0.030, 285], [0.200, 0.036, 330], [0.205, 0.030, 380], [0.230, 0.042, 395]], [238, 160, 88]],
+    [0.32, [[0.170, 0.028, 262], [0.205, 0.022, 285], [0.205, 0.014, 262], [0.225, 0.026, 388]], [233, 184, 96]],
+    [1.00, [[0.212, 0.040, 250], [0.226, 0.034, 246], [0.215, 0.022, 252], [0.228, 0.030, 400]], [241, 200, 112]],
+  ];
+  const NIGHT = [[[0.135, 0.030, 268], [0.155, 0.030, 276], [0.165, 0.022, 262], [0.175, 0.020, 280]], [201, 211, 230]];
+  const lerp3 = (a, b, t) => a.map((v, i) => lerp(v, b[i], t));
+  function look(up, night) {
+    let i = up > DAY[1][0] ? 1 : 0;
+    const t = smooth(clamp((up - DAY[i][0]) / (DAY[i + 1][0] - DAY[i][0]), 0, 1));
+    let sky = DAY[i][1].map((c, k) => lerp3(c, DAY[i + 1][1][k], t)), accent = lerp3(DAY[i][2], DAY[i + 1][2], t);
+    sky = sky.map((c, k) => lerp3(c, NIGHT[0][k], night)); accent = lerp3(accent, NIGHT[1], night);
+    sky.forEach(([L, C, h], k) => root.style.setProperty(`--bg${k}`, `oklch(${L.toFixed(4)} ${C.toFixed(4)} ${(h % 360).toFixed(1)})`));
+    const a = accent.map(Math.round);
+    root.style.setProperty("--sun", `rgb(${a.join(" ")})`);
+    accentNow = a.join(" ");
+  }
+  let accentNow = "233 184 96";
+
+  // ---- The sun (or the moon) as a thing with weight ---------------------------------------------------------
+  // Until you touch it, the sun rises and climbs like the live site's. After that it goes where you put it: it
+  // follows the pointer with a little lag while held, and settles with a small overshoot when you let go.
+  const saved = (() => { try { return JSON.parse(sessionStorage.getItem("held-sun") || "null"); } catch { return null; } })();
+  let mode = saved?.mode === "moon" ? "moon" : "sun", night = mode === "moon" ? 1 : 0, nightTo = night;
+  let held = false, placed = !!saved, ox = 0, oy = 0, vx = 0, vy = 0, tx = 0, ty = 0, grab = [0, 0], last = 0, swapUntil = 0;
+  let fx = saved?.fx ?? 0.64, fy = saved?.fy ?? 0.5;   // where it was left: across, and up from the line (as `up`)
+  // The rest of the page takes the saved time of day straight away, even if the opening screen isn't showing.
+  look(0.32, night);
+  const bounds = s => {
+    const ib = intro.getBoundingClientRect(), hb = heroEl.getBoundingClientRect();
+    const high = Math.max(ib.bottom - hb.top + s.R * 2.4, s.hz - s.R * 6.5);
+    return { left: s.R * 1.1, right: s.W - s.R * 1.1, high, line: s.hz, low: s.hz + s.R * 1.7 };
+  };
+  const upAt = (s, y) => { const b = bounds(s); return (b.line - y) / Math.max(1, b.line - b.high); };
+  const yAt = (s, up) => { const b = bounds(s); return b.line - up * (b.line - b.high); };
+  // Where the sun rests after the sunrise reads as the live site's sky (0.32 on the DAY scale), lower is towards
+  // sunset and higher towards midday.
+  const dayAt = (s, y) => {
+    const up = clamp(upAt(s, y), 0, 1), rest = clamp(upAt(s, s.hz - s.R * 0.55), 0.02, 0.9);
+    return up <= rest ? 0.32 * up / rest : 0.32 + 0.68 * (up - rest) / (1 - rest);
+  };
+
+  const scene = horizon(heroEl, "rise", {
+    night: () => night > 0.5,
+    light: s => { const y = s.sunY ?? s.hz; return clamp((s.hz - y) / s.R + 1.1, 0.15, 1) * (night > 0.5 ? 0.85 : 1 + 0.35 * clamp(upAt(s, y), 0, 1)); },
+    sun(s, now) {
+      const dt = Math.min(0.05, (now - (last || now)) / 1000); last = now;
+      if (!placed) {
+        // The live site's sunrise.
+        const R = s.R, age = reduce ? 1 : s.born == null ? 0 : 1 - Math.pow(1 - clamp((now - s.born) / 3200, 0, 1), 3);
+        const away = clamp(scrollY / Math.max(1, s.H), 0, 1);
+        ox = s.sx; oy = s.hz + R * 1.15 - (R * 1.15 + R * 0.55) * age - R * 1.6 * away;
+      } else {
+        if (!held) { tx = fx * s.W; ty = yAt(s, fy); }
+        if (reduce) { ox = tx; oy = ty; vx = vy = 0; }
+        else {
+          // Held: stiff and well damped, so it trails the finger a touch. Let go: softer, so it overshoots once.
+          const k = held ? 320 : 120, c = held ? 34 : 13;
+          vx += (k * (tx - ox) - c * vx) * dt; vy += (k * (ty - oy) - c * vy) * dt;
+          ox += vx * dt; oy += vy * dt;
+        }
+      }
+      // Night comes on, or goes, over about a second and a half.
+      night = reduce ? nightTo : night + clamp(nightTo - night, -dt / 1.4, dt / 1.4);
+      look(dayAt(s, oy), night);
+      starsEl.style.opacity = smooth(night).toFixed(3);
+      place(s);
+      return { x: ox, y: oy };
+    },
+  });
+  const settled = scene.busy;
+  scene.busy = now => settled(now) || held || now < swapUntil || Math.abs(nightTo - night) > 0.001 || Math.hypot(vx, vy) > 2 || (placed && Math.hypot(tx - ox, ty - oy) > 0.5);
+
+  // Keep the handle and the hint on the disc.
+  function place(s) {
+    const size = s.R * 2;
+    handle.style.width = handle.style.height = size + "px";
+    handle.style.transform = `translate(${(ox - s.R).toFixed(1)}px, ${(oy - s.R).toFixed(1)}px)`;
+    handle.style.visibility = !held && oy > s.hz + s.R * 0.9 ? "hidden" : "";
+    const right = ox + s.R + 120 < s.W;
+    hint.style.transform = `translate(${(right ? ox + s.R + 18 : ox - s.R - 18 - hint.offsetWidth).toFixed(1)}px, ${(oy - hint.offsetHeight / 2).toFixed(1)}px)`;
+    const up = clamp(upAt(s, oy), 0, 1), d = dayAt(s, oy);
+    const words = mode === "moon" ? (up > 0.55 ? "Night, the moon high" : "Night, the moon low") : d > 0.75 ? "Midday" : d > 0.45 ? "Afternoon" : d > 0.2 ? "Morning" : d > 0.06 ? "Golden hour" : "Sunset";
+    handle.setAttribute("aria-valuenow", Math.round(up * 100));
+    handle.setAttribute("aria-valuetext", words);
+    handle.setAttribute("aria-label", mode === "moon" ? "The moon. Arrow keys move it; take it below the water to bring the sun back." : "The sun. Arrow keys move it; take it below the water for night.");
+  }
+
+  function remember() { try { sessionStorage.setItem("held-sun", JSON.stringify({ mode, fx, fy })); } catch {} }
+  function start() {
+    if (!placed) { placed = true; tx = ox; ty = oy; vx = vy = 0; }
+    if (!localStorage.getItem("held-sun-hint")) { localStorage.setItem("held-sun-hint", "1"); }
+    hint.classList.remove("on"); clearTimeout(hintTimer);
+  }
+  // Let go somewhere: in the water it sinks with a splash and the other one comes up across the sky.
+  function drop() {
+    const b = bounds(scene);
+    if (oy > b.line + scene.R * 0.35) {
+      const x0 = ox;
+      [0, 160, 340].forEach(d => setTimeout(() => scene.ripple(x0 + (Math.random() - 0.5) * 10, scene.hz + 4 + d / 60), d));
+      fx = x0 / scene.W; fy = upAt(scene, b.low + scene.R);
+      mode = mode === "sun" ? "moon" : "sun"; nightTo = mode === "moon" ? 1 : 0;
+      swapUntil = performance.now() + 3200;
+      // Under the water, across the sky, it comes up.
+      setTimeout(() => {
+        const nx = clamp(1 - x0 / scene.W, 0.12, 0.88);
+        ox = nx * scene.W; oy = b.low + scene.R; vx = 0; vy = -40;
+        fx = nx; fy = mode === "moon" ? 0.62 : 0.4; remember(); wake();
+      }, reduce ? 0 : 900);
+    } else {
+      fx = clamp(ox / scene.W, 0, 1); fy = clamp(upAt(scene, oy), 0, 1);
+    }
+    remember(); wake();
+  }
+
+  // Pointer.
+  handle.addEventListener("pointerdown", e => {
+    e.preventDefault(); handle.setPointerCapture(e.pointerId); start();
+    held = true; document.body.classList.add("held");
+    const r = heroEl.getBoundingClientRect();
+    grab = [e.clientX - r.left - ox, e.clientY - r.top - oy];
+    tx = ox; ty = oy; wake();
+  });
+  handle.addEventListener("pointermove", e => {
+    if (!held) return;
+    const r = heroEl.getBoundingClientRect(), b = bounds(scene);
+    tx = clamp(e.clientX - r.left - grab[0], b.left, b.right);
+    ty = clamp(e.clientY - r.top - grab[1], b.high, b.low);
+    wake();
+  });
+  const letGo = () => { if (!held) return; held = false; document.body.classList.remove("held"); drop(); };
+  handle.addEventListener("pointerup", letGo);
+  handle.addEventListener("pointercancel", letGo);
+  handle.addEventListener("dblclick", () => { mode = "sun"; nightTo = 0; fx = 0.64; fy = 0.32; remember(); wake(); });
+
+  // Keys: left and right move it across, up and down move it through the day; down past the line drops it.
+  handle.addEventListener("keydown", e => {
+    // While one is sinking and the other coming up, keys wait (a held key would otherwise drop it straight back).
+    if (performance.now() < swapUntil - 1800) { if (e.key.startsWith("Arrow")) e.preventDefault(); return; }
+    const step = e.shiftKey ? 0.12 : 0.04, b = bounds(scene);
+    let used = true;
+    if (e.key === "ArrowLeft") fx = clamp(fx - step, b.left / scene.W, b.right / scene.W);
+    else if (e.key === "ArrowRight") fx = clamp(fx + step, b.left / scene.W, b.right / scene.W);
+    else if (e.key === "ArrowUp") fy = clamp(fy + step, 0, 1);
+    else if (e.key === "ArrowDown") {
+      if (fy <= 0.001) { start(); ox = fx * scene.W; oy = b.low; drop(); e.preventDefault(); return; }
+      fy = clamp(fy - step, 0, 1);
+    } else used = false;
+    if (!used) return;
+    e.preventDefault(); start(); remember(); wake();
+  });
+
+  // The hint, once the sun is up, if it's never been used here.
+  let hintTimer = 0;
+  if (!placed && !localStorage.getItem("held-sun-hint")) hintTimer = setTimeout(() => { if (!placed) { hint.classList.add("on"); } }, reduce ? 600 : 3800);
+
+  // A few stars, drawn once in the same dots, high in the hero's sky.
+  function stars() {
+    const dpr = Math.min(2, devicePixelRatio || 1), W = heroEl.clientWidth, H = heroEl.clientHeight;
+    starsEl.width = W * dpr; starsEl.height = H * dpr;
+    const c = starsEl.getContext("2d"); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H);
+    let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const n = Math.round(W * H / 16000);
+    for (let i = 0; i < n; i++) {
+      const x = rnd() * W, y = rnd() * (scene.hz - scene.R * 2.5), b = Math.pow(rnd(), 3);
+      c.fillStyle = `rgb(226 232 242 / ${(0.25 + 0.55 * b).toFixed(2)})`;
+      c.beginPath(); c.arc(x, y, 0.55 + 1.1 * b, 0, Math.PI * 2); c.fill();
+    }
+  }
+  stars(); addEventListener("resize", stars);
+
+  horizon(document.getElementById("set"), "set", { night: () => night > 0.5 });
+  clickRipples(() => accentNow);
+  smoothScroll();
+  scrolledFlag();
+  document.querySelector(".hint").addEventListener("click", e => { e.preventDefault(); document.getElementById("work").scrollIntoView({ behavior: reduce ? "auto" : "smooth" }); });
+  watchIn(520);
+  bar("held-sun.html");
+</script>
+</body>
+</html>

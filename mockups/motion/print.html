@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>3 · Print: everything is printed in dots</title>
+<!-- A throwaway mockup, not part of the site build. The live homepage with the halftone carried into the work:
+     project pictures first appear as a print of gold dots, then develop into the real picture, and moving between
+     projects morphs one print into the next. On a mouse the pointer is a small gold dot that knows where it is: a
+     caret over words, a turning ring of dots over links, and a ring that says Open over a project. Built on base.css
+     and base.js; see now.html for the starting page. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=sentient@1,2&display=swap">
+<link rel="stylesheet" href="base.css">
+<style>
+  /* ---- the developing card ---- */
+  .peek .print, .drop .print { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; }
+  .peek .stack { position: absolute; inset: 0; transform: none !important; }
+  .peek .stack .shot { position: absolute; inset: 0; height: auto; opacity: 0; transition: opacity 0.35s var(--ease); z-index: 2; }
+  .peek .stack .shot.on { opacity: 1; }
+  .peek .tag { position: absolute; z-index: 3; left: 10px; bottom: 10px; padding: 6px 9px; border-radius: 999px; background: rgb(14 16 26 / 0.82);
+    font: 400 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--sun); opacity: 0; translate: 0 4px; transition: opacity 0.35s var(--ease), translate 0.45s var(--ease); }
+  .peek.developed .tag { opacity: 1; translate: 0; }
+  .drop .frame { position: relative; aspect-ratio: 16 / 10; border-radius: 8px; overflow: hidden; margin-bottom: 12px; background: var(--tile); }
+  .drop .frame .shot { position: absolute; inset: 0; margin: 0; border-radius: 0; aspect-ratio: auto; z-index: 2; opacity: 0; transition: opacity 0.4s var(--ease); }
+  .drop .frame .shot.on { opacity: 1; }
+
+  /* ---- the pointer ---- */
+  @media (hover: hover) and (pointer: fine) {
+    .pointing, .pointing * { cursor: none !important; }
+  }
+  .cursor { position: fixed; z-index: 60; left: 0; top: 0; width: 0; height: 0; pointer-events: none; opacity: 0; transition: opacity 0.3s var(--ease); }
+  .cursor.on { opacity: 1; }
+  .cursor .dot { position: absolute; left: 0; top: 0; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 4px; background: var(--sun);
+    box-shadow: 0 0 10px rgb(233 184 96 / 0.55); transition: width 0.35s var(--spring), height 0.35s var(--spring), margin 0.35s var(--spring), border-radius 0.3s var(--ease), opacity 0.3s var(--ease), scale 0.25s var(--ease); }
+  .cursor .ring { position: absolute; left: -24px; top: -24px; width: 48px; height: 48px; opacity: 0; scale: 0.4; transition: opacity 0.3s var(--ease), scale 0.45s var(--spring); }
+  .cursor .ring svg { width: 100%; height: 100%; display: block; animation: turn 9s linear infinite; }
+  .cursor .ring circle { fill: var(--sun); }
+  @keyframes turn { to { rotate: 1turn; } }
+  /* Over words: a caret. Over links: a small ring. Over a project: a bigger ring, and the card says Open. */
+  .cursor[data-on="text"] .dot { width: 2px; height: 20px; margin: -10px 0 0 -1px; border-radius: 1px; box-shadow: none; }
+  .cursor[data-on="link"] .dot, .cursor[data-on="row"] .dot { width: 4px; height: 4px; margin: -2px 0 0 -2px; }
+  .cursor[data-on="link"] .ring { opacity: 1; scale: 0.62; }
+  .cursor[data-on="row"] .ring { opacity: 1; scale: 1; }
+  .cursor.down .dot { scale: 0.6; }
+  .cursor.down .ring { scale: 0.5; }
+</style>
+</head>
+<body>
+<header class="lit hero" id="rise">
+  <canvas aria-hidden="true"></canvas>
+  <div class="col">
+    <h1 class="name" id="name">Bryce Rambach</h1>
+    <p class="sub in" style="--i:1">Designer and engineer. Same person, no handoff.</p>
+    <div class="intro">
+      <p class="in" style="--i:2">Right now I’m building <a class="u" href="/projects/dervo">Dervo</a>, a Mac app for running Claude Code and Codex side by side. You leave your agents working and come back to a few sentences about what finished, what’s stuck and what needs you, instead of four terminals. It’s in private beta. I build Dervo with Dervo.</p>
+      <p class="in" style="--i:3">Before that I designed and built an <a class="u" href="/projects/integration-portal">integration portal</a> for HR and payroll teams, where one wrong field mapping means someone gets paid wrong. Clear wasn’t optional.</p>
+    </div>
+  </div>
+  <a class="hint" href="#work" aria-label="Skip to the work"><i></i><i></i><i></i></a>
+</header>
+
+<main class="col">
+  <h2 class="title" id="work" data-in><span class="t">Selected work</span><span class="rule"></span><span class="meta" id="work-meta" aria-hidden="true"></span></h2>
+  <div class="list" id="list"></div>
+
+  <h2 class="title" data-in><span class="t">In short</span><span class="rule"></span></h2>
+  <p class="about" id="about">I like software that tells you what’s going on. <a href="/projects/dervo" data-peek="0">Agents</a>, <a href="/projects/integration-portal" data-peek="1">payroll</a>, <a href="/projects/arro" data-peek="3">a family’s running streak</a>: different problems, same job. Make the complicated part <em>easy to read</em>, then build it properly, from first sketch to signed release.</p>
+
+  <h2 class="title" data-in><span class="t">Side quests</span><span class="rule"></span><span class="meta" aria-hidden="true">02</span></h2>
+  <ul class="links">
+    <li data-in><a class="u" href="/drive">The drive</a><span>A 3D Porsche on Lake Tahoe. Sound on.</span></li>
+    <li data-in style="--d:70ms"><a class="u" href="/work">The road</a><span>The old homepage. Scroll and the Porsche drives.</span></li>
+  </ul>
+</main>
+
+<footer class="lit finale" id="set">
+  <canvas aria-hidden="true"></canvas>
+  <div class="col">
+    <h2 class="title" data-in><span class="t">Say hello</span><span class="rule"></span></h2>
+    <ul class="links">
+      <li data-in><a class="u" href="mailto:bryce.rambach@gmail.com">bryce.rambach@gmail.com</a><span>Email</span></li>
+      <li data-in style="--d:60ms"><a class="u ext" href="https://www.linkedin.com/in/bryce-rambach/" target="_blank" rel="noopener">LinkedIn</a><span>bryce-rambach</span></li>
+      <li data-in style="--d:120ms"><a class="u ext" href="https://x.com/brycerambach" target="_blank" rel="noopener">X</a><span>@brycerambach</span></li>
+      <li data-in style="--d:180ms"><a class="u ext" href="https://github.com/brambach" target="_blank" rel="noopener">GitHub</a><span>brambach</span></li>
+      <li data-in style="--d:240ms"><a class="u ext" href="/Bryce_Rambach_Resume.pdf" target="_blank" rel="noopener">Resume</a><span>PDF, one page</span></li>
+    </ul>
+    <p class="sign fade" data-in>Designed and built by me, which is sort of the point.</p>
+  </div>
+</footer>
+
+<div class="cursor" id="cursor" aria-hidden="true"><span class="ring"><svg viewBox="0 0 48 48"></svg></span><span class="dot"></span></div>
+
+<script src="base.js"></script>
+<script>
+  const { root, reduce, fine, clamp, smooth, lerp, mix, pad, page, WORK, shot, letters, watchIn, smoothScroll, scrolledFlag, horizon, clickRipples, inShort, bar } = Sky;
+  letters(document.getElementById("name"));
+  document.querySelectorAll(".title .t").forEach(t => letters(t));
+
+  // ---- Prints: a picture as dots, developing into itself ------------------------------------------------------
+  // Each picture is drawn once, as the card shows it, into a small grid: one sample per dot. A print is in the
+  // site's gold, deep to pale, with dots sized by brightness. Developing, the dots swell and take the picture's real colours, then the picture itself
+  // fades in over them. Going from one picture to another, every dot eases from where it is to the new print, in a
+  // sweep from left to right, so one print turns into the next.
+  const GAP = 6, PALE = [248, 222, 160], GOLD = [233, 184, 96], DEEP = [112, 78, 34];
+  const loaded = new Map();
+  function picture(p) {
+    if (p.hero.port) return Promise.resolve(null);
+    if (!loaded.has(p.id)) loaded.set(p.id, new Promise(res => { const img = new Image(); img.onload = () => res(img); img.onerror = () => res(null); img.src = p.hero.src; }));
+    return loaded.get(p.id);
+  }
+  // Paint the picture the way the CSS shows it (cover with object-position, the tall phone layout, or Port's ring).
+  function render(p, img, W, H) {
+    const c = document.createElement("canvas"); c.width = W; c.height = H;
+    const g = c.getContext("2d");
+    g.fillStyle = p.hero.port ? "#141413" : p.hero.tall ? "#ece3d8" : "#2b2f3a"; g.fillRect(0, 0, W, H);
+    if (p.hero.port) {
+      g.strokeStyle = "rgb(255 255 255 / 0.55)"; g.lineWidth = 1.5;
+      g.beginPath(); g.arc(W / 2, H / 2, H * 0.17, 0, Math.PI * 2); g.stroke();
+      g.strokeStyle = "rgb(255 255 255 / 0.06)"; g.lineWidth = H * 0.06;
+      g.beginPath(); g.arc(W / 2, H / 2, H * 0.17 + H * 0.06, 0, Math.PI * 2); g.stroke();
+    } else if (img && p.hero.tall) {
+      const w = W * 0.46, h = w * img.naturalHeight / img.naturalWidth;
+      g.drawImage(img, (W - w) / 2, W * 0.04, w, h);
+    } else if (img) {
+      const [px, py] = (p.hero.pos || "0 0").split(" ").map(v => parseFloat(v) / 100 || 0);
+      const ir = img.naturalWidth / img.naturalHeight, br = W / H;
+      let sw = img.naturalWidth, sh = img.naturalHeight;
+      if (ir > br) sw = sh * br; else sh = sw / br;
+      g.drawImage(img, (img.naturalWidth - sw) * px, (img.naturalHeight - sh) * py, sw, sh, 0, 0, W, H);
+    }
+    return c;
+  }
+  const samples = new Map();
+  async function sample(i, W, H) {
+    const key = `${i}|${W}|${H}`;
+    if (samples.has(key)) return samples.get(key);
+    const p = WORK[i], img = await picture(p);
+    const cols = Math.ceil(W / GAP), rows = Math.ceil(H / GAP);
+    const tiny = document.createElement("canvas"); tiny.width = cols; tiny.height = rows;
+    const g = tiny.getContext("2d", { willReadFrequently: true });
+    g.imageSmoothingQuality = "high";
+    g.drawImage(render(p, img, W * 2, H * 2), 0, 0, cols, rows);
+    const data = g.getImageData(0, 0, cols, rows).data, n = cols * rows;
+    const col = new Float32Array(n * 3), lum = new Float32Array(n);
+    for (let k = 0; k < n; k++) {
+      col[k * 3] = data[k * 4]; col[k * 3 + 1] = data[k * 4 + 1]; col[k * 3 + 2] = data[k * 4 + 2];
+      lum[k] = (0.2126 * data[k * 4] + 0.7152 * data[k * 4 + 1] + 0.0722 * data[k * 4 + 2]) / 255;
+    }
+    const out = { cols, rows, col, lum };
+    samples.set(key, out);
+    return out;
+  }
+
+  // One developer per canvas. show(i) prints and develops picture i from whatever the dots are showing now; clear()
+  // drops the dots back to nothing, so the next one prints from a blank card.
+  function developer(canvas, layers) {
+    const ctx = canvas.getContext("2d");
+    let W = 0, H = 0, cols = 0, rows = 0, cur = null, from = null, to = null, t0 = 0, raf = 0, token = 0, target = -1;
+    // A card holds every picture; a row's preview holds only its own.
+    const isOn = j => (layers.length === 1 ? target >= 0 : j === target);
+    const size = () => {
+      const r = canvas.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+      W = Math.round(r.width); H = Math.round(r.height);
+      canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      cols = Math.ceil(W / GAP); rows = Math.ceil(H / GAP);
+      const n = cols * rows;
+      if (!cur || cur.r.length !== n) cur = { r: new Float32Array(n), c: new Float32Array(n * 3) };
+    };
+    const maxR = GAP * 0.5;
+    function frame(now) {
+      raf = 0;
+      if (!to) return;
+      const t = now - t0, n = cols * rows;
+      ctx.clearRect(0, 0, W, H);
+      let busy = false;
+      for (let k = 0; k < n; k++) {
+        const cx = k % cols, cy = (k / cols) | 0, x = cx * GAP + GAP / 2, y = cy * GAP + GAP / 2;
+        // The print sweeps in from the left; the development follows a beat later, corner to corner.
+        const a = smooth(clamp((t - (x / W) * 150) / 330, 0, 1));
+        const b = smooth(clamp((t - 380 - ((x / W) * 0.6 + (y / H) * 0.4) * 220) / 380, 0, 1));
+        if (a < 1 || b < 1) busy = true;
+        const L = to.lum[k];
+        const pr = maxR * Math.pow(L, 0.85) * 0.92;
+        const pc = L > 0.7 ? mix(GOLD, PALE, (L - 0.7) / 0.3) : mix(DEEP, GOLD, L / 0.7);
+        const tc = [to.col[k * 3], to.col[k * 3 + 1], to.col[k * 3 + 2]];
+        const r = lerp(lerp(from.r[k], pr, a), GAP * 0.64, b);
+        const c0 = [from.c[k * 3], from.c[k * 3 + 1], from.c[k * 3 + 2]];
+        const c = [0, 1, 2].map(j => lerp(lerp(c0[j], pc[j], a), tc[j], b));
+        cur.r[k] = r; cur.c[k * 3] = c[0]; cur.c[k * 3 + 1] = c[1]; cur.c[k * 3 + 2] = c[2];
+        if (r < 0.3) continue;
+        ctx.fillStyle = `rgb(${c[0] | 0} ${c[1] | 0} ${c[2] | 0})`;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      }
+      // Last, the picture itself, over the dots.
+      if (t > 860) { layers.forEach((el, j) => el.classList.toggle("on", isOn(j))); canvas.parentElement.classList.add("developed"); }
+      if (busy || t < 900) raf = requestAnimationFrame(frame);
+    }
+    return {
+      async show(i) {
+        if (i === target) return;
+        target = i;
+        const my = ++token;
+        layers.forEach(el => el.classList.remove("on"));
+        canvas.parentElement.classList.remove("developed");
+        if (reduce) { canvas.parentElement.classList.add("developed"); layers.forEach((el, j) => el.classList.toggle("on", isOn(j))); return; }
+        size();
+        const s = await sample(i, W, H);
+        if (my !== token) return;
+        from = { r: cur.r.slice(), c: cur.c.slice() };
+        to = s; t0 = performance.now();
+        if (!raf) raf = requestAnimationFrame(frame);
+      },
+      clear() {
+        token++; target = -1; to = null;
+        cancelAnimationFrame(raf); raf = 0;
+        layers.forEach(el => el.classList.remove("on"));
+        canvas.parentElement.classList.remove("developed");
+        if (cur) { cur.r.fill(0); cur.c.fill(0); }
+        ctx.clearRect(0, 0, W, H);
+      },
+    };
+  }
+
+  // ---- The work list, with the printed card ---------------------------------------------------------------
+  // The same quiet rows as the live site. The card that follows the cursor shows a print that develops; on touch
+  // the first tap opens the row and develops the picture in place, the second opens the project.
+  const list = document.getElementById("list"), meta = document.getElementById("work-meta");
+  const peek = document.createElement("div");
+  peek.className = "peek"; peek.setAttribute("aria-hidden", "true");
+  peek.innerHTML = `<canvas class="print"></canvas><div class="stack">${WORK.map(shot).join("")}</div><span class="tag">Open ↗</span>`;
+  document.body.append(peek);
+  const card = developer(peek.querySelector("canvas"), [...peek.querySelectorAll(".stack .shot")]);
+  WORK.forEach((p, i) => {
+    const row = document.createElement("div");
+    row.className = "row"; row.dataset.i = i; row.dataset.in = "";
+    row.style.setProperty("--d", 160 + i * 80 + "ms");
+    row.innerHTML = `<a class="head" href="${page(p.id)}"><span class="no">${pad(i + 1)}</span> <span class="nm">${p.name}</span> <span class="ln">${p.line}</span> <span class="kd">${p.kind}</span></a>
+      <div class="drop"><div><div class="inner"><div class="frame"><canvas class="print"></canvas>${shot(p)}</div><a class="go u" href="${page(p.id)}">Open ${p.name}</a></div></div></div>`;
+    list.append(row);
+  });
+  const end = document.createElement("div");
+  end.className = "end"; end.dataset.in = ""; end.style.setProperty("--d", 160 + WORK.length * 80 + "ms");
+  list.append(end);
+  const total = pad(WORK.length);
+  const point = i => { meta.innerHTML = i == null ? total : `<b>${pad(+i + 1)}</b> / ${total}`; };
+  point(null);
+
+  const PW = 272, PH = 170, PG = 30;
+  let tx = 0, ty = 0, px = 0, py = 0, on = false, loop = 0;
+  const aim = (cx, cy) => {
+    tx = cx + 18 + PW + 16 > innerWidth ? cx - PW - 18 : cx + 18;
+    ty = cy + PG + PH + 12 > innerHeight ? cy - PG - PH : cy + PG;
+  };
+  const tick = () => {
+    const k = reduce ? 1 : 0.14;
+    px += (tx - px) * k; py += (ty - py) * k;
+    peek.style.transform = `translate(${px.toFixed(1)}px, ${py.toFixed(1)}px)`;
+    loop = on || Math.abs(tx - px) + Math.abs(ty - py) > 0.3 ? requestAnimationFrame(tick) : 0;
+  };
+  addEventListener("mousemove", e => aim(e.clientX, e.clientY), { passive: true });
+  const show = (i, e) => {
+    if (!fine) return;
+    if (e) aim(e.clientX, e.clientY);
+    if (!on) { px = tx; py = ty; }
+    on = true; peek.classList.add("on");
+    card.show(i);
+    if (!loop) loop = requestAnimationFrame(tick);
+  };
+  const hide = () => { on = false; peek.classList.remove("on"); setTimeout(() => { if (!on) card.clear(); }, 450); };
+  if (fine) {
+    list.addEventListener("mouseover", e => { const row = e.target.closest(".row"); if (row) { show(+row.dataset.i, e); point(row.dataset.i); } });
+    list.addEventListener("mouseleave", () => { hide(); point(null); });
+    document.querySelectorAll("#about a[data-peek]").forEach(a => { a.addEventListener("mouseenter", e => show(+a.dataset.peek, e)); a.addEventListener("mouseleave", hide); });
+  } else {
+    const drops = new Map();
+    list.addEventListener("click", e => {
+      const head = e.target.closest(".head"); if (!head) return;
+      const row = head.closest(".row");
+      if (row.hasAttribute("data-open")) return;
+      e.preventDefault();
+      list.querySelectorAll(".row[data-open]").forEach(r => r.removeAttribute("data-open"));
+      row.setAttribute("data-open", ""); point(row.dataset.i);
+      const frame = row.querySelector(".frame");
+      if (!drops.has(row)) drops.set(row, developer(frame.querySelector("canvas"), [frame.querySelector(".shot")]));
+      // Wait for the row to open before measuring the card.
+      setTimeout(() => { drops.get(row).clear(); drops.get(row).show(+row.dataset.i); }, 260);
+    });
+  }
+  inShort(document.getElementById("about"), null);
+
+  // ---- The pointer ---------------------------------------------------------------------------------------------
+  // A gold dot that trails the real pointer very slightly. It reads what's under it: words make it a caret, links
+  // a small turning ring of dots, a project row a bigger ring that says Open. Keyboard focus is untouched.
+  if (fine && !reduce) {
+    const cur = document.getElementById("cursor"), svg = cur.querySelector("svg");
+    svg.innerHTML = Array.from({ length: 14 }, (_, k) => { const a = (k / 14) * Math.PI * 2; return `<circle cx="${(24 + Math.cos(a) * 19).toFixed(2)}" cy="${(24 + Math.sin(a) * 19).toFixed(2)}" r="1.5"/>`; }).join("");
+    document.documentElement.classList.add("pointing");
+    let x = -100, y = -100, cx = -100, cy = -100, moving = 0;
+    const step = () => {
+      cx += (x - cx) * 0.42; cy += (y - cy) * 0.42;
+      cur.style.transform = `translate(${cx.toFixed(1)}px, ${cy.toFixed(1)}px)`;
+      moving = Math.abs(x - cx) + Math.abs(y - cy) > 0.2 ? requestAnimationFrame(step) : 0;
+    };
+    const kind = el => {
+      if (!el) return "";
+      if (el.closest(".row .head")) return "row";
+      if (el.closest("a, button, [role=slider]")) return "link";
+      if (el.closest("p, h1, h2, .links span, .ln")) return "text";
+      return "";
+    };
+    addEventListener("pointermove", e => {
+      if (e.pointerType !== "mouse") return;
+      x = e.clientX; y = e.clientY; cur.classList.add("on");
+      const k = kind(e.target);
+      if (cur.dataset.on !== k) cur.dataset.on = k;
+      if (!moving) moving = requestAnimationFrame(step);
+    }, { passive: true });
+    addEventListener("pointerdown", () => cur.classList.add("down"));
+    addEventListener("pointerup", () => cur.classList.remove("down"));
+    document.documentElement.addEventListener("mouseleave", () => cur.classList.remove("on"));
+  }
+
+  horizon(document.getElementById("rise"), "rise");
+  horizon(document.getElementById("set"), "set");
+  clickRipples();
+  smoothScroll();
+  scrolledFlag();
+  document.querySelector(".hint").addEventListener("click", e => { e.preventDefault(); document.getElementById("work").scrollIntoView({ behavior: reduce ? "auto" : "smooth" }); });
+  watchIn(520);
+  bar("print.html");
+</script>
+</body>
+</html>

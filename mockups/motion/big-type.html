@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Type: the type is the motion</title>
+<!-- A throwaway mockup, not part of the site build. Direction 4: the same homepage as now.html, set as big editorial
+     type. The name swells in weight where the pointer is, like light passing over it, and the work is a list of big
+     names that fill with their picture. Fonts need internet; pictures come from public/, so open it through the Vite
+     dev server. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=sentient@1,2&display=swap">
+<link rel="stylesheet" href="base.css">
+<style>
+  /* Registered so the colour and the picture wipe can transition. */
+  @property --fill { syntax: "<percentage>"; inherits: true; initial-value: 0%; }
+  @property --tone { syntax: "<color>"; inherits: true; initial-value: rgb(168 168 166); }
+
+  :root { --gut: clamp(20px, 5vw, 72px); --max: 1200px; }
+  body { font-size: 16px; }
+  .wrap { position: relative; z-index: 1; max-width: calc(var(--max) + 2 * var(--gut)); margin: 0 auto; padding: 0 var(--gut); container-type: inline-size; }
+
+  /* ---- section labels: small mono over a rule of dots, so the big type has room ---- */
+  .title { margin: 0 0 clamp(28px, 4vw, 44px); gap: 16px; }
+  .title .t { font: 400 12px/1.4 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--soft); }
+  .title .meta { font-size: 12px; }
+
+  /* ---- the opening screen ---- */
+  .hero { padding: clamp(96px, 17vh, 170px) 0 300px; }
+  /* One line that fills the column. 7.3em is the name's width at the middle weight, plus the italic overhang. */
+  .big { position: relative; margin: 0 0 0 -0.035em; font: italic 250 calc(100cqi / 7.3)/0.9 var(--serif); letter-spacing: -0.02em; white-space: nowrap; }
+  .big .w { display: inline-block; white-space: nowrap; }
+  .big .ch, .mail .ch { display: inline-block; letter-spacing: 0; white-space: pre; }
+  .big .ch { opacity: 0; filter: blur(10px); translate: 0 0.32em; rotate: 3deg; }
+  .big.go .ch { animation: rise 1.15s var(--ease) forwards; animation-delay: calc(var(--k) * 40ms + 60ms); }
+  .lede { max-width: 35em; margin: clamp(28px, 4.4vh, 48px) 0 0; }
+  .lede .sub { margin: 0; font: 500 clamp(17px, 1.45vw, 20px)/1.4 var(--sans); color: var(--ink); letter-spacing: -0.005em; }
+  .lede .intro { margin: 22px 0 0; color: var(--soft); }
+  .lede .intro p { margin: 0 0 0.9em; }
+  .lede .intro a { color: var(--ink); }
+
+  main.wrap { padding-top: clamp(120px, 16vh, 180px); overflow-x: clip; }
+
+  /* ---- Selected work: the names are the list ---- */
+  .list { position: relative; margin: 0 0 0; }
+  .pj { position: relative; }
+  .pj::before, .list .end { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: var(--rule); transform: scaleX(0); transform-origin: left; transition: transform 1.3s var(--ease) var(--d, 0ms); }
+  .list .end { position: relative; display: block; }
+  .pj.seen::before, .list .end.seen { transform: none; }
+  .hd { display: block; padding: 0.05em 0 0.12em; font: italic 250 clamp(40px, 7vw, 108px)/1.04 var(--serif); letter-spacing: -0.02em; color: var(--soft);
+    opacity: 0; translate: 0 0.25em; transition: opacity 1s var(--ease) calc(var(--d) + 120ms), translate 1.1s var(--ease) calc(var(--d) + 120ms); }
+  .pj.seen .hd { opacity: 1; translate: 0; }
+  .hd:focus-visible { outline: none; }
+  .hd:focus-visible .nm { outline: 1px solid var(--sun); outline-offset: 2px; }
+  .mv { display: flex; align-items: baseline; gap: 0 0.22em; will-change: transform; }
+  /* The name is painted by its background, so the colour can wipe away and leave the picture inside the letters.
+     The padding keeps the italic overhang and the descenders inside the painted box. */
+  /* The tones are solid versions of --soft and --faint on this sky, so no picture shows through them at rest. */
+  .pj .nm { --tone: rgb(168 168 166); flex: none; display: inline-block; font-size: inherit; font-weight: inherit; padding: 0.1em 0.16em 0.24em 0.06em; margin: -0.1em -0.16em -0.24em -0.06em;
+    color: transparent; -webkit-background-clip: text; background-clip: text;
+    background-image: linear-gradient(100deg, transparent calc(var(--fill) - 40%), var(--tone) var(--fill)), var(--img);
+    background-size: 100% 100%, var(--fit, cover); background-position: 0 0, var(--pos, 50% 35%); background-repeat: no-repeat;
+    transition: --fill 1.2s var(--ease), --tone 0.6s var(--ease), font-weight 0.9s var(--ease); }
+  .no { flex: none; align-self: flex-start; margin-top: 0.3em; font: 400 12px/1 var(--mono); letter-spacing: 0.04em; color: var(--faint); transition: color 0.5s var(--ease); }
+  .mt { display: grid; gap: 6px; align-self: flex-end; margin: 0 0 0.3em 0.3em; min-width: 0; font: 400 15px/1.35 var(--sans); letter-spacing: 0;
+    opacity: 0; translate: -10px 0; transition: opacity 0.45s var(--ease), translate 0.7s var(--ease); }
+  .mt .ln { color: var(--ink); }
+  .mt .kd { font: 400 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--soft); }
+  .list[data-active] .nm { --tone: rgb(139 139 140); font-weight: 200; }
+  .list[data-active] .pj.on .nm { --tone: var(--ink); --fill: 140%; font-weight: 640; }
+  .pj.on .no { color: var(--ink); }
+  .pj.on .mt { opacity: 1; translate: 0; transition-delay: 0.12s; }
+
+  /* The plate: the picture itself, at the right of the list, gliding to whichever row you're on. */
+  .plate { position: absolute; z-index: 2; right: 0; top: 0; width: clamp(240px, 24vw, 360px); pointer-events: none;
+    opacity: 0; scale: 0.96; translate: 0 var(--y, 0px); transition: opacity 0.5s var(--ease), scale 0.7s var(--ease), translate 0.75s var(--ease); }
+  .list[data-active] .plate { opacity: 1; scale: 1; }
+  .plate .pic { position: relative; aspect-ratio: 16 / 10; border-radius: 8px; overflow: hidden; background: var(--tile); box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.06); }
+  .plate .shot { position: absolute; inset: 0; opacity: 0; transition: opacity 0.5s var(--ease); }
+  .plate .shot.on, .plate .cap.on { opacity: 1; }
+  .plate .shot img { height: 100%; }
+  .plate .shot.tall img { height: auto; }
+  .plate .caps { position: relative; height: 3em; margin-top: 12px; }
+  .plate .cap { position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; opacity: 0; transition: opacity 0.5s var(--ease); }
+  .plate .cap .kd { font: 400 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--soft); white-space: nowrap; }
+  @media (hover: hover) and (pointer: fine) { .mt { display: none; } }
+
+  /* Touch: the first tap fills the name and opens the picture in place, the second opens the project. */
+  .drop { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.7s var(--ease); }
+  .pj[data-open] .drop { grid-template-rows: 1fr; }
+  .drop > div { overflow: hidden; }
+  .drop .inner { padding: 6px 0 26px; opacity: 0; translate: 0 -8px; transition: opacity 0.5s var(--ease), translate 0.6s var(--ease); }
+  .pj[data-open] .inner { opacity: 1; translate: 0; transition-delay: 0.12s; }
+  .drop .shot { aspect-ratio: 16 / 10; border-radius: 10px; }
+  .drop .dl { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 14px 0 10px; }
+  .drop .dl .kd { font: 400 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--soft); white-space: nowrap; }
+  .drop .go { font-size: 15px; }
+
+  /* ---- In short ---- */
+  .sec { margin-top: clamp(140px, 20vh, 220px); }
+  .about { max-width: 21em; font: 300 clamp(26px, 3.6vw, 50px)/1.18 var(--serif); letter-spacing: -0.02em; }
+  .about .pw::before, .about .pw::after { bottom: -0.06em; }
+
+  /* ---- Side quests: two big titles side by side ---- */
+  .quests { display: grid; grid-template-columns: 1fr 1fr; gap: 40px clamp(24px, 4vw, 48px); margin: 0; padding: 0; list-style: none; }
+  .quests li { display: grid; gap: 10px; align-content: start; opacity: 0; translate: 0 10px; transition: opacity 0.9s var(--ease) var(--d), translate 0.9s var(--ease) var(--d); }
+  .quests li.seen { opacity: 1; translate: 0; }
+  .quests a { justify-self: start; font: italic 300 clamp(34px, 4.4vw, 60px)/1.08 var(--serif); letter-spacing: -0.02em; transition: font-weight 0.7s var(--ease), background-size 0.55s var(--ease); }
+  .quests a:hover, .quests a:focus-visible { font-weight: 480; }
+  .quests span { max-width: 26em; color: var(--soft); }
+
+  /* ---- Say hello, over the sunset ---- */
+  .finale { padding: clamp(140px, 20vh, 220px) 0 300px; }
+  .kicker { margin: 0 0 6px; font: 400 11px/1.4 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--soft); }
+  /* The address is the closing line. 12.75em is its width at the middle weight. */
+  .mail { position: relative; display: inline-block; margin-left: -0.03em; font: italic 250 calc(100cqi / 12.75)/1 var(--serif); letter-spacing: -0.02em; white-space: nowrap; }
+  .mail .w { display: inline-block; white-space: nowrap; }
+  .mail::after { content: ""; position: absolute; left: 0.04em; right: 0.06em; bottom: 0.02em; height: 1px; background: var(--rule); }
+  .mail:focus-visible { outline-offset: 8px; }
+  .contacts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; margin: clamp(40px, 6vh, 64px) 0 0; padding: 0; list-style: none; }
+  .contacts li { display: grid; gap: 4px; opacity: 0; translate: 0 8px; transition: opacity 0.8s var(--ease) var(--d), translate 0.8s var(--ease) var(--d); }
+  .contacts li.seen { opacity: 1; translate: 0; }
+  .contacts a { justify-self: start; font-weight: 500; }
+  .contacts span { font: 400 12px/1.4 var(--mono); color: var(--soft); }
+  .sign { margin: clamp(48px, 8vh, 80px) 0 0; }
+
+  @media (hover: hover) and (pointer: fine) {
+    .hd { cursor: pointer; }
+    .drop { display: none; }
+  }
+  @media not ((hover: hover) and (pointer: fine)) { .plate { display: none; } }
+  @media (max-width: 700px) {
+    .mv { gap: 0 0.18em; }
+    .mt { display: none; }
+    .quests { grid-template-columns: 1fr; }
+    .contacts { grid-template-columns: 1fr 1fr; }
+  }
+  /* Phones: the name and the address each break onto two lines so they can stay big. */
+  @media (max-width: 560px) {
+    .hero { padding-top: 88px; }
+    .big { font-size: calc(100cqi / 4.5); line-height: 0.92; white-space: normal; }
+    .hd { font-size: 12.4cqi; line-height: 1.08; padding: 0.08em 0 0.14em; }
+    .mv { flex-wrap: wrap; }
+    .pj .nm { flex: 0 1 auto; }
+    .mail { font-size: calc(100cqi / 7.05); line-height: 1.04; white-space: normal; }
+    .mail::after { display: none; }
+    .finale { padding-bottom: 250px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hd, .quests li, .contacts li { opacity: 1 !important; translate: 0 !important; }
+    .list[data-active] .nm, .list[data-active] .pj.on .nm, .quests a:hover { font-weight: 250; }
+    .quests a:hover { font-weight: 300; }
+  }
+</style>
+</head>
+<body>
+<header class="lit hero" id="rise">
+  <canvas aria-hidden="true"></canvas>
+  <div class="wrap">
+    <h1 class="big" id="name">Bryce Rambach</h1>
+    <div class="lede">
+      <p class="sub in" style="--i:6">Designer and engineer. Same person, no handoff.</p>
+      <div class="intro">
+        <p class="in" style="--i:7">Right now I’m building <a class="u" href="/projects/dervo">Dervo</a>, a Mac app for running Claude Code and Codex side by side. You leave your agents working and come back to a few sentences about what finished, what’s stuck and what needs you, instead of four terminals. It’s in private beta. I build Dervo with Dervo.</p>
+        <p class="in" style="--i:8">Before that I designed and built an <a class="u" href="/projects/integration-portal">integration portal</a> for HR and payroll teams, where one wrong field mapping means someone gets paid wrong. Clear wasn’t optional.</p>
+      </div>
+    </div>
+  </div>
+  <a class="hint" href="#work" aria-label="Skip to the work"><i></i><i></i><i></i></a>
+</header>
+
+<main class="wrap">
+  <h2 class="title" id="work" data-in><span class="t">Selected work</span><span class="rule"></span><span class="meta" id="work-meta" aria-hidden="true"></span></h2>
+  <div class="list" id="list"></div>
+
+  <section class="sec">
+    <h2 class="title" data-in><span class="t">In short</span><span class="rule"></span></h2>
+    <p class="about" id="about">I like software that tells you what’s going on. <a href="/projects/dervo" data-peek="0">Agents</a>, <a href="/projects/integration-portal" data-peek="1">payroll</a>, <a href="/projects/arro" data-peek="3">a family’s running streak</a>: different problems, same job. Make the complicated part <em>easy to read</em>, then build it properly, from first sketch to signed release.</p>
+  </section>
+
+  <section class="sec">
+    <h2 class="title" data-in><span class="t">Side quests</span><span class="rule"></span><span class="meta" aria-hidden="true">02</span></h2>
+    <ul class="quests">
+      <li data-in><a class="u" href="/drive">The drive</a><span>A 3D Porsche on Lake Tahoe. Sound on.</span></li>
+      <li data-in style="--d:90ms"><a class="u" href="/work">The road</a><span>The old homepage. Scroll and the Porsche drives.</span></li>
+    </ul>
+  </section>
+</main>
+
+<footer class="lit finale" id="set">
+  <canvas aria-hidden="true"></canvas>
+  <div class="wrap">
+    <h2 class="title" data-in><span class="t">Say hello</span><span class="rule"></span></h2>
+    <p class="kicker" aria-hidden="true">Email</p>
+    <a class="mail" id="mail" href="mailto:bryce.rambach@gmail.com">bryce.rambach@gmail.com</a>
+    <ul class="contacts">
+      <li data-in><a class="u ext" href="https://www.linkedin.com/in/bryce-rambach/" target="_blank" rel="noopener">LinkedIn</a><span>bryce-rambach</span></li>
+      <li data-in style="--d:60ms"><a class="u ext" href="https://x.com/brycerambach" target="_blank" rel="noopener">X</a><span>@brycerambach</span></li>
+      <li data-in style="--d:120ms"><a class="u ext" href="https://github.com/brambach" target="_blank" rel="noopener">GitHub</a><span>brambach</span></li>
+      <li data-in style="--d:180ms"><a class="u ext" href="/Bryce_Rambach_Resume.pdf" target="_blank" rel="noopener">Resume</a><span>PDF, one page</span></li>
+    </ul>
+    <p class="sign fade" data-in>Designed and built by me, which is sort of the point.</p>
+  </div>
+</footer>
+
+<script src="base.js"></script>
+<script>
+  const { reduce, fine, clamp, smooth, pad, page, WORK, shot, letters, watchIn, smoothScroll, scrolledFlag, horizon, clickRipples, inShort, addPainter, bar } = Sky;
+  const INK = [236, 235, 230], GOLD = [233, 184, 96];
+  const ready = new Promise(res => { document.fonts?.ready.then(res); setTimeout(res, 1600); });
+
+  // ---- Swell: big type that gains weight where the light is ----------------------------------------------------
+  // Splits the text into words of letters. Each letter sits in a box as wide as it is at the middle weight, so it can
+  // swell without pushing its neighbours along; a small shift keeps it centred in that box as it grows. Near the
+  // pointer letters swell toward `peak` with a soft falloff and settle back to `rest`. Once, when it first shows, a
+  // band of light runs across it from left to right. `breaks` lists where a long line may wrap on a phone.
+  function swell(el, o = {}) {
+    const opt = { rest: 250, peak: 600, from: 250, sweepPeak: fine ? 500 : 430, sweepMs: fine ? 1700 : 2800, delay: 600, breaks: " ", ...o };
+    const text = el.textContent;
+    el.setAttribute("aria-label", text); el.textContent = "";
+    const chars = [];
+    let word = null;
+    [...text].forEach((ch, k) => {
+      if (ch === " ") { el.append(" "); word = null; return; }
+      if (opt.breaks.includes(ch) && word) { el.append(document.createElement("wbr")); word = null; }
+      if (!word) { word = document.createElement("span"); word.className = "w"; word.setAttribute("aria-hidden", "true"); el.append(word); }
+      const s = document.createElement("span");
+      s.className = "ch"; s.style.setProperty("--k", k); s.textContent = ch;
+      word.append(s); chars.push({ el: s, ch, w: opt.from, adv: 0, slope: 0, x: 0, y: 0, tint: -1 });
+    });
+
+    // Advances at the middle weight, in context so kerning is kept, and how much each letter widens per unit of weight.
+    function measure() {
+      const cs = getComputedStyle(el), m = document.createElement("span");
+      m.style.cssText = `position:absolute;left:-9999px;top:0;white-space:pre;font-family:${cs.fontFamily};font-style:${cs.fontStyle};font-size:100px;letter-spacing:${parseFloat(cs.letterSpacing) / parseFloat(cs.fontSize) * 100 || 0}px;font-weight:400`;
+      document.body.append(m);
+      el.querySelectorAll(".w").forEach(w => {
+        const list = chars.filter(c => c.el.parentNode === w), node = document.createTextNode(list.map(c => c.ch).join(""));
+        m.textContent = ""; m.append(node);
+        const r = document.createRange(), lefts = list.map((c, i) => { r.setStart(node, i); r.setEnd(node, i + 1); return r.getBoundingClientRect().left; });
+        const end = m.getBoundingClientRect().right;
+        list.forEach((c, i) => { c.adv = ((i < list.length - 1 ? lefts[i + 1] : end) - lefts[i]) / 100; });
+      });
+      chars.forEach(c => {
+        m.textContent = c.ch; m.style.letterSpacing = "0";
+        m.style.fontWeight = 200; const a = m.getBoundingClientRect().width;
+        m.style.fontWeight = 700; const b = m.getBoundingClientRect().width;
+        c.slope = (b - a) / 500 / 100;
+        c.el.style.width = c.adv.toFixed(4) + "em";
+      });
+      m.remove();
+    }
+
+    const apply = c => {
+      c.el.style.fontWeight = c.w.toFixed(1);
+      c.el.style.transform = `translateX(${(-c.slope * (c.w - 400) / 2).toFixed(4)}em)`;
+      const t = Math.round(clamp((c.w - opt.rest) / (opt.peak - opt.rest), 0, 1) * 40) / 40;
+      if (t !== c.tint) { c.tint = t; c.el.style.color = t ? `rgb(${Sky.mix(INK, GOLD, t * 0.3).join(" ")})` : ""; }
+    };
+
+    if (reduce) { ready.then(() => { measure(); chars.forEach(c => { c.w = opt.rest; apply(c); }); el.classList.add("go"); }); return; }
+
+    let pointer = null, last = 0, start = 0, ok = false, fs = 100, top = 0, h = 0, left = 0, right = 0;
+    if (fine) {
+      addEventListener("pointermove", e => { if (e.pointerType === "mouse" || e.pointerType === "pen") pointer = [e.clientX, e.clientY]; }, { passive: true });
+      document.documentElement.addEventListener("mouseleave", () => { pointer = null; Sky.wake(); });
+    }
+    const p = {
+      target: el,
+      layout() {
+        if (!ok) return;
+        const r = el.getBoundingClientRect();
+        fs = parseFloat(getComputedStyle(el).fontSize);
+        left = r.left + scrollX; right = r.right + scrollX; top = r.top + scrollY; h = r.height;
+        chars.forEach(c => { c.x = left + c.el.offsetLeft + c.el.offsetWidth / 2; c.y = top + c.el.offsetTop + c.el.offsetHeight / 2; });
+      },
+      paint(now) {
+        if (!ok) return;
+        if (!start && p.born != null) start = now + opt.delay;
+        const dt = last ? Math.min(100, now - last) : 16; last = now;
+        const k = 1 - Math.exp(-dt / 110);
+        // The band of light on the first showing, and the weight under it settling from `from` to `rest`.
+        const s = start ? clamp((now - start) / opt.sweepMs, 0, 1) : 0;
+        const base = opt.from + (opt.rest - opt.from) * smooth(s);
+        const lx = left - fs * 1.4 + (right - left + fs * 2.8) * smooth(s), on = start && now >= start && s < 1;
+        const px = pointer && pointer[0] + scrollX, py = pointer && pointer[1] + scrollY;
+        let moving = false;
+        chars.forEach(c => {
+          let target = base;
+          if (on) target = Math.max(target, base + (opt.sweepPeak - base) * Math.exp(-((c.x - lx) ** 2) / (2 * (fs * 0.9) ** 2)));
+          if (pointer) {
+            const out = Math.max(0, Math.abs(py - c.y) - h * 0.32);
+            const f = Math.exp(-((px - c.x) ** 2) / (2 * (fs * 0.62) ** 2)) * Math.exp(-(out ** 2) / (2 * (fs * 0.45) ** 2));
+            target = Math.max(target, opt.rest + (opt.peak - opt.rest) * f);
+          }
+          const next = c.w + (target - c.w) * k;
+          if (Math.abs(next - c.w) > 0.05) { c.w = next; apply(c); }
+          if (Math.abs(target - c.w) > 0.4) moving = true;
+        });
+        p.moving = moving;
+      },
+      busy(now) { return !ok || !start || now < start + opt.sweepMs + 200 || p.moving; },
+    };
+    ready.then(() => { measure(); ok = true; chars.forEach(apply); el.classList.add("go"); addPainter(p); });
+    return p;
+  }
+
+  // ---- The work as big names ----------------------------------------------------------------------------------
+  // Point at a name, focus it or tap it: it comes to ink and gains weight, its picture wipes in through the letters,
+  // the line and kind appear beside it and the rest step back. On touch the first tap also opens the picture in place
+  // and the second opens the project. Alternate rows drift a little with the scroll.
+  function bigList(list, meta) {
+    const total = pad(WORK.length);
+    const point = i => { meta.innerHTML = i == null ? total : `<b>${pad(i + 1)}</b> / ${total}`; };
+    point(null);
+    const fill = p => p.hero.port
+      ? "repeating-radial-gradient(circle at 46% 58%, #f4f2ec 0 0.14em, #9b9a95 0.14em 0.17em)"
+      : `url("${p.hero.src}")`;
+    const rows = WORK.map((p, i) => {
+      const row = document.createElement("div");
+      row.className = "pj"; row.dataset.in = ""; row.style.setProperty("--d", 120 + i * 90 + "ms");
+      row.style.setProperty("--img", fill(p));
+      if (p.hero.pos) row.style.setProperty("--pos", p.hero.pos);
+      if (p.hero.tall) row.style.setProperty("--pos", "50% 28%");
+      row.innerHTML = `<a class="hd" href="${page(p.id)}"><span class="mv"><span class="nm">${p.name}</span><span class="no" aria-hidden="true">${pad(i + 1)}</span><span class="mt"><span class="ln">${p.line}</span><span class="kd">${p.kind}</span></span></span></a>
+        <div class="drop"><div><div class="inner">${shot(p)}<p class="dl"><span>${p.line}</span><span class="kd">${p.kind}</span></p><a class="go u" href="${page(p.id)}">Open ${p.name}</a></div></div></div>`;
+      list.append(row);
+      return { row, mv: row.querySelector(".mv") };
+    });
+    const end = document.createElement("div");
+    end.className = "end"; end.dataset.in = ""; end.style.setProperty("--d", 120 + WORK.length * 90 + "ms");
+    list.append(end);
+    const plate = document.createElement("div");
+    plate.className = "plate"; plate.setAttribute("aria-hidden", "true");
+    plate.innerHTML = `<div class="pic">${WORK.map(shot).join("")}</div><div class="caps">${WORK.map(p => `<p class="cap"><span>${p.line}</span><span class="kd">${p.kind}</span></p>`).join("")}</div>`;
+    list.append(plate);
+    const plates = [...plate.querySelectorAll(".shot, .cap")];
+
+    let active = null;
+    const set = i => {
+      if (active === i) return;
+      active = i;
+      list.toggleAttribute("data-active", i != null);
+      rows.forEach((r, j) => r.row.classList.toggle("on", j === i));
+      plates.forEach((el, j) => el.classList.toggle("on", j % WORK.length === i));
+      if (i != null) {
+        const r = rows[i].row;
+        // Centred on the row, kept inside the list.
+        const y = r.offsetTop + r.offsetHeight / 2 - plate.offsetHeight / 2;
+        // The first time in, it appears where it is instead of sliding over from the last row.
+        if (!list.hasAttribute("data-was")) plate.style.transition = "opacity 0.5s var(--ease), scale 0.7s var(--ease)";
+        plate.style.setProperty("--y", clamp(y, 0, list.offsetHeight - plate.offsetHeight) + "px");
+        plate.offsetWidth; plate.style.transition = "";
+        list.setAttribute("data-was", "");
+      } else list.removeAttribute("data-was");
+      point(i);
+    };
+    const which = e => { const r = e.target.closest(".pj"); return r ? rows.findIndex(x => x.row === r) : -1; };
+    if (fine) {
+      list.addEventListener("mouseover", e => { const i = which(e); if (i >= 0) set(i); });
+      list.addEventListener("mouseleave", () => { if (!list.contains(document.activeElement)) set(null); });
+      list.addEventListener("focusout", e => { if (!list.contains(e.relatedTarget)) set(null); });
+    } else {
+      list.addEventListener("click", e => {
+        const hd = e.target.closest(".hd"); if (!hd) return;
+        const row = hd.closest(".pj");
+        if (row.hasAttribute("data-open")) return;
+        e.preventDefault();
+        rows.forEach(r => r.row.removeAttribute("data-open"));
+        row.setAttribute("data-open", ""); set(which(e));
+      });
+    }
+    list.addEventListener("focusin", e => { const i = which(e); if (i >= 0) set(i); });
+
+    // The drift: alternate rows slide a few percent of the width in opposite directions, lined up with the grid as
+    // they cross the middle of the screen.
+    if (reduce) return;
+    let raf = 0;
+    const drift = () => {
+      raf = 0;
+      if (innerWidth < 700) { rows.forEach(r => { r.mv.style.transform = ""; }); return; }
+      const amp = Math.min(innerWidth, 1600) * 0.022;
+      const ps = rows.map(r => { const b = r.row.getBoundingClientRect(); return clamp((b.top + b.height / 2 - innerHeight / 2) / innerHeight, -1, 1); });
+      rows.forEach((r, i) => { r.mv.style.transform = `translate3d(${((i % 2 ? 1 : -1) * ps[i] * amp).toFixed(2)}px, 0, 0)`; });
+    };
+    addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(drift); }, { passive: true });
+    addEventListener("resize", drift);
+    drift();
+  }
+
+  swell(document.getElementById("name"), { from: 200 });
+  swell(document.getElementById("mail"), { breaks: "@", delay: 300 });
+  document.querySelectorAll(".title .t").forEach(t => letters(t));
+  bigList(document.getElementById("list"), document.getElementById("work-meta"));
+  inShort(document.getElementById("about"));
+  horizon(document.getElementById("rise"), "rise");
+  horizon(document.getElementById("set"), "set");
+  clickRipples();
+  smoothScroll();
+  scrolledFlag();
+  document.querySelector(".hint").addEventListener("click", e => { e.preventDefault(); document.getElementById("work").scrollIntoView({ behavior: reduce ? "auto" : "smooth" }); });
+  watchIn(520);
+  bar("big-type.html");
+</script>
+</body>
+</html>
