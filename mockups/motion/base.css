@@ -154,6 +154,7 @@ main.col > .title:first-child { margin-top: 24px; }
 .bar a:hover { color: #fff; }
 .bar [aria-current] { background: #ecebe6; color: #111; }
 .bar b { font-weight: 500; opacity: 0.55; margin-right: 5px; }
+.bar .short { display: none; }
 
 @media (max-width: 560px) {
   .head { grid-template-columns: 26px 1fr auto; gap: 2px 12px; }
@@ -164,6 +165,8 @@ main.col > .title:first-child { margin-top: 24px; }
   .bar { right: 50%; translate: 50% 0; top: auto; bottom: 14px; }
   .bar a { padding: 9px 7px; }
   .bar b { display: none; }
+  .bar .long { display: none; }
+  .bar .short { display: inline; }
 }
 @media (prefers-reduced-motion: reduce) {
   .in, .ch, .hint, .hint i { animation: none !important; opacity: 1 !important; filter: none !important; translate: 0 !important; rotate: 0deg !important; }
