@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>1 · Day: the page is one day</title>
+<!-- A throwaway mockup, not part of the site build. The live homepage with one change: the scroll is one day. The
+     sunrise condenses into a small sun that keeps you company, climbing the right margin, crossing the top of the
+     screen at noon and coming down the left margin to set into the closing sunset. The sky's colour follows it, and
+     a small clock reads the time. Built on base.css and base.js; see now.html for the page it starts from. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=sentient@1,2&display=swap">
+<link rel="stylesheet" href="base.css">
+<style>
+  /* The sky is a fixed layer whose colours follow the time of day; JS sets --top, --mid and --bot. */
+  body { background: none; }
+  .daysky { position: fixed; inset: 0; z-index: -1; background: linear-gradient(to bottom, var(--top, var(--bg0)), var(--mid, var(--bg1)) 55%, var(--bot, var(--bg2))); }
+  /* The travelling sun sits above the horizons and under the words. */
+  .traveller { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+  .clock { position: fixed; z-index: 2; left: 0; top: 0; font: 400 11px/1 var(--mono); letter-spacing: 0.06em; color: var(--faint); white-space: nowrap; pointer-events: none;
+    opacity: 0; transition: opacity 0.5s var(--ease); font-variant-numeric: tabular-nums; }
+  .clock.on { opacity: 1; }
+  /* The sun crosses the top edge at noon, so the mockup bar moves out of its way. */
+  .bar { top: auto; bottom: 18px; right: 50%; translate: 50% 0; }
+</style>
+</head>
+<body>
+<div class="daysky" id="daysky" aria-hidden="true"></div>
+<header class="lit hero" id="rise">
+  <canvas aria-hidden="true"></canvas>
+  <div class="col">
+    <h1 class="name" id="name">Bryce Rambach</h1>
+    <p class="sub in" style="--i:1">Designer and engineer. Same person, no handoff.</p>
+    <div class="intro">
+      <p class="in" style="--i:2">Right now I’m building <a class="u" href="/projects/dervo">Dervo</a>, a Mac app for running Claude Code and Codex side by side. You leave your agents working and come back to a few sentences about what finished, what’s stuck and what needs you, instead of four terminals. It’s in private beta. I build Dervo with Dervo.</p>
+      <p class="in" style="--i:3">Before that I designed and built an <a class="u" href="/projects/integration-portal">integration portal</a> for HR and payroll teams, where one wrong field mapping means someone gets paid wrong. Clear wasn’t optional.</p>
+    </div>
+  </div>
+  <a class="hint" href="#work" aria-label="Skip to the work"><i></i><i></i><i></i></a>
+</header>
+
+<main class="col">
+  <h2 class="title" id="work" data-in><span class="t">Selected work</span><span class="rule"></span><span class="meta" id="work-meta" aria-hidden="true"></span></h2>
+  <div class="list" id="list"></div>
+
+  <h2 class="title" data-in><span class="t">In short</span><span class="rule"></span></h2>
+  <p class="about" id="about">I like software that tells you what’s going on. <a href="/projects/dervo" data-peek="0">Agents</a>, <a href="/projects/integration-portal" data-peek="1">payroll</a>, <a href="/projects/arro" data-peek="3">a family’s running streak</a>: different problems, same job. Make the complicated part <em>easy to read</em>, then build it properly, from first sketch to signed release.</p>
+
+  <h2 class="title" data-in><span class="t">Side quests</span><span class="rule"></span><span class="meta" aria-hidden="true">02</span></h2>
+  <ul class="links">
+    <li data-in><a class="u" href="/drive">The drive</a><span>A 3D Porsche by a lake. Sound on.</span></li>
+    <li data-in style="--d:70ms"><a class="u" href="/work">The road</a><span>The old homepage. Scroll and the Porsche drives.</span></li>
+  </ul>
+</main>
+
+<footer class="lit finale" id="set">
+  <canvas aria-hidden="true"></canvas>
+  <div class="col">
+    <h2 class="title" data-in><span class="t">Say hello</span><span class="rule"></span></h2>
+    <ul class="links">
+      <li data-in><a class="u" href="mailto:bryce.rambach@gmail.com">bryce.rambach@gmail.com</a><span>Email</span></li>
+      <li data-in style="--d:60ms"><a class="u ext" href="https://www.linkedin.com/in/bryce-rambach/" target="_blank" rel="noopener">LinkedIn</a><span>bryce-rambach</span></li>
+      <li data-in style="--d:120ms"><a class="u ext" href="https://x.com/brycerambach" target="_blank" rel="noopener">X</a><span>@brycerambach</span></li>
+      <li data-in style="--d:180ms"><a class="u ext" href="https://github.com/brambach" target="_blank" rel="noopener">GitHub</a><span>brambach</span></li>
+      <li data-in style="--d:240ms"><a class="u ext" href="/Bryce_Rambach_Resume.pdf" target="_blank" rel="noopener">Resume</a><span>PDF, one page</span></li>
+    </ul>
+    <p class="sign fade" data-in>Designed and built by me, which is sort of the point.</p>
+  </div>
+</footer>
+
+<canvas class="traveller" id="traveller" aria-hidden="true"></canvas>
+<span class="clock" id="clock" aria-hidden="true"></span>
+
+<script src="base.js"></script>
+<script>
+  const { root, reduce, clamp, smooth, lerp, mix, rgb, oklch, SUN, letters, watchIn, smoothScroll, scrolledFlag, horizon, clickRipples, workList, inShort, addPainter, bar } = Sky;
+  letters(document.getElementById("name"));
+  document.querySelectorAll(".title .t").forEach(t => letters(t));
+  const peek = workList(document.getElementById("list"), document.getElementById("work-meta"));
+  inShort(document.getElementById("about"), peek);
+
+  const heroEl = document.getElementById("rise"), setEl = document.getElementById("set");
+  const narrow = () => root.clientWidth < 700;
+  const bigR = () => (narrow() ? 28 : 46);
+
+  // ---- The day ---------------------------------------------------------------------------------------------
+  // Everything follows three numbers per scroll position:
+  //   rise  0..1  the sunrise condensing into the small sun (first half), which then floats out to the margin
+  //   day   0..1  the small sun's way across the sky, from the right margin over the top to the left margin
+  //   set   0..1  the small sun reaching the closing sunset (first half), then opening out into it
+  function phases() {
+    const H = innerHeight, y = scrollY, end = root.scrollHeight - H;
+    const s0 = heroEl.offsetHeight * 0.42, s1 = end - H * 0.36;
+    const rise = clamp((y - s0) / (H * 0.5), 0, 1), set = clamp((y - s1) / (H * 0.36), 0, 1);
+    const day = clamp((y - s0 - H * 0.5) / Math.max(1, s1 - s0 - H * 0.5), 0, 1);
+    const ease = (v, a, b) => smooth(clamp((v - a) / (b - a), 0, 1));
+    return {
+      rise, day, set, D: 0.12 * rise + 0.78 * day + 0.1 * set,
+      condense: ease(rise, 0, 0.5), leave: ease(rise, 0.45, 1),
+      arrive: ease(set, 0, 0.55), open: ease(set, 0.5, 1),
+    };
+  }
+
+  // Where the opening sun is, the same climb as the live site's but with its full size kept for the sums.
+  function heroSun(s, now) {
+    const R = bigR();
+    const age = reduce ? 1 : s.born == null ? 0 : 1 - Math.pow(1 - clamp((now - s.born) / 3200, 0, 1), 3);
+    const away = clamp(scrollY / Math.max(1, s.H), 0, 1);
+    return { x: s.sx, y: s.hz + R * 1.15 - (R * 1.15 + R * 0.55) * age - R * 1.6 * away };
+  }
+  function setSun(s) {
+    const R = bigR(), top = setEl.getBoundingClientRect().top + scrollY;
+    const p = clamp((scrollY + innerHeight - top) / Math.max(1, root.scrollHeight - top), 0, 1);
+    return { x: s.sx, y: s.hz - R * 1.8 + R * 2.25 * smooth(p) };
+  }
+  // The opening sun shrinks away as the small one leaves it; the closing sun grows as the small one arrives. Their
+  // size is set just before each frame is drawn (with reduced motion a frame is only drawn when you scroll).
+  const hero = horizon(heroEl, "rise", { sun: heroSun });
+  const dusk = horizon(setEl, "set", { sun: setSun });
+  const sized = (scene, size) => { const paint = scene.paint; scene.paint = now => { scene.R = Math.max(0.01, size()); paint(now); }; };
+  sized(hero, () => bigR() * (1 - phases().condense));
+  sized(dusk, () => bigR() * phases().open);
+
+  // The small sun's path across the screen. Wide screens: up the right margin, a quick crossing along the top edge
+  // at noon (hugging the top, so it passes over the least-read line), down the left margin. Phones have no margins,
+  // so it keeps to a shallow arc along the top edge.
+  function path(day) {
+    const W = root.clientWidth, H = innerHeight, c = Math.cos(Math.PI * day);
+    if (W < 900) return { x: W / 2 + (W / 2 - 22) * Math.sign(c) * Math.pow(Math.abs(c), 0.8), y: 22 + 26 * Math.pow(Math.abs(c), 1.4), over: true };
+    const reach = Math.max(120, (W / 2 - 300) / 2 + 300);
+    return { x: W / 2 + reach * Math.sign(c) * Math.pow(Math.abs(c), 0.32), y: 26 + (H * 0.56 - 26) * Math.pow(Math.abs(c), 1.5), over: Math.abs(c) < 0.25 };
+  }
+
+  // The sky's colours through the day, top, middle and bottom of the screen, in oklch. All stay dark enough that
+  // --faint text keeps about 4.6:1.
+  // Hues are listed unwrapped (422 is 62) so the afternoon goes through violet and rose to amber, never green.
+  const STOPS = [
+    [0.00, [0.165, 0.030, 264], [0.200, 0.024, 284], [0.205, 0.016, 262]],
+    [0.14, [0.180, 0.032, 260], [0.205, 0.030, 300], [0.222, 0.034, 330]],
+    [0.38, [0.205, 0.036, 252], [0.215, 0.030, 245], [0.222, 0.026, 238]],
+    [0.56, [0.222, 0.040, 246], [0.225, 0.032, 250], [0.228, 0.024, 262]],
+    [0.76, [0.200, 0.030, 262], [0.215, 0.030, 300], [0.232, 0.046, 422]],
+    [0.90, [0.185, 0.026, 285], [0.205, 0.026, 320], [0.232, 0.048, 396]],
+    [1.00, [0.175, 0.024, 282], [0.200, 0.020, 300], [0.225, 0.026, 388]],
+  ];
+  const hueMix = (a, b, t) => (lerp(a, b, t) + 360) % 360;
+  function skyAt(D) {
+    let i = 0;
+    while (i < STOPS.length - 2 && D > STOPS[i + 1][0]) i++;
+    const [d0, ...a] = STOPS[i], [d1, ...b] = STOPS[i + 1], t = smooth(clamp((D - d0) / (d1 - d0), 0, 1));
+    return a.map((c, k) => { const e = b[k]; return `oklch(${lerp(c[0], e[0], t).toFixed(4)} ${lerp(c[1], e[1], t).toFixed(4)} ${hueMix(c[2], e[2], t).toFixed(1)})`; });
+  }
+
+  // The clock: 5:48 am before the sun's up, then sunrise at 6:12 to sunset at 7:44 pm.
+  function clockAt(D) {
+    const m = Math.round(lerp(348, 1184, clamp(D, 0, 1)));
+    const h = Math.floor(m / 60), mm = String(m % 60).padStart(2, "0");
+    return `${((h + 11) % 12) + 1}:${mm} ${h < 12 ? "am" : "pm"}`;
+  }
+
+  // ---- The small sun, drawn in the same dots as the horizons -------------------------------------------------
+  const canvas = document.getElementById("traveller"), ctx = canvas.getContext("2d");
+  const daysky = document.getElementById("daysky").style, clock = document.getElementById("clock");
+  let W = 0, H = 0, lastKey = "";
+  const traveller = addPainter({
+    target: canvas, always: true,
+    layout() {
+      const dpr = Math.min(2, devicePixelRatio || 1);
+      W = innerWidth; H = innerHeight;
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      lastKey = "";
+    },
+    paint(now) {
+      const ph = phases(), key = `${scrollY}|${W}|${H}|${hero.born != null}`;
+      // Nothing to redraw while the page is still, except during the sunrise.
+      if (key === lastKey && hero.born != null && now - hero.born > 3400) return;
+      lastKey = key;
+      const [top, mid, bot] = skyAt(ph.D);
+      daysky.setProperty("--top", top); daysky.setProperty("--mid", mid); daysky.setProperty("--bot", bot);
+      ctx.clearRect(0, 0, W, H);
+      const small = narrow() ? 10 : 15;
+      // The small sun condenses inside the sunrise as it shrinks, floats out along the path, comes down to where the
+      // sunset will be, and opens out into it.
+      const size = small * ph.condense * (1 - ph.open);
+      if (size < 0.5) { clock.classList.remove("on"); return; }
+      const hr = heroEl.getBoundingClientRect(), sr = setEl.getBoundingClientRect();
+      const a = heroSun(hero, now), b = setSun(dusk), p = path(ph.day);
+      let x = lerp(hr.left + a.x, p.x, ph.leave), y = lerp(hr.top + a.y, p.y, ph.leave);
+      x = lerp(x, sr.left + b.x, ph.arrive); y = lerp(y, Math.min(H - 36, sr.top + b.y), ph.arrive);
+      const warm = clamp((ph.D - 0.55) / 0.4, 0, 1);
+      draw(x, y, size, 1, mix(SUN.rise[0], SUN.set[0], warm), mix(SUN.rise[1], SUN.set[1], warm));
+      // The clock sits under the sun, only while it's in a margin, never over the words.
+      clock.textContent = clockAt(ph.D);
+      const cw = clock.offsetWidth, lx = x - cw / 2, ly = y + size * 1.6 + 14;
+      const clear = lx > W / 2 + 300 || lx + cw < W / 2 - 300;
+      clock.classList.toggle("on", W >= 900 && ph.leave > 0.7 && ph.arrive < 0.3 && clear);
+      clock.style.transform = `translate(${lx.toFixed(1)}px, ${ly.toFixed(1)}px)`;
+    },
+  });
+
+  // A disc of full dots, a soft ring of smaller ones, and a faint wash, on a grid that travels with the sun so it
+  // stays crisp while it moves.
+  function draw(x, y, r, alpha, midC, highC) {
+    const gap = Math.max(3.6, r / 3.4), reach = r * 3.4, maxR = gap * 0.46;
+    const wash = ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 7);
+    wash.addColorStop(0, `rgb(${highC.join(" ")} / ${(0.13 * alpha).toFixed(3)})`);
+    wash.addColorStop(1, `rgb(${highC.join(" ")} / 0)`);
+    ctx.fillStyle = wash; ctx.fillRect(x - r * 7, y - r * 7, r * 14, r * 14);
+    const NB = 8, paths = Array.from({ length: NB }, () => new Path2D());
+    const n = Math.ceil(reach / gap);
+    for (let j = -n; j <= n; j++) for (let i = -n; i <= n; i++) {
+      const dx = i * gap, dy = j * gap, d = Math.hypot(dx, dy);
+      if (d > reach) continue;
+      const B = d < r ? 1 : Math.exp(-(d - r) / (r * 0.75)) * 0.62;
+      const rad = maxR * Math.pow(B, 0.8);
+      if (rad < 0.35) continue;
+      const k = Math.min(NB - 1, Math.floor(B * NB));
+      paths[k].moveTo(x + dx + rad, y + dy); paths[k].arc(x + dx, y + dy, rad, 0, Math.PI * 2);
+    }
+    ctx.globalAlpha = alpha;
+    for (let k = 0; k < NB; k++) {
+      const t = (k + 0.5) / NB;
+      ctx.fillStyle = rgb(t < 0.5 ? mix([70, 64, 82], midC, t / 0.5) : mix(midC, highC, (t - 0.5) / 0.5));
+      ctx.fill(paths[k]);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  clickRipples();
+  smoothScroll();
+  scrolledFlag();
+  document.querySelector(".hint").addEventListener("click", e => { e.preventDefault(); document.getElementById("work").scrollIntoView({ behavior: reduce ? "auto" : "smooth" }); });
+  watchIn(520);
+  bar("a-day.html");
+</script>
+</body>
+</html>

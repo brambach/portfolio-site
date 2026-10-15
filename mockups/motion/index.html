@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Motion: five directions for the sky site</title>
+<!-- A throwaway chooser for the motion mockups, not part of the site build. Open through the Vite dev server. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=sentient@1,2&display=swap">
+<link rel="stylesheet" href="base.css">
+<style>
+  body { padding: 14vh 0 18vh; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  h1 { margin: 0; font: italic 400 30px/1.2 var(--serif); letter-spacing: -0.015em; }
+  .lede { margin: 10px 0 56px; max-width: 58ch; color: var(--soft); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1px; background: var(--rule); border-block: 1px solid var(--rule); }
+  .card { display: grid; align-content: start; gap: 8px; padding: 26px 24px 30px; background: var(--bg1); transition: background-color 0.5s var(--ease); }
+  .card:hover, .card:focus-visible { background: oklch(0.23 0.022 280); }
+  .card .label b { font-weight: 400; color: var(--sun); margin-right: 6px; }
+  .card h2 { margin: 0; font: italic 400 26px/1.15 var(--serif); letter-spacing: -0.012em; }
+  .card p { margin: 0; color: var(--soft); }
+  .card .try { margin-top: 6px; font-size: 13px; color: var(--faint); }
+  .card .go { margin-top: 10px; justify-self: start; font-size: 14px; }
+  .card:hover .go { background-size: 100% 1px, 100% 1px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Five ways to move</h1>
+  <p class="lede">Each one keeps the sky, the gold and your words, and adds one idea. The first three build on the site you have; the last two are bigger redos. Use the bar at the top right to jump between them.</p>
+  <div class="grid">
+    <a class="card" href="a-day.html"><span class="label"><b>1</b>Builds on now</span><h2>Day</h2><p>The scroll is one day. A single sun keeps you company from the sunrise at the top to the sunset at the end, and the sky changes colour with it.</p><p class="try">Try: scroll slowly to the bottom.</p><span class="go u">Open Day</span></a>
+    <a class="card" href="held-sun.html"><span class="label"><b>2</b>Builds on now</span><h2>Sun</h2><p>One thing to hold. Drag the sun and the whole page changes time of day, from bright gold down to sunset, and below the water to night and the moon.</p><p class="try">Try: grab the sun and pull it into the water.</p><span class="go u">Open Sun</span></a>
+    <a class="card" href="print.html"><span class="label"><b>3</b>Builds on now</span><h2>Print</h2><p>Everything is printed in dots. Project pictures appear as halftone and develop into the real thing, and the pointer changes with what it's over.</p><p class="try">Try: move slowly down the work list. Best with a mouse.</p><span class="go u">Open Print</span></a>
+    <a class="card" href="big-type.html"><span class="label"><b>4</b>Redo</span><h2>Type</h2><p>Big type is the motion. Your name swells where the pointer passes. The work becomes large names: point at one and it fills with its picture, with a clear copy and its line gliding alongside.</p><p class="try">Try: run the pointer across your name.</p><span class="go u">Open Type</span></a>
+    <a class="card" href="one-horizon.html"><span class="label"><b>5</b>Redo</span><h2>Horizon</h2><p>One screen, one horizon. Point at a project and the sun travels to it while its picture rises out of the water with its reflection below. Dervo comes up first.</p><p class="try">Try: arrow keys left and right.</p><span class="go u">Open Horizon</span></a>
+    <a class="card" href="now.html"><span class="label">For comparison</span><h2>Now</h2><p>The live homepage, rebuilt on the same base so the five can be compared like for like.</p><span class="go u">Open Now</span></a>
+  </div>
+</div>
+</body>
+</html>

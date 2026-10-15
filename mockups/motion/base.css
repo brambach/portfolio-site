@@ -1,0 +1,172 @@
+/* Shared styles for the motion mockups in mockups/motion/. Not part of the site build. The look matches the live sky
+   site (src/sky/sky.css): pre-dawn navy at the top to dusk at the bottom, one warm gold, Sentient italic for names and
+   titles, Hanken for reading, Plex Mono for labels. Each direction adds its own idea on top of this. */
+
+:root {
+  --serif: "Sentient", "Iowan Old Style", Georgia, serif; --sans: "Hanken Grotesk", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
+  --spring: cubic-bezier(0.34, 1.5, 0.64, 1);
+  --bg0: oklch(0.17 0.028 262); --bg1: oklch(0.205 0.022 285); --bg2: oklch(0.205 0.014 262); --bg3: oklch(0.225 0.026 28);
+  --ink: #ecebe6; --soft: rgb(236 235 230 / 0.68); --faint: rgb(236 235 230 / 0.54); --rule: rgb(236 235 230 / 0.12);
+  --tile: oklch(0.255 0.014 262); --sun: #e9b860; --sun-ink: #1d1608;
+  color-scheme: dark;
+  background: var(--bg0);
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; color: var(--ink); background: linear-gradient(to bottom, var(--bg0) 0%, var(--bg1) 28%, var(--bg2) 72%, var(--bg3) 100%);
+  font: 400 15px/1.65 var(--sans); -webkit-font-smoothing: antialiased; }
+::selection { background: rgb(233 184 96 / 0.35); color: #fff; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 1px solid var(--sun); outline-offset: 4px; border-radius: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.col { position: relative; z-index: 1; max-width: 600px; margin: 0 auto; padding: 0 24px; }
+
+/* ---- entrances ---- */
+.ch { display: inline-block; }
+.in { opacity: 0; filter: blur(6px); translate: 0 8px; animation: settle 0.9s var(--ease) forwards; animation-delay: calc(var(--i, 0) * 80ms + 260ms); }
+@keyframes settle { to { opacity: 1; filter: none; translate: 0; } }
+@keyframes rise { to { opacity: 1; filter: none; translate: 0; rotate: 0deg; } }
+/* Only the middle is set, so letters start and end on the ink colour. */
+@keyframes glint { 40% { color: var(--sun); text-shadow: 0 0 14px rgb(233 184 96 / 0.45); } }
+[data-in] { --d: 0ms; }
+.fade[data-in] { opacity: 0; translate: 0 10px; transition: opacity 0.8s var(--ease) var(--d), translate 0.8s var(--ease) var(--d); }
+.fade.seen { opacity: 1; translate: 0; }
+
+/* ---- links ---- */
+.u { background: linear-gradient(var(--sun), var(--sun)) 0 100% / 0 1px no-repeat, linear-gradient(var(--rule), var(--rule)) 0 100% / 100% 1px no-repeat; transition: background-size 0.55s var(--ease); }
+.u:hover, .u:focus-visible { background-size: 100% 1px, 100% 1px; }
+.ext::after { content: "↗"; display: inline-block; margin-left: 4px; font-size: 12px; color: var(--soft); transition: translate 0.45s var(--spring), color 0.3s var(--ease); }
+.ext:hover::after { translate: 2px -2px; color: var(--sun); }
+
+/* ---- section titles: serif italic letters rise, a halftone rule of dots draws out ---- */
+.title { display: flex; align-items: center; gap: 14px; margin: 88px 0 12px; font-weight: 400; }
+.title .t { font: italic 400 24px/1.2 var(--serif); letter-spacing: -0.012em; white-space: nowrap; }
+.title .ch { opacity: 0; filter: blur(6px); translate: 0 0.45em; transition: opacity 0.8s var(--ease), filter 0.8s var(--ease), translate 0.9s var(--ease); transition-delay: calc(var(--k) * 28ms); }
+.title.seen .ch { opacity: 1; filter: none; translate: 0; }
+.title .rule { flex: 1; height: 4px; background: radial-gradient(circle, rgb(236 235 230 / 0.42) 0.85px, transparent 1.35px) 0 50% / 7px 4px repeat-x;
+  -webkit-mask: linear-gradient(to right, #000 40%, transparent); mask: linear-gradient(to right, #000 40%, transparent);
+  transform: scaleX(0); transform-origin: left; transition: transform 1.3s var(--ease) 0.25s; }
+.title.seen .rule { transform: none; }
+.title .meta { font: 400 11px/1.4 var(--mono); letter-spacing: 0.06em; color: var(--faint); opacity: 0; transition: opacity 0.6s var(--ease) 0.8s; }
+.title.seen .meta { opacity: 1; }
+.title .meta b { font-weight: 400; color: var(--ink); }
+.label { font: 400 11px/1.4 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+
+/* ---- horizons: a screen with a halftone canvas drawn behind its words ---- */
+.lit { position: relative; display: block; }
+.lit > canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; pointer-events: none; }
+.ripples { position: fixed; inset: 0; pointer-events: none; z-index: 30; }
+
+/* ---- the opening and closing screens ---- */
+.hero, .finale { min-height: 100svh; }
+.hero { padding: 14vh 0 300px; }
+.finale { padding: 1px 0 300px; }
+.name { margin: 0; font: italic 400 22px/1.3 var(--serif); letter-spacing: -0.01em; }
+.name .ch { opacity: 0; filter: blur(8px); translate: 0 0.5em; rotate: 4deg;
+  animation: rise 1s var(--ease) forwards, glint 1.2s ease-in-out forwards;
+  animation-delay: calc(var(--k) * 34ms + 120ms), calc(var(--k) * 55ms + 1700ms); }
+.sub { margin: 2px 0 0; color: var(--soft); }
+.intro { margin: 48px 0 0; }
+.intro p { margin: 0 0 1em; }
+main.col > .title:first-child { margin-top: 24px; }
+/* Three dots that drift down, gone once you scroll. */
+.hint { position: absolute; z-index: 2; left: 50%; bottom: 30px; translate: -50% 0; display: grid; gap: 6px; padding: 10px; opacity: 0; animation: settle 1s var(--ease) 2.6s forwards; }
+.hint i { width: 4px; height: 4px; border-radius: 50%; background: var(--ink); opacity: 0.5; animation: drip 2.2s ease-in-out infinite; animation-delay: calc(var(--n, 0) * 0.18s); }
+.hint i:nth-child(2) { --n: 1; } .hint i:nth-child(3) { --n: 2; }
+@keyframes drip { 0%, 100% { opacity: 0.15; translate: 0 -2px; } 45% { opacity: 0.8; translate: 0 2px; } }
+.scrolled .hint { opacity: 0 !important; transition: opacity 0.4s; pointer-events: none; }
+
+/* ---- the work list, kept quiet ---- */
+.row { position: relative; }
+.row::before, .end { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: var(--rule); transform: scaleX(0); transform-origin: left; transition: transform 1.2s var(--ease) var(--d, 0ms); }
+.end { position: relative; display: block; }
+.row.seen::before, .end.seen { transform: none; }
+.head { display: grid; grid-template-columns: 30px 9em 1fr auto; gap: 14px; align-items: baseline; padding: 14px 0;
+  opacity: 0; translate: 0 8px; transition: opacity 0.9s var(--ease) calc(var(--d, 0ms) + 140ms), translate 0.9s var(--ease) calc(var(--d, 0ms) + 140ms); }
+.row.seen .head { opacity: 1; translate: 0; }
+.no, .kd { font: 400 11px/1 var(--mono); color: var(--faint); transition: color 0.5s var(--ease); }
+.kd { letter-spacing: 0.04em; text-align: right; }
+.nm { justify-self: start; font-weight: 500; font-size: 15px; color: var(--soft); transition: color 0.5s var(--ease); }
+.ln { color: var(--faint); transition: color 0.5s var(--ease); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: var(--soft); opacity: 0; transition: opacity 0.6s var(--ease); z-index: 1; }
+.head:focus-visible { outline-offset: 2px; }
+.head:focus-visible .nm, .row[data-open] .nm { color: var(--ink); }
+@media (hover: hover) and (pointer: fine) {
+  .row:hover .nm { color: var(--ink); }
+  .row:hover .ln, .row:hover .no, .row:hover .kd { color: var(--soft); }
+  .row:hover::after { opacity: 0.5; }
+}
+/* Touch: the first tap opens the preview in place. */
+.drop { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.6s var(--ease); }
+.row[data-open] .drop { grid-template-rows: 1fr; }
+.drop > div { overflow: hidden; }
+.drop .inner { padding: 0 0 20px; opacity: 0; translate: 0 -6px; transition: opacity 0.5s var(--ease), translate 0.5s var(--ease); }
+.row[data-open] .inner { opacity: 1; translate: 0; transition-delay: 0.12s; }
+.drop .shot { aspect-ratio: 16 / 10; border-radius: 8px; margin-bottom: 12px; }
+.drop .go { font-size: 14px; }
+
+/* The hover card: the picture the project opens on, following the cursor. */
+.peek { position: fixed; top: 0; left: 0; width: 272px; height: 170px; pointer-events: none; z-index: 5; border-radius: 8px; overflow: hidden; background: var(--tile);
+  box-shadow: 0 24px 50px -24px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.06); opacity: 0; scale: 0.97; transition: opacity 0.45s var(--ease), scale 0.6s var(--ease); }
+.peek.on { opacity: 1; scale: 1; }
+.peek .stack { transition: transform 0.6s var(--ease); }
+.peek .shot { height: 170px; }
+
+/* ---- pictures ---- */
+.shot { position: relative; overflow: hidden; background: var(--tile); }
+.shot img { width: 100%; height: 100%; max-width: none; object-fit: cover; object-position: var(--pos, 0 0); display: block; }
+.shot.tall { background: #ece3d8; }
+.shot.tall img { width: 46%; height: auto; margin: 4% auto 0; border-radius: 12px 12px 0 0; box-shadow: 0 10px 30px -10px rgb(0 0 0 / 0.25); }
+.port-tile { position: absolute; inset: 0; display: grid; place-items: center; background: #141413; }
+.port-tile .ring { display: block; width: 56px; height: 56px; border-radius: 50%; border: 1px solid rgb(255 255 255 / 0.5); box-shadow: 0 0 0 10px rgb(255 255 255 / 0.04), 0 0 0 22px rgb(255 255 255 / 0.025); }
+.port-tile span { position: absolute; bottom: 12px; left: 0; right: 0; text-align: center; font: 500 10px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: rgb(255 255 255 / 0.62); }
+
+/* ---- In short ---- */
+.about { margin: 0; font: 400 clamp(21px, 3vw, 24px)/1.42 var(--serif); letter-spacing: -0.012em; }
+.about em { font-style: italic; }
+.about .pw { position: relative; transition: color 0.4s var(--ease); }
+.about .pw::before, .about .pw::after { content: ""; position: absolute; left: 0; right: 0; bottom: -0.12em; height: 4px; pointer-events: none; }
+.about .pw::before { background: radial-gradient(circle, var(--sun) 1px, transparent 1.45px) 0 50% / 6px 4px repeat-x; transform: scaleX(0); transform-origin: left; transition: transform 0.9s var(--ease) var(--wd, 0ms), opacity 0.35s var(--ease); }
+.about a.lit-up .pw::before { transform: none; }
+.about .pw::after { background: radial-gradient(2.7px 0.9px at 50% 50%, var(--sun) 65%, transparent 100%) 0 50% / 8px 4px repeat-x;
+  opacity: 0; transition: opacity 0.35s var(--ease); animation: drift 1.3s linear infinite, swell 0.9s ease-in-out infinite alternate; animation-play-state: paused; }
+.about a:hover .pw, .about a:focus-visible .pw { color: color-mix(in oklab, var(--ink) 78%, var(--sun)); }
+.about a:hover .pw::before, .about a:focus-visible .pw::before { opacity: 0; }
+.about a:hover .pw::after, .about a:focus-visible .pw::after { opacity: 1; animation-play-state: running; }
+.about a.glint .pw { animation: glint 1.2s ease-in-out both; animation-delay: var(--gd, 0ms); }
+@keyframes drift { to { background-position-x: 8px; } }
+@keyframes swell { from { transform: scaleY(0.7); } to { transform: scaleY(1.35); } }
+
+/* ---- lists of links ---- */
+.links { list-style: none; margin: 0; padding: 0; }
+.links li { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 6px 0; }
+.links li[data-in] { opacity: 0; translate: 0 8px; transition: opacity 0.8s var(--ease) var(--d), translate 0.8s var(--ease) var(--d); }
+.links li.seen { opacity: 1; translate: 0; }
+.links a { flex: none; }
+.links span { color: var(--soft); font-size: 13px; text-align: right; }
+.sign { margin: 40px 0 0; color: var(--soft); font-size: 13px; }
+
+/* ---- the bar: switch between the directions (mockups only) ---- */
+.bar { position: fixed; right: 16px; top: 16px; z-index: 40; display: flex; align-items: center; gap: 2px; padding: 4px; border-radius: 999px;
+  background: rgb(30 32 40 / 0.86); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 0 0 1px rgb(255 255 255 / 0.08);
+  font: 500 11px/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+.bar a { flex: none; padding: 9px 11px; border-radius: 999px; color: rgb(255 255 255 / 0.62); transition: color 0.3s; }
+.bar a:hover { color: #fff; }
+.bar [aria-current] { background: #ecebe6; color: #111; }
+.bar b { font-weight: 500; opacity: 0.55; margin-right: 5px; }
+
+@media (max-width: 560px) {
+  .head { grid-template-columns: 26px 1fr auto; gap: 2px 12px; }
+  .ln { grid-column: 2 / 4; grid-row: 2; white-space: normal; }
+  .title .t { font-size: 22px; }
+  .hero, .finale { padding-bottom: 230px; }
+  .hint { bottom: 18px; }
+  .bar { right: 50%; translate: 50% 0; top: auto; bottom: 14px; }
+  .bar a { padding: 9px 7px; }
+  .bar b { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .in, .ch, .hint, .hint i { animation: none !important; opacity: 1 !important; filter: none !important; translate: 0 !important; rotate: 0deg !important; }
+  *, *::before, *::after { transition-duration: 0s !important; transition-delay: 0s !important; }
+  .about .pw::after { animation: none !important; }
+}

@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>5 · Horizon: the sun points at what you're looking at</title>
+<!-- A throwaway mockup, not part of the site build. The first screen is one wide halftone horizon. The work is a
+     short index on the shore; pointing at a project sends the sun along the horizon to that project's spot, and its
+     picture rises out of the water in front of the sun with its reflection beneath. Built on base.css and base.js. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=sentient@1,2&display=swap">
+<link rel="stylesheet" href="base.css">
+<style>
+  /* ---- the first screen ---- */
+  .top { position: relative; --water: 300px; }
+  .stage { height: 100svh; min-height: 620px; overflow: hidden; }
+  .who { position: absolute; z-index: 2; left: 56px; top: 52px; }
+  .who .name { font-size: 24px; }
+
+  /* The index sits on the shore, bottom left, just above the waterline. */
+  .index { position: absolute; z-index: 2; left: 56px; bottom: calc(var(--water) + 34px); width: 292px; }
+  .index h2 { margin: 0 0 10px; display: flex; justify-content: space-between; }
+  .index ol { list-style: none; margin: 0; padding: 0; }
+  .index li { opacity: 0; translate: 0 6px; animation: settle 0.9s var(--ease) forwards; animation-delay: calc(var(--n) * 70ms + 900ms); }
+  .index a { position: relative; display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: baseline; padding: 5px 0; }
+  .index .no, .index .kd { font: 400 11px/1 var(--mono); color: var(--faint); transition: color 0.5s var(--ease); }
+  .index .kd { letter-spacing: 0.04em; }
+  .index .nm { color: var(--soft); font-weight: 500; transition: color 0.5s var(--ease); }
+  /* The current one comes up to ink with a small sun beside it. */
+  .index a::before { content: ""; position: absolute; left: -16px; top: 50%; width: 5px; height: 5px; margin-top: -2px; border-radius: 50%; background: var(--sun);
+    box-shadow: 0 0 8px rgb(233 184 96 / 0.7); opacity: 0; scale: 0.3; transition: opacity 0.4s var(--ease), scale 0.6s var(--spring); }
+  .index a.on::before { opacity: 1; scale: 1; }
+  .index a.on .nm { color: var(--ink); }
+  .index a.on .no, .index a.on .kd { color: var(--soft); }
+  .index a:focus-visible { outline-offset: 3px; }
+  .how { margin: 14px 0 0; font: 400 11px/1.4 var(--mono); letter-spacing: 0.04em; color: var(--faint); transition: opacity 0.8s var(--ease) !important; }
+  .how.done { opacity: 0 !important; }
+
+  /* A berth is where one project's picture rises. Its bottom edge is the waterline and it clips there, so the
+     picture comes up out of the water; the reflection below opens downward as it rises. */
+  .berth { position: absolute; z-index: 1; bottom: var(--water); clip-path: inset(-120px -120px 0 -120px); pointer-events: none; }
+  .card { display: block; translate: 0 102%; transition: translate 0.5s cubic-bezier(0.4, 0, 0.7, 0.3); }
+  .berth.up { pointer-events: auto; z-index: 2; }
+  .berth.up .card { translate: 0 0; transition: translate 1.15s var(--ease) var(--delay, 0.3s); }
+  .card .shot { aspect-ratio: 16 / 10; border-radius: 8px 8px 2px 2px; box-shadow: 0 0 0 1px rgb(255 255 255 / 0.06), 0 -20px 60px -30px rgb(0 0 0 / 0.6); }
+  /* The current project's line, under the index. */
+  .said { position: relative; height: 1.4em; margin: 14px 0 0; font: italic 400 18px/1.4 var(--serif); letter-spacing: -0.01em; }
+  .said span { position: absolute; inset: 0; white-space: nowrap; opacity: 0; translate: 0 6px; filter: blur(4px); transition: opacity 0.5s var(--ease), translate 0.6s var(--ease), filter 0.5s var(--ease); }
+  .said span.on { opacity: 1; translate: 0; filter: none; transition-delay: 0.35s; }
+  .mirror { position: absolute; z-index: 1; top: calc(100% - var(--water) + 3px); height: calc(var(--water) * 0.78); pointer-events: none;
+    clip-path: inset(0 0 100% 0); transition: clip-path 0.5s cubic-bezier(0.4, 0, 0.7, 0.3); }
+  .mirror.up { clip-path: inset(0); transition: clip-path 1.15s var(--ease) var(--delay, 0.3s); }
+
+  /* ---- below the fold ---- */
+  main.col { padding-top: 112px; }
+  main .intro { margin: 0; }
+  main .intro p { margin: 0 0 1em; }
+  main .intro p[data-in] { opacity: 0; translate: 0 10px; transition: opacity 0.8s var(--ease) var(--d), translate 0.8s var(--ease) var(--d); }
+  main .intro p.seen { opacity: 1; translate: 0; }
+
+  @media (max-width: 760px) {
+    .stage { height: 64svh; min-height: 460px; }
+    .who { left: 24px; top: 28px; }
+    .who .name { font-size: 22px; }
+    .index { position: static; width: auto; padding: 10px 24px 0; }
+    .index a { padding: 9px 0; }
+    .index a::before { left: -12px; }
+    .how { margin-bottom: 0; }
+    main.col { padding-top: 72px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .index li { animation: none; opacity: 1; translate: 0; }
+    .card, .mirror { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<header class="top" id="top">
+  <div class="lit stage" id="rise">
+    <canvas aria-hidden="true"></canvas>
+    <div class="who">
+      <h1 class="name" id="name">Bryce Rambach</h1>
+      <p class="sub in" style="--i:1">Designer and engineer. Same person, no handoff.</p>
+    </div>
+    <div id="berths"></div>
+  </div>
+  <nav class="index" aria-labelledby="work-label">
+    <h2 class="label in" id="work-label" style="--i:3">Selected work<span aria-hidden="true" id="work-meta">06</span></h2>
+    <ol id="index"></ol>
+    <p class="said" id="said" aria-live="polite"></p>
+    <p class="how in" style="--i:6" id="how">Point at one, or use the arrow keys.</p>
+  </nav>
+</header>
+
+<main class="col">
+  <div class="intro">
+    <p data-in>Right now I’m building <a class="u" href="/projects/dervo">Dervo</a>, a Mac app for running Claude Code and Codex side by side. You leave your agents working and come back to a few sentences about what finished, what’s stuck and what needs you, instead of four terminals. It’s in private beta. I build Dervo with Dervo.</p>
+    <p data-in style="--d:80ms">Before that I designed and built an <a class="u" href="/projects/integration-portal">integration portal</a> for HR and payroll teams, where one wrong field mapping means someone gets paid wrong. Clear wasn’t optional.</p>
+  </div>
+
+  <h2 class="title" data-in><span class="t">In short</span><span class="rule"></span></h2>
+  <p class="about" id="about">I like software that tells you what’s going on. <a href="/projects/dervo" data-peek="0">Agents</a>, <a href="/projects/integration-portal" data-peek="1">payroll</a>, <a href="/projects/arro" data-peek="3">a family’s running streak</a>: different problems, same job. Make the complicated part <em>easy to read</em>, then build it properly, from first sketch to signed release.</p>
+
+  <h2 class="title" data-in><span class="t">Side quests</span><span class="rule"></span><span class="meta" aria-hidden="true">02</span></h2>
+  <ul class="links">
+    <li data-in><a class="u" href="/drive">The drive</a><span>A 3D Porsche by a lake. Sound on.</span></li>
+    <li data-in style="--d:70ms"><a class="u" href="/work">The road</a><span>The old homepage. Scroll and the Porsche drives.</span></li>
+  </ul>
+</main>
+
+<footer class="lit finale" id="set">
+  <canvas aria-hidden="true"></canvas>
+  <div class="col">
+    <h2 class="title" data-in><span class="t">Say hello</span><span class="rule"></span></h2>
+    <ul class="links">
+      <li data-in><a class="u" href="mailto:bryce.rambach@gmail.com">bryce.rambach@gmail.com</a><span>Email</span></li>
+      <li data-in style="--d:60ms"><a class="u ext" href="https://www.linkedin.com/in/bryce-rambach/" target="_blank" rel="noopener">LinkedIn</a><span>bryce-rambach</span></li>
+      <li data-in style="--d:120ms"><a class="u ext" href="https://x.com/brycerambach" target="_blank" rel="noopener">X</a><span>@brycerambach</span></li>
+      <li data-in style="--d:180ms"><a class="u ext" href="https://github.com/brambach" target="_blank" rel="noopener">GitHub</a><span>brambach</span></li>
+      <li data-in style="--d:240ms"><a class="u ext" href="/Bryce_Rambach_Resume.pdf" target="_blank" rel="noopener">Resume</a><span>PDF, one page</span></li>
+    </ul>
+    <p class="sign fade" data-in>Designed and built by me, which is sort of the point.</p>
+  </div>
+</footer>
+
+<script src="base.js"></script>
+<script>
+  const { WORK, shot, pad, page, reduce, fine, clamp, letters, watchIn, smoothScroll, horizon, reflection, clickRipples, inShort, wake, bar } = Sky;
+  letters(document.getElementById("name"));
+  document.querySelectorAll(".title .t").forEach(t => letters(t));
+
+  const shore = document.getElementById("top"), stage = document.getElementById("rise");
+  const index = document.getElementById("index"), berths = document.getElementById("berths");
+  const meta = document.getElementById("work-meta"), said = document.getElementById("said");
+  const narrow = () => document.documentElement.clientWidth <= 760;
+  if (!fine) document.getElementById("how").textContent = "Tap a name to raise it, tap again to open.";
+
+  // The index, and one berth (picture and reflection) per project.
+  const links = [], cards = [], mirrors = [];
+  WORK.forEach((p, i) => {
+    index.insertAdjacentHTML("beforeend", `<li style="--n:${i}"><a href="${page(p.id)}" data-i="${i}"><span class="no">${pad(i + 1)}</span> <span class="nm">${p.name}</span> <span class="kd">${p.kind}</span></a></li>`);
+    links.push(index.lastElementChild.firstElementChild);
+    berths.insertAdjacentHTML("beforeend", `<div class="berth" data-i="${i}"><a class="card" href="${page(p.id)}" tabindex="-1" aria-hidden="true">${shot(p)}</a></div><canvas class="mirror" aria-hidden="true"></canvas>`);
+    cards.push(berths.children[i * 2]); mirrors.push(berths.children[i * 2 + 1]);
+    said.insertAdjacentHTML("beforeend", `<span>${p.line}</span>`);
+  });
+
+  // Each project owns a spot along the horizon, right of the index on wide screens, close to the middle on phones.
+  const spot = i => narrow() ? 0.5 + (i - 2.5) * 0.035 : 0.45 + i * 0.082;
+  const waterline = () => Math.round(stage.clientHeight * (narrow() ? 0.3 : 0.36));
+  let cardW = 340, centers = [];
+  function layout() {
+    const W = stage.clientWidth;
+    shore.style.setProperty("--water", waterline() + "px");
+    cardW = narrow() ? Math.min(320, W - 48) : clamp(W * 0.24, 300, 380);
+    const minLeft = narrow() ? 24 : 56 + 292 + 40;
+    cards.forEach((c, i) => {
+      const left = clamp(W * spot(i) - cardW / 2, minLeft, W - cardW - 24);
+      c.style.left = mirrors[i].style.left = left + "px";
+      c.style.width = mirrors[i].style.width = cardW + "px";
+      centers[i] = left + cardW / 2;
+    });
+  }
+  layout();
+  addEventListener("resize", layout);
+
+  // The sun: rises like the live site's, then glides along the horizon to whichever project is current, with a
+  // little weight, and climbs behind the picture so its top half shows over it, like a sun behind a sail.
+  let current = null, sx = null, vx = 0, lift = 0, last = 0;
+  const target = s => current == null ? s.W * 0.66 : centers[current];
+  const scene = horizon(stage, "rise", {
+    get water() { return waterline(); }, get waters() { return waterline(); }, Rs: 30,
+    sun(s, now) {
+      const dt = Math.min(0.05, (now - (last || now)) / 1000); last = now;
+      const tx = target(s);
+      if (sx == null || reduce) { sx = tx; vx = 0; }
+      else { vx += (60 * (tx - sx) - 13 * vx) * dt; sx += vx * dt; }
+      const want = current == null ? 0 : cardW * 0.625 - s.R * 0.75;
+      lift = reduce ? want : lift + (want - lift) * Math.min(1, dt * 3);
+      const age = reduce ? 1 : s.born == null ? 0 : 1 - Math.pow(1 - clamp((now - s.born) / 3200, 0, 1), 3);
+      const away = clamp(scrollY / Math.max(1, s.H), 0, 1);
+      return { x: sx, y: s.hz + s.R * 1.15 - (s.R * 1.15 + s.R * 0.55) * age - s.R * 1.6 * away - lift };
+    },
+  });
+  const settle = scene.busy;
+  scene.busy = now => settle(now) || Math.abs(vx) > 0.5 || (sx != null && Math.abs(target(scene) - sx) > 0.5) || Math.abs(lift - (current == null ? 0 : cardW * 0.625 - scene.R * 0.75)) > 0.5;
+
+  // The reflections only paint while their picture is up or going down.
+  const reflections = cards.map((c, i) => {
+    const r = reflection(c.querySelector(".shot"), mirrors[i]);
+    const paint = r.paint;
+    r.paint = now => { if (r.until > now) paint(now); };
+    r.until = 0;
+    return r;
+  });
+
+  function select(i, { delay = 0.3 } = {}) {
+    if (i === current) return;
+    const prev = current;
+    current = i;
+    const now = performance.now();
+    if (prev != null) {
+      cards[prev].classList.remove("up"); mirrors[prev].classList.remove("up");
+      reflections[prev].until = now + 700;
+    }
+    links.forEach((a, j) => a.classList.toggle("on", j === i));
+    [...said.children].forEach((el, j) => el.classList.toggle("on", j === i));
+    meta.innerHTML = i == null ? pad(WORK.length) : `${pad(i + 1)} / ${pad(WORK.length)}`;
+    if (i != null) {
+      // Coming from another project the new picture waits for the sun to get most of the way there.
+      const d = reduce ? 0 : prev == null ? delay : 0.42;
+      cards[i].style.setProperty("--delay", d + "s"); mirrors[i].style.setProperty("--delay", d + "s");
+      cards[i].classList.add("up"); mirrors[i].classList.add("up");
+      reflections[i].until = Infinity;
+      reflections[i].layout();
+      // A ring in the water where it comes up.
+      setTimeout(() => scene.ripple(centers[i], scene.hz + 6), d * 1000 + 200);
+    }
+    wake();
+  }
+
+  // Pointing, focus and keys.
+  index.addEventListener("mouseover", e => { const a = e.target.closest("a"); if (a && fine) select(+a.dataset.i); });
+  index.addEventListener("focusin", e => { const a = e.target.closest("a"); if (a) select(+a.dataset.i); });
+  // Touch: the first tap raises it, the second opens it. Focus lands before the click, so remember what was up
+  // when the finger went down.
+  let wasUp = null;
+  index.addEventListener("pointerdown", () => { wasUp = current; });
+  index.addEventListener("click", e => {
+    const a = e.target.closest("a"); if (!a || fine) return;
+    if (wasUp !== +a.dataset.i) { e.preventDefault(); select(+a.dataset.i); }
+  });
+  const step = d => {
+    const i = current == null ? (d > 0 ? 0 : WORK.length - 1) : (current + d + WORK.length) % WORK.length;
+    links[i].focus({ preventScroll: true });
+    select(i);
+  };
+  addEventListener("keydown", e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const inIndex = index.contains(document.activeElement);
+    const onTop = scrollY < stage.clientHeight * 0.5 && (document.activeElement === document.body || inIndex);
+    if (!onTop) return;
+    if (e.key === "ArrowRight" || (inIndex && e.key === "ArrowDown")) { e.preventDefault(); step(1); }
+    else if (e.key === "ArrowLeft" || (inIndex && e.key === "ArrowUp")) { e.preventDefault(); step(-1); }
+    else if (e.key === "Escape") { select(null); document.activeElement.blur(); }
+  });
+
+  // Dervo comes up on its own once the sun is up, unless you've already picked something.
+  // The hint goes once you've used it.
+  let touched = false;
+  const used = () => { touched = true; document.getElementById("how").classList.add("done"); };
+  index.addEventListener("pointerdown", used, { once: true });
+  index.addEventListener("mouseover", () => setTimeout(used, 2500), { once: true });
+  addEventListener("keydown", e => { if (e.key.startsWith("Arrow")) used(); });
+  setTimeout(() => { if (!touched && current == null) select(0, { delay: 0 }); }, reduce ? 0 : 2600);
+
+  inShort(document.getElementById("about"), null);
+  horizon(document.getElementById("set"), "set");
+  clickRipples();
+  smoothScroll();
+  watchIn(300);
+  bar("one-horizon.html");
+</script>
+</body>
+</html>
