@@ -32,7 +32,7 @@ function settleScroll(route: Route, saved?: number) {
   scrollTo(0, 0);
 }
 
-/** Keyboard and screen-reader users land somewhere sensible after a move: a project's title, or back on the row
+/** Keyboard and screen-reader users land somewhere sensible after a move: a project's title, or back on the name
  *  of the project they left. */
 function placeFocus(route: Route, from: Route) {
   const target = route.name === 'project'
@@ -41,18 +41,21 @@ function placeFocus(route: Route, from: Route) {
   target?.focus({ preventScroll: true });
 }
 
-/** After the new page renders, name its pieces to match what the old page named. */
+/** After the new page renders, name its pieces to match what the old page named. Back on the home page, the
+ *  project's title lands on its name, and its picture sinks back into its place on the horizon if that's in view. */
 function nameArrivals(route: Route, from: Route) {
   if (route.name === 'project') {
     nameForTravel([[document.querySelector('[data-piece="shot"]'), 'sky-shot'], [document.querySelector('[data-piece="title"]'), 'sky-title']]);
   } else if (from.name === 'project') {
-    nameForTravel([[document.querySelector(`[data-row="${from.id}"] .sky-nm`), 'sky-title']]);
+    const card = scrollY < innerHeight * 0.04 ? document.querySelector(`[data-berth="${from.id}"] .sky-shot`) : null;
+    nameForTravel([[document.querySelector(`[data-row="${from.id}"] .sky-nm`), 'sky-title'], [card, 'sky-shot']]);
   }
 }
 
 export default function SkyApp() {
   const [route, setRoute] = useState<Route>(readRoute);
   const [arrived, setArrived] = useState(true);
+  const [cameFrom, setCameFrom] = useState<string | null>(null);
   const current = useRef(route);
   current.current = route;
 
@@ -74,7 +77,7 @@ export default function SkyApp() {
   const move = useCallback((next: Route, commit: () => void, prepare?: () => void, saved?: number) => {
     const from = current.current;
     const update = () => {
-      flushSync(() => { setArrived(false); setRoute(next); });
+      flushSync(() => { setArrived(false); setRoute(next); setCameFrom(from.name === 'project' ? from.id : null); });
       commit();
       settleScroll(next, saved);
       nameArrivals(next, from);
@@ -110,7 +113,7 @@ export default function SkyApp() {
     return () => removeEventListener('popstate', pop);
   }, [move]);
 
-  return <SkyNav.Provider value={{ go, arrived }}>
+  return <SkyNav.Provider value={{ go, arrived, cameFrom }}>
     <div className={`sky${arrived ? '' : ' sky--moved'}`}>
       {route.name === 'project' ? <SkyProject key={route.id} id={route.id} /> : <SkyHome />}
     </div>

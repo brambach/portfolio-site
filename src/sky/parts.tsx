@@ -9,7 +9,9 @@ export const finePointer = () => typeof matchMedia === 'function' && matchMedia(
 /** Moving between pages inside the sky site. `prepare` runs just before the old page is captured, to name the pieces
  *  that should travel to the new page. */
 export type Go = (to: string, prepare?: () => void) => void;
-export const SkyNav = createContext<{ go: Go; arrived: boolean }>({ go: to => { location.href = to; }, arrived: true });
+/** `arrived` is false once you've moved inside the sky site (the new page is already in place); `cameFrom` is the
+ *  project you've just come back from, if any. */
+export const SkyNav = createContext<{ go: Go; arrived: boolean; cameFrom: string | null }>({ go: to => { location.href = to; }, arrived: true, cameFrom: null });
 export const useSky = () => useContext(SkyNav);
 
 /** A link that moves inside the sky site with a transition, and falls back to a normal link for new tabs. */
@@ -89,7 +91,7 @@ export function Lit({ kind, as: Tag = 'section', className = '', options, childr
   const canvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     if (!host.current || !canvas.current || typeof ResizeObserver === 'undefined' || typeof IntersectionObserver === 'undefined') return;
-    return horizon(host.current, canvas.current, kind, options);
+    return horizon(host.current, canvas.current, kind, options).stop;
     // The options are fixed per page; a new object each render shouldn't restart the scene.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kind]);
