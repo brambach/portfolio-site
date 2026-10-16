@@ -155,7 +155,7 @@ export default function SkyHome() {
         <canvas ref={stageCanvas} aria-hidden="true" />
         <div className="sky-who">
           <h1 className="sky-name"><Letters text="Bryce Rambach" /></h1>
-          <p className="sky-sub sky-in" style={{ '--i': 1 } as CSSProperties}>Designer and engineer. Same person, no handoff.</p>
+          <p className="sky-sub sky-in" style={{ '--i': 1 } as CSSProperties}>I design software, then build it myself.</p>
         </div>
         <div className="sky-berths">
           {WORK.map((work, i) => <Fragment key={work.id}>
