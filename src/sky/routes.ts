@@ -2,12 +2,12 @@
    index.html, which mirrors this rule to paint the sky before anything loads) can decide without loading it.
 
    - /                    the sky home page
-   - /projects/<id>       a project page, for the six projects in catalog.ts
+   - /projects/<id>       a project page, for Dervo, Arro and Port
    - /?mile=<id>          still the road, parked at that billboard (old study links come back this way)
    - /projects?look=...   still the old studies, which /next links to
    - /?town and friends   still the 3D drive */
 
-export const SKY_IDS = ['dervo', 'integration-portal', 'lucid', 'arro', 'port', 'agentsky'] as const;
+export const SKY_IDS = ['dervo', 'arro', 'port'] as const;
 const DRIVE_KEYS = ['from', 'town', 'city', 'journey', 'forest'];
 
 export function isSkyPath(pathname: string, search: string) {

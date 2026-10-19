@@ -37,18 +37,19 @@ function settleScroll(route: Route, saved?: number) {
 function placeFocus(route: Route, from: Route) {
   const target = route.name === 'project'
     ? document.querySelector<HTMLElement>('[data-piece="title"]')
-    : from.name === 'project' ? document.querySelector<HTMLElement>(`[data-row="${from.id}"] .sky-head`) : null;
+    : from.name === 'project' ? document.querySelector<HTMLElement>(`li[data-project="${from.id}"] .sky-head`) : null;
   target?.focus({ preventScroll: true });
 }
 
 /** After the new page renders, name its pieces to match what the old page named. Back on the home page, the
- *  project's title lands on its name, and its picture sinks back into its place on the horizon if that's in view. */
+ *  project's title lands on its name in the index, and its picture sinks back into its place on the horizon if
+ *  that's in view. */
 function nameArrivals(route: Route, from: Route) {
   if (route.name === 'project') {
     nameForTravel([[document.querySelector('[data-piece="shot"]'), 'sky-shot'], [document.querySelector('[data-piece="title"]'), 'sky-title']]);
   } else if (from.name === 'project') {
-    const card = scrollY < innerHeight * 0.04 ? document.querySelector(`[data-berth="${from.id}"] .sky-shot`) : null;
-    nameForTravel([[document.querySelector(`[data-row="${from.id}"] .sky-nm`), 'sky-title'], [card, 'sky-shot']]);
+    const card = scrollY < innerHeight * 0.04 ? document.querySelector(`.sky-berth[data-project="${from.id}"] .sky-shot`) : null;
+    nameForTravel([[document.querySelector(`li[data-project="${from.id}"] .sky-kd`), 'sky-title'], [card, 'sky-shot']]);
   }
 }
 
