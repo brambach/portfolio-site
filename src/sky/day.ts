@@ -46,8 +46,11 @@ export const narrowDawn = () => width() <= 760;
 const roomy = () => width() >= 1000;
 const bigR = () => (width() < 700 ? 30 : 46);
 const SMALL = 15, REACH = SMALL * 7, BOX = REACH * 2;
-/** How much water the first screen has. */
-export const waterFor = (stageHeight: number) => Math.round(stageHeight * (narrowDawn() ? 0.3 : 0.36));
+/** How much water the first screen has. On shorter wide screens there's less, so the index on the shore stays
+ *  clear of the claim above it (it needs about 560px over the water). */
+export const waterFor = (stageHeight: number) => Math.round(narrowDawn()
+  ? stageHeight * 0.3
+  : Math.min(stageHeight * 0.36, Math.max(stageHeight * 0.24, stageHeight - 560)));
 
 // The sky through the day: top, middle and bottom of the screen, in oklch. Hues are unwrapped (422 is 62) so the
 // afternoon goes through violet and rose to amber, never green. All stay dark enough that --sky-faint text keeps

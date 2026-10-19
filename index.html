@@ -9,7 +9,7 @@
         var path = location.pathname.replace(/\/$/, '');
         var q = new URLSearchParams(location.search);
         var drive = ['from', 'town', 'city', 'journey', 'forest'].some(function (k) { return q.has(k); });
-        var ids = ['dervo', 'integration-portal', 'lucid', 'arro', 'port', 'agentsky'];
+        var ids = ['dervo', 'arro', 'port'];
         var project = /^\/projects\/([^/]+)$/.exec(path);
         var sky = !q.has('look') && ((path === '' && !q.has('mile') && !drive) || (project && ids.indexOf(project[1]) >= 0));
         if (sky) document.documentElement.setAttribute('data-sky', '');
@@ -25,7 +25,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Bryce Rambach designs software, then builds it. Right now that's Dervo, a Mac app for running Claude Code and Codex side by side."
+      content="Bryce Rambach builds the whole thing: integrations, agents, the harnesses that check them, the design and the product calls. He's looking for a founding engineer role at an AI startup in a new city."
     />
     <meta name="theme-color" content="#090f1c" />
     <!-- Sentient, the display face, comes from Fontshare (its licence doesn't allow the files in a public repo).
@@ -49,7 +49,7 @@
     <meta property="og:title" content="Bryce Rambach" />
     <meta
       property="og:description"
-      content="Bryce Rambach designs software, then builds it. Right now that's Dervo, a Mac app for running Claude Code and Codex side by side."
+      content="Bryce Rambach builds the whole thing: integrations, agents, the harnesses that check them, the design and the product calls. He's looking for a founding engineer role at an AI startup in a new city."
     />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://brycerambach.com/og-sky.jpg?v=sky2" />
@@ -60,7 +60,7 @@
     <meta name="twitter:title" content="Bryce Rambach" />
     <meta
       name="twitter:description"
-      content="Bryce Rambach designs software, then builds it. Right now that's Dervo, a Mac app for running Claude Code and Codex side by side."
+      content="Bryce Rambach builds the whole thing: integrations, agents, the harnesses that check them, the design and the product calls. He's looking for a founding engineer role at an AI startup in a new city."
     />
     <meta name="twitter:image" content="https://brycerambach.com/og-sky.jpg?v=sky2" />
     <meta property="og:url" content="https://brycerambach.com" />
