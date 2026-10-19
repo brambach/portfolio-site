@@ -167,18 +167,21 @@
 .sky-map-tile small { grid-column: 1 / -1; margin-top: 1.6cqw; font: 400 2.4cqw/1.3 var(--font-mono); letter-spacing: 0.04em; color: #6b6255; text-align: center; }
 
 /* ---- home: the proof ------------------------------------------------------------------------------------------ */
-.sky-skill { margin-top: 56px; scroll-margin-top: 48px; }
-.sky-title + .sky-skill { margin-top: 24px; }
-.sky-skill__h { display: flex; gap: 14px; align-items: baseline; margin: 0 0 10px; font-size: 18px; font-weight: 500; }
+.sky-skill { margin-top: 64px; scroll-margin-top: 48px; }
+.sky-title + .sky-skill { margin-top: 28px; }
+/* Each skill's name is where the page speaks, so it's the serif, big enough to scan for. */
+.sky-skill__h { display: flex; gap: 14px; align-items: baseline; margin: 0 0 12px; font: 400 clamp(28px, 4vw, 34px)/1.1 var(--sky-serif); letter-spacing: -0.015em; }
 .sky-skill__h:focus { outline: none; }
 .sky-skill__h:focus-visible { outline: 1px solid var(--sky-sun); }
-.sky-skill__h .sky-no { font-size: 11px; }
-.sky-skill p { margin: 0 0 1em; }
-.sky-proof { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 14px; }
-.sky-proof li { display: grid; gap: 3px; padding-left: 28px; }
-.sky-proof a, .sky-proof b { justify-self: start; font-weight: 500; }
+.sky-skill__h .sky-no { font: 400 11px/1 var(--font-mono); letter-spacing: 0.06em; color: var(--sky-faint); translate: 0 -0.5em; }
+.sky-skill p { margin: 0 0 0.8em; }
+/* The proof under it: a name and a line each, quiet rows. */
+.sky-proof { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 12px; }
+.sky-proof li { display: grid; grid-template-columns: 172px 1fr; gap: 4px 20px; align-items: baseline; }
+.sky-proof a, .sky-proof b { justify-self: start; font-size: 14px; font-weight: 500; }
 .sky-proof b small { margin-left: 6px; font: 400 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--sky-faint); }
 .sky-proof span { font-size: 14px; color: var(--sky-soft); }
+@media (max-width: 560px) { .sky-proof li { grid-template-columns: 1fr; } }
 
 /* ---- lists of links ------------------------------------------------------------------------------------------ */
 .sky-links { list-style: none; margin: 0; padding: 0; }
