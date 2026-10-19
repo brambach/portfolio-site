@@ -4,6 +4,7 @@ import './index.css';
 import {QuietIdleLoader} from './prototype/QuietIdleLoader';
 import {SiteAnalytics} from './lib/SiteAnalytics';
 import {isSkyPath} from './sky/routes';
+import {labRoute} from './lab/routes';
 
 const Garage=lazy(()=>import('./admin/Garage'));
 const showGarage=window.location.pathname.replace(/\/$/,'')==='/admin';
@@ -12,6 +13,9 @@ const showProjectLab=window.location.pathname.replace(/\/$/,'')==='/project-lab'
 // The sky site is the front door: / and /projects/<id> (see src/sky/routes.ts). The road lives at /work (and
 // /?mile=<id>, where old study links come back to it), the 3D drive at /drive with its old links (/?town and
 // friends) still opening it, and the quiet index at /next, whose ?look= links keep the old studies.
+// The motion lab (/lab, /lab/a, /lab/b, /lab/c): three motion directions for the home page, each its own chunk.
+const LabApp = lazy(() => import('./lab/LabApp.tsx'));
+const showLab = labRoute(window.location.pathname) !== null;
 const SkyApp = lazy(() => import('./sky/SkyApp.tsx'));
 const showSky = isSkyPath(window.location.pathname, window.location.search);
 const ProjectReader = lazy(() => import('./prototype/ProjectReader.tsx'));
@@ -46,6 +50,6 @@ if(import.meta.hot){
 appRoot.render(
   <StrictMode>
     <SiteAnalytics/>
-    <Suspense fallback={showSky?null:<QuietIdleLoader />}>{toHome?null:showSky&&!phoneReview&&!drivingReview&&!lifecycleReview?<SkyApp/>:showGarage?<Garage/>:showProjectLab?<ProjectLab/>:phoneReview?<div style={{padding:16,background:"#202520",minHeight:"100svh"}}><iframe title="Phone viewport review" src="/drive" style={{display:"block",border:0,width:phoneLandscape?660:390,height:phoneLandscape?390:660}}/></div>:drivingReview&&DrivingInputReview?<DrivingInputReview/>:lifecycleReview&&SceneLifecycleReview?<SceneLifecycleReview/>:showProjects ? <ProjectReader /> : showQuiet ? <QuietIndex /> : showWork ? <SimplePortfolio /> : showPrevious ? <PreviousSite /> : showPhotoEntrance ? <PhotoEntrance /> : <Entrance />}</Suspense>
+    <Suspense fallback={showSky||showLab?null:<QuietIdleLoader />}>{toHome?null:showLab?<LabApp/>:showSky&&!phoneReview&&!drivingReview&&!lifecycleReview?<SkyApp/>:showGarage?<Garage/>:showProjectLab?<ProjectLab/>:phoneReview?<div style={{padding:16,background:"#202520",minHeight:"100svh"}}><iframe title="Phone viewport review" src="/drive" style={{display:"block",border:0,width:phoneLandscape?660:390,height:phoneLandscape?390:660}}/></div>:drivingReview&&DrivingInputReview?<DrivingInputReview/>:lifecycleReview&&SceneLifecycleReview?<SceneLifecycleReview/>:showProjects ? <ProjectReader /> : showQuiet ? <QuietIndex /> : showWork ? <SimplePortfolio /> : showPrevious ? <PreviousSite /> : showPhotoEntrance ? <PhotoEntrance /> : <Entrance />}</Suspense>
   </StrictMode>,
 );

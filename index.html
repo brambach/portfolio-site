@@ -13,10 +13,11 @@
         var project = /^\/projects\/([^/]+)$/.exec(path);
         var sky = !q.has('look') && ((path === '' && !q.has('mile') && !drive) || (project && ids.indexOf(project[1]) >= 0));
         if (sky) document.documentElement.setAttribute('data-sky', '');
+        if (/^\/lab(\/[abc])?$/.test(path)) document.documentElement.setAttribute('data-lab', '');
       })();
     </script>
     <style>
-      :root[data-sky] { background: #090f1c; color-scheme: dark; }
+      :root[data-sky], :root[data-lab] { background: #090f1c; color-scheme: dark; }
       :root[data-sky] body { background: linear-gradient(#090f1c, #161621 28%, #14171e 72%, #27171a); }
     </style>
     <link rel="icon" type="image/svg+xml" href="/favicon-sky.svg?v=sky" />
