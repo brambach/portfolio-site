@@ -47,9 +47,10 @@ const roomy = () => width() >= 1000;
 const bigR = () => (width() < 700 ? 30 : 46);
 const SMALL = 15, REACH = SMALL * 7, BOX = REACH * 2;
 /** How much water the first screen has. On shorter wide screens there's less, so the index on the shore stays
- *  clear of the claim above it (it needs about 560px over the water). */
+ *  clear of the claim above it (it needs about 560px over the water). On phones it's kept low so the sun rising
+ *  behind the picture stays under the words. */
 export const waterFor = (stageHeight: number) => Math.round(narrowDawn()
-  ? stageHeight * 0.3
+  ? stageHeight * 0.26
   : Math.min(stageHeight * 0.36, Math.max(stageHeight * 0.24, stageHeight - 560)));
 
 // The sky through the day: top, middle and bottom of the screen, in oklch. Hues are unwrapped (422 is 62) so the
