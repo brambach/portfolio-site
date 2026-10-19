@@ -1,20 +1,21 @@
 # brycerambach.com
 
-<a href="https://brycerambach.com"><img src="docs/readme/drive.webp" alt="Opening the door of a green Porsche 911, then driving out of town toward the mountains" width="100%"></a>
+<a href="https://brycerambach.com"><img src="docs/screenshots/generalist/desktop-02-skill-raised.png" alt="The home page: I build the whole thing, the five skills it covers, and Dervo's run report rising out of the water in front of a halftone sun" width="100%"></a>
 
-My portfolio. You scroll down a road, and a flat green 911 drives past a billboard for each thing I've made. If you'd rather take the wheel yourself, there's a 3D Porsche one click away: you open the door, find a note in the glovebox, turn the key and drive out of town toward Lake Tahoe.
+My portfolio. The home page is one day, from a halftone sunrise at the top to a sunset at the bottom. The first screen says what I do: integrations, agents, the harnesses that check them, design and product taste. The sun walks the horizon through all five, raising the project behind each one out of the water, and further down each one has its proof.
 
-**[Take the road](https://brycerambach.com)**, or skip to [the projects](https://brycerambach.com/projects), or [take the wheel](https://brycerambach.com/drive).
+The older ideas are still around as side quests: a road where a flat green 911 drives past a billboard for each project, and a 3D Porsche you can drive out of town toward a mountain lake.
 
-![The road: scroll and the car drives the page](docs/readme/road.jpg)
+**[See the site](https://brycerambach.com)**, or [take the road](https://brycerambach.com/work), or [take the wheel](https://brycerambach.com/drive).
 
 ## What's in it
 
 | Where | What it is |
 | --- | --- |
-| `/` | The road. Scrolling drives the car past a billboard per project, with Dervo first. Coffee shop and tennis club on the way, a night stop at the end with the archive as a pile of cards, and a few photos from off the clock. |
-| `/projects/<name>` | A study for each project: Dervo, the integration portal, Lucid, Arro, Port and AgentSky. Each one has something you can poke, not just screenshots. Moving between pages cross-fades where the browser supports it. |
-| `/drive` | The 3D Porsche. Open the door, turn the key, drive from town to a Tahoe-style overlook. `/drive?from=work` skips the walk-up. |
+| `/` | The sky. The claim, the five skills with a picture each on the horizon, then the proof for each, side quests and contact over the sunset. |
+| `/projects/<name>` | A page each for Dervo, Arro and Port, with something you can try. Moving between pages carries the picture and the title across where the browser supports view transitions. |
+| `/work` | The road. Scrolling drives the car past a billboard per project, with a night stop at the end where the archive is a pile of cards. |
+| `/drive` | The 3D Porsche. Open the door, turn the key, drive from town to a lakeside overlook. `/drive?from=work` skips the walk-up. |
 | `/previous` | The earlier version of the site, kept around. |
 
 ![Dervo's stop on the road](docs/readme/road-stop.jpg)
@@ -80,6 +81,7 @@ The race times and admin functions need Upstash/KV environment variables that ar
 | Path | What's there |
 | --- | --- |
 | `src/main.tsx` | Routing. It's path-based, with no router library. A new route also needs a rewrite in `vercel.json`. |
+| `src/sky/` | The sky site. `skills.ts` holds the five skills and their proof, `SkyHome.tsx` the home page, `day.ts` the sun through the day, `work.ts` the three project pages. |
 | `src/projects/SimplePortfolio.tsx` | The road: the scroll-driven scene, billboards and stops. |
 | `src/projects/Glovebox.tsx` | The night stop at the end. |
 | `src/projects/catalog.ts` and `road-lineup.ts` | Project data, and the order and covers shared by the road and the 3D billboards. |

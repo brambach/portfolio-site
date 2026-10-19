@@ -79,7 +79,10 @@
 .sky-name .sky-ch { opacity: 0; filter: blur(8px); translate: 0 0.5em; rotate: 4deg;
   animation: sky-rise 1s var(--sky-ease) forwards, sky-glint 1.2s ease-in-out forwards;
   animation-delay: calc(var(--k) * 34ms + 120ms), calc(var(--k) * 55ms + 1700ms); }
-.sky-sub { margin: 2px 0 0; color: var(--sky-soft); }
+.sky-name { font-size: 20px; color: var(--sky-soft); }
+/* The claim is the one big thing on the first screen. */
+.sky-claim { margin: 4px 0 0; font: 400 clamp(40px, min(5vw, 7.2vh), 72px)/1.02 var(--sky-serif); letter-spacing: -0.025em; text-wrap: balance; }
+.sky-sub { max-width: 40em; margin: 12px 0 0; text-wrap: balance; font-size: 16px; line-height: 1.5; color: var(--sky-soft); }
 
 /* The work: a short index on the shore, bottom left, just above the waterline. */
 .sky-ix { position: absolute; z-index: 2; left: 56px; bottom: calc(var(--water) + 34px); width: 292px; }
@@ -98,11 +101,20 @@
 .sky-head.is-on .sky-nm, .sky-head:focus-visible .sky-nm { color: var(--sky-ink); }
 .sky-head.is-on .sky-no, .sky-head.is-on .sky-kd { color: var(--sky-soft); }
 .sky-head:focus-visible { outline-offset: 3px; }
-.sky-said { position: relative; height: 1.4em; margin: 14px 0 0; font: italic 400 18px/1.4 var(--sky-serif); letter-spacing: -0.01em; }
-.sky-said span { position: absolute; inset: 0; white-space: nowrap; opacity: 0; translate: 0 6px; filter: blur(4px); transition: opacity 0.5s var(--sky-ease), translate 0.6s var(--sky-ease), filter 0.5s var(--sky-ease); }
+.sky-said { position: relative; height: 2.8em; margin: 14px 0 0; font: italic 400 18px/1.4 var(--sky-serif); letter-spacing: -0.01em; }
+.sky-said span { position: absolute; inset: 0; text-wrap: balance; opacity: 0; translate: 0 6px; filter: blur(4px); transition: opacity 0.5s var(--sky-ease), translate 0.6s var(--sky-ease), filter 0.5s var(--sky-ease); }
 .sky-said span.is-on { opacity: 1; translate: 0; filter: none; transition-delay: 0.35s; }
+.sky-now { display: none; }
 .sky-how { margin: 14px 0 0; font: 400 11px/1.4 var(--font-mono); letter-spacing: 0.04em; color: var(--sky-faint); transition: opacity 0.8s var(--sky-ease) !important; }
 .sky-how.is-done { opacity: 0 !important; }
+.sky-pause { margin-left: 6px; padding: 6px 0; border: 0; background: none; color: var(--sky-soft); font: inherit; letter-spacing: inherit; cursor: pointer;
+  background-image: linear-gradient(var(--sky-rule), var(--sky-rule)); background-size: 100% 1px; background-position: 0 calc(100% - 4px); background-repeat: no-repeat; transition: color 0.3s; }
+.sky-pause:hover { color: var(--sky-ink); }
+/* While the sun walks through them, a line of dots fills under the one that's up, until the next. */
+.sky-head::after { content: ""; position: absolute; left: 36px; right: 0; bottom: 0; height: 3px; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle, rgb(233 184 96 / 0.7) 0.8px, transparent 1.25px) 0 50% / 6px 3px repeat-x; transform: scaleX(0); transform-origin: left; }
+.sky-ix.is-touring li:not(:last-child) .sky-head.is-on::after { opacity: 1; animation: sky-fill var(--step) linear forwards; }
+@keyframes sky-fill { to { transform: none; } }
 
 /* A berth is where one project's picture rises. Its bottom edge is the waterline and it clips there, so the picture
    comes up out of the water; its reflection below opens downward as it rises. */
@@ -141,22 +153,36 @@
 .sky-port-tile { position: absolute; inset: 0; display: grid; place-items: center; background: #141413; }
 .sky-port-tile .port-ring { display: block; width: 56px; height: 56px; border-radius: 50%; border: 1px solid rgb(255 255 255 / 0.5); box-shadow: 0 0 0 10px rgb(255 255 255 / 0.04), 0 0 0 22px rgb(255 255 255 / 0.025); }
 .sky-port-tile > span { position: absolute; bottom: 12px; left: 0; right: 0; text-align: center; font: 500 10px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: rgb(255 255 255 / 0.62); }
+/* The integrations picture: two systems and the fields between them, drawn on paper. Sized off the card's width so
+   it's the same drawing on a phone and a wide screen. */
+.sky-shot.is-map { background: #efe9df; container-type: inline-size; }
+.sky-map-tile { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; align-content: center; row-gap: 2.4cqw; padding: 0 8cqw; color: #2a2620; font: 400 3.3cqw/1.2 var(--font-sans); }
+.sky-map-tile__side { margin-bottom: 0.6cqw; font: 500 2.5cqw/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: #6b6255; }
+.sky-map-tile__side + .sky-map-tile__side { text-align: right; }
+.sky-map-tile__row { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 2.6cqw; }
+.sky-map-tile__row span { padding: 1.3cqw 2.4cqw; border-radius: 1.6cqw; background: #fff; box-shadow: 0 0 0 1px rgb(42 38 32 / 0.08), 0 6px 14px -10px rgb(42 38 32 / 0.5); white-space: nowrap; }
+.sky-map-tile__row i { position: relative; flex: 1; height: 3px; background: radial-gradient(circle, rgb(42 38 32 / 0.4) 0.9px, transparent 1.35px) 0 50% / 6px 3px repeat-x; }
+/* As the picture comes up, each mapping is checked in turn: gold dots draw across it, top to bottom. */
+.sky-map-tile__row i::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle, #b9801f 1.1px, transparent 1.5px) 0 50% / 6px 3px repeat-x; transform: scaleX(0); transform-origin: left; }
+.sky-berth.is-up .sky-map-tile__row i::after { animation: sky-fill 0.6s var(--sky-ease) forwards; animation-delay: calc(var(--delay, 0s) + 1s + var(--r) * 0.3s); }
+.sky-map-tile small { grid-column: 1 / -1; margin-top: 1.6cqw; font: 400 2.4cqw/1.3 var(--font-mono); letter-spacing: 0.04em; color: #6b6255; text-align: center; }
 
-/* ---- home: In short ------------------------------------------------------------------------------------------ */
-.sky-about { margin: 0; font: 400 clamp(21px, 3vw, 24px)/1.42 var(--sky-serif); letter-spacing: -0.012em; }
-.sky-about em { font-style: italic; }
-.sky-pw { position: relative; transition: color 0.4s var(--sky-ease); }
-.sky-pw::before, .sky-pw::after { content: ""; position: absolute; left: 0; right: 0; bottom: -0.12em; height: 4px; pointer-events: none; }
-.sky-pw::before { background: radial-gradient(circle, var(--sky-sun) 1px, transparent 1.45px) 0 50% / 6px 4px repeat-x; transform: scaleX(0); transform-origin: left; transition: transform 0.9s var(--sky-ease) var(--wd, 0ms), opacity 0.35s var(--sky-ease); }
-.sky-pl.lit-up .sky-pw::before { transform: none; }
-.sky-pw::after { background: radial-gradient(2.7px 0.9px at 50% 50%, var(--sky-sun) 65%, transparent 100%) 0 50% / 8px 4px repeat-x;
-  opacity: 0; transition: opacity 0.35s var(--sky-ease); animation: sky-drift 1.3s linear infinite, sky-swell 0.9s ease-in-out infinite alternate; animation-play-state: paused; }
-.sky-pl:hover .sky-pw, .sky-pl:focus-visible .sky-pw { color: color-mix(in oklab, var(--sky-ink) 78%, var(--sky-sun)); }
-.sky-pl:hover .sky-pw::before, .sky-pl:focus-visible .sky-pw::before { opacity: 0; }
-.sky-pl:hover .sky-pw::after, .sky-pl:focus-visible .sky-pw::after { opacity: 1; animation-play-state: running; }
-.sky-pl.glint .sky-pw { animation: sky-glint 1.2s ease-in-out both; animation-delay: var(--gd, 0ms); }
-@keyframes sky-drift { to { background-position-x: 8px; } }
-@keyframes sky-swell { from { transform: scaleY(0.7); } to { transform: scaleY(1.35); } }
+/* ---- home: the proof ------------------------------------------------------------------------------------------ */
+.sky-skill { margin-top: 64px; scroll-margin-top: 48px; }
+.sky-title + .sky-skill { margin-top: 28px; }
+/* Each skill's name is where the page speaks, so it's the serif, big enough to scan for. */
+.sky-skill__h { display: flex; gap: 14px; align-items: baseline; margin: 0 0 12px; font: 400 clamp(28px, 4vw, 34px)/1.1 var(--sky-serif); letter-spacing: -0.015em; }
+.sky-skill__h:focus { outline: none; }
+.sky-skill__h:focus-visible { outline: 1px solid var(--sky-sun); }
+.sky-skill__h .sky-no { font: 400 11px/1 var(--font-mono); letter-spacing: 0.06em; color: var(--sky-faint); translate: 0 -0.5em; }
+.sky-skill p { margin: 0 0 0.8em; }
+/* The proof under it: a name and a line each, quiet rows. */
+.sky-proof { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 12px; }
+.sky-proof li { display: grid; grid-template-columns: 200px 1fr; gap: 4px 20px; align-items: baseline; }
+.sky-proof a, .sky-proof b { justify-self: start; font-size: 14px; font-weight: 500; white-space: nowrap; }
+.sky-proof b small { margin-left: 6px; font: 400 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--sky-faint); }
+.sky-proof span { font-size: 14px; color: var(--sky-soft); }
+@media (max-width: 560px) { .sky-proof li { grid-template-columns: 1fr; } }
 
 /* ---- lists of links ------------------------------------------------------------------------------------------ */
 .sky-links { list-style: none; margin: 0; padding: 0; }
@@ -228,9 +254,8 @@
 .sky-button:active { translate: 0 1px; }
 .sky-button[aria-pressed="true"] { background: transparent; color: var(--sky-ink); box-shadow: inset 0 0 0 1px var(--sky-rule); }
 .sky-chip { display: inline-block; padding: 3px 10px; border-radius: 999px; font: 500 11px/1.5 var(--font-mono); letter-spacing: 0.04em; white-space: nowrap; }
-.sky-chip.is-stuck, .sky-chip.is-inferred { background: rgb(222 140 98 / 0.18); color: #f0b393; }
-.sky-chip.is-good, .sky-chip.is-verified { background: rgb(134 214 162 / 0.16); color: #9fdcb4; }
-.sky-chip.is-researched { background: rgb(233 184 96 / 0.16); color: var(--sky-sun); }
+.sky-chip.is-stuck { background: rgb(222 140 98 / 0.18); color: #f0b393; }
+.sky-chip.is-good { background: rgb(134 214 162 / 0.16); color: #9fdcb4; }
 
 /* Dervo: the handoff. */
 .sky-handoff__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
@@ -241,38 +266,6 @@
 .sky-files i.is-done { background: var(--sky-sun); box-shadow: 0 0 10px rgb(233 184 96 / 0.5); }
 .sky-handoff.is-handed .sky-files i:nth-child(n + 4) { transition-delay: calc(var(--i) * 450ms + 300ms); scale: 1.1; }
 .sky-files span { margin-left: 6px; font: 400 11px/1 var(--font-mono); color: var(--sky-faint); }
-
-/* Integration portal: the real portal's white app, on the sky. */
-.sky-pt { --pt-bg: transparent; background: none; color: var(--sky-ink); }
-.sky-pt.pt { color: var(--sky-ink); background: none; }
-.sky-pt .pt-window { width: min(1100px, calc(100% - 48px)); margin: 0 auto; }
-.sky-pt .pt-app { color: #1a1a1e; }
-.sky-pt .pt-steps, .sky-pt .pt-tabs { width: min(1100px, calc(100% - 48px)); margin: 22px auto 0; justify-content: center; }
-.sky-pt .pt-tabs { margin: 0 auto 22px; }
-.sky-pt .pt-steps__label { color: var(--sky-faint); }
-.sky-pt .pt-steps button, .sky-pt .pt-tabs button { background: transparent; color: var(--sky-ink); border: 1px solid var(--sky-rule); box-shadow: none; }
-.sky-pt .pt-steps button small { color: var(--sky-faint); }
-.sky-pt .pt-steps button[aria-pressed="true"], .sky-pt .pt-tabs button[aria-pressed="true"] { background: var(--sky-sun); border-color: var(--sky-sun); color: var(--sky-sun-ink); box-shadow: none; }
-.sky-pt .pt-steps button[aria-pressed="true"] small { color: rgb(29 22 8 / 0.7); }
-.sky-pt .pt-caption { width: min(600px, 100%); margin: 18px auto 0; display: block; padding: 0 24px; }
-.sky-pt .pt-caption h3 { margin: 0 0 4px; font: italic 400 19px/1.3 var(--sky-serif); color: var(--sky-ink); letter-spacing: -0.01em; }
-.sky-pt .pt-caption p { margin: 0; justify-self: auto; max-width: none; font-size: 14px; color: var(--sky-soft); }
-.sky-pt .sky-subtitle { margin-top: 80px; }
-
-/* Lucid: inspect a field. */
-.sky-fields { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px; padding: 14px; }
-.sky-fields__list { display: grid; gap: 4px; min-width: 0; }
-.sky-fields__list button { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 11px 12px; border: 0; border-radius: 9px; background: none; color: var(--sky-soft); text-align: left; cursor: pointer; font: 400 12.5px/1.3 var(--font-mono); transition: background-color 0.3s, color 0.3s; }
-.sky-fields__list button:hover { background: rgb(255 255 255 / 0.04); color: var(--sky-ink); }
-.sky-fields__list button[aria-pressed="true"] { background: rgb(255 255 255 / 0.07); color: var(--sky-ink); }
-.sky-fields__list button { min-width: 0; }
-/* Lines break around the arrow or after a dot, never inside a name. */
-.sky-fields__map { flex: 1 1 auto; min-width: 0; overflow-wrap: normal; }
-.sky-fields__map i { font-style: normal; color: var(--sky-faint); }
-.sky-fields__why { padding: 10px 10px 10px 0; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
-.sky-fields__why h3 { margin: 0; font: italic 400 22px/1.2 var(--sky-serif); }
-.sky-fields__why p { margin: 0; color: var(--sky-soft); }
-.sky-fields__why small { color: var(--sky-faint); font-size: 12px; }
 
 /* Arro: thirty mornings. */
 .sky-arro { display: grid; place-items: center; padding: 28px 0 8px; }
@@ -313,17 +306,6 @@
 .sky-timing h3 { margin: 10px 0 4px; font-weight: 500; font-size: 15px; }
 .sky-timing p { margin: 0; color: var(--sky-soft); font-size: 14px; }
 
-/* AgentSky: the film. */
-.sky-film__frame { width: min(880px, calc(100% - 48px)); margin: 0 auto; border-radius: 10px; overflow: hidden; background: #0b0d12; box-shadow: 0 40px 90px -50px rgb(0 0 0 / 0.8), 0 0 0 1px rgb(255 255 255 / 0.06); }
-.sky-film__frame video { display: block; width: 100%; aspect-ratio: 1280 / 800; background: #0b0d12; }
-.sky-film__fail { margin: 0; padding: 60px 24px; text-align: center; color: var(--sky-soft); }
-.sky-chapters { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 10px; }
-.sky-chapters button { display: inline-flex; gap: 8px; align-items: center; padding: 9px 14px; border: 1px solid var(--sky-rule); border-radius: 999px; background: none; color: var(--sky-ink); font: 500 13px/1 var(--font-sans); cursor: pointer; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
-.sky-chapters button small { font: 400 11px/1 var(--font-mono); color: var(--sky-faint); }
-.sky-chapters button[aria-pressed="true"] { background: var(--sky-sun); border-color: var(--sky-sun); color: var(--sky-sun-ink); }
-.sky-chapters button[aria-pressed="true"] small { color: rgb(29 22 8 / 0.7); }
-.sky-chapters button:disabled { opacity: 0.4; cursor: default; }
-
 /* ---- moving between pages ------------------------------------------------------------------------------------ */
 /* The old page stays solid underneath while the new one fades in over it, so the sky never washes out; named
    pieces (the picture and the title) travel between them. */
@@ -336,9 +318,19 @@
 
 /* ---- small screens ------------------------------------------------------------------------------------------- */
 @media (max-width: 760px) {
-  .sky-stage { height: 64svh; min-height: 460px; }
-  .sky-who { left: 24px; top: 28px; }
-  .sky-name { font-size: 22px; }
+  .sky-stage { height: 76svh; min-height: 600px; }
+  .sky-who { left: 24px; right: 24px; top: 28px; }
+  .sky-name { font-size: 18px; }
+  .sky-claim { max-width: 11ch; font-size: clamp(40px, 11.5vw, 52px); }
+  .sky-sub { font-size: 15px; }
+  /* What's left of the sun's glow behind the words fades out around them. */
+  .sky-who { text-shadow: 0 0 14px var(--sky-0), 0 0 4px var(--sky-0); }
+  .sky-now { display: block; position: absolute; z-index: 2; left: 24px; right: 24px; bottom: 20px; height: 4.4em; margin: 0; pointer-events: none; }
+  .sky-now span { position: absolute; inset: 0; display: grid; align-content: end; gap: 6px; opacity: 0; translate: 0 6px; transition: opacity 0.5s var(--sky-ease), translate 0.6s var(--sky-ease); }
+  .sky-now span.is-on { opacity: 1; translate: 0; transition-delay: 0.35s; }
+  .sky-now b { font: 400 11px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--sky-soft); }
+  .sky-now span { font: italic 400 19px/1.3 var(--sky-serif); letter-spacing: -0.01em; text-shadow: 0 1px 12px var(--sky-0); }
+  .sky-ix .sky-said { display: none; }
   .sky-ix { position: static; width: auto; padding: 10px 24px 0; }
   .sky-head { padding: 9px 0; }
   .sky-head::before { left: -12px; }
@@ -352,16 +344,13 @@
   .sky-water { height: 80px; }
   .sky-strip { height: 340px; }
   .sky-gallery { gap: 56px; }
-  .sky-fields { grid-template-columns: minmax(0, 1fr); }
-  .sky-fields__why { padding: 4px 8px 8px; }
   .sky-timing { grid-template-columns: 1fr; gap: 22px; }
-  .sky-pt .pt-window { width: calc(100% - 24px); }
 }
 
 /* ---- reduced motion ------------------------------------------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {
+  .sky-map-tile__row i::after { animation: none !important; transform: none; }
   .sky .sky-in, .sky .sky-ch, .sky .sky-ix li { animation: none !important; opacity: 1 !important; filter: none !important; translate: 0 !important; rotate: 0deg !important; }
   .sky *, .sky *::before, .sky *::after { transition-duration: 0s !important; transition-delay: 0s !important; }
-  .sky-pw::after { animation: none !important; }
   :root[data-sky]::view-transition-group(*), :root[data-sky]::view-transition-old(*), :root[data-sky]::view-transition-new(*) { animation: none !important; }
 }

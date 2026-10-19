@@ -12,7 +12,7 @@ export const JOURNEY_STOPS=[
   {id:'tennis',name:'Tennis club',detail:'Take a detour to the courts.',fraction:.18,kind:'tennis'},
   {id:'store',name:'Corner store',detail:'A small stop along the way.',fraction:.25,kind:'store'},
   {id:'trailhead',name:'Forest trailhead',detail:'Park under the trees. Walk to a view.',fraction:.43,kind:'forest'},
-  {id:'lake',name:'Lakeside',detail:'A Tahoe-inspired end to the afternoon.',fraction:.61,kind:'lake'},
+  {id:'lake',name:'Lakeside',detail:'A mountain lake to end the afternoon.',fraction:.61,kind:'lake'},
   {id:'city',name:'After hours',detail:'Keep going through the city lights.',fraction:.82,kind:'city'},
 ] as const;
 export type JourneyStopId=typeof JOURNEY_STOPS[number]['id'];

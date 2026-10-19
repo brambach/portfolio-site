@@ -146,7 +146,7 @@ export function HeroDawn() {
             <div className="flex items-center gap-3">
               <div aria-hidden className="h-px w-9 bg-paper/40" />
               <div className="font-mono text-[10.5px] tracking-[0.18em] text-paper/60">
-                brisbane, australia
+                somewhere with good light
               </div>
             </div>
           </Settle>

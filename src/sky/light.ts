@@ -392,7 +392,8 @@ export function reflection(picture: HTMLElement, canvas: HTMLCanvasElement, acti
   resize.observe(picture);
   const imgs = [...picture.querySelectorAll('img')];
   const loaded = () => requestAnimationFrame(() => painter.layout());
-  imgs.forEach(img => { if (!img.complete) img.addEventListener('load', loaded, { once: true }); });
+  // Every load, not just the first: the home page gives a picture its src only when it's about to rise.
+  imgs.forEach(img => img.addEventListener('load', loaded));
   loaded();
   return () => {
     gone = true; painters.delete(painter); io?.unobserve(canvas); resize.disconnect();
