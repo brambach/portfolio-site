@@ -212,6 +212,8 @@ export default function SkyHome() {
               style={{ left: geo.lefts[i], width: geo.cardW, '--delay': `${up(i) ? delay.current : 0}s` } as CSSProperties} />
           </Fragment>)}
         </div>
+        {/* On a phone the index is below the picture, so the picture says what it is, in the water under it. */}
+        <p className="sky-now" aria-hidden="true">{SKILLS.map((skill, i) => <span key={skill.id} className={current === i ? 'is-on' : ''}><b>{skill.name}</b>{skill.line}</span>)}</p>
       </div>
 
       <nav className={`sky-ix${touring ? ' is-touring' : ''}`} aria-labelledby="sky-work" style={{ '--step': `${TOUR_STEP}ms` } as CSSProperties}>
