@@ -40,7 +40,7 @@ export const SKILLS: Skill[] = [
       'My contract work, July to October 2026, is HR and payroll integrations. One wrong field mapping there means someone gets paid wrong. The client work stays private, so here’s what I can show.',
     ],
     evidence: [
-      { name: 'Arro', to: '/projects/arro', note: 'Apple Health, Supabase and push in one iPhone app. I left Strava out because its API terms only let an app show your activity back to you.' },
+      { name: 'Arro', to: '/projects/arro', note: 'Apple Health sync in the background, Supabase and six kinds of server push in one iPhone app. I left Strava out because its API terms only let an app show your activity back to you.' },
       { name: 'Crypto Command Center', href: 'https://github.com/brambach/crypto-dashboard', note: 'Live CoinGecko prices, and a Llama model on Groq that streams a read on any coin you click.' },
     ],
   },
@@ -74,7 +74,7 @@ export const SKILLS: Skill[] = [
     ],
     evidence: [
       { name: 'dervo_harness', href: 'https://github.com/brambach/dervo/tree/main/backend/dervo_harness', note: 'Drives Claude Code and Codex. The evals and load tests sit beside it in tools/.' },
-      { name: 'Arro’s checks', href: 'https://github.com/brambach/arro', note: 'Jest, a typecheck and pgTAP tests for row-level security, on every pull request.' },
+      { name: 'Arro’s checks', href: 'https://github.com/brambach/arro', note: 'Jest, a typecheck and 192 pgTAP tests for row-level security, streaks, invites and pushes, on every pull request.' },
     ],
   },
   {
@@ -99,16 +99,16 @@ export const SKILLS: Skill[] = [
     name: 'Product taste',
     proof: 'Arro',
     line: 'A missed day is never public.',
-    picture: { src: '/projects/arro/today-sample.png', tall: true },
+    picture: { src: '/projects/arro/today.jpg', tall: true },
     to: '/projects/arro',
     project: 'arro',
     body: [
-      'Arro is a daily workout streak for families who live apart, and most of its calls are about what it won’t show. A missed day is never public: it says “Maya still has today”, never “Maya broke the streak”. No rankings, and nudges are capped.',
+      'Arro is a daily movement streak for families who live apart, and most of its calls are about what it won’t show. A missed day is never public: it says “Maya still has today”, never “Maya broke the streak”. No rankings, no red badges, and one nudge a day at most.',
       'Knowing when to stop counts too. Dervo’s beta opened to a waitlist in September 2026. In October Claude shipped the same things, so I parked it. The source is on GitHub.',
     ],
     evidence: [
-      { name: 'Arro', to: '/projects/arro', note: 'In TestFlight now. Cheer a sample milestone.' },
-      { name: 'arrofamily.com', href: 'https://arrofamily.com', note: 'Arro’s landing page.' },
+      { name: 'Arro', to: '/projects/arro', note: 'It got to TestFlight, then I parked it. Cheer a sample milestone.' },
+      { name: 'Arro on GitHub', href: 'https://github.com/brambach/arro', note: 'Expo, React Native and Supabase, open source under MIT.' },
     ],
   },
 ];

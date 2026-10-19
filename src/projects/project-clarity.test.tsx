@@ -43,7 +43,7 @@ it('places the Arro sample-activity boundary beside the opening phone frame', ()
   render(<ArroStudy />);
   const sampleSection = screen.getByText(/A small reason to show up/i).closest('header');
   expect(sampleSection).not.toBeNull();
-  expect(within(sampleSection as HTMLElement).getByText('Prototype with sample activity. Names and initials are fictional.')).toBeInTheDocument();
+  expect(within(sampleSection as HTMLElement).getByText('Screens from the web build’s sample family. Names and activity are made up.')).toBeInTheDocument();
 });
 
 it('places the portal employer-owned fiction boundary beside the first mapping task', () => {

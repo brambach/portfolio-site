@@ -28,11 +28,14 @@ const extra: Record<SkyId, Omit<Work, keyof Project>> = {
   },
   arro: {
     kind: 'React Native',
-    hero: { src: '/projects/arro/today-sample.png', tall: true, title: 'A little encouragement.', text: 'See who’s already been out and who still has today. There’s room for a cheer, without turning the family into a leaderboard.' },
+    hero: { src: '/projects/arro/today.jpg', tall: true, title: 'Who’s moved, and who still has today.', text: 'Today shows how many of the family have kept it, the family streak and how close you are to your first 30 days together. Maya hasn’t moved yet, so she still has today.' },
     gallery: [
-      { src: '/projects/arro/trail-sample.png', tall: true, title: 'Every day adds up.', text: 'The weekly trail makes everyone’s effort visible. A rest day can belong in the story too.' },
+      { src: '/projects/arro/feed.jpg', tall: true, title: 'Today and yesterday, nothing older.', text: 'The feed keeps two days of workouts, with photos, a sketch of the route and who cheered. It’s meant to be one moment of contact a day, not a feed to scroll.' },
+      { src: '/projects/arro/workout.jpg', tall: true, title: 'The route, minus your front door.', text: 'Apple Health brings the route in, and Arro cuts 200 meters off each end before it leaves the phone. On an iPhone it sits on a real map. This is the web build, so it’s drawn on paper.' },
+      { src: '/projects/arro/log-today.jpg', tall: true, title: 'Anything counts.', text: 'No Apple Health? Tap “I moved today” and pick a walk, the gym, yoga or anything else. Minutes, a photo and a note are optional. You can log today or yesterday, never older.' },
+      { src: '/projects/arro/nudge.jpg', tall: true, title: 'One nudge a day.', text: 'Tap someone who still has today and you can send them a cheer. Each person gets one nudge a day at most, and it only pushes between 7am and 9pm their time.' },
     ],
-    link: { href: 'https://arrofamily.com', label: 'arrofamily.com' },
+    link: { href: 'https://github.com/brambach/arro', label: 'Read the source on GitHub' },
   },
   port: {
     kind: 'SwiftUI',

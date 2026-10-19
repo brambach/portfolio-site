@@ -52,15 +52,15 @@ function ArroMilestone() {
   const [burst, setBurst] = useState(0);
   const cheer = () => { setCheered(!cheered); if (!cheered && !reduced()) setBurst(b => b + 1); };
   return <div className="sky-col">
-    <Prompt>Thirty mornings becomes a shared memory. The milestone gets its own quiet, celebratory treatment.</Prompt>
+    <Prompt>When the family gets through its first 30 days together, Arro gives it a card of its own.</Prompt>
     <div className="sky-arro">
       <div className="sky-arro__card">
-        <span className="sky-arro__eyebrow">Arro · A moment to keep</span>
+        <span className="sky-arro__eyebrow">Arro · Day 30</span>
         <strong>30</strong>
-        <span className="sky-arro__unit">mornings, together.</span>
-        <p>Alex kept 30 days.<br />The family’s cheering.</p>
+        <span className="sky-arro__unit">days together.</span>
+        <p>Your first month, the whole family.<br />Maya and Jo have cheered.</p>
         <button aria-pressed={cheered} onClick={cheer}>{cheered ? '♥ Cheer sent' : '♡ Send a sample cheer'}{burst > 0 && <span key={burst} className="sky-arro__burst" aria-hidden="true">{Array.from({ length: 14 }, (_, i) => <i key={i} style={{ '--a': `${(i / 14) * 360}deg` } as CSSProperties} />)}</span>}</button>
-        <small>Illustrative milestone interaction. Names are fictional and cheers stay on this page.</small>
+        <small>A sample milestone with Arro’s sample family. Milestone cheers never made it into the app, so this one stays on this page.</small>
       </div>
     </div>
   </div>;
