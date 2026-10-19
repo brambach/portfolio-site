@@ -178,8 +178,8 @@
 .sky-skill p { margin: 0 0 0.8em; }
 /* The proof under it: a name and a line each, quiet rows. */
 .sky-proof { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 12px; }
-.sky-proof li { display: grid; grid-template-columns: 172px 1fr; gap: 4px 20px; align-items: baseline; }
-.sky-proof a, .sky-proof b { justify-self: start; font-size: 14px; font-weight: 500; }
+.sky-proof li { display: grid; grid-template-columns: 200px 1fr; gap: 4px 20px; align-items: baseline; }
+.sky-proof a, .sky-proof b { justify-self: start; font-size: 14px; font-weight: 500; white-space: nowrap; }
 .sky-proof b small { margin-left: 6px; font: 400 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--sky-faint); }
 .sky-proof span { font-size: 14px; color: var(--sky-soft); }
 @media (max-width: 560px) { .sky-proof li { grid-template-columns: 1fr; } }
