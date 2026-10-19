@@ -73,6 +73,16 @@ describe('the home page', () => {
     expect(label).toHaveTextContent('02 / 05');
   });
 
+  it('only fetches the pictures the first screen is about to show', () => {
+    at('/');
+    render(<SkyApp />);
+    const sources = () => [...document.querySelectorAll<HTMLImageElement>('.sky-berths img')].map(img => img.getAttribute('src'));
+    // Integrations is a drawing and Port a ring, so Agents is the only photo up next.
+    expect(sources()).toEqual(['/projects/dervo/catch-up.jpg', null, null]);
+    act(() => { fireEvent.keyDown(document.body, { key: 'ArrowLeft' }); });
+    expect(sources()).toEqual(['/projects/dervo/catch-up.jpg', '/projects/dervo/thread.jpg', '/projects/arro/today-sample.png']);
+  });
+
   it('lets the arrow keys step through the skills', () => {
     at('/');
     render(<SkyApp />);

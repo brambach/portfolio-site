@@ -53,6 +53,9 @@ export default function SkyHome() {
   const [geo, setGeo] = useState(() => berthsFor(typeof window === 'undefined' ? 1280 : document.documentElement.clientWidth, typeof window === 'undefined' ? 800 : innerHeight));
   const [touched, setTouched] = useState(false);
   const [touring, setTouring] = useState(false);
+  // Pictures load as they're needed: the one that's up and the one after it, so the first screen only fetches two.
+  const [reach, setReach] = useState(() => (back >= 0 ? back : 0) + 1);
+  useEffect(() => { if (current != null && current + 1 > reach) setReach(current + 1); }, [current, reach]);
   const delay = useRef(0);
   const wasUp = useRef<number | null>(null);
   const tourTimer = useRef(0);
@@ -202,7 +205,7 @@ export default function SkyHome() {
             <div ref={el => { if (el) berths.current[i] = el; }} className={`sky-berth${up(i) ? ' is-up' : ''}`} data-berth={skill.id} data-project={skill.project}
               style={{ left: geo.lefts[i], width: geo.cardW, '--delay': `${up(i) ? delay.current : 0}s` } as CSSProperties}>
               <a className="sky-card" href={skill.to} tabIndex={-1} aria-hidden="true" onClick={openCard(i)}>
-                <Shot ref={el => { if (el) shots.current[i] = el; }} picture={skill.picture} />
+                <Shot ref={el => { if (el) shots.current[i] = el; }} picture={skill.picture} held={i > reach} />
               </a>
             </div>
             <canvas ref={el => { if (el) mirrors.current[i] = el; }} className={`sky-mirror${up(i) ? ' is-up' : ''}`} aria-hidden="true"
