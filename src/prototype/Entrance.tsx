@@ -646,9 +646,9 @@ export default function Entrance() {
       </aside>}
       {townMode&&travelling&&intro==="done"&&race.phase==="idle"&&!object&&laptop==="idle"&&!menu&&!routeMap&&!lakeApproach&&call!=="ringing"&&call!=="answered"&&<RoadNotes progress={telemetry.distance/scenicRoad.length} deferred={Boolean(invitation)} onFocusHidden={focusStopInvitation}/>}
       {lakeApproach && !object && laptop === "idle" && <aside className="journey-caption" role="status"><strong>One stop I don’t want you to miss.</strong><span>The car will guide you into the lake turnout.</span></aside>}
-      {lakeArrival && !object && laptop === "idle" && <section className="journey-note journey-note--finish" aria-label="the lake turnout">
+      {lakeArrival && !object && laptop === "idle" && <section className="journey-note journey-note--finish" aria-label="Lake turnout">
         <span>03 / THE LAKE</span><h1>Stay for a moment.</h1>
-        <p>the lake means a lot to me. This little stretch of road is my nod to it.</p>
+        <p>There’s a lake that means a lot to me. This little stretch of road is my nod to it.</p>
         <p>{previousStops.lake?"Take another look around. The road home is here when you’re ready.":"The drive can wait. Take in the view, open the laptop, or race the road home."}</p>
         <button onClick={()=>{setLakeDismissed(true);setLakeView(true);sceneRef.current?.stopEngine();sceneRef.current?.lookAtLake();focusCabin();}}>Take in the view</button>
         {townMode&&<TimeToBeat open={()=>{raceTimesReturnFocusRef.current=document.activeElement instanceof HTMLElement?document.activeElement:null;setRaceTimes(true);}}/>}
