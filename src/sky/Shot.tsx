@@ -8,9 +8,11 @@ const FIELDS = [['Start date', 'Hire date'], ['Pay rate', 'Base rate'], ['Leave 
 /** A picture as the home page raises it and a project page opens on, so one can grow into the other. Port has no
  *  screenshots, so its picture is a drawn tile: a ring to hold. The integrations work is private, so its picture is
  *  a drawing of a field mapping, and says so. */
-export function Shot({ picture, alt = '', loading, children, className = '', piece, ref }: {
+export function Shot({ picture, alt = '', loading, children, className = '', piece, ref, held = false }: {
   picture: Picture & { port?: boolean; map?: boolean }; alt?: string; loading?: 'lazy' | 'eager'; children?: ReactNode;
   className?: string; piece?: string; ref?: Ref<HTMLDivElement>;
+  /** Not wanted yet: the image is in place but doesn't load until this turns false. */
+  held?: boolean;
 }) {
   const kind = picture.port ? ' is-port' : picture.map ? ' is-map' : '';
   return <div ref={ref} data-piece={piece} className={`sky-shot${picture.tall ? ' is-tall' : ''}${kind}${className ? ` ${className}` : ''}`}>
@@ -24,7 +26,7 @@ export function Shot({ picture, alt = '', loading, children, className = '', pie
             </div>)}
             <small>A drawing. Client work stays private.</small>
           </div>
-        : <img src={picture.src} alt={alt} loading={loading} decoding="async" style={picture.pos ? { '--pos': picture.pos } as CSSProperties : undefined} />}
+        : <img src={held ? undefined : picture.src} alt={alt} loading={loading} decoding="async" style={picture.pos ? { '--pos': picture.pos } as CSSProperties : undefined} />}
     {children}
   </div>;
 }
