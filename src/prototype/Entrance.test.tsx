@@ -329,7 +329,7 @@ it('keeps ignition locked until the cabin tour finishes and offers projects at t
   const host=screen.getByLabelText('Porsche cabin').parentElement!;
   fireEvent(host,new CustomEvent('car-drive',{detail:{phase:'parked',overlook:true}}));
   fireEvent(host,new CustomEvent('car-telemetry',{detail:{speed:0,rpm:900,gear:1,engineOn:true,automatic:true,collision:false,distance:2400,x:0,z:0,stop:'lake'}}));
-  expect(screen.getByText(/the lake means a lot to me/)).toBeInTheDocument();
+  expect(screen.getByText(/a lake that means a lot to me/)).toBeInTheDocument();
   expect(screen.getByRole('link',{name:'Read the full portfolio ↗'})).toHaveAttribute('href','/work');
   await user.click(screen.getByRole('button',{name:'Open my projects'}));
   expect(screen.getByRole('dialog',{name:'Project laptop'})).toBeInTheDocument();

@@ -3,10 +3,12 @@ import {trackJourney} from './journey-stats';
 import {Analytics} from '@vercel/analytics/react';
 import type {BeforeSendEvent} from '@vercel/analytics';
 
+const SITE_HOSTS=['brycerambach.com','www.brycerambach.com'];
+
 export function visitorEvent(event:BeforeSendEvent):BeforeSendEvent|null {
   const url=new URL(event.url);
   if(url.pathname.startsWith('/admin'))return null;
-  if(!['brycerambach.com','www.brycerambach.com'].includes(url.hostname))return null;
+  if(!SITE_HOSTS.includes(url.hostname))return null;
   // Exclude review sessions and keep only campaign attribution in page URLs.
   if(['profile','drivingReview','phoneReview','capture'].some(key=>url.searchParams.has(key)))return null;
   for(const key of [...url.searchParams.keys()]){
@@ -38,5 +40,7 @@ export function SiteAnalytics(){
     document.addEventListener('click',clicked);document.addEventListener('auxclick',clicked);
     return()=>{document.removeEventListener('click',clicked);document.removeEventListener('auxclick',clicked);};
   },[]);
-  return import.meta.env.PROD ? <Analytics beforeSend={visitorEvent}/> : null;
+  // Events from anywhere else are dropped anyway, and the script only exists on Vercel, so a local preview would
+  // just log a 404 for it.
+  return import.meta.env.PROD&&SITE_HOSTS.includes(location.hostname) ? <Analytics beforeSend={visitorEvent}/> : null;
 }

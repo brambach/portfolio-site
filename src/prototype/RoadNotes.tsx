@@ -2,7 +2,7 @@ import {useEffect,useId,useLayoutEffect,useRef,useState} from 'react';
 import './road-notes.css';
 const notes=[
   {title:'I design and build software.',short:'Interfaces, connected systems, and little tools for the people around me.',detail:'The laptop brings those sides together: interface studies, desktop tools, mobile prototypes and integration work. Each project has something you can explore.'},
-  {title:'My day job connects systems.',short:'At the consultancy, I work across payroll, HR and finance.',detail:'That work includes an integration platform, a payroll system, a rostering system and the finance system. The integration portal study shows an anonymised interpretation of that work, with fictional client data.'},
+  {title:'My day job connects systems.',short:'By day I work across payroll, HR and finance.',detail:'Most of it is quiet plumbing between platforms. The integration portal study shows an anonymised interpretation of that work, with fictional client data.'},
   {title:'Some projects start at home.',short:'Arro began as a running streak with my family.',detail:'A shared ritual, a little encouragement, and a reason to keep showing up. The portfolio uses fictional names and sample activity.'},
   {title:'There’s a racket back there.',short:'I played tennis when I was younger. The racket has a place in the car for a reason.',detail:'The nickname is “the young prodigy”. You can pick up the racket from the cabin when we stop.'}
 ];

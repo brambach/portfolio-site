@@ -73,7 +73,7 @@ export default function SkyProject({ id }: { id: string }) {
     <figure className="sky-herowrap">
       {hero.port
         ? <PortHold ref={picture} />
-        : <Shot ref={picture} work={work} piece="shot" className="sky-pic sky-in" alt={`${work.name}${hero.title ? `: ${hero.title}` : ''}`} loading="eager" />}
+        : <Shot ref={picture} picture={hero} piece="shot" className="sky-pic sky-in" alt={`${work.name}${hero.title ? `: ${hero.title}` : ''}`} loading="eager" />}
       <Water picture={picture} />
       {hero.title && <figcaption className="sky-col sky-cap sky-fade" data-in><b>{hero.title}</b>{hero.text}</figcaption>}
     </figure>
@@ -97,7 +97,7 @@ export default function SkyProject({ id }: { id: string }) {
 
     {work.gallery.length > 0 && <section className="sky-gallery" aria-label={`More of ${work.name}`}>
       {work.gallery.map(g => <figure key={g.src} className={`sky-g sky-fade${g.tall ? ' is-tall' : ''}`} data-in>
-        <Shot work={work} picture={g} className="sky-g__pic" alt={`${work.name}: ${g.title}`} loading="lazy" />
+        <Shot picture={g} className="sky-g__pic" alt={`${work.name}: ${g.title}`} loading="lazy" />
         <figcaption className="sky-col"><b>{g.title}</b>{g.text}</figcaption>
       </figure>)}
     </section>}

@@ -32,11 +32,11 @@ export function WorkSection() {
             className="text-balance font-display text-[42px] font-medium leading-[1.05] md:text-[56px]"
           />
           <p className="max-w-[360px] text-[15px] leading-[1.7] text-inksoft">
-            By day I wire payroll, HR and finance platforms together at the consultancy. The
-            kind of plumbing nobody notices, which is the point.
+            By day I wire payroll, HR and finance platforms together. The kind of plumbing
+            nobody notices, which is the point.
           </p>
           <div className="font-mono text-[10.5px] tracking-[0.08em] text-oak/50">
-            an integration platform · a payroll system · a rostering system · the finance system
+            payroll · hr · finance
           </div>
         </div>
 

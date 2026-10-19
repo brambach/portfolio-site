@@ -7,7 +7,7 @@ describe('WorkSection', () => {
     render(<WorkSection />);
     expect(screen.getByRole('heading', { name: 'Systems, wired together.' })).toBeInTheDocument();
     expect(screen.getByText(/plumbing nobody notices/)).toBeInTheDocument();
-    expect(screen.getByText('an integration platform · a payroll system · a rostering system · the finance system')).toBeInTheDocument();
+    expect(screen.getByText('payroll · hr · finance')).toBeInTheDocument();
   });
 
   it('shows the desk at golden hour', () => {
