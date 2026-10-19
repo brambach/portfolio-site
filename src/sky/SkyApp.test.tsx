@@ -24,7 +24,7 @@ describe('the home page', () => {
     for (const [no, name, id] of SKILL_ROWS) {
       expect(within(index).getByRole('link', { name: new RegExp(`^${no} ${name}`) })).toHaveAttribute('href', `#${id}`);
     }
-    expect(screen.getByRole('link', { name: /Resume/ })).toHaveAttribute('href', '/Bryce_Rambach_Resume.pdf');
+    expect(screen.queryByRole('link', { name: /Resume/ })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'The drive' })).toHaveAttribute('href', '/drive');
     expect(screen.getByRole('link', { name: 'The road' })).toHaveAttribute('href', '/work');
     expect(document.title).toBe('Bryce Rambach');

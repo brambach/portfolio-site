@@ -261,7 +261,6 @@ export default function SkyHome() {
           <li data-in style={{ '--d': '60ms' } as CSSProperties}><a className="sky-u sky-ext" href="https://www.linkedin.com/in/bryce-rambach/" target="_blank" rel="noopener noreferrer">LinkedIn</a><span>bryce-rambach</span></li>
           <li data-in style={{ '--d': '120ms' } as CSSProperties}><a className="sky-u sky-ext" href="https://x.com/brycerambach" target="_blank" rel="noopener noreferrer">X</a><span>@brycerambach</span></li>
           <li data-in style={{ '--d': '180ms' } as CSSProperties}><a className="sky-u sky-ext" href="https://github.com/brambach" target="_blank" rel="noopener noreferrer">GitHub</a><span>brambach</span></li>
-          <li data-in style={{ '--d': '240ms' } as CSSProperties}><a className="sky-u sky-ext" href="/Bryce_Rambach_Resume.pdf" target="_blank" rel="noopener">Resume</a><span>PDF, one page</span></li>
         </ul>
         <p className="sky-sign sky-fade" data-in>Designed and built by me, which is sort of the point.</p>
       </div>

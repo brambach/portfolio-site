@@ -26,7 +26,7 @@ describe('the work on the sky site', () => {
     }
   });
   it('has the files the pages link to', () => {
-    for (const file of ['/Bryce_Rambach_Resume.pdf', '/projects/port/close.wav', '/favicon-sky.svg', '/og-sky.jpg']) {
+    for (const file of ['/projects/port/close.wav', '/favicon-sky.svg', '/og-sky.jpg']) {
       expect(existsSync(publicFile(file)), file).toBe(true);
     }
   });
