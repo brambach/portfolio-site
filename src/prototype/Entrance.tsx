@@ -646,9 +646,9 @@ export default function Entrance() {
       </aside>}
       {townMode&&travelling&&intro==="done"&&race.phase==="idle"&&!object&&laptop==="idle"&&!menu&&!routeMap&&!lakeApproach&&call!=="ringing"&&call!=="answered"&&<RoadNotes progress={telemetry.distance/scenicRoad.length} deferred={Boolean(invitation)} onFocusHidden={focusStopInvitation}/>}
       {lakeApproach && !object && laptop === "idle" && <aside className="journey-caption" role="status"><strong>One stop I don’t want you to miss.</strong><span>The car will guide you into the lake turnout.</span></aside>}
-      {lakeArrival && !object && laptop === "idle" && <section className="journey-note journey-note--finish" aria-label="Lake Tahoe turnout">
-        <span>03 / LAKE TAHOE</span><h1>Stay for a moment.</h1>
-        <p>Lake Tahoe means a lot to me. This little stretch of road is my nod to it.</p>
+      {lakeArrival && !object && laptop === "idle" && <section className="journey-note journey-note--finish" aria-label="Lake turnout">
+        <span>03 / THE LAKE</span><h1>Stay for a moment.</h1>
+        <p>There’s a lake that means a lot to me. This little stretch of road is my nod to it.</p>
         <p>{previousStops.lake?"Take another look around. The road home is here when you’re ready.":"The drive can wait. Take in the view, open the laptop, or race the road home."}</p>
         <button onClick={()=>{setLakeDismissed(true);setLakeView(true);sceneRef.current?.stopEngine();sceneRef.current?.lookAtLake();focusCabin();}}>Take in the view</button>
         {townMode&&<TimeToBeat open={()=>{raceTimesReturnFocusRef.current=document.activeElement instanceof HTMLElement?document.activeElement:null;setRaceTimes(true);}}/>}
@@ -657,7 +657,7 @@ export default function Entrance() {
         <div className="journey-finish-links"><a href="/work">Read the full portfolio ↗</a><a href="mailto:bryce.rambach@gmail.com">Say hello ↗</a></div><ContactLinks/>
         <button onClick={() => {setLakeDismissed(true);focusCabin();}}>Stay a little longer</button>
       </section>}
-      {lakeView&&phase==='inside'&&!object&&laptop==='idle'&&<aside className="lake-view-note"><span>LAKE TAHOE / NO HURRY</span><p>Drag to look around. Stay as long as you like.</p><button onClick={()=>{setLakeView(false);setLakeDismissed(false);sceneRef.current?.center();}}>Back to the lake stop</button></aside>}
+      {lakeView&&phase==='inside'&&!object&&laptop==='idle'&&<aside className="lake-view-note"><span>THE LAKE / NO HURRY</span><p>Drag to look around. Stay as long as you like.</p><button onClick={()=>{setLakeView(false);setLakeDismissed(false);sceneRef.current?.center();}}>Back to the lake stop</button></aside>}
       {routeBlocked&&!object&&laptop==='idle'&&!routeMap&&<aside className="route-blocked-note" role="status"><span>LAKE APPROACH</span><p>The car is already committed to the lake turnout. Stay with the scenic approach, or go straight to {JOURNEY_STOPS.find(stop=>stop.id===routeBlocked.requested)?.name??'that stop'}.</p><button onClick={()=>goStraight(routeBlocked.requested)}>Go straight to {JOURNEY_STOPS.find(stop=>stop.id===routeBlocked.requested)?.name??'that stop'}</button><button onClick={()=>{setRouteBlocked(null);focusCabin();}}>Stay on the approach</button></aside>}
       {routeJump&&<aside className="route-jump-cover" role="status" aria-live="polite"><span>SHORT ROUTE</span><strong>Heading to {routeJump.label}.</strong></aside>}
       {raceTimes&&<RaceTimes returnFocusRef={raceTimesReturnFocusRef} close={()=>setRaceTimes(false)}/>}

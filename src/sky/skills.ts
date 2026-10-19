@@ -37,7 +37,7 @@ export const SKILLS: Skill[] = [
     picture: { src: '', map: true },
     to: '#integrations',
     body: [
-      'My Brisbane contract, July to October 2026, is HR and payroll integrations. One wrong field mapping there means someone gets paid wrong. The client work stays private, so here’s what I can show.',
+      'My contract work, July to October 2026, is HR and payroll integrations. One wrong field mapping there means someone gets paid wrong. The client work stays private, so here’s what I can show.',
     ],
     evidence: [
       { name: 'Arro', to: '/projects/arro', note: 'Apple Health, Supabase and push in one iPhone app. I left Strava out because its API terms only let an app show your activity back to you.' },
@@ -103,7 +103,7 @@ export const SKILLS: Skill[] = [
     to: '/projects/arro',
     project: 'arro',
     body: [
-      'Arro is a daily workout streak for families who live apart, and most of its calls are about what it won’t show. A missed day is never public: it says “Darcey still has today”, never “Darcey broke the streak”. No rankings, and nudges are capped.',
+      'Arro is a daily workout streak for families who live apart, and most of its calls are about what it won’t show. A missed day is never public: it says “Maya still has today”, never “Maya broke the streak”. No rankings, and nudges are capped.',
       'Knowing when to stop counts too. Dervo’s beta opened to a waitlist in September 2026. In October Claude shipped the same things, so I parked it. The source is on GitHub.',
     ],
     evidence: [

@@ -85,7 +85,7 @@ Source geometry preserved and compressed. Distant views are rendered from the sa
 
 Fictional alpine panorama
 Generated with OpenAI image generation for this portfolio, September 6, 2026.
-Tahoe-inspired scenery, not a photograph of a verified location.
+Fictional alpine scenery, not a photograph of a verified location.
 Sky and mountain background only; nearby terrain and water are rendered geometry.
 
 Lake radio music

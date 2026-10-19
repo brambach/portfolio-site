@@ -243,7 +243,7 @@ function Drive() {
           : <Billboard key={project.id} project={project} index={i} onFocus={bringIntoView} active={stop === i} distance={distance} speed={speed} />)}
         <div className="sp-panel sp-panel--overlook">
           <div className="sp-lakeside" aria-hidden="true"><b>Lakeside</b><span>Yes, this counts as looking at my site</span></div>
-          <div className="sp-signpost" aria-hidden="true"><span>Tahoe overlook</span><span>1 mi</span></div>
+          <div className="sp-signpost" aria-hidden="true"><span>The overlook</span><span>1 mi</span></div>
           <h2>Want to drive it yourself?</h2>
           <p>The rest of the road is in 3D. Open the door, turn the key, take it to the lake.</p>
           <div className="sp-overlook__actions">

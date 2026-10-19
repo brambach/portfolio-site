@@ -4,7 +4,7 @@
 
 My portfolio. The home page is one day, from a halftone sunrise at the top to a sunset at the bottom. The first screen says what I do: integrations, agents, the harnesses that check them, design and product taste. The sun walks the horizon through all five, raising the project behind each one out of the water, and further down each one has its proof.
 
-The older ideas are still around as side quests: a road where a flat green 911 drives past a billboard for each project, and a 3D Porsche you can drive out of town toward Lake Tahoe.
+The older ideas are still around as side quests: a road where a flat green 911 drives past a billboard for each project, and a 3D Porsche you can drive out of town toward a mountain lake.
 
 **[See the site](https://brycerambach.com)**, or [take the road](https://brycerambach.com/work), or [take the wheel](https://brycerambach.com/drive).
 
@@ -15,7 +15,7 @@ The older ideas are still around as side quests: a road where a flat green 911 d
 | `/` | The sky. The claim, the five skills with a picture each on the horizon, then the proof for each, side quests and contact over the sunset. |
 | `/projects/<name>` | A page each for Dervo, Arro and Port, with something you can try. Moving between pages carries the picture and the title across where the browser supports view transitions. |
 | `/work` | The road. Scrolling drives the car past a billboard per project, with a night stop at the end where the archive is a pile of cards. |
-| `/drive` | The 3D Porsche. Open the door, turn the key, drive from town to a Tahoe-style overlook. `/drive?from=work` skips the walk-up. |
+| `/drive` | The 3D Porsche. Open the door, turn the key, drive from town to a lakeside overlook. `/drive?from=work` skips the walk-up. |
 | `/previous` | The earlier version of the site, kept around. |
 
 ![Dervo's stop on the road](docs/readme/road-stop.jpg)

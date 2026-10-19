@@ -10,7 +10,7 @@ export function WorkArrival({ ready }: { ready: boolean }) {
   return <div className={`sp-page sp-arrival ${ready ? 'sp-arrival--ready' : ''}`} aria-hidden={ready} inert={ready}>
     <div className="sp-stars" aria-hidden="true" />
     <div className="sp-arrival__copy">
-      <div className="sp-signpost"><span>Tahoe overlook</span><span>You made it</span></div>
+      <div className="sp-signpost"><span>The overlook</span><span>You made it</span></div>
       <p role="status">{ready ? 'Here we are.' : 'Pulling in…'}</p>
     </div>
     <div className="sp-arrival__road" aria-hidden="true">

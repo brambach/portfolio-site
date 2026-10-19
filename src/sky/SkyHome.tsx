@@ -236,7 +236,7 @@ export default function SkyHome() {
 
     <main className="sky-col sky-main">
       <div className="sky-intro">
-        <p className="sky-fade" data-in>I’m 22. I grew up in Carmel and Lake Tahoe and finished a computer science degree at San Diego State in May 2026. Since July I’ve been in Brisbane on a three-month contract, building HR and payroll integrations, and before that I founded <SkyLink className="sky-u" to="/projects/dervo">Dervo</SkyLink>.</p>
+        <p className="sky-fade" data-in>I’m 22. I finished a computer science degree in May 2026. Since July I’ve been on a three-month contract building HR and payroll integrations, and before that I founded <SkyLink className="sky-u" to="/projects/dervo">Dervo</SkyLink>.</p>
         <p className="sky-fade" data-in style={{ '--d': '80ms' } as CSSProperties}>I do my best work on a small team where one person can own a product from the API at the bottom to the words on the buttons. Here’s what that looks like, one part at a time.</p>
       </div>
 
@@ -245,7 +245,7 @@ export default function SkyHome() {
 
       <Title>Side quests</Title>
       <ul className="sky-links">
-        <li data-in><a className="sky-u" href="/drive">The drive</a><span>A 3D Porsche on Lake Tahoe. Sound on.</span></li>
+        <li data-in><a className="sky-u" href="/drive">The drive</a><span>A 3D Porsche on a mountain lake. Sound on.</span></li>
         <li data-in style={{ '--d': '70ms' } as CSSProperties}><a className="sky-u" href="/work">The road</a><span>The old homepage. Scroll and the Porsche drives.</span></li>
         <li data-in style={{ '--d': '140ms' } as CSSProperties}><a className="sky-u sky-ext" href="https://github.com/brambach/fire-station-33" target="_blank" rel="noopener noreferrer">Fire Station #33</a><span>A Unity game about rescuing hikers from a wildfire. Four of us made it for a class.</span></li>
         <li data-in style={{ '--d': '210ms' } as CSSProperties}><a className="sky-u sky-ext" href="https://github.com/brambach/apple-picker" target="_blank" rel="noopener noreferrer">Apple Picker</a><span>A small Unity game. Catch the good apples, dodge the bad ones.</span></li>

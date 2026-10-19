@@ -317,7 +317,7 @@ it('keeps speed hold unavailable while parking and restores its driving guidance
   expect(hold).toBeEnabled();expect(document.getElementById('driving-mode-help')).toHaveTextContent('C holds speed');
 });
 
-it('keeps ignition locked until the cabin tour finishes and offers projects at Tahoe',async()=>{
+it('keeps ignition locked until the cabin tour finishes and offers projects at the lake',async()=>{
   const user=userEvent.setup();render(<Entrance/>);
   await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));
   fireEvent.keyDown(screen.getByLabelText('Porsche cabin'),{key:'k',code:'KeyK'});
@@ -329,7 +329,7 @@ it('keeps ignition locked until the cabin tour finishes and offers projects at T
   const host=screen.getByLabelText('Porsche cabin').parentElement!;
   fireEvent(host,new CustomEvent('car-drive',{detail:{phase:'parked',overlook:true}}));
   fireEvent(host,new CustomEvent('car-telemetry',{detail:{speed:0,rpm:900,gear:1,engineOn:true,automatic:true,collision:false,distance:2400,x:0,z:0,stop:'lake'}}));
-  expect(screen.getByText(/Lake Tahoe means a lot to me/)).toBeInTheDocument();
+  expect(screen.getByText(/a lake that means a lot to me/)).toBeInTheDocument();
   expect(screen.getByRole('link',{name:'Read the full portfolio ↗'})).toHaveAttribute('href','/work');
   await user.click(screen.getByRole('button',{name:'Open my projects'}));
   expect(screen.getByRole('dialog',{name:'Project laptop'})).toBeInTheDocument();
@@ -531,7 +531,7 @@ it('recognizes a completed introduction without requiring every object again',as
   await user.click(screen.getByRole('button',{name:/Take another drive/}));expect(screen.getByRole('button',{name:'Turn the ignition key'})).toBeInTheDocument();
 });
 
-it('offers the race shortcut only after Tahoe and starts it explicitly',async()=>{
+it('offers the race shortcut only after the lake and starts it explicitly',async()=>{
   localStorage.setItem('bryce-journey-v2',JSON.stringify({onboarded:true,tahoe:true,discoveries:['lake']}));
   const user=userEvent.setup();render(<Entrance/>);await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));
   await user.click(screen.getByRole('button',{name:/Back to the race/}));expect(scene.replayRace).toHaveBeenCalledOnce();expect(screen.queryByRole('region',{name:'Welcome back'})).not.toBeInTheDocument();

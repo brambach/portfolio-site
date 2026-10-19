@@ -4,7 +4,7 @@ type Day={date:string;counts:Record<string,number>};
 type BoardEntry={id:string;name:string;elapsed:number};
 type Stats={daily:Day[];startedAt:string|null;updatedAt:string;board:BoardEntry[]};
 const analyticsUrl='https://vercel.com/bryce-rambachs-projects/brycerambach-portfolio/analytics';
-const stages=[['visit','Opened the site'],['scene_ready','Car became usable'],['car_entered','Got in the Porsche'],['intro_completed','Finished the introduction'],['tahoe_reached','Made it to Tahoe'],['race_started','Started the race'],['race_finished','Crossed the line'],['time_posted','Posted a time']];
+const stages=[['visit','Opened the site'],['scene_ready','Car became usable'],['car_entered','Got in the Porsche'],['intro_completed','Finished the introduction'],['tahoe_reached','Made it to the lake'],['race_started','Started the race'],['race_finished','Crossed the line'],['time_posted','Posted a time']];
 const lap=(ms:number)=>(ms/1000).toFixed(3)+'s';
 export default function Garage(){
   const [stats,setStats]=useState<Stats|null>(null),[locked,setLocked]=useState(false),[busy,setBusy]=useState(true),[error,setError]=useState(''),[days,setDays]=useState(7);
