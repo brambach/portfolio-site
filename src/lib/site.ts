@@ -32,8 +32,9 @@ export const projects: Project[] = [
   },
   {
     name: 'arro',
-    oneLiner: 'a running-streak ritual my family actually keeps',
+    oneLiner: 'a daily movement streak for families who live apart',
     tag: 'react native',
+    sourceHref: 'https://github.com/brambach/arro',
   },
   {
     name: 'trace',

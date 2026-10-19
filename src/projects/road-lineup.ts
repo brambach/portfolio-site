@@ -9,7 +9,7 @@ export const covers: Partial<Record<Project['id'], string>> = {
   agentsky: '/project-lab/sky.png',
   dervo: '/projects/dervo/sunrise.jpg',
   lucid: '/projects/lucid/spec.png',
-  arro: '/projects/arro/today-sample.png',
+  arro: '/projects/arro/today.jpg',
   'integration-portal': '/projects/portal/hub.png',
 };
 

@@ -9,7 +9,7 @@ export function ProjectCover({project}:{project:Project}) {
     {project.id === 'agentsky' && <img src="/project-lab/sky.png" alt=""/>}
     {project.id === 'dervo' && <img className="ps-cover__product" src="/projects/dervo/catch-up.jpg" alt="" loading="lazy"/>}
     {project.id === 'lucid' && <img className="ps-cover__product" src="/projects/lucid/spec.png" alt="" loading="lazy"/>}
-    {project.id === 'arro' && <img className="ps-cover__product" src="/projects/arro/today-sample.png" alt="" loading="lazy"/>}
+    {project.id === 'arro' && <img className="ps-cover__product" src="/projects/arro/today.jpg" alt="" loading="lazy"/>}
     {project.id === 'port' && <div className="ps-port-line"/>}
     {project.id === 'integration-portal' && <img className="ps-cover__product" src="/projects/portal/hub.png" alt="" loading="lazy"/>}
     <strong>{project.name}</strong><span className="ps-cover__line">{project.line}</span><span className="ps-cover__open">Open study</span>
