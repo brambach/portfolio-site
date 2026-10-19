@@ -4,7 +4,7 @@ import { email, projects, streakDay, streakDayOn, vibeCards } from './site';
 describe('site data', () => {
   it('leads with AgentSky and keeps the existing projects', () => {
     expect(projects.map((p) => p.name)).toEqual(['AgentSky', 'arro', 'trace', 'throughline', 'bryce-os']);
-    expect(projects.find(p => p.name === 'arro')?.oneLiner).toBe('a running-streak ritual my family actually keeps');
+    expect(projects.find(p => p.name === 'arro')?.oneLiner).toBe('a daily movement streak for families who live apart');
   });
 
   it('keeps the streak and email', () => {

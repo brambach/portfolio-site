@@ -80,7 +80,7 @@ describe('the home page', () => {
     // Integrations is a drawing and Port a ring, so Agents is the only photo up next.
     expect(sources()).toEqual(['/projects/dervo/catch-up.jpg', null, null]);
     act(() => { fireEvent.keyDown(document.body, { key: 'ArrowLeft' }); });
-    expect(sources()).toEqual(['/projects/dervo/catch-up.jpg', '/projects/dervo/thread.jpg', '/projects/arro/today-sample.png']);
+    expect(sources()).toEqual(['/projects/dervo/catch-up.jpg', '/projects/dervo/thread.jpg', '/projects/arro/today.jpg']);
   });
 
   it('lets the arrow keys step through the skills', () => {
