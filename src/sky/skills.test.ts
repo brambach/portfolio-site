@@ -5,7 +5,7 @@ import { projects } from '../projects/catalog';
 import { SKY_IDS } from './routes';
 import { SKILLS, skillForProject } from './skills';
 
-const DASHES = /[–—]/;
+const DASHES = /[\u2013\u2014]/;
 
 describe('the five skills', () => {
   it('are the five the home page claims, each with proof', () => {
