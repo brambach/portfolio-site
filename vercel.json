@@ -31,14 +31,31 @@
       ]
     }
   ],
+  "redirects": [
+    {
+      "source": "/lab/e/projects/:id(dervo|arro|port|lucid|integration-portal|agentsky)",
+      "destination": "/projects/:id",
+      "permanent": false
+    },
+    {
+      "source": "/lab",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/lab/:path*",
+      "destination": "/",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/projects",
       "destination": "/index.html"
     },
     {
-      "source": "/projects/:path*",
-      "destination": "/index.html"
+      "source": "/projects/:id(dervo|arro|port|lucid|integration-portal|agentsky)",
+      "destination": "/projects/:id.html"
     },
     {
       "source": "/work",
@@ -54,14 +71,6 @@
     },
     {
       "source": "/admin",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/lab",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/lab/:path*",
       "destination": "/index.html"
     }
   ]
