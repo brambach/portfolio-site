@@ -181,6 +181,8 @@ html.lenis, html.lenis body { height: auto; }
 .e-list { margin-top: 14px; }
 .e-sign { margin: clamp(56px, 10vh, 120px) 0 0; padding-top: 18px; border-top: 1px solid var(--e-rule);
   font: 400 11px/1.5 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--e-faint); }
+/* Where the waving hand ends up on a phone, under the last line (motion.ts). Elsewhere it's beside the words. */
+.e-close__rest { display: none; }
 
 /* ---- the pointer (chrome.ts): four dots that trail it and rest as a little block. Over a link they line up and
    point the way the link goes, and its word comes up beside them. ------------------------------------------- */
@@ -224,6 +226,8 @@ html.lenis, html.lenis body { height: auto; }
   .e-index__more > div { padding-left: 42px; }
   .e-hello { font-size: clamp(72px, 22vw, 150px); }
   .e-mail { font-size: clamp(20px, 6.2vw, 30px); }
+  .e-close { padding-bottom: 0 !important; }
+  .e-close__rest { display: block; height: 46lvh; }
 }
 
 @media (prefers-reduced-motion: reduce) {

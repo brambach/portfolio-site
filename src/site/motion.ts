@@ -265,8 +265,17 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
 
   // On a phone the words scroll up over the photo, so once a part's words reach the top half of the screen its
   // scene steps back to let them be read. The next part brings it back with its morph.
+  // The hand is the exception: there's no next part to bring it back, and at the foot of the page its place would be
+  // over the last links. So it sits in the space above Say hello and scrolls away with it, and the same dots wait in
+  // a space left for them under the last line (data-hand-rest), where the page ends.
   let backed = false;
+  const close = root.querySelector<HTMLElement>('[data-scene="contact"]'), rest = root.querySelector<HTMLElement>('[data-hand-rest]');
+  const handLift = () => {
+    const H = grid.h, above = close!.getBoundingClientRect().top - H * 0.03;
+    return above + H * 0.42 > 0 ? above : rest!.getBoundingClientRect().top - H * 0.04;
+  };
   const stepBack = () => {
+    if (scene === 'contact' && close && rest) { dots?.lift(handLift()); if (backed) { backed = false; canvas.style.opacity = ''; } return; }
     const el = scene && scene !== 'hero' ? root.querySelector<HTMLElement>(`[data-scene="${scene}"]`) : null;
     const back = !!el && el.getBoundingClientRect().top < -innerHeight * 0.08;
     if (back !== backed) { backed = back; canvas.style.opacity = back ? '0.32' : ''; }
