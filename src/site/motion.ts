@@ -495,7 +495,7 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
     const move = l2.querySelector('.e-tag__move')!;
     const moveChars = s2.chars.filter(c => move.contains(c)), makeChars = s2.chars.filter(c => !move.contains(c));
     const path = l1.querySelector('path')!, beam = l3.querySelector('.e-tag__beam')!;
-    const head = root.querySelector('.e-head')!, foot = root.querySelector('[data-hero-foot]')!;
+    const head = root.querySelector('.e-head')!, foot = root.querySelector('[data-hero-foot]')!, sub = foot.querySelector('.e-hero__sub')!;
 
     const words = gsap.timeline({ paused: true, delay: 0.15, onComplete: () => { splitDone = true; } })
       // "I design it," : the letters come up out of their masks and lean upright, then a pen line draws under design.
@@ -508,7 +508,10 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
       // "and build it." : the letters go up like columns from the baseline, middle first, and a beam goes in under them.
       .from(s3.chars, { scaleY: 0, transformOrigin: '50% 100%', duration: 0.75, stagger: { each: 0.035, from: 'center' }, ease: EXPO }, 0.95)
       .fromTo(beam, { scaleX: 0 }, { scaleX: 1, duration: 0.8, ease: 'expo.inOut' }, 1.2)
-      .from(head, { opacity: 0, y: -12, duration: 1, ease: EXPO }, 1.1);
+      // Then the line under it, once the tagline is most of the way up, and the header last. Both start hidden in
+      // the CSS (e.css), so they go from and to stated values.
+      .fromTo(sub, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 1, ease: EXPO }, 0.8)
+      .fromTo(head, { opacity: 0, y: -12 }, { opacity: 1, y: 0, duration: 0.9, ease: EXPO }, 1.05);
 
     // Scrolling away, the three lines drift apart a little, at different speeds.
     const away = { trigger: '.e-hero', start: 'top top', end: 'bottom top', scrub: 0.6 };
@@ -522,7 +525,7 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
   // Everything else is quiet: a block rises a few pixels and fades in, all of it together, once.
   function quiet() {
     q('[data-rule]').forEach(el => gsap.fromTo(el, { scaleX: 0 }, { scaleX: 1, duration: 1.3, ease: 'expo.inOut', scrollTrigger: { trigger: el, start: 'top 88%', once: true } }));
-    q('[data-quiet]').forEach(el => gsap.from(el, { y: 22, opacity: 0, duration: 1.1, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 90%', once: true } }));
+    q('[data-quiet]').forEach(el => gsap.fromTo(el, { y: 22, opacity: 0 }, { y: 0, opacity: 1, duration: 1.1, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 90%', once: true } }));
     // The big paragraph about Bryce lights up word by word as you read down it. Its words stay readable as they are
     // (aria 'none'), since a label on the paragraph would hide the name of the Dervo link inside it.
     q('[data-read]').forEach(el => {

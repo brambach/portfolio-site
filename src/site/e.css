@@ -53,10 +53,17 @@ html.lenis, html.lenis body { height: auto; }
 .e-hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-start; padding: clamp(96px, 14vh, 150px) var(--pad) 40px; }
 .e-tag { margin: 0; font: 400 clamp(54px, 8.6vw, 160px)/0.99 var(--e-serif); letter-spacing: -0.045em; }
 .e-tag__l { display: block; white-space: nowrap; width: max-content; }
-/* The tagline waits for its font so it can be split. The line under it doesn't, so it's there from the first paint. */
+/* The tagline waits for its font so it can be split. The header waits with it, or it would show, hide while the
+   words are split, and fade back in. */
 .e-site:not(.is-ready) .e-tag { visibility: hidden; }
-/* The header waits with it, or it would show, hide while the words are split, and fade back in. */
 .e-site:not(.is-ready) .e-head { opacity: 0; }
+/* Everything else the entrance moves starts where the motion starts it, from the first paint, so nothing shows, hides
+   and comes back (motion.ts and work-motion.ts take it from here, with fromTo, since a from() would read these as
+   where to end). With reduced motion nothing moves, so nothing waits. */
+@media (prefers-reduced-motion: no-preference) {
+  .e-site:not(.is-ready) :is(.e-hero__sub, [data-lead], [data-quiet], [data-top-label]) { opacity: 0; }
+  .e-site:not(.is-ready) :is([data-rule], [data-top-rule]) { transform: scaleX(0); }
+}
 .e-tag__l--2 { margin-left: 0.9em; font-style: italic; letter-spacing: -0.035em; }
 .e-tag__l--3 { position: relative; margin-left: 0.3em; padding-bottom: 0.06em; }
 .e-tag__design { position: relative; display: inline-block; }
