@@ -1,5 +1,4 @@
-import { buffersOf, buildScene, type BuildJob } from './build';
-import { ART } from './scenes';
+import { buffersOf, buildScene, srcOf, type BuildJob } from './build';
 
 /* The worker that turns E's pictures into dots: it fetches and decodes a picture, scales it on an OffscreenCanvas and
    works out every dot, then hands the numbers back. The page only has to upload them. */
@@ -11,7 +10,8 @@ scope.onmessage = async (e: MessageEvent<BuildJob & { key: number; blob?: Blob }
   const { key, blob, ...job } = e.data;
   try {
     let img: ImageBitmap | null = null;
-    if (job.id !== 'work') img = await createImageBitmap(blob ?? await (await fetch(ART[job.id].src)).blob());
+    const src = srcOf(job);
+    if (src) img = await createImageBitmap(blob ?? await (await fetch(src)).blob());
     const built = buildScene(job, img, (w, h) => new OffscreenCanvas(w, h).getContext('2d', { willReadFrequently: true }));
     img?.close();
     if (!built) { scope.postMessage({ key, error: 'no canvas' }); return; }

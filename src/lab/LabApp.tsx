@@ -1,6 +1,6 @@
 import { lazy, Suspense, useLayoutEffect } from 'react';
 import { useThemeColor } from '../projects/look';
-import { labRoute, LAB_IDS, type LabId } from './routes';
+import { hourQuery, isLabWorkPath, labRoute, labWorkId, LAB_IDS, type LabId } from './routes';
 import './lab.css';
 
 /* The motion lab: five takes on the home page's motion, side by side, with the same words. Each direction is its
@@ -13,6 +13,8 @@ const DIRECTIONS: Record<LabId, { name: string; line: string; load: () => Promis
   d: { name: 'Outdoors', line: 'B’s moving type over a landscape that goes from first light to dusk as you scroll: clouds, hills, mist on the water, grass in the wind. One moment per part, the rest stays quiet.', load: () => import('./d/DirectionD') },
   e: { name: 'Dots', line: 'One bold object for each part, drawn in dots that move: they fly in out of static, turn from one object into the next as you reach each part, snap into focus, and get out of your way. The colors follow your clock.', load: () => import('./e/DirectionE') },
 };
+/** E's own project pages, at /lab/e/projects/<id>. */
+const WorkE = lazy(() => import('./e/WorkE'));
 const pages = Object.fromEntries(LAB_IDS.map(id => [id, lazy(DIRECTIONS[id].load)])) as Record<LabId, React.LazyExoticComponent<React.ComponentType>>;
 
 export function LabSwitch({ current }: { current: LabId | 'index' }) {
@@ -42,17 +44,21 @@ function LabIndex() {
 }
 
 export default function LabApp() {
-  const route = labRoute(location.pathname) ?? 'index';
+  const work = labWorkId(location.pathname);
+  // An address under E's project pages that isn't one of them goes back to E's list of work.
+  const lost = !work && isLabWorkPath(location.pathname);
+  if (lost) location.replace(`/lab/e${hourQuery(location.search)}#e-work`);
+  const route = work || lost ? 'e' : labRoute(location.pathname) ?? 'index';
   useThemeColor('#090f1c');
   useLayoutEffect(() => {
     const root = document.documentElement;
     root.dataset.lab = '';
-    document.title = route === 'index' ? 'Motion lab · Bryce Rambach' : `${route.toUpperCase()}: ${DIRECTIONS[route].name} · Motion lab`;
+    if (!work) document.title = route === 'index' ? 'Motion lab · Bryce Rambach' : `${route.toUpperCase()}: ${DIRECTIONS[route].name} · Motion lab`;
     return () => { delete root.dataset.lab; };
-  }, [route]);
+  }, [route, work]);
   const Page = route === 'index' ? null : pages[route];
   return <div className="lab">
-    {Page ? <Suspense fallback={null}><Page /></Suspense> : <LabIndex />}
+    {lost ? null : work ? <Suspense fallback={null}><WorkE id={work} /></Suspense> : Page ? <Suspense fallback={null}><Page /></Suspense> : <LabIndex />}
     <LabSwitch current={route} />
   </div>;
 }

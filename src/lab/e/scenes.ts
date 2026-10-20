@@ -154,3 +154,10 @@ export function containBox(pw: number, ph: number, rx: number, ry: number, rw: n
   const scale = Math.min(rw / pw, rh / ph), w = pw * scale, h = ph * scale;
   return { x: rx + (rw - w) * align[0], y: ry + (rh - h) * align[1], w, h };
 }
+
+/** Where a project's object sits at the top of its page in E, and at the foot of the page before it, so the dots
+ *  can be handed from one page to the next without moving. Like the parts of E: the right half on a wide screen,
+ *  the top of the screen on a phone. */
+export function workRect(phone: boolean): { rect: [number, number, number, number]; align: [number, number] } {
+  return phone ? { rect: [0.07, 0.085, 0.93, 0.42], align: [0.5, 0.5] } : { rect: [0.5, 0.15, 0.95, 0.86], align: [0.5, 0.45] };
+}

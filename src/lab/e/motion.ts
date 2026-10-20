@@ -3,11 +3,14 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
 import Lenis from 'lenis';
 import { finePointer, narrow, reducedMotion, WORK } from '../content';
+import { eWorkById } from './work';
+import type { EWorkId } from '../routes';
 import { startDots, type Dots } from './dots';
-import { buildScene, type Built, type BuildJob } from './build';
+import { buildScene, srcOf, type Built, type BuildJob } from './build';
+import { saveHandoff, saveReturn, snapshotOf, startCursor } from './chrome';
 import { FIELD_SIZE, fieldColor, makeGrid, sampleType, withType, type Formation, type Grid } from './field';
 import { hex, type Palette } from './palette';
-import { curtainPainter, peekPainter, portPicture } from './pixels';
+import { peekPainter, portPicture } from './pixels';
 import { ART, SCENE_ORDER, type SceneId } from './scenes';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
@@ -22,13 +25,13 @@ gsap.registerPlugin(ScrollTrigger, SplitText);
 
    With reduced motion nothing splits or flies. Each part's picture is drawn as still dots when you reach it. */
 
-export type EMotion = { stop: () => void; curtain: (name: string, href: string) => void };
+export type EMotion = { stop: () => void; leave: (id: EWorkId, href: string) => void };
 
 const EXPO = 'expo.out', POWER = 'power4.out';
 
 /** Sentient comes from Fontshare with its stylesheet loading late, so wait (briefly) for it before splitting, or
  *  the lines would be measured in Georgia. */
-async function fontsReady(limit = 1100) {
+export async function fontsReady(limit = 1100) {
   if (typeof document === 'undefined' || !document.fonts) return;
   const until = performance.now() + limit;
   const declared = () => [...document.fonts].some(f => f.family.replace(/"/g, '') === 'Sentient');
@@ -41,7 +44,7 @@ async function fontsReady(limit = 1100) {
 
 const offThread = typeof window !== 'undefined' && typeof Worker === 'function' && typeof OffscreenCanvas === 'function' && typeof createImageBitmap === 'function';
 const early = new Map<string, Promise<Blob | null>>();
-const fetchArt = (src: string) => {
+export const fetchArt = (src: string) => {
   let p = early.get(src);
   if (!p) { p = fetch(src).then(r => (r.ok ? r.blob() : null)).catch(() => null); early.set(src, p); }
   return p;
@@ -49,7 +52,7 @@ const fetchArt = (src: string) => {
 
 /** Turns pictures into dots: in a worker where there is one, so it never takes frames from the dots, and on the main
  *  thread otherwise. */
-function builder() {
+export function builder() {
   let worker: Worker | null = null, key = 0;
   const waiting = new Map<number, (b: Built | null) => void>();
   if (offThread) {
@@ -61,12 +64,13 @@ function builder() {
   }
   async function onMain(job: BuildJob): Promise<Built | null> {
     let img: HTMLImageElement | null = null;
-    if (job.id !== 'work') {
+    const src = srcOf(job);
+    if (src) {
       // An image that isn't in the page is as wide as its file, which is what the builder reads.
       img = await new Promise<HTMLImageElement | null>(done => {
         const el = new Image();
         el.onload = () => done(el); el.onerror = () => done(null);
-        el.src = ART[job.id].src;
+        el.src = src;
       });
       if (!img) return null;
       await img.decode().catch(() => {});
@@ -77,7 +81,7 @@ function builder() {
   return {
     async build(job: BuildJob): Promise<Built | null> {
       if (worker) {
-        const blob = job.id === 'work' ? undefined : (await fetchArt(ART[job.id].src)) ?? undefined;
+        const src = srcOf(job), blob = src ? (await fetchArt(src)) ?? undefined : undefined;
         const got = await new Promise<Built | null>(done => { const k = ++key; waiting.set(k, done); worker!.postMessage({ ...job, key: k, blob }); });
         if (got) return got;
       }
@@ -97,7 +101,7 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
   };
   // The picture the page opens on starts coming first.
   if (offThread) void fetchArt(ART.hero.src);
-  let stopped = false, lenis: Lenis | null = null;
+  let stopped = false, leaving = false, lenis: Lenis | null = null;
   const ctx = gsap.context(() => {}, root);
 
   // ---- the dots -------------------------------------------------------------------------------------------------
@@ -203,9 +207,9 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
   /** Move the dots to a part's picture. Until the intro has started, this only notes where the page is. */
   async function go(id: SceneId) {
     wanted = id;
-    if (!started) return;
+    if (!started || leaving) return;
     const f = await formationFor(id);
-    if (stopped || wanted !== id || id === scene || !f) return;
+    if (stopped || leaving || wanted !== id || id === scene || !f) return;
     const from = scene;
     scene = id;
     const at = SCENE_ORDER.indexOf(id), was = from ? SCENE_ORDER.indexOf(from) : 0;
@@ -275,7 +279,7 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
     last = now;
     if (document.hidden || !dots) return;
     if (followTag) dots.shift([0, 0], [0, tag.getBoundingClientRect().top - tagTop]);
-    if (phone) stepBack();
+    if (phone && !leaving) stepBack();
     dots.frame(now / 1000, dt);
   };
   gsap.ticker.add(frame);
@@ -327,30 +331,9 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
     on(window, 'pointercancel', () => dots.leave());
   }
 
-  // ---- the cursor: a dot, and a ring that grows into a gold disc with a word over anything you can open --------
-  const cursor = root.querySelector<HTMLElement>('[data-cursor-el]')!;
-  const ring = cursor.querySelector<HTMLElement>('.e-cursor__ring')!, label = cursor.querySelector<HTMLElement>('[data-cursor-label]')!;
-  const dot = cursor.querySelector<HTMLElement>('.e-cursor__dot')!;
+  // ---- the pointer: four dots that trail it, and point over links (chrome.ts) ------------------------------------
   if (fine) {
-    root.classList.add('has-cursor');
-    const dx = gsap.quickTo(dot, 'x', { duration: 0.12, ease: 'power3.out' }), dy = gsap.quickTo(dot, 'y', { duration: 0.12, ease: 'power3.out' });
-    const rx = gsap.quickTo(ring, 'x', { duration: 0.5, ease: 'power3.out' }), ry = gsap.quickTo(ring, 'y', { duration: 0.5, ease: 'power3.out' });
-    let shown = false;
-    on(window, 'pointermove', (e: PointerEvent) => {
-      if (e.pointerType !== 'mouse') return;
-      if (!shown) { shown = true; gsap.set([dot, ring], { x: e.clientX, y: e.clientY }); cursor.classList.add('is-on'); }
-      dx(e.clientX); dy(e.clientY); rx(e.clientX); ry(e.clientY);
-    });
-    on(document.documentElement, 'pointerleave', () => { shown = false; cursor.classList.remove('is-on'); });
-    on(root, 'pointerover', (e: PointerEvent) => {
-      const target = (e.target as Element).closest<HTMLElement>('[data-cursor], a, button');
-      const word = target?.dataset.cursor ?? '';
-      cursor.classList.toggle('is-label', !!word);
-      cursor.classList.toggle('is-link', !!target && !word);
-      if (word) label.textContent = word;
-    });
-    on(root, 'pointerdown', () => cursor.classList.add('is-down'));
-    on(window, 'pointerup', () => cursor.classList.remove('is-down'));
+    startCursor(root, on);
 
     // Magnetic: links marked for it lean toward the pointer, and settle back when it leaves.
     q('[data-magnetic]').forEach(el => {
@@ -405,27 +388,44 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
     off.push(() => window.clearTimeout(settle));
   }
 
-  // ---- the curtain: leaving for a project, the page breaks into blocks and the name comes up in them -------------
-  const curtainEl = root.querySelector<HTMLElement>('[data-curtain]')!, curtainName = root.querySelector<HTMLElement>('[data-curtain-name]')!;
-  const curtainPaint = curtainPainter(root.querySelector<HTMLCanvasElement>('[data-curtain-canvas]')!, palette);
-  function curtain(name: string, href: string) {
-    if (still || stopped) { location.href = href; return; }
-    curtainName.textContent = name;
+  // ---- leaving for a project: the words step back and the dots gather into the project's own object, where its
+  // page will draw it. That page picks them up in place (see chrome.ts and WorkE.tsx).
+  const main = root.querySelector('main'), head = root.querySelector('.e-head');
+  function leave(id: EWorkId, href: string) {
+    saveReturn(window.scrollY);
+    const work = eWorkById(id);
+    if (still || stopped || !dots || !work) { location.href = href; return; }
+    if (leaving) return;
+    leaving = true;
     lenis?.stop();
+    canvas.style.opacity = '';
     gsap.to(peek, { autoAlpha: 0, duration: 0.3, ease: 'power2.in', overwrite: 'auto' });
-    curtainPaint.fit();
-    ctx.add(() => {
-      const state = { p: 0 };
-      const split = SplitText.create(curtainName, { type: 'chars', mask: 'chars' });
-      gsap.timeline({ onComplete: () => { location.href = href; } })
-        .set(curtainEl, { visibility: 'visible' })
-        .to(state, { p: 1, duration: 0.95, ease: 'power1.inOut', onUpdate: () => curtainPaint.draw(state.p) })
-        .from(split.chars, { yPercent: 110, duration: 0.8, stagger: 0.04, ease: EXPO }, 0.6)
-        .to({}, { duration: 0.15 });
+    gsap.to([main, head], { autoAlpha: 0, duration: 0.45, ease: 'power2.out', overwrite: 'auto' });
+    const g = grid, built = build.build({ ...job('work'), ...('ring' in work.hero ? { id: 'ring' } : { id: 'shot', src: work.hero.src }) });
+    // If the picture is slow, don't keep the visitor waiting on it.
+    const late = window.setTimeout(() => { location.href = href; }, 2200);
+    void built.then(b => {
+      if (!leaving) return;
+      if (!b || g !== grid) { window.clearTimeout(late); location.href = href; return; }
+      // Go once the dots have snapped sharp (the focus pull ends about a quarter second after the move does).
+      dots.morph(b.f, { order: 'center', dur: 0.95, spread: 0.45, onDone: () => window.setTimeout(() => {
+        window.clearTimeout(late);
+        if (!leaving) return;
+        saveHandoff(id, g.w, g.h, snapshotOf(b.f, g.cells));
+        location.href = href;
+      }, 300) });
     });
   }
-  // Coming back with the back button, the page may come out of the cache with the blocks still up.
-  on(window, 'pageshow', (e: PageTransitionEvent) => { if (e.persisted) { gsap.set(curtainEl, { visibility: 'hidden' }); curtainPaint.draw(0); lenis?.start(); } });
+  // Coming back with the browser's back button, the page may come out of the cache as it was left: words gone and
+  // the dots drawing the project. Put the part back.
+  on(window, 'pageshow', (e: PageTransitionEvent) => {
+    if (!e.persisted || !leaving) return;
+    leaving = false; backed = false;
+    gsap.to([main, head], { autoAlpha: 1, duration: 0.5, ease: 'power2.out', overwrite: 'auto' });
+    lenis?.start();
+    const f = scene && formations.get(scene);
+    if (f && dots) dots.morph(f, { order: 'center', dur: 0.9, spread: 0.4 });
+  });
 
   // ---- the parts: each one makes the dots move when it reaches the middle of the screen -------------------------
   function triggers() {
@@ -566,7 +566,7 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
   }
 
   return {
-    curtain,
+    leave,
     stop() {
       stopped = true;
       off.forEach(fn => fn());

@@ -69,13 +69,47 @@ html.lenis, html.lenis body { height: auto; }
 .e-proof, .e-list { list-style: none; margin: 32px 0 0; padding: 0; }
 .e-proof li, .e-list li { position: relative; display: grid; grid-template-columns: minmax(150px, auto) 1fr; gap: 6px 22px; padding: 12px 0 14px; transition: opacity 0.4s var(--lab-ease); }
 .e-proof:hover li:not(:hover), .e-list:hover li:not(:hover) { opacity: 0.55; }
-.e-proof__name, .e-list a { display: inline-flex; align-self: start; gap: 8px; align-items: baseline; color: var(--e-ink); font-size: 16px; width: max-content; }
-.e-proof__name b, .e-list a b { font-weight: 400; color: var(--e-faint); transition: translate 0.45s var(--lab-spring), color 0.3s var(--lab-ease); }
-.e-proof__name:hover b, .e-list a:hover b { translate: 3px -1px; color: var(--e-accent); }
-.e-proof__name span, .e-list a span { background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat; transition: background-size 0.6s var(--lab-ease); }
-.e-proof__name:hover span, .e-list a:hover span { background-size: 100% 1px; }
+.e-proof__name { align-self: start; font-size: 16px; width: max-content; }
+.e-proof__name.is-private { display: inline-flex; gap: 10px; align-items: baseline; }
 .e-proof__name.is-private small { font: 400 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--e-faint); }
 .e-proof__note, .e-list li > span { color: var(--e-faint); font-size: 14px; line-height: 1.55; }
+
+/* ---- links (links.tsx): a mark made of dots, and a dotted line under the words that fills in gold --------------
+   Four dots in a row stay on the site and grow a head pointing right. Four on a diagonal open a new tab and point
+   up and right. Nothing is a glyph or a button. */
+.lab-e { --e-dot: color-mix(in srgb, var(--e-ink) 34%, transparent); }
+.e-go { position: relative; display: inline-flex; align-items: baseline; gap: 12px; color: var(--e-ink); }
+.e-go:focus-visible { outline: 2px solid var(--e-accent); outline-offset: 5px; }
+.e-mark { position: relative; flex: none; width: 17px; height: 17px; align-self: center; transition: translate 0.5s var(--lab-spring); }
+.e-mark i { position: absolute; left: calc(var(--x) * 3.5px); top: calc(var(--y) * 3.5px); width: 3px; height: 3px; border-radius: 50%; background: var(--e-dot);
+  transition: background-color 0.25s var(--lab-ease) calc(var(--k) * 35ms), scale 0.45s var(--lab-spring) calc(var(--k) * 35ms), opacity 0.3s var(--lab-ease) calc(var(--k) * 35ms); }
+.e-mark i.is-head { opacity: 0; scale: 0.2; }
+.e-go__text { position: relative; padding-bottom: 6px; transition: translate 0.55s var(--lab-ease); }
+/* The dotted line, faint, and over it the same dots in gold, uncovered a few at a time. */
+.e-go__text::before, .e-go__text::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; pointer-events: none;
+  background: radial-gradient(circle at 1.5px 1.5px, var(--d) 1.1px, transparent 1.6px) 0 0 / 5px 3px repeat-x; }
+.e-go__text::before { --d: var(--e-dot); opacity: 0.7; }
+.e-go__text::after { --d: var(--e-accent); clip-path: inset(0 100% 0 0); transition: clip-path 0.6s steps(14, end); }
+.e-go:hover .e-mark i, .e-go:focus-visible .e-mark i, .e-list li:hover .e-mark i { background: var(--e-accent); }
+.e-go:hover .e-mark i.is-head, .e-go:focus-visible .e-mark i.is-head, .e-list li:hover .e-mark i.is-head { opacity: 1; scale: 1; }
+.e-go:hover .e-mark, .e-go:focus-visible .e-mark, .e-list li:hover .e-mark { translate: 3px 0; }
+.e-go.is-away:hover .e-mark, .e-go.is-away:focus-visible .e-mark, .e-list li:hover .is-away .e-mark { translate: 2px -2px; }
+.e-go.is-back:hover .e-mark, .e-go.is-back:focus-visible .e-mark { translate: -3px 0; }
+.e-go:hover .e-go__text::after, .e-go:focus-visible .e-go__text::after, .e-list li:hover .e-go__text::after { clip-path: inset(0 0 0 0); }
+
+/* The lists at the foot: each row is the link, edge to edge, with the name in the serif and handles in mono. */
+.e-list li { grid-template-columns: minmax(200px, auto) 1fr; align-items: baseline; padding: 16px 0 17px;
+  background: radial-gradient(circle at 1px 1px, var(--e-rule) 0.9px, transparent 1.3px) 0 0 / 6px 2px repeat-x; }
+.e-list { padding-bottom: 2px; background: radial-gradient(circle at 1px 1px, var(--e-rule) 0.9px, transparent 1.3px) 0 100% / 6px 2px repeat-x; }
+.e-list .e-go { position: static; font: 400 clamp(22px, 1.9vw, 28px)/1.1 var(--lab-serif); letter-spacing: -0.015em; }
+.e-list .e-go::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+.e-list .e-go:focus-visible { outline: none; }
+.e-list .e-go:focus-visible::after { outline: 2px solid var(--e-accent); outline-offset: 2px; }
+.e-list .e-go__text { padding-bottom: 7px; }
+.e-list li:hover .e-go__text { translate: 6px 0; }
+.e-list li > span { transition: translate 0.55s var(--lab-ease), color 0.3s var(--lab-ease); }
+.e-list li:hover > span { translate: 6px 0; color: var(--e-soft); }
+.e-list li > .e-list__handle { font: 400 12.5px/1.4 var(--font-mono); letter-spacing: 0.02em; }
 
 /* ---- the work index ----------------------------------------------------------------------------------------- */
 .e-work__title { margin: 0 0 clamp(24px, 5vh, 56px); font: italic 400 clamp(28px, 3vw, 44px)/1 var(--lab-serif); letter-spacing: -0.02em; }
@@ -99,15 +133,13 @@ html.lenis, html.lenis body { height: auto; }
 .e-index__more > div { overflow: hidden; min-height: 0; }
 .e-index__row.is-open .e-index__more { grid-template-rows: 1fr; }
 .e-index__more p { margin: 16px 0; color: var(--e-soft); font-size: 15px; max-width: 520px; }
-.e-button { display: inline-flex; gap: 10px; align-items: center; margin-bottom: 28px; padding: 13px 20px; border-radius: 999px; background: var(--e-ink); color: var(--e-paper) !important;
-  font-size: 14px; text-shadow: none; transition: scale 0.2s var(--lab-ease); }
-.e-button:active { scale: 0.96; }
+.e-open { display: inline-flex; min-height: 48px; align-items: center; margin-bottom: 22px; font: italic 400 24px/1.1 var(--lab-serif); letter-spacing: -0.01em; }
 .e-work__hint { margin: 22px 0 0; font: 400 11px/1.4 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--e-faint); }
 .e-tile { overflow: hidden; border-radius: 4px; aspect-ratio: 16 / 10; background: #151a26; }
 .e-tile.is-tall { aspect-ratio: 9 / 14; max-width: 240px; }
 .e-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .e-port { display: grid; place-items: center; align-content: center; gap: 14px; width: 100%; height: 100%; background: radial-gradient(70% 70% at 50% 45%, #2a3346, #151a26); }
-.e-port i { width: 64px; height: 64px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--e-accent); }
+.e-dotring circle { fill: var(--e-accent); }
 .e-port span { font: 400 11px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: rgb(236 235 230 / 0.7); text-shadow: none; }
 @media (hover: hover) and (pointer: fine) { .e-index__more { display: none; } }
 
@@ -130,29 +162,25 @@ html.lenis, html.lenis body { height: auto; }
 .e-sign { margin: clamp(56px, 10vh, 120px) 0 0; padding-top: 18px; border-top: 1px solid var(--e-rule);
   font: 400 11px/1.5 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--e-faint); }
 
-/* ---- the curtain: blocks that cover the page ---------------------------------------------------------------- */
-.e-curtain { position: fixed; inset: 0; z-index: 95; visibility: hidden; display: grid; place-items: center; pointer-events: none; }
-.e-curtain canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-.e-curtain p { position: relative; margin: 0; font: italic 400 clamp(80px, 15vw, 240px)/1 var(--lab-serif); letter-spacing: -0.04em; color: #ecebe6; }
-
-/* ---- the cursor --------------------------------------------------------------------------------------------- */
+/* ---- the pointer (chrome.ts): four dots that trail it and rest as a little block. Over a link they line up and
+   point the way the link goes, and its word comes up beside them. ------------------------------------------- */
 .e-cursor { display: none; }
 .lab-e.has-cursor, .lab-e.has-cursor a, .lab-e.has-cursor button { cursor: none; }
 .lab-e.has-cursor .e-cursor { display: block; position: fixed; inset: 0; z-index: 120; pointer-events: none; opacity: 0; transition: opacity 0.3s var(--lab-ease); }
 .lab-e.has-cursor .e-cursor.is-on { opacity: 1; }
-.e-cursor__dot, .e-cursor__ring { position: absolute; left: 0; top: 0; will-change: transform; }
-.e-cursor__dot { width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: var(--e-ink); transition: scale 0.3s var(--lab-ease), opacity 0.3s; }
-.e-cursor__ring { width: 0; height: 0; }
-.e-cursor__ring::before { content: ""; position: absolute; left: -18px; top: -18px; width: 36px; height: 36px; border-radius: 50%; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--e-ink) 45%, transparent);
-  transition: scale 0.55s var(--lab-ease), background-color 0.4s var(--lab-ease), box-shadow 0.4s var(--lab-ease); }
-.e-cursor__ring span { position: absolute; left: 0; top: 0; translate: -50% -50%; font: 400 10px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--lab-sun-ink); opacity: 0; scale: 0.6; transition: opacity 0.3s var(--lab-ease), scale 0.45s var(--lab-ease); white-space: nowrap; }
-.e-cursor.is-link .e-cursor__ring::before { scale: 1.5; box-shadow: inset 0 0 0 1px var(--e-accent); }
-.e-cursor.is-label .e-cursor__ring::before { scale: 2.3; background: var(--e-accent); box-shadow: none; }
-.e-cursor.is-label .e-cursor__ring span { opacity: 1; scale: 1; }
-.e-cursor.is-label .e-cursor__dot { scale: 0; }
-.e-cursor.is-down .e-cursor__ring::before { scale: 0.8; }
-.e-cursor.is-label.is-down .e-cursor__ring::before { scale: 2; }
+.e-cursor__d, .e-cursor__label { position: absolute; left: 0; top: 0; width: 0; height: 0; will-change: transform; }
+.e-cursor__d i { position: absolute; left: -2.5px; top: -2.5px; width: 5px; height: 5px; border-radius: 50%; background: var(--e-ink); box-shadow: 0 0 0 1.5px var(--e-paper);
+  translate: var(--rx) var(--ry); transition: translate 0.45s var(--lab-spring), background-color 0.3s var(--lab-ease), scale 0.3s var(--lab-ease); }
+.e-cursor__d:nth-child(1) { --rx: -3px; --ry: -3px; } .e-cursor__d:nth-child(2) { --rx: 3px; --ry: -3px; }
+.e-cursor__d:nth-child(3) { --rx: -3px; --ry: 3px; } .e-cursor__d:nth-child(4) { --rx: 3px; --ry: 3px; }
+.e-cursor.is-link .e-cursor__d i { background: var(--e-accent); translate: calc(var(--k) * 6px - 2px) 0; }
+.e-cursor.is-link.is-away .e-cursor__d i { translate: calc(var(--k) * 5px - 2px) calc(var(--k) * -5px + 2px); }
+.e-cursor.is-down .e-cursor__d i { scale: 0.6; }
+.e-cursor__word { position: absolute; left: 26px; top: 0; translate: 0 -50%; font: 400 10px/1 var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap;
+  color: var(--e-ink); text-shadow: var(--e-halo); opacity: 0; translate: -6px -50%; transition: opacity 0.25s var(--lab-ease), translate 0.45s var(--lab-ease); }
+.e-cursor.is-away .e-cursor__word { top: 14px; left: 22px; }
+.e-cursor.is-label:not(.is-away) .e-cursor__word { top: 14px; left: 4px; }
+.e-cursor.is-label .e-cursor__word { opacity: 1; translate: 0 -50%; }
 
 /* ---- phones: the object takes the top of the screen and the words read under it ----------------------------- */
 @media (max-width: 760px) {
@@ -169,6 +197,8 @@ html.lenis, html.lenis body { height: auto; }
   .e-skill__name { font-size: clamp(44px, 13vw, 92px); }
   .e-skill__body p { font-size: 16px; }
   .e-proof li, .e-list li { grid-template-columns: 1fr; }
+  .e-list li { gap: 4px; padding: 14px 0 16px; }
+  .e-list li > span { padding-left: 27px; }
   .e-index__link { grid-template-columns: 30px 1fr; grid-template-areas: "no name" "no kind" "no title"; gap: 8px 12px; }
   .e-index__name { font-size: clamp(60px, 19vw, 120px); }
   .e-index__more > div { padding-left: 42px; }
@@ -177,5 +207,5 @@ html.lenis, html.lenis body { height: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .e-roll__c > span, .e-index__more, .e-proof li, .e-list li, .e-mail, .e-link { transition: none; }
+  .e-roll__c > span, .e-index__more, .e-proof li, .e-list li, .e-mail, .e-link, .e-mark, .e-mark i, .e-go__text, .e-go__text::after, .e-list li > span { transition: none; }
 }

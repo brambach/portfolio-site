@@ -1,5 +1,5 @@
 import { hex, lum, type Palette, type RGB } from './palette';
-import { containBox, LIFE, type Art, type Layout } from './scenes';
+import { containBox, LIFE, ROLE, type Art, type Layout } from './scenes';
 
 /* The dots, as numbers. Nothing here touches the page, so it's all testable.
 
@@ -402,4 +402,63 @@ export function sampleType(alpha: (x: number, y: number) => number, color: (x: n
   if (out.length <= limit) return out;
   const step = out.length / limit;
   return Array.from({ length: limit }, (_, i) => out[Math.floor(i * step)]);
+}
+
+/** One of a project's screens as dots, for the top of its page in E. Unlike the portrait it's fitted whole, edges
+ *  and all, so it reads as a screen: a frame of the darkest tone round it, and inside, every cell takes one of the
+ *  four tones by its light, dithered. On a light page none is left as paper, so the screen stays one solid object.
+ *  `pixels` is the screen scaled to one pixel per cell of `box` (in CSS pixels). */
+export function shotFormation(g: Grid, box: { x: number; y: number; w: number; h: number }, pixels: Pixels, palette: Palette, seed = 21): Formation {
+  const rand = seeded(seed), f = base(g, rand), tones = objectTonesOf(palette);
+  const ls: number[] = [];
+  for (let i = 0; i < pixels.width * pixels.height; i += 2) ls.push(lum([pixels.data[i * 4] / 255, pixels.data[i * 4 + 1] / 255, pixels.data[i * 4 + 2] / 255]));
+  ls.sort((a, b) => a - b);
+  const lo = ls[Math.floor(ls.length * 0.02)] ?? 0, hi = ls[Math.floor(ls.length * 0.98)] ?? 1, span = Math.max(0.08, hi - lo);
+  const ladder = [0, 1, 2, 3].sort((a, b) => lum(tones.rgb[a]) - lum(tones.rgb[b]));
+  const c0 = Math.ceil(box.x / g.cell - 0.5), c1 = Math.floor((box.x + box.w) / g.cell - 0.5);
+  const r0 = Math.ceil(box.y / g.cell - 0.5), r1 = Math.floor((box.y + box.h) / g.cell - 0.5);
+  for (let cy = Math.max(0, r0); cy <= Math.min(g.rows - 1, r1); cy++) for (let cx = Math.max(0, c0); cx <= Math.min(g.cols - 1, c1); cx++) {
+    const i = cy * g.cols + cx, x = f.pos[i * 2], y = f.pos[i * 2 + 1];
+    let t: number;
+    if (cx === c0 || cx === c1 || cy === r0 || cy === r1) t = ladder[0];
+    else {
+      const u = (x - box.x) / box.w, v = (y - box.y) / box.h;
+      const px = Math.min(pixels.width - 1, Math.max(0, Math.floor(u * pixels.width))), py = Math.min(pixels.height - 1, Math.max(0, Math.floor(v * pixels.height)));
+      const o = (py * pixels.width + px) * 4;
+      let l = Math.min(1, Math.max(0, (lum([pixels.data[o] / 255, pixels.data[o + 1] / 255, pixels.data[o + 2] / 255]) - lo) / span));
+      // On a dark page the screen is shown the way a dark mode would: its light ground becomes the paper and what's
+      // on it comes up in the light tones, instead of a bright block.
+      if (palette.dark) l = 1 - l;
+      const step = Math.min(3, Math.max(0, Math.floor(l * 3.99 + (bayer(cx, cy) - 0.5) * 0.9)));
+      if (palette.dark && step === 0) continue;
+      t = ladder[step];
+    }
+    const rgb = tones.rgb[t];
+    f.size[i] = 1;
+    f.col[i * 3] = rgb[0]; f.col[i * 3 + 1] = rgb[1]; f.col[i * 3 + 2] = rgb[2];
+    f.life[i] = LIFE.still;
+    f.key[i] = keyOf(tones.rank[t], x / g.w, y / g.h);
+  }
+  return sortOrder(f);
+}
+
+/** Port has no screens, so its object is the ring you hold: navy outside, gold in. `closed` is the ring after the
+ *  hold, compressed to a small still disc. */
+export function ringFormation(g: Grid, rect: [number, number, number, number], palette: Palette, closed = false, seed = 23): Formation {
+  const rand = seeded(seed), f = base(g, rand), tones = objectTonesOf(palette);
+  const [x0, y0, x1, y1] = rect, mx = ((x0 + x1) / 2) * g.w, my = ((y0 + y1) / 2) * g.h;
+  const R = Math.min((x1 - x0) * g.w, (y1 - y0) * g.h) * 0.36, width = Math.max(g.cell * 2.2, R * 0.2);
+  for (let i = 0; i < g.cells; i++) {
+    const x = f.pos[i * 2], y = f.pos[i * 2 + 1], d = Math.hypot(x - mx, y - my);
+    let t = -1;
+    if (closed) { if (d < R * 0.16) t = d < R * 0.08 ? ROLE.peach : 0; }
+    else if (Math.abs(d - R) < width / 2) t = d < R ? ROLE.peach : 0;
+    if (t < 0) continue;
+    const rgb = tones.rgb[t];
+    f.size[i] = 1;
+    f.col[i * 3] = rgb[0]; f.col[i * 3 + 1] = rgb[1]; f.col[i * 3 + 2] = rgb[2];
+    f.life[i] = LIFE.still;
+    f.key[i] = keyOf(tones.rank[t], x / g.w, y / g.h);
+  }
+  return sortOrder(f);
 }
