@@ -1,4 +1,4 @@
-// Screen recordings and stills of the motion lab, for comparing the three directions.
+// Screen recordings and stills of the motion lab, for comparing the directions.
 // Run `npm run build && npm run preview` first, then:
 //   node scripts/record-lab.mjs [outDir] [baseUrl] [directions]
 // For each direction it records a scroll-through at 1440x900 and at 390x844 (touch), converts each to an H.264 mp4
@@ -11,7 +11,7 @@ import { chromium } from 'playwright';
 
 const outDir = process.argv[2] ?? 'docs/motion-lab/recordings';
 const base = process.argv[3] ?? 'http://localhost:4173';
-const only = (process.argv[4] ?? 'a,b,c').split(',');
+const only = (process.argv[4] ?? 'a,b,c,d').split(',');
 mkdirSync(outDir, { recursive: true });
 
 const sizes = [
@@ -23,7 +23,7 @@ const browser = await chromium.launch({ args: ['--enable-gpu-rasterization', '--
 const hasFfmpeg = (() => { try { execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' }); return true; } catch { return false; } })();
 const wait = ms => new Promise(r => setTimeout(r, ms));
 // Where the middle still is taken, as a share of the page. A's middle lands between two of its pinned shots at 45%.
-const MIDDLE = { a: 0.38, b: 0.45, c: 0.45 };
+const MIDDLE = { a: 0.38, b: 0.45, c: 0.45, d: 0.45 };
 
 /** Scrolls the page from top to bottom in about `seconds`, holding briefly every screen or so. Desktop scrolls
  *  with the wheel (so smooth-scroll libraries see real input), phones with a finger-like eased scroll. */

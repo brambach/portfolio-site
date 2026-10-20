@@ -1,5 +1,5 @@
-/* The motion lab: /lab and a page per direction at /lab/a, /lab/b and /lab/c. */
-export const LAB_IDS = ['a', 'b', 'c'] as const;
+/* The motion lab: /lab and a page per direction at /lab/a, /lab/b, /lab/c and /lab/d. */
+export const LAB_IDS = ['a', 'b', 'c', 'd'] as const;
 export type LabId = (typeof LAB_IDS)[number];
 
 export function labRoute(pathname: string): LabId | 'index' | null {
