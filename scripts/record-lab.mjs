@@ -11,7 +11,7 @@ import { chromium } from 'playwright';
 
 const outDir = process.argv[2] ?? 'docs/motion-lab/recordings';
 const base = process.argv[3] ?? 'http://localhost:4173';
-const only = (process.argv[4] ?? 'a,b,c,d').split(',');
+const only = (process.argv[4] ?? 'a,b,c,d,e').split(',');
 mkdirSync(outDir, { recursive: true });
 
 const sizes = [
@@ -23,7 +23,11 @@ const browser = await chromium.launch({ args: ['--enable-gpu-rasterization', '--
 const hasFfmpeg = (() => { try { execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' }); return true; } catch { return false; } })();
 const wait = ms => new Promise(r => setTimeout(r, ms));
 // Where the middle still is taken, as a share of the page. A's middle lands between two of its pinned shots at 45%.
-const MIDDLE = { a: 0.38, b: 0.45, c: 0.45, d: 0.45 };
+const MIDDLE = { a: 0.38, b: 0.45, c: 0.45, d: 0.45, e: 0.45 };
+// E takes its colors from the clock, so its recordings are pinned to the dawn palette to stay comparable.
+const QUERY = { e: '?hour=7' };
+// Thousands of moving dots don't compress well, so E's videos are encoded a step lower to keep the PR light.
+const CRF = { e: 31 };
 
 /** Scrolls the page from top to bottom in about `seconds`, holding briefly every screen or so. Desktop scrolls
  *  with the wheel (so smooth-scroll libraries see real input), phones with a finger-like eased scroll. */
@@ -70,7 +74,7 @@ async function record(id, size) {
   const page = await context.newPage();
   page.on('console', m => { if (m.type() === 'error') errors.push(`${tag}: ${m.text()}`); });
   page.on('pageerror', e => errors.push(`${tag}: ${e.message}`));
-  await page.goto(`${base}/lab/${id}`, { waitUntil: 'networkidle' });
+  await page.goto(`${base}/lab/${id}${QUERY[id] ?? ''}`, { waitUntil: 'networkidle' });
   await wait(3200);
   if (!size.mobile) {
     // A slow pass of the pointer across the first screen, for the directions that answer it.
@@ -82,7 +86,7 @@ async function record(id, size) {
   const webm = await video.path();
   const name = join(outDir, `${tag}`);
   if (hasFfmpeg) {
-    execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', webm, '-c:v', 'libx264', '-preset', 'slow', '-crf', size.mobile ? '27' : '25', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', `${name}.mp4`]);
+    execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', webm, '-c:v', 'libx264', '-preset', 'slow', '-crf', String(CRF[id] ?? (size.mobile ? 27 : 25)), '-pix_fmt', 'yuv420p', '-movflags', '+faststart', `${name}.mp4`]);
     rmSync(tmp, { recursive: true, force: true });
     console.log(`${tag}.mp4 ${(statSync(`${name}.mp4`).size / 1e6).toFixed(1)} MB`);
   } else {
@@ -95,7 +99,7 @@ async function record(id, size) {
 async function stills(id, size) {
   const context = await browser.newContext({ viewport: { width: size.width, height: size.height }, deviceScaleFactor: 2, isMobile: size.mobile, hasTouch: size.mobile });
   const page = await context.newPage();
-  await page.goto(`${base}/lab/${id}`, { waitUntil: 'networkidle' });
+  await page.goto(`${base}/lab/${id}${QUERY[id] ?? ''}`, { waitUntil: 'networkidle' });
   await wait(3500);
   await page.screenshot({ path: join(outDir, `${id}-${size.name}-1-top.png`) });
   const total = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
@@ -115,7 +119,8 @@ for (const f of readdirSync(outDir).filter(f => f.endsWith('.png'))) {
   // Keep the stills small enough for a pull request.
   if (hasFfmpeg) {
     const png = join(outDir, f), jpg = png.replace(/\.png$/, '.jpg');
-    execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', png, '-q:v', '4', jpg]);
+    // E's dots make heavy stills at 2x, so its desktop ones are kept at 1x.
+    execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', png, ...(f.startsWith('e-desktop') ? ['-vf', 'scale=1440:-1'] : []), '-q:v', '4', jpg]);
     rmSync(png);
   }
 }
