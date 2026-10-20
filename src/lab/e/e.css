@@ -1,0 +1,178 @@
+/* Direction E: B's type on a page of dots. Poster-sized Sentient, Hanken for reading, Plex Mono for the labels, one
+   gold for the marks. The paper, the ink and the gold come from the palette the page picked from the visitor's
+   clock (palette.ts), so the same rules work on a pink dawn page and a deep night one. */
+
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+:root[data-lab-e], :root[data-lab-e] body { background: var(--e-paper); }
+:root[data-lab-e]:not([data-lab-e="night"]) { color-scheme: light; }
+
+.lab-e { --pad: clamp(20px, 4.4vw, 72px);
+  --e-soft: color-mix(in srgb, var(--e-ink) 74%, transparent); --e-faint: color-mix(in srgb, var(--e-ink) 58%, transparent);
+  --e-rule: color-mix(in srgb, var(--e-ink) 18%, transparent);
+  /* A halo of paper behind the words, so they read wherever the dots are. */
+  --e-halo: 0 0 3px var(--e-paper), 0 0 14px var(--e-paper), 0 0 28px color-mix(in srgb, var(--e-paper) 70%, transparent);
+  position: relative; overflow-x: clip; color: var(--e-ink); }
+.lab-e ::selection { background: color-mix(in srgb, var(--e-accent) 45%, transparent); color: var(--e-ink); }
+.lab-e a:focus-visible { outline-color: var(--e-accent); }
+
+/* ---- the dots: one fixed canvas under everything, as tall as the screen gets so a phone's bar doesn't resize it */
+.e-dots { position: fixed; left: 0; top: 0; z-index: 0; width: 100vw; height: 100vh; height: 100lvh; display: block; pointer-events: none; transition: opacity 0.5s var(--lab-ease); }
+.lab-e main { position: relative; z-index: 1; text-shadow: var(--e-halo); }
+
+/* ---- the running header: the name, and what the dots are showing ------------------------------------------- */
+.e-head { position: fixed; z-index: 40; inset: 0 0 auto; display: flex; justify-content: space-between; align-items: baseline; gap: 24px;
+  padding: 22px var(--pad); pointer-events: none; text-shadow: var(--e-halo); }
+.e-head > * { pointer-events: auto; }
+/* Words scroll up under the header, so it sits on a little paper that fades out downward. */
+.e-head::before { content: ""; position: absolute; inset: 0 0 -28px; z-index: -1; pointer-events: none;
+  background: linear-gradient(to bottom, var(--e-paper) 40%, color-mix(in srgb, var(--e-paper) 0%, transparent)); }
+.e-head { isolation: isolate; }
+.e-head__name { font: italic 400 19px/1 var(--lab-serif); letter-spacing: -0.01em; }
+.e-caption { margin: 0; font: 400 10.5px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--e-faint); }
+.e-swap { display: inline-grid; overflow: hidden; padding: 2px 0; vertical-align: middle; justify-items: end; }
+.e-swap > span { grid-area: 1 / 1; white-space: nowrap; display: block; }
+
+/* ---- the hero: the tagline at poster size, on the lake's sky -------------------------------------------------- */
+.e-hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-start; padding: clamp(96px, 14vh, 150px) var(--pad) 40px; }
+.e-tag { margin: 0; font: 400 clamp(54px, 8.6vw, 160px)/0.99 var(--lab-serif); letter-spacing: -0.045em; }
+.e-tag__l { display: block; white-space: nowrap; width: max-content; }
+/* The tagline waits for its font so it can be split. The line under it doesn't, so it's there from the first paint. */
+.lab-e:not(.is-ready) .e-tag, .lab-e:not(.is-ready) .e-hero__cue { visibility: hidden; }
+.e-tag__l--2 { margin-left: 0.9em; font-style: italic; letter-spacing: -0.035em; }
+.e-tag__l--3 { position: relative; margin-left: 0.3em; padding-bottom: 0.06em; }
+.e-tag__design { position: relative; display: inline-block; }
+.e-tag__design svg { position: absolute; left: -2%; right: -2%; width: 104%; bottom: -0.08em; height: 0.16em; overflow: visible; }
+.e-tag__design path { fill: none; stroke: var(--e-accent); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 0; }
+.e-tag__beam { position: absolute; left: 0.04em; right: 0.04em; bottom: 0; height: 2px; background: var(--e-ink); transform-origin: 0 50%; opacity: 0.85; }
+.e-hero__foot { position: absolute; right: var(--pad); top: clamp(140px, 19vh, 200px); display: flex; flex-direction: column; align-items: start; gap: 22px; max-width: 300px; }
+.e-hero__sub { margin: 0; max-width: 360px; color: var(--e-soft); font-size: 15px; }
+.e-hero__cue { margin: 0; font: 400 11px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
+.e-hero__go::after { content: ""; display: inline-block; width: 28px; height: 1px; margin-left: 10px; vertical-align: middle; background: currentColor; }
+
+/* ---- parts: the words keep the left, the photo takes the right ------------------------------------------------ */
+.e-part:not(.e-hero) { position: relative; padding: clamp(110px, 20vh, 220px) var(--pad) clamp(60px, 12vh, 140px); min-height: 100svh; box-sizing: border-box; }
+.e-part:not(.e-hero):not(.e-work) > * { max-width: min(560px, 40vw); }
+.e-rule { display: flex; align-items: center; gap: 16px; margin-bottom: clamp(32px, 6vh, 64px); font: 400 11px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--e-faint); }
+.e-rule i { flex: 1; height: 1px; background: var(--e-rule); transform-origin: 0 50%; display: block; }
+
+.e-intro__big { margin: 0; font: 400 clamp(26px, 2.7vw, 44px)/1.16 var(--lab-serif); letter-spacing: -0.02em; }
+.e-intro__small { margin: clamp(28px, 5vh, 56px) 0 0; font-size: 17px; line-height: 1.6; color: var(--e-soft); }
+.e-link { font-style: italic; background: linear-gradient(var(--e-accent), var(--e-accent)) 0 92% / 100% 2px no-repeat; transition: color 0.4s var(--lab-ease); }
+
+.e-skill__name { margin: 0 0 18px; font: 400 clamp(48px, 6.4vw, 112px)/0.94 var(--lab-serif); letter-spacing: -0.04em; }
+.e-skill__line { margin: 0 0 clamp(28px, 5vh, 48px); font: italic 400 clamp(22px, 2.2vw, 34px)/1.18 var(--lab-serif); letter-spacing: -0.02em; color: var(--e-soft); }
+.e-skill__body p { margin: 0 0 18px; font-size: 17px; line-height: 1.62; color: var(--e-soft); }
+.e-proof, .e-list { list-style: none; margin: 32px 0 0; padding: 0; }
+.e-proof li, .e-list li { position: relative; display: grid; grid-template-columns: minmax(150px, auto) 1fr; gap: 6px 22px; padding: 12px 0 14px; transition: opacity 0.4s var(--lab-ease); }
+.e-proof:hover li:not(:hover), .e-list:hover li:not(:hover) { opacity: 0.55; }
+.e-proof__name, .e-list a { display: inline-flex; align-self: start; gap: 8px; align-items: baseline; color: var(--e-ink); font-size: 16px; width: max-content; }
+.e-proof__name b, .e-list a b { font-weight: 400; color: var(--e-faint); transition: translate 0.45s var(--lab-spring), color 0.3s var(--lab-ease); }
+.e-proof__name:hover b, .e-list a:hover b { translate: 3px -1px; color: var(--e-accent); }
+.e-proof__name span, .e-list a span { background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat; transition: background-size 0.6s var(--lab-ease); }
+.e-proof__name:hover span, .e-list a:hover span { background-size: 100% 1px; }
+.e-proof__name.is-private small { font: 400 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--e-faint); }
+.e-proof__note, .e-list li > span { color: var(--e-faint); font-size: 14px; line-height: 1.55; }
+
+/* ---- the work index ----------------------------------------------------------------------------------------- */
+.e-work__title { margin: 0 0 clamp(24px, 5vh, 56px); font: italic 400 clamp(28px, 3vw, 44px)/1 var(--lab-serif); letter-spacing: -0.02em; }
+.e-index { list-style: none; margin: 0; padding: 0; }
+.e-index__row { position: relative; }
+.e-index__link { display: grid; grid-template-columns: 56px 1fr auto; grid-template-areas: "no name kind" "no title title"; align-items: baseline;
+  gap: 4px 24px; padding: clamp(14px, 2.6vh, 30px) 0; transition: opacity 0.5s var(--lab-ease); }
+.e-index:hover .e-index__link { opacity: 0.3; }
+.e-index:hover .e-index__row:hover .e-index__link { opacity: 1; }
+.e-index__no { grid-area: no; font: 400 11px/1 var(--font-mono); letter-spacing: 0.08em; color: var(--e-faint); }
+.e-index__name { grid-area: name; font: 400 clamp(64px, 11.5vw, 200px)/0.9 var(--lab-serif); letter-spacing: -0.05em; }
+.e-index__kind { grid-area: kind; font: 400 11px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--e-soft); }
+.e-index__title { grid-area: title; color: var(--e-faint); font-size: 15px; }
+.e-roll { display: inline-flex; }
+.e-roll__c { position: relative; display: inline-block; overflow: hidden; padding: 0.02em 0.01em 0.08em; margin-bottom: -0.08em; }
+.e-roll__c > span { display: block; transition: translate 0.7s var(--lab-ease); transition-delay: calc(var(--i) * 26ms); }
+.e-roll__c > span + span { position: absolute; inset: 0.02em 0.01em auto; translate: 0 105%; font-style: italic; color: var(--e-accent); }
+.e-index__row:hover .e-roll__c > span, .e-index__row.is-open .e-roll__c > span { translate: 0 -105%; }
+.e-index__row:hover .e-roll__c > span + span, .e-index__row.is-open .e-roll__c > span + span { translate: 0 0; }
+.e-index__more { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.7s var(--lab-ease); }
+.e-index__more > div { overflow: hidden; min-height: 0; }
+.e-index__row.is-open .e-index__more { grid-template-rows: 1fr; }
+.e-index__more p { margin: 16px 0; color: var(--e-soft); font-size: 15px; max-width: 520px; }
+.e-button { display: inline-flex; gap: 10px; align-items: center; margin-bottom: 28px; padding: 13px 20px; border-radius: 999px; background: var(--e-ink); color: var(--e-paper) !important;
+  font-size: 14px; text-shadow: none; transition: scale 0.2s var(--lab-ease); }
+.e-button:active { scale: 0.96; }
+.e-work__hint { margin: 22px 0 0; font: 400 11px/1.4 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--e-faint); }
+.e-tile { overflow: hidden; border-radius: 4px; aspect-ratio: 16 / 10; background: #151a26; }
+.e-tile.is-tall { aspect-ratio: 9 / 14; max-width: 240px; }
+.e-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.e-port { display: grid; place-items: center; align-content: center; gap: 14px; width: 100%; height: 100%; background: radial-gradient(70% 70% at 50% 45%, #2a3346, #151a26); }
+.e-port i { width: 64px; height: 64px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--e-accent); }
+.e-port span { font: 400 11px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: rgb(236 235 230 / 0.7); text-shadow: none; }
+@media (hover: hover) and (pointer: fine) { .e-index__more { display: none; } }
+
+/* The picture is square-cornered, like everything made of pixels here. */
+.e-peek { position: fixed; z-index: 30; left: 0; top: 0; width: clamp(280px, 26vw, 420px); aspect-ratio: 16 / 10; pointer-events: none; visibility: hidden; will-change: transform; }
+.e-peek canvas { width: 100%; height: 100%; display: block; }
+
+/* ---- the close ---------------------------------------------------------------------------------------------- */
+.e-close { padding-bottom: 150px !important; }
+.e-part.e-close > .e-hello { max-width: none; }
+.e-hello { margin: 0; font: 400 clamp(84px, 13vw, 240px)/0.88 var(--lab-serif); letter-spacing: -0.05em; white-space: nowrap; cursor: default; touch-action: manipulation; user-select: none; }
+.e-hello > div { will-change: transform; }
+.e-mail { display: inline-block; margin-top: clamp(28px, 5vh, 56px); font: italic 400 clamp(24px, 3vw, 46px)/1.1 var(--lab-serif); letter-spacing: -0.02em;
+  background: linear-gradient(var(--e-accent), var(--e-accent)) 0 100% / 0 2px no-repeat, linear-gradient(var(--e-rule), var(--e-rule)) 0 100% / 100% 1px no-repeat;
+  padding-bottom: 6px; transition: background-size 0.7s var(--lab-ease); word-break: break-all; }
+.e-mail:hover { background-size: 100% 2px, 100% 1px; }
+.e-close__cols { display: grid; grid-template-columns: 1fr; gap: 40px; margin-top: clamp(56px, 10vh, 120px); }
+.e-kicker { margin: 0; font: 400 11px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--e-faint); font-weight: 400; }
+.e-list { margin-top: 14px; }
+.e-sign { margin: clamp(56px, 10vh, 120px) 0 0; padding-top: 18px; border-top: 1px solid var(--e-rule);
+  font: 400 11px/1.5 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--e-faint); }
+
+/* ---- the curtain: blocks that cover the page ---------------------------------------------------------------- */
+.e-curtain { position: fixed; inset: 0; z-index: 95; visibility: hidden; display: grid; place-items: center; pointer-events: none; }
+.e-curtain canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.e-curtain p { position: relative; margin: 0; font: italic 400 clamp(80px, 15vw, 240px)/1 var(--lab-serif); letter-spacing: -0.04em; color: #ecebe6; }
+
+/* ---- the cursor --------------------------------------------------------------------------------------------- */
+.e-cursor { display: none; }
+.lab-e.has-cursor, .lab-e.has-cursor a, .lab-e.has-cursor button { cursor: none; }
+.lab-e.has-cursor .e-cursor { display: block; position: fixed; inset: 0; z-index: 120; pointer-events: none; opacity: 0; transition: opacity 0.3s var(--lab-ease); }
+.lab-e.has-cursor .e-cursor.is-on { opacity: 1; }
+.e-cursor__dot, .e-cursor__ring { position: absolute; left: 0; top: 0; will-change: transform; }
+.e-cursor__dot { width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: var(--e-ink); transition: scale 0.3s var(--lab-ease), opacity 0.3s; }
+.e-cursor__ring { width: 0; height: 0; }
+.e-cursor__ring::before { content: ""; position: absolute; left: -18px; top: -18px; width: 36px; height: 36px; border-radius: 50%; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--e-ink) 45%, transparent);
+  transition: scale 0.55s var(--lab-ease), background-color 0.4s var(--lab-ease), box-shadow 0.4s var(--lab-ease); }
+.e-cursor__ring span { position: absolute; left: 0; top: 0; translate: -50% -50%; font: 400 10px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--lab-sun-ink); opacity: 0; scale: 0.6; transition: opacity 0.3s var(--lab-ease), scale 0.45s var(--lab-ease); white-space: nowrap; }
+.e-cursor.is-link .e-cursor__ring::before { scale: 1.5; box-shadow: inset 0 0 0 1px var(--e-accent); }
+.e-cursor.is-label .e-cursor__ring::before { scale: 2.3; background: var(--e-accent); box-shadow: none; }
+.e-cursor.is-label .e-cursor__ring span { opacity: 1; scale: 1; }
+.e-cursor.is-label .e-cursor__dot { scale: 0; }
+.e-cursor.is-down .e-cursor__ring::before { scale: 0.8; }
+.e-cursor.is-label.is-down .e-cursor__ring::before { scale: 2; }
+
+/* ---- phones: the photo takes the top of the screen and the words read under it ------------------------------ */
+@media (max-width: 760px) {
+  .e-head { padding: 16px var(--pad) 20px; }
+  .e-head__name { font-size: 17px; }
+  .e-caption { font-size: 9.5px; max-width: 52vw; text-align: right; }
+  .e-hero { padding-top: 15svh; }
+  .e-tag { font-size: clamp(44px, 13.4vw, 96px); line-height: 0.96; }
+  .e-tag__l--2 { margin-left: 0.5em; }
+  .e-tag__l--3 { margin-left: 0.15em; }
+  .e-hero__foot { position: static; margin-top: 28px; gap: 18px; }
+  .e-part:not(.e-hero) { padding-top: 46svh; min-height: auto; }
+  .e-part:not(.e-hero):not(.e-work) > * { max-width: none; }
+  .e-skill__name { font-size: clamp(44px, 13vw, 92px); }
+  .e-skill__body p { font-size: 16px; }
+  .e-proof li, .e-list li { grid-template-columns: 1fr; }
+  .e-index__link { grid-template-columns: 30px 1fr; grid-template-areas: "no name" "no kind" "no title"; gap: 8px 12px; }
+  .e-index__name { font-size: clamp(60px, 19vw, 120px); }
+  .e-index__more > div { padding-left: 42px; }
+  .e-hello { font-size: clamp(72px, 22vw, 150px); }
+  .e-mail { font-size: clamp(20px, 6.2vw, 30px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .e-roll__c > span, .e-index__more, .e-proof li, .e-list li, .e-mail, .e-link { transition: none; }
+}

@@ -3,7 +3,7 @@ import { useThemeColor } from '../projects/look';
 import { labRoute, LAB_IDS, type LabId } from './routes';
 import './lab.css';
 
-/* The motion lab: four takes on the home page's motion, side by side, with the same words. Each direction is its
+/* The motion lab: five takes on the home page's motion, side by side, with the same words. Each direction is its
    own chunk, so its libraries (GSAP, Lenis, Three) only load on its page, and never on /. */
 
 const DIRECTIONS: Record<LabId, { name: string; line: string; load: () => Promise<{ default: React.ComponentType }> }> = {
@@ -11,6 +11,7 @@ const DIRECTIONS: Record<LabId, { name: string; line: string; load: () => Promis
   b: { name: 'Kinetic type', line: 'An editorial page where the words do the moving: big serif type split and masked in, a cursor that pulls, sections that hand over like spreads.', load: () => import('./b/DirectionB') },
   c: { name: 'Tactile', line: 'A sky you can touch. It follows your pointer and your clock, everything moves on springs, and the project cards pick up and throw.', load: () => import('./c/DirectionC') },
   d: { name: 'Outdoors', line: 'B’s moving type over a landscape that goes from first light to dusk as you scroll: clouds, hills, mist on the water, grass in the wind. One moment per part, the rest stays quiet.', load: () => import('./d/DirectionD') },
+  e: { name: 'Dots', line: 'Bryce’s own photos, dithered into dots that move: they fly in out of static, travel from one photo to the next as you reach each part, ripple, rustle and drift, and get out of your way. The colors follow your clock.', load: () => import('./e/DirectionE') },
 };
 const pages = Object.fromEntries(LAB_IDS.map(id => [id, lazy(DIRECTIONS[id].load)])) as Record<LabId, React.LazyExoticComponent<React.ComponentType>>;
 
@@ -25,8 +26,8 @@ function LabIndex() {
   return <main className="lab-index">
     <div className="lab-index__col">
       <p className="lab-index__kicker">Motion lab · brycerambach.com</p>
-      <h1>Four ways to move.</h1>
-      <p className="lab-index__lede">The same home page, the same words, the same day from sunrise to sunset. Each one moves it differently. D puts B’s type over A’s sky, after trying the first three. Open them side by side and pick the parts you like.</p>
+      <h1>Five ways to move.</h1>
+      <p className="lab-index__lede">The same home page, the same words, the same day from sunrise to sunset. Each one moves it differently. D puts B’s type over A’s sky, after trying the first three. E keeps B’s type and makes everything else out of dots. Open them side by side and pick the parts you like.</p>
       <ol>
         {LAB_IDS.map(id => <li key={id}><a href={`/lab/${id}`}>
           <span className="lab-index__no">{id.toUpperCase()}</span>
