@@ -5,7 +5,27 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig } from 'vitest/config';
-import {loadEnv} from 'vite';
+import {loadEnv, type Plugin} from 'vite';
+import { PAGES, sitemap, withMeta } from './src/site/meta';
+
+/** Writes a copy of index.html for every page of the site with its own title, description, address and picture
+ *  (src/site/meta.ts), the not-found page the host serves for unknown addresses, and the sitemap. */
+const sitePages = (): Plugin => ({
+  name: 'site-pages',
+  apply: 'build',
+  enforce: 'post',
+  generateBundle(_, bundle) {
+    const index = bundle['index.html'];
+    if (!index || index.type !== 'asset') throw new Error('site-pages: no index.html in the build');
+    const html = String(index.source);
+    for (const page of PAGES) {
+      const source = withMeta(html, page);
+      if (page.file === 'index.html') index.source = source;
+      else this.emitFile({ type: 'asset', fileName: page.file, source });
+    }
+    this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: sitemap() });
+  },
+});
 
 export default defineConfig(({mode})=>{
   const local=loadEnv(mode,process.cwd(),'');
@@ -13,7 +33,7 @@ export default defineConfig(({mode})=>{
     if(local[key]&&!process.env[key])process.env[key]=local[key];
   }
   return {
-  plugins: [react(), tailwindcss(), {name:"local-race-api",configureServer(server){server.middlewares.use("/api/race",raceHandler);server.middlewares.use("/api/admin",adminHandler);server.middlewares.use("/api/journey",journeyHandler);},configurePreviewServer(server){server.middlewares.use("/api/race",raceHandler);server.middlewares.use("/api/admin",adminHandler);server.middlewares.use("/api/journey",journeyHandler);}}],
+  plugins: [react(), tailwindcss(), sitePages(), {name:"local-race-api",configureServer(server){server.middlewares.use("/api/race",raceHandler);server.middlewares.use("/api/admin",adminHandler);server.middlewares.use("/api/journey",journeyHandler);},configurePreviewServer(server){server.middlewares.use("/api/race",raceHandler);server.middlewares.use("/api/admin",adminHandler);server.middlewares.use("/api/journey",journeyHandler);}}],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, '.'),
