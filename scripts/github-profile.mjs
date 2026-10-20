@@ -37,7 +37,7 @@ const THEMES = {
   },
 };
 const W = 1200, H = 320, ROAD = 258, DASH = 52;
-const LABEL = 'Bryce Rambach. the city, building Dervo.';
+const LABEL = 'Bryce Rambach. the city, open to founding roles in a new city.';
 
 // The flat 911 from src/projects/FlatCar.tsx, facing right, in its 320 x 120 box.
 const wheel = (c, cx) => `<g transform="translate(${cx} 90)">
@@ -133,7 +133,7 @@ const banner = (t) => `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" heig
     <text class="label" x="76" y="96">the home city</text>
     <text class="name" x="70" y="180">Bryce <tspan class="em">Rambach</tspan></text>
     <circle class="dot" cx="82" cy="224.5" r="5" fill="${t.green}"/>
-    <text class="label" x="98" y="230">BUILDING DERVO</text>
+    <text class="label" x="98" y="230">OPEN TO FOUNDING ROLES IN a new city</text>
     <rect y="${ROAD}" width="${W}" height="${H - ROAD}" fill="${t.road}"/>
     <rect y="${ROAD}" width="${W}" height="3" fill="${t.edge}"/>
     <g class="dash">

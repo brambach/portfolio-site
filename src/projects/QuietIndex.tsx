@@ -409,8 +409,8 @@ export default function QuietIndex() {
             <W>I </W><span className="qi-mark"><W>design</W></span><W> software, then I </W><span className="qi-mark qi-mark--late"><W>build</W></span><W> it.</W>
           </p>
           <p className="qi-in" style={at(1)}>
-            <W>Right now that's </W><a className="ink-link" href={`/projects/dervo${lookQuery(look)}`}><W>Dervo</W></a><W>, a Mac app for running Claude Code and
-            Codex side by side. It tells you what finished, what's stuck and what needs you. It's in private beta.</W>
+            <W>Most recently that was </W><a className="ink-link" href={`/projects/dervo${lookQuery(look)}`}><W>Dervo</W></a><W>, a Mac app for running Claude Code and
+            Codex side by side. It tells you what finished, what's stuck and what needs you. I parked it in October 2026.</W>
           </p>
           <p className="qi-in" style={at(1.12)}>
             <W>As an employee I designed and built an integration portal for HR and payroll teams. There's also Lucid, Arro,
@@ -432,9 +432,9 @@ export default function QuietIndex() {
         <section id="now" className="qi-now" aria-labelledby="qi-now">
           <motion.h2 id="qi-now" className="qi-label" {...rise()}>now</motion.h2>
           <ul>
-            <motion.li {...rise(0.05)}>building Dervo. invited testers, apple silicon macs.</motion.li>
+            <motion.li {...rise(0.05)}>open to founding engineer roles at early ai startups.</motion.li>
             <motion.li {...rise(0.12)}>day <StreakNumber value={streakDay} /> of the running streak.</motion.li>
-            <motion.li {...rise(0.19)}>next: building my own thing. a new city, soon.</motion.li>
+            <motion.li {...rise(0.19)}>next: a new city, soon.</motion.li>
           </ul>
         </section>
       </main>
