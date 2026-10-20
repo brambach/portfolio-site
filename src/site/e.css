@@ -184,7 +184,9 @@ html.lenis, html.lenis body { height: auto; }
 /* ---- the close ---------------------------------------------------------------------------------------------- */
 .e-close { padding-bottom: 150px !important; }
 .e-part.e-close > .e-hello { max-width: none; }
-.e-hello { margin: 0; font: 400 clamp(84px, 13vw, 240px)/0.88 var(--e-serif); letter-spacing: -0.05em; white-space: nowrap; cursor: default; touch-action: manipulation; user-select: none; }
+/* Beside the hand, Say hello stops short of the half of the screen the hand takes (it's 3.9em wide, so 10.6vw ends
+   it at about 45%), so the thumb never reaches the o. */
+.e-hello { margin: 0; font: 400 clamp(76px, 10.6vw, 240px)/0.88 var(--e-serif); letter-spacing: -0.05em; white-space: nowrap; cursor: default; touch-action: manipulation; user-select: none; }
 .e-hello > div { will-change: transform; }
 .e-mail { display: inline-block; margin-top: clamp(28px, 5vh, 56px); font: italic 400 clamp(24px, 3vw, 46px)/1.1 var(--e-serif); letter-spacing: -0.02em;
   background: linear-gradient(var(--e-accent), var(--e-accent)) 0 100% / 0 2px no-repeat, linear-gradient(var(--e-rule), var(--e-rule)) 0 100% / 100% 1px no-repeat;
