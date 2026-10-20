@@ -107,7 +107,7 @@ export const SKILLS: Skill[] = [
       'Knowing when to stop counts too. Dervo’s beta opened to a waitlist in September 2026. In October Claude shipped the same things, so I parked it. The source is on GitHub.',
     ],
     evidence: [
-      { name: 'Arro', to: '/projects/arro', note: 'It got to TestFlight, then I parked it.' },
+      { name: 'Arro', to: '/projects/arro', note: 'It’s on TestFlight.' },
       { name: 'Arro on GitHub', href: 'https://github.com/brambach/arro', note: 'Expo, React Native and Supabase, open source under MIT.' },
     ],
   },
