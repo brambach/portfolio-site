@@ -131,7 +131,16 @@ for (const size of SIZES) {
       if (!a.getClientRects().length || a.closest('.e-index__row:not(.is-open) .e-index__more') || a.closest('.e-index__more') && getComputedStyle(a.closest('.e-index__more')).display === 'none') continue;
       const ra = a.getBoundingClientRect();
       if (!ra.width) continue;
-      if (!a.closest('.e-head, .e-hold')) { window.scrollTo(0, ra.top + scrollY - innerHeight / 2 + ra.height / 2); await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); }
+      if (!a.closest('.e-head, .e-hold')) {
+        // Centred on the screen. The smooth scroll can cut an instant jump short (WebKit), so try again if it did.
+        for (let k = 0; k < 4; k++) {
+          const now = a.getBoundingClientRect();
+          if (k && now.top >= 0 && now.bottom <= innerHeight) break;
+          window.scrollTo(0, now.top + scrollY - innerHeight / 2 + now.height / 2);
+          await new Promise(r => setTimeout(r, k ? 300 : 0));
+          await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+        }
+      }
       const r = a.getBoundingClientRect(), cx = r.left + Math.min(r.width / 2, 12), cy = r.top + r.height / 2;
       const inside = (x, y) => { const t = document.elementFromPoint(x, y); return !!t && (t === a || a.contains(t)); };
       if (!inside(cx, cy) && !inside(r.left + r.width / 2, cy)) { taps.push(`${a.textContent.trim().slice(0, 30)}: covered`); continue; }

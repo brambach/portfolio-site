@@ -15,11 +15,13 @@ cdp.on('Page.screencastFrame', (f) => { frames.push({ at: f.metadata.timestamp *
 if (from) {
   await page.goto(from, { waitUntil: 'load' });
   await page.waitForTimeout(3000);
-  const path = new URL(url).pathname, link = page.locator(`a[href="${path}"]`).first();
+  const path = new URL(url).pathname, link = page.locator(`a.e-index__link[href="${path}"]`).first();
   await link.scrollIntoViewIfNeeded(); await page.waitForTimeout(1500);
   await cdp.send('Page.startScreencast', { format: 'png', everyNthFrame: 1, maxWidth: Number(w), maxHeight: Number(h) });
   await link.click();
-  if (touch) { await page.waitForTimeout(800); await page.locator(`a.e-open[href="${path}"]`).first().click(); }
+  // On a touch screen the first tap opens the row, and its Open link leaves.
+  await page.waitForTimeout(800);
+  if (await page.locator('.e-index__row.is-open').count()) await page.locator(`a.e-open[href="${path}"]`).first().click();
   await page.waitForURL(url);
 } else {
   await cdp.send('Page.startScreencast', { format: 'png', everyNthFrame: 1, maxWidth: Number(w), maxHeight: Number(h) });
