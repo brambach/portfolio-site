@@ -5,10 +5,10 @@ import { chromium, webkit } from 'playwright';
 import { writeFileSync } from 'node:fs';
 
 const args = process.argv.slice(2);
-const flag = (name) => { const i = args.indexOf(name); return i < 0 ? null : args.splice(i, 2)[1]; };
-const json = flag('--json');
+const option = (name) => { const i = args.indexOf(name); return i < 0 ? null : args.splice(i, 2)[1]; };
+const json = option('--json');
 // --from <home url>: open the home page first and follow its link to the page, so the dots are handed over.
-const from = flag('--from');
+const from = option('--from');
 const reduced = args.includes('--reduced') ? (args.splice(args.indexOf('--reduced'), 1), true) : false;
 const [url, engine = 'chromium', w = '1440', h = '900'] = args;
 const browser = await (engine === 'webkit' ? webkit : chromium).launch();
