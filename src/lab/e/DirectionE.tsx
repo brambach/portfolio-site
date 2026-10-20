@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from 'react';
 import { CONTACT, finePointer, INTRO, NAME, SIDE_QUESTS, SIGN, SKILLS, SUB, TAGLINE, WORK } from '../content';
+import { eWorkHref, type EWorkId } from '../routes';
+import { afterFirstPaint, takeReturn } from './chrome';
+import { DotRing, ECursor, ELink } from './links';
 import { startDirectionE, type EMotion } from './motion';
 import { paletteFor } from './palette';
 import { ART, SCENE_ORDER, type SceneId } from './scenes';
+import { toEWork } from './work';
 import './e.css';
 
 /* Direction E: the page is made of dots. Every part is one bold object drawn in dots on the paper (a paper
@@ -20,18 +24,6 @@ const LABELS: Record<SceneId, string> = {
   hero: 'Hello', intro: 'About', integrations: 'Integrations', agents: 'Agents', harnesses: 'Harnesses',
   design: 'Design', product: 'Product taste', work: 'The work', contact: 'Say hello',
 };
-
-/** Runs `fn` just after the browser reports its first contentful paint, or after 400 ms if it doesn't say. */
-function afterFirstPaint(fn: () => void) {
-  let done = false, t = 0, obs: PerformanceObserver | undefined;
-  const go = () => { if (done) return; done = true; obs?.disconnect(); window.clearTimeout(cap); t = window.setTimeout(fn); };
-  const cap = window.setTimeout(go, 400);
-  try {
-    obs = new PerformanceObserver(list => { if (list.getEntries().some(e => e.name === 'first-contentful-paint')) go(); });
-    obs.observe({ type: 'paint', buffered: true });
-  } catch { /* no paint timing: the cap starts it */ }
-  return () => { done = true; obs?.disconnect(); window.clearTimeout(cap); window.clearTimeout(t); };
-}
 
 /** A part's opening: its number, a rule and its name. */
 function Rule({ id }: { id: SceneId }) {
@@ -60,6 +52,9 @@ export default function DirectionE() {
     // The motion starts once the words have painted, so the line under the tagline never waits on the dots, their
     // pictures or their worker.
     const el = root.current;
+    // Back from a project: open where the visitor left off.
+    const y = takeReturn();
+    if (y !== null) window.scrollTo(0, y);
     const cancel = afterFirstPaint(() => { motion.current = startDirectionE(el, palette); });
     return () => {
       cancel();
@@ -72,14 +67,17 @@ export default function DirectionE() {
   }, [palette]);
 
   const plain = (e: MouseEvent) => e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey;
-  /** Leaving for a project: the page breaks up into blocks with its name in them. On a phone the first tap opens
-   *  the row instead, and the button inside it leaves. */
-  const leave = (id: string, name: string, href: string, row: boolean) => (e: MouseEvent<HTMLAnchorElement>) => {
+  const search = typeof location === 'undefined' ? '' : location.search;
+  /** Leaving for a project: the words step back and the dots gather into the project's object, and its page picks
+   *  them up. On a phone the first tap opens the row instead, and the link inside it leaves. */
+  const leave = (id: EWorkId, href: string, row: boolean) => (e: MouseEvent<HTMLAnchorElement>) => {
     if (plain(e)) return;
     e.preventDefault();
     if (row && !finePointer() && open !== id) { setOpen(id); return; }
-    motion.current?.curtain(name, href);
+    if (motion.current) motion.current.leave(id, href); else location.href = href;
   };
+  /** A link to one of the live project pages goes to E's version of it, the same way the index does. */
+  const page = (to: string) => { const id = toEWork(to); return id ? { href: eWorkHref(id, search), onClick: leave(id, eWorkHref(id, search), false) } : { href: to }; };
 
   const vars = { '--e-paper': palette.paper, '--e-ink': palette.ink, '--e-accent': palette.accent } as CSSProperties;
   return <div ref={root} className={`lab-e is-${palette.name}${palette.dark ? ' is-dark' : ''}`} style={vars}>
@@ -106,7 +104,7 @@ export default function DirectionE() {
 
       <section className="e-part e-intro" data-scene="intro" aria-label="About">
         <Rule id="intro" />
-        <p className="e-intro__big" data-read>{INTRO.before}<a className="e-link" href={INTRO.link.to} data-cursor="Open">{INTRO.link.label}</a>{INTRO.after}</p>
+        <p className="e-intro__big" data-read>{INTRO.before}<a className="e-link" {...page(INTRO.link.to)} data-cursor="Open">{INTRO.link.label}</a>{INTRO.after}</p>
         <p className="e-intro__small" data-quiet>{INTRO.second}</p>
         <span className="lab-sr" role="img" aria-label={`A portrait of ${NAME}, drawn in dots`} />
       </section>
@@ -121,8 +119,8 @@ export default function DirectionE() {
           {skill.body.map((text, k) => <p key={k}>{text}</p>)}
           <ul className="e-proof">
             {skill.evidence.map(item => <li key={item.name}>
-              {item.to ? <a className="e-proof__name" href={item.to} data-cursor="Open" data-magnetic><span>{item.name}</span><b aria-hidden="true">→</b></a>
-                : item.href ? <a className="e-proof__name" href={item.href} target="_blank" rel="noopener noreferrer" data-cursor="Read" data-magnetic><span>{item.name}</span><b aria-hidden="true">↗</b></a>
+              {item.to ? <ELink className="e-proof__name" {...page(item.to)}>{item.name}</ELink>
+                : item.href ? <ELink className="e-proof__name" href={item.href} away cursor="Read">{item.name}</ELink>
                   : <span className="e-proof__name is-private"><span>{item.name}</span><small>Private</small></span>}
               <span className="e-proof__note">{item.note}</span>
             </li>)}
@@ -135,7 +133,7 @@ export default function DirectionE() {
         <h2 id="e-work" className="e-work__title" data-quiet>The work</h2>
         <ol className="e-index" data-index>
           {WORK.map((work, i) => <li key={work.id} className={`e-index__row${open === work.id ? ' is-open' : ''}`} data-work={work.id} data-quiet>
-            <a className="e-index__link" href={`/projects/${work.id}`} onClick={leave(work.id, work.name, `/projects/${work.id}`, true)} data-cursor="Open" aria-expanded={finePointer() ? undefined : open === work.id}>
+            <a className="e-index__link" href={eWorkHref(work.id, search)} onClick={leave(work.id, eWorkHref(work.id, search), true)} data-cursor="Open" aria-expanded={finePointer() ? undefined : open === work.id}>
               <span className="e-index__no">{pad(i + 1)}</span>
               <span className="e-index__name"><Roll text={work.name} /></span>
               <span className="e-index__kind">{work.kind}</span>
@@ -144,10 +142,10 @@ export default function DirectionE() {
             <div className="e-index__more">
               <div>
                 <div className={`e-tile${work.hero.tall ? ' is-tall' : ''}`}>
-                  {work.hero.port ? <div className="e-port"><i /><span>Hold to close</span></div> : <img src={work.hero.src} alt="" loading="lazy" decoding="async" />}
+                  {work.hero.port ? <div className="e-port"><DotRing /><span>Hold to close</span></div> : <img src={work.hero.src} alt="" loading="lazy" decoding="async" />}
                 </div>
                 <p>{work.hero.text}</p>
-                <a className="e-button" href={`/projects/${work.id}`} onClick={leave(work.id, work.name, `/projects/${work.id}`, false)}>Open {work.name} <span aria-hidden="true">→</span></a>
+                <ELink className="e-open" href={eWorkHref(work.id, search)} onClick={leave(work.id, eWorkHref(work.id, search), false)}>Open {work.name}</ELink>
               </div>
             </div>
           </li>)}
@@ -162,11 +160,11 @@ export default function DirectionE() {
         <div className="e-close__cols" data-quiet>
           <div>
             <h3 className="e-kicker">Elsewhere</h3>
-            <ul className="e-list">{CONTACT.slice(1).map(c => <li key={c.name}><a href={c.href} target="_blank" rel="noopener noreferrer" data-cursor="Read"><span>{c.name}</span><b aria-hidden="true">↗</b></a><span>{c.note}</span></li>)}</ul>
+            <ul className="e-list">{CONTACT.slice(1).map(c => <li key={c.name}><ELink href={c.href} away>{c.name}</ELink><span className="e-list__handle">{c.note}</span></li>)}</ul>
           </div>
           <div>
             <h3 className="e-kicker">Side quests</h3>
-            <ul className="e-list">{SIDE_QUESTS.map(q => <li key={q.name}><a href={q.href} {...(q.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})} data-cursor={q.external ? 'Read' : 'Open'}><span>{q.name}</span><b aria-hidden="true">{q.external ? '↗' : '→'}</b></a><span>{q.note}</span></li>)}</ul>
+            <ul className="e-list">{SIDE_QUESTS.map(q => <li key={q.name}><ELink href={q.href} away={!!q.external}>{q.name}</ELink><span>{q.note}</span></li>)}</ul>
           </div>
         </div>
         <p className="e-sign"><span>{SIGN}</span></p>
@@ -175,7 +173,6 @@ export default function DirectionE() {
 
     {/* The picture that follows the pointer over the index, on screens with one. */}
     <div className="e-peek" aria-hidden="true" data-peek><canvas data-peek-canvas /></div>
-    <div className="e-curtain" aria-hidden="true" data-curtain><canvas data-curtain-canvas /><p data-curtain-name /></div>
-    <div className="e-cursor" aria-hidden="true" data-cursor-el><i className="e-cursor__dot" /><span className="e-cursor__ring"><span data-cursor-label /></span></div>
+    <ECursor />
   </div>;
 }

@@ -4,7 +4,7 @@ import './index.css';
 import {QuietIdleLoader} from './prototype/QuietIdleLoader';
 import {SiteAnalytics} from './lib/SiteAnalytics';
 import {isSkyPath} from './sky/routes';
-import {labRoute} from './lab/routes';
+import {isLabWorkPath, labRoute} from './lab/routes';
 
 const Garage=lazy(()=>import('./admin/Garage'));
 const showGarage=window.location.pathname.replace(/\/$/,'')==='/admin';
@@ -13,9 +13,10 @@ const showProjectLab=window.location.pathname.replace(/\/$/,'')==='/project-lab'
 // The sky site is the front door: / and /projects/<id> (see src/sky/routes.ts). The road lives at /work (and
 // /?mile=<id>, where old study links come back to it), the 3D drive at /drive with its old links (/?town and
 // friends) still opening it, and the quiet index at /next, whose ?look= links keep the old studies.
-// The motion lab (/lab and /lab/a to /lab/e): five motion directions for the home page, each its own chunk.
+// The motion lab (/lab and /lab/a to /lab/e): five motion directions for the home page, each its own chunk, and E's
+// own project pages under /lab/e/projects.
 const LabApp = lazy(() => import('./lab/LabApp.tsx'));
-const showLab = labRoute(window.location.pathname) !== null;
+const showLab = labRoute(window.location.pathname) !== null || isLabWorkPath(window.location.pathname);
 const SkyApp = lazy(() => import('./sky/SkyApp.tsx'));
 const showSky = isSkyPath(window.location.pathname, window.location.search);
 const ProjectReader = lazy(() => import('./prototype/ProjectReader.tsx'));

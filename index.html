@@ -13,20 +13,43 @@
         var project = /^\/projects\/([^/]+)$/.exec(path);
         var sky = !q.has('look') && ((path === '' && !q.has('mile') && !drive) || (project && ids.indexOf(project[1]) >= 0));
         if (sky) document.documentElement.setAttribute('data-sky', '');
-        if (/^\/lab(\/[a-e])?$/.test(path)) document.documentElement.setAttribute('data-lab', '');
-        // Lab E is on paper the color of the visitor's time of day. Mirrors PALETTES and timeOf in src/lab/e/palette.ts.
-        if (path === '/lab/e') {
+        var eWork = /^\/lab\/e\/projects\/[^/]+$/.test(path);
+        if (/^\/lab(\/[a-e])?$/.test(path) || eWork) document.documentElement.setAttribute('data-lab', '');
+        // Lab E (and its project pages) is on paper the color of the visitor's time of day. Mirrors PALETTES and timeOf
+        // in src/lab/e/palette.ts.
+        if (path === '/lab/e' || eWork) {
           var raw = q.get('hour'), m = raw && /^(\d{1,2})(?::(\d{2}))?$/.exec(raw), now = new Date();
           var h = raw === null ? NaN : m ? Number(m[1]) + (m[2] ? Number(m[2]) / 60 : 0) : Number(raw);
           if (!(h >= 0 && h <= 24)) h = now.getHours() + now.getMinutes() / 60;
           var paper = h >= 5 && h < 10 ? '#f4d5e0' : h >= 10 && h < 16 ? '#eef2ee' : h >= 16 && h < 19.5 ? '#f6e0c6' : '#0a0f26';
           document.documentElement.style.background = paper;
         }
+        // Arriving on one of E's project pages with the dots handed over (src/lab/e/chrome.ts): hold the page before on
+        // screen until the dots are drawn here, then the page lets it go. Never longer than the hold below.
+        // When the browser drops a page transition it rejects with this. Nobody needs to see it as an error.
+        if (eWork) addEventListener('unhandledrejection', function (e) { if (e.reason && e.reason.name === 'AbortError' && /skipped/i.test(e.reason.message)) e.preventDefault(); });
+        if (eWork && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          try {
+            var note = JSON.parse(sessionStorage.getItem('lab-e:handoff') || 'null');
+            if (note && Date.now() - note.at < 5000 && path.split('/').pop() === note.id) {
+              document.documentElement.setAttribute('data-e-arriving', '');
+              addEventListener('pagereveal', function (e) {
+                var t = e.viewTransition;
+                window.__eReveal = t;
+                if (t) [t.ready, t.finished, t.updateCallbackDone].forEach(function (p) { if (p) p.catch(function () {}); });
+              });
+            }
+          } catch (e) {}
+        }
       })();
     </script>
     <style>
       :root[data-sky], :root[data-lab] { background: #090f1c; color-scheme: dark; }
       :root[data-sky] body { background: linear-gradient(#090f1c, #161621 28%, #14171e 72%, #27171a); }
+      :root[data-e-arriving]::view-transition-old(root) { animation: e-vt-hold 2s linear both; }
+      :root[data-e-arriving]::view-transition-new(root) { animation: e-vt-wait 2s linear both; }
+      @keyframes e-vt-hold { from, to { opacity: 1; } }
+      @keyframes e-vt-wait { from, to { opacity: 0; } }
     </style>
     <link rel="icon" type="image/svg+xml" href="/favicon-sky.svg?v=sky" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-sky-32.png?v=sky" />

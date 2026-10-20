@@ -1,9 +1,7 @@
-import type { Palette } from './palette';
-
 /* Blocky pixel dissolves, like the squares breaking up the edge of the reference. A screen is cut into square
    blocks, and each block turns over at its own moment, set by an 8x8 ordered dither, so the change spreads in
-   that checkered way instead of as a wipe. Two uses: the curtain that covers the page before a project opens,
-   and the picture that follows the pointer over the work, which changes from one project to the next this way. */
+   that checkered way instead of as a wipe. The picture that follows the pointer over the work changes from one
+   project to the next this way. */
 
 const B8 = [
   0, 32, 8, 40, 2, 34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26, 12, 44, 4, 36, 14, 46, 6, 38, 60, 28, 52, 20, 62, 30, 54, 22,
@@ -13,36 +11,6 @@ const B8 = [
 export function blockAt(x: number, y: number) {
   const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
   return (B8[(y & 7) * 8 + (x & 7)] / 64) * 0.82 + (n - Math.floor(n)) * 0.18;
-}
-
-/** The curtain: blocks cover the page, passing through the palette's tones on the way to the dark of the project
- *  pages, then the project's name. `draw(p)` paints it at progress p (0 open, 1 covered). */
-export function curtainPainter(canvas: HTMLCanvasElement, palette: Palette) {
-  const ctx = canvas.getContext('2d');
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
-  let size = 0, cols = 0, rows = 0;
-  const steps = [palette.tones[5], palette.tones[3], palette.tones[1], '#090f1c'];
-  function fit() {
-    const w = innerWidth, h = innerHeight;
-    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
-    size = Math.max(28, Math.round(Math.max(w, h) / 30));
-    cols = Math.ceil(w / size); rows = Math.ceil(h / size);
-  }
-  return {
-    fit,
-    draw(p: number) {
-      if (!ctx) return;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
-        // Each block takes a third of the time to turn over, through the tones, starting at its own moment.
-        const k = (p - blockAt(x, y) * 0.66) / 0.34;
-        if (k <= 0) continue;
-        ctx.fillStyle = steps[Math.min(steps.length - 1, Math.floor(k * steps.length))];
-        ctx.fillRect(x * size, y * size, size + 0.5, size + 0.5);
-      }
-    },
-  };
 }
 
 type Pic = HTMLImageElement | HTMLCanvasElement;
@@ -90,7 +58,7 @@ export function peekPainter(canvas: HTMLCanvasElement) {
   };
 }
 
-/** Port has no screenshots, so its picture is the ring you hold, drawn once. */
+/** Port has no screenshots, so its picture is the ring you hold, drawn once in dots. */
 export function portPicture(ink: string) {
   const c = document.createElement('canvas');
   c.width = 840; c.height = 560;
@@ -99,8 +67,12 @@ export function portPicture(ink: string) {
   const g = ctx.createRadialGradient(420, 250, 20, 420, 250, 520);
   g.addColorStop(0, '#2a3346'); g.addColorStop(1, '#151a26');
   ctx.fillStyle = g; ctx.fillRect(0, 0, 840, 560);
-  ctx.strokeStyle = ink; ctx.lineWidth = 4;
-  ctx.beginPath(); ctx.arc(420, 250, 64, 0, Math.PI * 2); ctx.stroke();
+  // The ring is dots, like everything else in E.
+  ctx.fillStyle = ink;
+  for (let k = 0; k < 26; k++) {
+    const a = (k / 26) * Math.PI * 2;
+    ctx.beginPath(); ctx.arc(420 + Math.cos(a) * 64, 250 + Math.sin(a) * 64, 4.5, 0, Math.PI * 2); ctx.fill();
+  }
   ctx.fillStyle = 'rgb(236 235 230 / 0.7)';
   ctx.font = '400 22px "IBM Plex Mono", monospace';
   ctx.textAlign = 'center';
