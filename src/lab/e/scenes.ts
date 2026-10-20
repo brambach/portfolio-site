@@ -13,7 +13,7 @@ export type SceneId = 'hero' | 'intro' | 'integrations' | 'agents' | 'harnesses'
 /** What a dot does while it's home. 0 sits still. Type, static, dust and drips only happen in code. Type is the
  *  highest, and the shader tells it apart by that. */
 export const LIFE = {
-  still: 0, bob: 1, trail: 2, plugL: 3, plugR: 4, drift: 5, loop: 6, glint: 7, sway: 8,
+  still: 0, bob: 1, trail: 2, plugL: 3, plugR: 4, drift: 5, loop: 6, glint: 7,
   draw: 10, steam: 11, wave: 12, lines: 13, dust: 14, static: 15, drip: 16, type: 20,
 } as const;
 export const TYPE_LIFE = LIFE.type;
@@ -65,7 +65,8 @@ export const ART: Record<Exclude<SceneId, 'work'>, Art> = {
     src: '/lab/e/plane.jpg', caption: 'A paper airplane', kind: 'object', size: [1280, 720], crop: [65, 44, 1213, 685],
     life: (x, y) => (inside(PLANE, x, y) ? LIFE.bob : [LIFE.trail, around(x, y, 330, 450, 7), 0]),
   },
-  intro: { src: '/lab/e/headshot.jpg', caption: 'A portrait', kind: 'photo', size: [480, 480], crop: [0, 0, 480, 480], focus: [0.5, 0.3], life: () => LIFE.still },
+  // The wall and the plant behind him are keyed out of the file (they're its alpha), so only he is drawn.
+  intro: { src: '/lab/e/headshot.webp', caption: 'A portrait', kind: 'photo', size: [480, 480], crop: [0, 0, 480, 480], focus: [0.5, 0.3], life: () => LIFE.still },
   // The plugs nudge closer, click, and ease apart. The prong and the socket light up as they meet.
   integrations: {
     src: '/lab/e/plugs.jpg', caption: 'Two plugs', kind: 'object', size: [1152, 864], crop: [67, 229, 1087, 638],
@@ -83,11 +84,11 @@ export const ART: Record<Exclude<SceneId, 'work'>, Art> = {
       return LIFE.drift;
     },
   },
-  // The rope sways a little where it hangs from the carabiner. The harness itself stays put.
+  // Just the waist belt, its buckle and the leg loops: the rope and carabiner above them read as stripes at this
+  // size, so they're painted out of the file. The buckles catch the light now and then.
   harnesses: {
-    src: '/lab/e/harness.jpg', caption: 'A climbing harness', kind: 'object', size: [1152, 864], crop: [288, 36, 858, 819],
-    pivot: [560, 290],
-    life: (x, y) => ((y > 290 && y < 422 && x > 300 && x < 700) || (x < 400 && y >= 395 && y < 512) ? LIFE.sway : LIFE.still),
+    src: '/lab/e/harness.jpg', caption: 'A climbing harness', kind: 'object', size: [1152, 864], crop: [322, 422, 830, 806],
+    life: (_x, _y, role) => (role === ROLE.peach ? LIFE.glint : LIFE.still),
   },
   // The pen's curve draws itself from one anchor to the other, holds, and clears to draw again.
   design: {

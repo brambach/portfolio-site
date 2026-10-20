@@ -1,4 +1,5 @@
-import { pair, type Formation, type Grid } from './field';
+import { FIELD_SIZE, pair, type Formation, type Grid, type IntroPlan } from './field';
+import type { RGB } from './palette';
 
 /* The dots on screen. One WebGL draw of points, never more than about 35,000 with the pool (about 21,000 on a
    1440 by 900 laptop) and 9,000 or so on a phone.
@@ -45,8 +46,6 @@ vec4 live(float k, vec2 p, vec2 aux, float s, float t, out float dark) {
     float w = smoothstep(0.0, 0.08, ph) * (1.0 - smoothstep(0.08, 0.3, ph));
     return vec4(0.0, 0.0, w * 0.6, w * 0.5);
   }
-  if (k < 8.5) // sway: the rope swings a little about where it hangs
-    return vec4(turn(aux, sin(t * 0.9) * 0.022 + sin(t * 0.37) * 0.01), 0.0, 0.0);
   if (k < 10.5) { // draw: the pen's curve draws itself from one anchor to the other, holds, and clears
     float c = fract(t / 7.0), head = smoothstep(0.02, 0.3, c) * 1.04, tail = smoothstep(0.9, 0.98, c) * 1.04;
     float shown = step(aux.x, head) * step(tail, aux.x);
@@ -92,7 +91,7 @@ void main() {
   float bend = (h(seed * 3.1) - 0.5) * min(len, 600.0) * 0.24;
   float fly = sin(PI * e);
   vec2 p = mix(from, to, e) + perp * bend * fly;
-  p += vec2(sin(uTime * 3.0 + seed * 20.0), cos(uTime * 2.6 + seed * 13.0)) * fly * uCell * 0.8;
+  p += vec2(sin(uTime * 3.0 + seed * 20.0), cos(uTime * 2.6 + seed * 13.0)) * fly * uCell * 0.8 * min(1.0, len / uCell);
   // The focus pull: dots arrive a little loose and soft, then the whole picture snaps sharp together.
   float k = clamp((uClock - uFocusAt) / 0.42, 0.0, 1.0);
   float loose = uLoose * e * (1.0 - k * k * (3.0 - 2.0 * k));
@@ -149,6 +148,12 @@ export type Dots = {
   readonly grid: Grid;
   /** Put every dot in its slot at once. */
   set: (f: Formation) => void;
+  /** The quiet field the page opens on: one still, faint dot in every cell. */
+  field: () => void;
+  /** Ready the first picture to assemble out of the field, and hold it there until `play`. Everything it needs is
+   *  uploaded now, so the first frame of the move costs no more than any other. */
+  intro: (f: Formation, plan: IntroPlan, o?: { dur?: number; onDone?: () => void }) => void;
+  play: () => void;
   morph: (f: Formation, o?: MorphOptions) => void;
   /** Take a formation's type slots at once, for the dots holding them, and leave every other dot be. It's how
    *  the words turn into dots in place, without anything else on screen jumping. */
@@ -161,44 +166,54 @@ export type Dots = {
   pointer: (x: number, y: number) => void;
   leave: () => void;
   frame: (now: number, dt: number) => void;
-  reset: (grid: Grid, f: Formation) => void;
+  /** A new grid, with `f` set on it, or the field if there's nothing to show yet. */
+  reset: (grid: Grid, f: Formation | null) => void;
   readonly busy: boolean;
   stop: () => void;
 };
 
-export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still: boolean; phone: boolean; dark: [number, number, number] }): Dots | null {
+export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still: boolean; phone: boolean; dark: RGB; field: RGB }): Dots | null {
   const gl = canvas.getContext('webgl', { antialias: false, alpha: true, premultipliedAlpha: true, depth: false, stencil: false, powerPreference: 'high-performance' });
   if (!gl) return null;
   const sh = (type: number, src: string) => { const s = gl.createShader(type)!; gl.shaderSource(s, src); gl.compileShader(s); return s; };
   const prog = gl.createProgram()!;
   gl.attachShader(prog, sh(gl.VERTEX_SHADER, VERT));
   gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG));
+  // Every attribute's slot is fixed before linking, so nothing has to ask the program where they went.
+  const ATTRS: [string, number, number][] = [['aFrom', 3, 0], ['aTo', 3, 3], ['aColF', 3, 6], ['aColT', 3, 9], ['aMeta', 4, 12], ['aAux', 4, 16]];
+  ATTRS.forEach(([name], loc) => gl.bindAttribLocation(prog, loc, name));
+  gl.bindAttribLocation(prog, ATTRS.length, 'aOff');
   gl.linkProgram(prog);
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
-  gl.useProgram(prog);
+  // The shaders compile while the page goes on loading: where the browser can, the program is only checked once
+  // it says it's done, a frame or so later, so the page never sits waiting on the GPU for it.
+  const parallel = gl.getExtension('KHR_parallel_shader_compile');
+  const buf = gl.createBuffer(), offBuf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  ATTRS.forEach(([, size, offset], loc) => { gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, size, gl.FLOAT, false, STRIDE * 4, offset * 4); });
+  gl.bindBuffer(gl.ARRAY_BUFFER, offBuf);
+  gl.enableVertexAttribArray(ATTRS.length);
+  gl.vertexAttribPointer(ATTRS.length, 2, gl.FLOAT, false, 0, 0);
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-  const U = (n: string) => gl.getUniformLocation(prog, n);
-  const u = { view: U('uView'), clock: U('uClock'), dur: U('uDur'), time: U('uTime'), cell: U('uCell'), dpr: U('uDpr'), idle: U('uIdle'), fade: U('uTypeFade'), sf: U('uShiftF'), st: U('uShiftT'),
-    dark: U('uDark'), focusAt: U('uFocusAt'), loose: U('uLoose'), drip: U('uDrip') };
-  const buf = gl.createBuffer(), offBuf = gl.createBuffer();
-  const attr = (name: string, size: number, offset: number) => {
-    const loc = gl.getAttribLocation(prog, name);
-    gl.enableVertexAttribArray(loc);
-    gl.vertexAttribPointer(loc, size, gl.FLOAT, false, STRIDE * 4, offset * 4);
-  };
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  attr('aFrom', 3, 0); attr('aTo', 3, 3); attr('aColF', 3, 6); attr('aColT', 3, 9); attr('aMeta', 4, 12); attr('aAux', 4, 16);
-  gl.bindBuffer(gl.ARRAY_BUFFER, offBuf);
-  const offLoc = gl.getAttribLocation(prog, 'aOff');
-  gl.enableVertexAttribArray(offLoc);
-  gl.vertexAttribPointer(offLoc, 2, gl.FLOAT, false, 0, 0);
+  type Uniforms = Record<'view' | 'clock' | 'dur' | 'time' | 'cell' | 'dpr' | 'idle' | 'fade' | 'sf' | 'st' | 'dark' | 'focusAt' | 'loose' | 'drip', WebGLUniformLocation | null>;
+  let u: Uniforms | null = null;
+  /** Once the program has linked: use it, or give up on the dots if it didn't. */
+  function linked() {
+    if (u) return true;
+    if (parallel && !gl!.getProgramParameter(prog, parallel.COMPLETION_STATUS_KHR)) return false;
+    if (!gl!.getProgramParameter(prog, gl!.LINK_STATUS)) { stopped = true; canvas.style.visibility = 'hidden'; return false; }
+    gl!.useProgram(prog);
+    const U = (name: string) => gl!.getUniformLocation(prog, name);
+    u = { view: U('uView'), clock: U('uClock'), dur: U('uDur'), time: U('uTime'), cell: U('uCell'), dpr: U('uDpr'), idle: U('uIdle'), fade: U('uTypeFade'), sf: U('uShiftF'), st: U('uShiftT'),
+      dark: U('uDark'), focusAt: U('uFocusAt'), loose: U('uLoose'), drip: U('uDrip') };
+    return true;
+  }
 
   const dpr = Math.min(window.devicePixelRatio || 1, opts.phone ? 1.5 : 2);
   let grid = first, n = 0;
   let data = new Float32Array(0), keys = new Float32Array(0), off = new Float32Array(0), vel = new Float32Array(0);
   let slot = new Uint32Array(0), owner = new Int32Array(0), active = new Uint8Array(0), list: number[] = [];
-  let clock = 1e3, dur = 1, end = 1, time = 0, fade = 1, focusAt = -1e3, loose = 0, dripFrom = 1e9, dripStop = 1e9, stopped = false, done: (() => void) | undefined, dirty = true, offDirty = false;
+  let held = false, fresh = false, clock = 1e3, dur = 1, end = 1, time = 0, fade = 1, focusAt = -1e3, loose = 0, dripFrom = 1e9, dripStop = 1e9, stopped = false, done: (() => void) | undefined, dirty = true, offDirty = false;
   let shiftF: [number, number] = [0, 0], shiftT: [number, number] = [0, 0];
   let px = -1e4, py = -1e4, pvx = 0, pvy = 0, pointerOn = false, lastT = 0;
 
@@ -261,14 +276,50 @@ export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still:
   }
 
   function set(f: Formation) {
+    held = false;
     for (let i = 0; i < n; i++) { place(f, i, i, true); place(f, i, i, false); slot[i] = i; }
     index(f, null);
     clock = 1e3; dur = 1; end = 1; focusAt = -1e3; done = undefined;
     upload();
   }
 
+  function field() {
+    const col = opts.field, size = FIELD_SIZE;
+    for (let i = 0; i < n; i++) {
+      const o = i * STRIDE, cell = i < grid.cells, x = ((i % grid.cols) + 0.5) * grid.cell, y = (Math.floor(i / grid.cols) + 0.5) * grid.cell;
+      for (const b of [0, 3]) { data[o + b] = cell ? x : 0; data[o + b + 1] = cell ? y : 0; data[o + b + 2] = cell ? size : 0; }
+      for (let j = 0; j < 3; j++) data[o + 6 + j] = data[o + 9 + j] = col[j];
+      data[o + 12] = data[o + 13] = 0; data[o + 15] = 0;
+      data[o + 16] = data[o + 17] = data[o + 18] = data[o + 19] = 0;
+      keys[i] = cell ? x / grid.w : -1; slot[i] = i;
+    }
+    owner.fill(-1);
+    held = false; clock = 1e3; dur = 1; end = 1; focusAt = -1e3; done = undefined;
+    upload();
+  }
+
+  function intro(f: Formation, plan: IntroPlan, o: { dur?: number; onDone?: () => void } = {}) {
+    const col = opts.field, size = FIELD_SIZE;
+    for (let i = 0; i < n; i++) {
+      const b = i * STRIDE;
+      place(f, i, i, false);
+      data[b] = plan.from[i * 2]; data[b + 1] = plan.from[i * 2 + 1]; data[b + 2] = plan.shown[i] ? size : 0;
+      for (let j = 0; j < 3; j++) data[b + 6 + j] = col[j];
+      data[b + 12] = 0; data[b + 15] = plan.delay[i]; data[b + 16] = data[b + 17] = 0;
+      // A dot that ends hidden fades where it is.
+      if (!f.size[i]) { data[b + 3] = data[b]; data[b + 4] = data[b + 1]; }
+      slot[i] = i;
+    }
+    index(f, null);
+    shiftF = [0, 0]; shiftT = [0, 0]; fade = 1;
+    dur = o.dur ?? 1.5; end = plan.last + dur; focusAt = end - 0.15; loose = 1;
+    clock = 0; held = true; done = o.onDone;
+    upload();
+  }
+
   function morph(f: Formation, o: MorphOptions = {}) {
     if (opts.still) { set(f); o.onDone?.(); return; }
+    held = false;
     // Which dots are words right now, before the snapshot forgets.
     const typed = new Uint8Array(n);
     for (let i = 0; i < n; i++) typed[i] = data[i * STRIDE + 13] > TYPE ? 1 : 0;
@@ -309,10 +360,10 @@ export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still:
     upload();
   }
 
-  function reset(g: Grid, f: Formation) {
+  function reset(g: Grid, f: Formation | null) {
     alloc(g);
     shiftF = [0, 0]; shiftT = [0, 0];
-    set(f);
+    if (f) set(f); else field();
   }
 
   // ---- the pointer ------------------------------------------------------------------------------------------
@@ -347,9 +398,14 @@ export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still:
   }
 
   function frame(now: number, dt: number) {
-    if (stopped) return;
+    // Nothing moves until it can be drawn.
+    if (stopped || !linked()) return;
+    const at = u!;
     const was = clock;
-    clock += dt;
+    // Held, the intro waits at its first frame. The frame after it's let go is still that first frame, however long
+    // the frame before took, so the move starts from rest.
+    if (!held) clock += fresh ? 0 : dt;
+    fresh = false;
     time = now;
     if (was < end && clock >= end && done) { const d = done; done = undefined; d(); }
     if (!opts.still) {
@@ -365,20 +421,20 @@ export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still:
     // With reduced motion nothing moves, so only draw when something changed.
     if (opts.still && !dirty) return;
     dirty = false;
-    gl!.uniform2f(u.view, grid.w, grid.h);
-    gl!.uniform1f(u.clock, opts.still ? 1e3 : clock);
-    gl!.uniform1f(u.dur, dur);
-    gl!.uniform1f(u.time, opts.still ? 0 : time);
-    gl!.uniform1f(u.cell, grid.cell);
-    gl!.uniform1f(u.dpr, dpr);
-    gl!.uniform1f(u.idle, opts.still ? 0 : 1);
-    gl!.uniform1f(u.fade, fade);
-    gl!.uniform2f(u.sf, shiftF[0], shiftF[1]);
-    gl!.uniform2f(u.st, shiftT[0], shiftT[1]);
-    gl!.uniform3f(u.dark, opts.dark[0], opts.dark[1], opts.dark[2]);
-    gl!.uniform1f(u.focusAt, focusAt);
-    gl!.uniform1f(u.loose, opts.still ? 0 : loose);
-    gl!.uniform2f(u.drip, dripFrom, dripStop);
+    gl!.uniform2f(at.view, grid.w, grid.h);
+    gl!.uniform1f(at.clock, opts.still ? 1e3 : clock);
+    gl!.uniform1f(at.dur, dur);
+    gl!.uniform1f(at.time, opts.still ? 0 : time);
+    gl!.uniform1f(at.cell, grid.cell);
+    gl!.uniform1f(at.dpr, dpr);
+    gl!.uniform1f(at.idle, opts.still ? 0 : 1);
+    gl!.uniform1f(at.fade, fade);
+    gl!.uniform2f(at.sf, shiftF[0], shiftF[1]);
+    gl!.uniform2f(at.st, shiftT[0], shiftT[1]);
+    gl!.uniform3f(at.dark, opts.dark[0], opts.dark[1], opts.dark[2]);
+    gl!.uniform1f(at.focusAt, focusAt);
+    gl!.uniform1f(at.loose, opts.still ? 0 : loose);
+    gl!.uniform2f(at.drip, dripFrom, dripStop);
     gl!.clearColor(0, 0, 0, 0);
     gl!.clear(gl!.COLOR_BUFFER_BIT);
     gl!.drawArrays(gl!.POINTS, 0, n);
@@ -390,7 +446,8 @@ export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still:
   return {
     get grid() { return grid; },
     get busy() { return clock < end; },
-    set, morph, adopt, reset, frame,
+    set, field, intro, morph, adopt, reset, frame,
+    play() { if (held) { held = false; fresh = true; } },
     shift(from, to) { shiftF = from; shiftT = to; dirty = true; },
     typeFade(v) { fade = v; dirty = true; },
     drip(from, stop) { dripFrom = from; dripStop = stop; },
