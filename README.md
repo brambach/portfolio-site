@@ -1,8 +1,8 @@
 # brycerambach.com
 
-<a href="https://brycerambach.com"><img src="docs/screenshots/generalist/desktop-02-skill-raised.png" alt="The home page: I build the whole thing, the five skills it covers, and Dervo's run report rising out of the water in front of a halftone sun" width="100%"></a>
+<a href="https://brycerambach.com"><img src="docs/motion-lab/recordings/ship-home.jpg" alt="The home page at dawn: I design it, make it move, and build it, beside a paper airplane drawn in dots" width="100%"></a>
 
-My portfolio. The home page is one day, from a halftone sunrise at the top to a sunset at the bottom. The first screen says what I do: integrations, agents, the harnesses that check them, design and product taste. The sun walks the horizon through all five, raising the project behind each one out of the water, and further down each one has its proof.
+My portfolio. The whole page is made of dots. Each part is one object drawn in them (a paper airplane, two plugs, a cursor, a harness, a pen, a cup, a hand), and as you scroll the dots fly from one object into the next. It covers what I do: integrations, agents, the harnesses that check them, design and product taste, each with its proof. The colors follow your clock, from a pink dawn to a dark night.
 
 The older ideas are still around as side quests: a road where a flat green 911 drives past a billboard for each project, and a 3D Porsche you can drive out of town toward a mountain lake.
 
@@ -12,8 +12,8 @@ The older ideas are still around as side quests: a road where a flat green 911 d
 
 | Where | What it is |
 | --- | --- |
-| `/` | The sky. The claim, the five skills with a picture each on the horizon, then the proof for each, side quests and contact over the sunset. |
-| `/projects/<name>` | A page each for Dervo, Arro and Port, with something you can try. Moving between pages carries the picture and the title across where the browser supports view transitions. |
+| `/` | The home page. The tagline, an about with a portrait in dots, the five skills with their proof, the work, side quests and contact. `?hour=7` (or any hour) shows another time of day. |
+| `/projects/<name>` | A page each for Dervo, Arro, Port, Lucid, the integration portal and AgentSky, with one of the project's screens drawn in dots (Port's is a ring you can hold to close). Opening one from the home page hands the dots across. |
 | `/work` | The road. Scrolling drives the car past a billboard per project, with a night stop at the end where the archive is a pile of cards. |
 | `/drive` | The 3D Porsche. Open the door, turn the key, drive from town to a lakeside overlook. `/drive?from=work` skips the walk-up. |
 | `/previous` | The earlier version of the site, kept around. |
@@ -80,8 +80,8 @@ The race times and admin functions need Upstash/KV environment variables that ar
 
 | Path | What's there |
 | --- | --- |
-| `src/main.tsx` | Routing. It's path-based, with no router library. A new route also needs a rewrite in `vercel.json`. |
-| `src/sky/` | The sky site. `skills.ts` holds the five skills and their proof, `SkyHome.tsx` the home page, `day.ts` the sun through the day, `work.ts` the three project pages. |
+| `src/main.tsx` | Routing. It's path-based, with no router library. A new route also needs a rewrite in `vercel.json`, or it gets the not-found page. |
+| `src/site/` | The site. `Home.tsx` and `motion.ts` are the home page, `WorkPage.tsx` and `work-motion.ts` the project pages, `dots.ts` and `field.ts` the dots, `palette.ts` the colors by time of day, `meta.ts` each page's title, description and preview picture. `data/skills.ts` holds the five skills and their proof. |
 | `src/projects/SimplePortfolio.tsx` | The road: the scroll-driven scene, billboards and stops. |
 | `src/projects/Glovebox.tsx` | The night stop at the end. |
 | `src/projects/catalog.ts` and `road-lineup.ts` | Project data, and the order and covers shared by the road and the 3D billboards. |
