@@ -221,15 +221,17 @@ export function startWorkPage(root: HTMLElement, palette: Palette, work: PageWor
   function intro() {
     const name = root.querySelector<HTMLElement>('[data-title]')!, head = root.querySelector('.e-head')!;
     const split = SplitText.create(name, { type: 'chars', mask: 'chars', aria: 'none' });
+    // Everything here but the letters starts hidden in the CSS (e.css), so each goes from and to stated values.
     return gsap.timeline({ paused: true, delay: 0.1 })
       .from(split.chars, { yPercent: 115, rotate: 8, duration: 1.1, stagger: 0.04, ease: POWER }, 0)
-      .from('[data-lead]', { y: 18, opacity: 0, duration: 1, stagger: 0.08, ease: EXPO }, 0.35)
       .fromTo('[data-top-rule]', { scaleX: 0 }, { scaleX: 1, duration: 1.2, ease: 'expo.inOut' }, 0.2)
-      .from(head, { opacity: 0, y: -12, duration: 1, ease: EXPO }, 0.5);
+      .fromTo('[data-top-label]', { opacity: 0 }, { opacity: 1, duration: 0.8, ease: 'power2.out' }, 0.3)
+      .fromTo('[data-lead]', { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 1, stagger: 0.08, ease: EXPO }, 0.35)
+      .fromTo(head, { opacity: 0, y: -12 }, { opacity: 1, y: 0, duration: 1, ease: EXPO }, 0.5);
   }
   function quiet() {
     q('[data-rule]').forEach(el => gsap.fromTo(el, { scaleX: 0 }, { scaleX: 1, duration: 1.3, ease: 'expo.inOut', scrollTrigger: { trigger: el, start: 'top 88%', once: true } }));
-    q('[data-quiet]').forEach(el => gsap.from(el, { y: 22, opacity: 0, duration: 1.1, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 90%', once: true } }));
+    q('[data-quiet]').forEach(el => gsap.fromTo(el, { y: 22, opacity: 0 }, { y: 0, opacity: 1, duration: 1.1, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 90%', once: true } }));
   }
 
   // ---- leaving for the next project: the words step back and the dots become its object, if they aren't already

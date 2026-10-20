@@ -17,4 +17,14 @@
   .e-404__main > * { max-width: min(760px, 52vw); }
   .e-404__main > .e-404__dots { position: absolute; right: var(--pad); top: 50%; translate: 0 -50%; width: min(34vw, 520px); max-width: none; margin: 0; }
 }
+/* A phone on its side has the width for that too but not the height for the number over the words, so the number
+   takes the right there as well, and the page starts higher. */
+@media (max-height: 560px) and (orientation: landscape) {
+  .e-404__main { padding-top: 84px; padding-bottom: 40px; }
+  .e-404__main > * { max-width: 56vw; }
+  .e-404__main .e-rule { margin-bottom: 24px; }
+  .e-404__main > .e-404__dots { position: absolute; right: var(--pad); top: 50%; translate: 0 -50%; width: min(34vw, 96svh); max-width: none; margin: 0; }
+  .e-404__title { font-size: clamp(40px, 6vw, 72px); }
+  .e-404__line { font-size: 19px; margin-bottom: 20px; }
+}
 @media (prefers-reduced-motion: reduce) { .e-404__dots circle { animation: none; } }
