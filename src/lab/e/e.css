@@ -33,12 +33,12 @@ html.lenis, html.lenis body { height: auto; }
 .e-swap { display: inline-grid; overflow: hidden; padding: 2px 0; vertical-align: middle; justify-items: end; }
 .e-swap > span { grid-area: 1 / 1; white-space: nowrap; display: block; }
 
-/* ---- the hero: the tagline at poster size, on the lake's sky -------------------------------------------------- */
+/* ---- the hero: the tagline at poster size, the plane under it ------------------------------------------------- */
 .e-hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-start; padding: clamp(96px, 14vh, 150px) var(--pad) 40px; }
 .e-tag { margin: 0; font: 400 clamp(54px, 8.6vw, 160px)/0.99 var(--lab-serif); letter-spacing: -0.045em; }
 .e-tag__l { display: block; white-space: nowrap; width: max-content; }
 /* The tagline waits for its font so it can be split. The line under it doesn't, so it's there from the first paint. */
-.lab-e:not(.is-ready) .e-tag, .lab-e:not(.is-ready) .e-hero__cue { visibility: hidden; }
+.lab-e:not(.is-ready) .e-tag { visibility: hidden; }
 .e-tag__l--2 { margin-left: 0.9em; font-style: italic; letter-spacing: -0.035em; }
 .e-tag__l--3 { position: relative; margin-left: 0.3em; padding-bottom: 0.06em; }
 .e-tag__design { position: relative; display: inline-block; }
@@ -47,10 +47,8 @@ html.lenis, html.lenis body { height: auto; }
 .e-tag__beam { position: absolute; left: 0.04em; right: 0.04em; bottom: 0; height: 2px; background: var(--e-ink); transform-origin: 0 50%; opacity: 0.85; }
 .e-hero__foot { position: absolute; right: var(--pad); top: clamp(140px, 19vh, 200px); display: flex; flex-direction: column; align-items: start; gap: 22px; max-width: 300px; }
 .e-hero__sub { margin: 0; max-width: 360px; color: var(--e-soft); font-size: 15px; }
-.e-hero__cue { margin: 0; font: 400 11px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
-.e-hero__go::after { content: ""; display: inline-block; width: 28px; height: 1px; margin-left: 10px; vertical-align: middle; background: currentColor; }
 
-/* ---- parts: the words keep the left, the photo takes the right ------------------------------------------------ */
+/* ---- parts: the words keep the left, the object takes the right ---------------------------------------------- */
 .e-part:not(.e-hero) { position: relative; padding: clamp(110px, 20vh, 220px) var(--pad) clamp(60px, 12vh, 140px); min-height: 100svh; box-sizing: border-box; }
 .e-part:not(.e-hero):not(.e-work) > * { max-width: min(560px, 40vw); }
 .e-rule { display: flex; align-items: center; gap: 16px; margin-bottom: clamp(32px, 6vh, 64px); font: 400 11px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--e-faint); }
@@ -151,7 +149,7 @@ html.lenis, html.lenis body { height: auto; }
 .e-cursor.is-down .e-cursor__ring::before { scale: 0.8; }
 .e-cursor.is-label.is-down .e-cursor__ring::before { scale: 2; }
 
-/* ---- phones: the photo takes the top of the screen and the words read under it ------------------------------ */
+/* ---- phones: the object takes the top of the screen and the words read under it ----------------------------- */
 @media (max-width: 760px) {
   .e-head { padding: 16px var(--pad) 20px; }
   .e-head__name { font-size: 17px; }

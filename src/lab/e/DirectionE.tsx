@@ -2,14 +2,15 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEve
 import { CONTACT, finePointer, INTRO, NAME, SIDE_QUESTS, SIGN, SKILLS, SUB, TAGLINE, WORK } from '../content';
 import { startDirectionE, type EMotion } from './motion';
 import { paletteFor } from './palette';
-import { PHOTOS, SCENE_ORDER, type SceneId } from './scenes';
+import { ART, SCENE_ORDER, type SceneId } from './scenes';
 import './e.css';
 
-/* Direction E: the page is made of dots. Every scene is one of Bryce's own photos dithered into a field of dots in
-   a soft palette, and the dots are alive. They fly in out of static when the page opens, travel from their place
-   in one photo to their place in the next when you reach a new part, ripple where there's water, shiver where
-   there are leaves, drift where there's aurora, and get out of the way of the pointer. The tagline breaks into the
-   same dots when you leave it and comes back together when you return, and the portrait is built of them too.
+/* Direction E: the page is made of dots. Every part is one bold object drawn in dots on the paper (a paper
+   airplane, two plugs, a cursor, a climbing harness, a pen, a cup, a waving hand), and the portrait is built of
+   the same dots. They fly in out of static when the page opens, travel from one object into the next when you
+   reach a new part, arrive loose and snap sharp, move a little the way each object would, and get out of the way of
+   the pointer. Grains drip off the plane until you scroll. The tagline breaks into the same dots when you leave
+   it and comes back together when you return.
 
    The palette comes from the visitor's clock when the page loads (dawn, day, late afternoon or night) and stays.
    The words move the way B's do. All of the motion is in motion.ts, the dots in dots.ts and field.ts. */
@@ -70,7 +71,7 @@ export default function DirectionE() {
 
     <header className="e-head">
       <a className="e-head__name" href="/" data-cursor="Home">{NAME}</a>
-      <p className="e-caption" aria-hidden="true"><span className="e-swap" data-caption><span>{PHOTOS.hero.caption}</span></span></p>
+      <p className="e-caption" aria-hidden="true"><span className="e-swap" data-caption><span>{ART.hero.caption}</span></span></p>
     </header>
 
     <main>
@@ -84,7 +85,6 @@ export default function DirectionE() {
         </h1>
         <div className="e-hero__foot" data-hero-foot>
           <p className="e-hero__sub">{SUB}</p>
-          <p className="e-hero__cue" aria-hidden="true"><span className="e-hero__go">Scroll</span></p>
         </div>
       </section>
 

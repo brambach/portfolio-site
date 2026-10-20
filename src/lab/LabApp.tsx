@@ -11,7 +11,7 @@ const DIRECTIONS: Record<LabId, { name: string; line: string; load: () => Promis
   b: { name: 'Kinetic type', line: 'An editorial page where the words do the moving: big serif type split and masked in, a cursor that pulls, sections that hand over like spreads.', load: () => import('./b/DirectionB') },
   c: { name: 'Tactile', line: 'A sky you can touch. It follows your pointer and your clock, everything moves on springs, and the project cards pick up and throw.', load: () => import('./c/DirectionC') },
   d: { name: 'Outdoors', line: 'B’s moving type over a landscape that goes from first light to dusk as you scroll: clouds, hills, mist on the water, grass in the wind. One moment per part, the rest stays quiet.', load: () => import('./d/DirectionD') },
-  e: { name: 'Dots', line: 'Bryce’s own photos, dithered into dots that move: they fly in out of static, travel from one photo to the next as you reach each part, ripple, rustle and drift, and get out of your way. The colors follow your clock.', load: () => import('./e/DirectionE') },
+  e: { name: 'Dots', line: 'One bold object for each part, drawn in dots that move: they fly in out of static, turn from one object into the next as you reach each part, snap into focus, and get out of your way. The colors follow your clock.', load: () => import('./e/DirectionE') },
 };
 const pages = Object.fromEntries(LAB_IDS.map(id => [id, lazy(DIRECTIONS[id].load)])) as Record<LabId, React.LazyExoticComponent<React.ComponentType>>;
 

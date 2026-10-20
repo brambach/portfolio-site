@@ -2,9 +2,9 @@ import { readFileSync } from 'node:fs';
 import { render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import DirectionE from './DirectionE';
-import { bayer, makeGrid, pair, photoFormation, sampleType, staticFormation, tonesOf, withType } from './field';
+import { bayer, keyArt, makeGrid, objectFormation, objectTonesOf, pair, photoFormation, sampleType, staticFormation, withType } from './field';
 import { hex, hourFor, PALETTES, timeOf } from './palette';
-import { layoutFor, PHOTOS, SCENE_ORDER } from './scenes';
+import { ART, LIFE, layoutFor, SCENE_ORDER } from './scenes';
 
 // jsdom has no canvas, WebGL or font loading, so the dots don't start and the page is just its words.
 beforeEach(() => {
@@ -79,13 +79,13 @@ describe('E’s dots', () => {
     expect(new Set(slots).size).toBe(g.n);
   });
 
-  it('turns a photo into dots in the palette’s tones, dissolved where it washes out', () => {
+  it('turns the portrait into dots in the four object tones, dissolved where it washes out', () => {
     const g = makeGrid(280, 140, false);
     const w = 40, h = 20, data = new Uint8ClampedArray(w * h * 4);
     for (let i = 0; i < w * h; i++) { const x = i % w; data.set([x * 6, 120, 255 - x * 6, 255], i * 4); }
-    const layout = { rect: [0, 0, 1, 1] as [number, number, number, number], wash: (x: number) => (x > 0.5 ? 1 : 0) };
-    const f = photoFormation(g, layout, PHOTOS.hero, [w, h], { width: w, height: h, data }, palette);
-    const tones = tonesOf(palette).rgb;
+    const layout = { rect: [0, 0, 1, 1] as [number, number, number, number], align: [0.5, 0.5] as [number, number], wash: (x: number) => (x > 0.5 ? 1 : 0) };
+    const f = photoFormation(g, layout, ART.intro, { width: w, height: h, data }, palette);
+    const tones = objectTonesOf(palette).rgb.slice(0, 4);
     let left = 0, right = 0;
     for (let i = 0; i < g.cells; i++) {
       if (!f.size[i]) continue;
@@ -121,7 +121,71 @@ describe('E’s dots', () => {
     }
   });
 
-  it('names no places in what it says about the photos', () => {
-    for (const p of Object.values(PHOTOS)) expect(p.caption).toMatch(/^(A|An) [a-z ]+$/);
+  it('names no places in what it says about the pictures', () => {
+    for (const p of Object.values(ART)) expect(p.caption).toMatch(/^(A|An|Two) [a-z ]+$/);
+  });
+
+  // A pink picture with a navy square in the middle and a thin teal line under it, like the art in photos2.
+  const art = (w = 60, h = 40) => {
+    const data = new Uint8ClampedArray(w * h * 4);
+    for (let i = 0; i < w * h; i++) {
+      const x = i % w, y = Math.floor(i / w);
+      const square = x >= 20 && x < 40 && y >= 10 && y < 26, line = y === 30 && x >= 10 && x < 50;
+      data.set(square ? [22, 46, 92, 255] : line ? [44, 140, 150, 255] : [252, 214, 216, 255], i * 4);
+    }
+    return { width: w, height: h, data };
+  };
+  const whole = { rect: [0, 0, 1, 1] as [number, number, number, number], align: [0.5, 0.5] as [number, number], wash: () => 0 };
+
+  it('keys the pink out of the art and reads its four tones', () => {
+    const k = keyArt(art());
+    expect(k[0]).toBe(4);
+    expect(k[15 * 60 + 30]).toBe(0);
+    expect(k[30 * 60 + 30]).toBe(1);
+  });
+
+  it('draws an object as a silhouette on bare paper, thin lines and all, in the palette’s object tones', () => {
+    for (const p of Object.values(PALETTES)) {
+      const g = makeGrid(540, 360, false), f = objectFormation(g, whole, ART.design, art(), p);
+      const tones = objectTonesOf(p).rgb;
+      let navy = 0, teal = 0, outside = 0;
+      for (let i = 0; i < g.cells; i++) {
+        if (!f.size[i]) continue;
+        const x = f.pos[i * 2] / g.w, y = f.pos[i * 2 + 1] / g.h, c = [f.col[i * 3], f.col[i * 3 + 1], f.col[i * 3 + 2]];
+        if (c.every((v, k) => Math.abs(v - tones[0][k]) < 1e-6)) navy++;
+        if (c.every((v, k) => Math.abs(v - tones[1][k]) < 1e-6)) teal++;
+        if (y < 0.2 || y > 0.8 || x < 0.12 || x > 0.88) outside++;
+      }
+      expect(navy).toBeGreaterThan(60);
+      expect(teal).toBeGreaterThan(10);
+      expect(outside).toBe(0);
+    }
+  });
+
+  it('puts a few drips on the plane’s lower edge, or a still heap at the bottom with reduced motion', () => {
+    const g = makeGrid(540, 360, false), drips = Array.from({ length: g.drips }, (_, k) => g.n - g.drips + k);
+    const moving = objectFormation(g, whole, ART.hero, art(), palette, { drips: true });
+    for (const s of drips) {
+      expect(moving.life[s]).toBe(LIFE.drip);
+      expect(moving.pos[s * 2 + 1] / g.h).toBeGreaterThan(0.6);
+    }
+    const still = objectFormation(g, whole, ART.hero, art(), palette, { drips: true, still: true });
+    const shown = drips.filter(s => still.size[s] > 0);
+    expect(shown.length).toBe(16);
+    for (const s of shown) { expect(still.life[s]).toBe(LIFE.still); expect(still.pos[s * 2 + 1]).toBeGreaterThan(g.h - g.cell * 4); }
+  });
+
+  it('keeps every object tone clear of its paper, so no picture sinks into the page at any hour', () => {
+    const lab = (h: string) => {
+      const [r, g, b] = hex(h).map(v => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+      const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+      const X = f((0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047), Y = f(0.2126 * r + 0.7152 * g + 0.0722 * b), Z = f((0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883);
+      return [116 * Y - 16, 500 * (X - Y), 200 * (Y - Z)];
+    };
+    const dE = (a: string, b: string) => Math.hypot(...lab(a).map((v, k) => v - lab(b)[k]));
+    for (const p of Object.values(PALETTES)) {
+      p.object.forEach((t, k) => expect(dE(t, p.paper)).toBeGreaterThan(k === 3 ? 14 : 40));
+      for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) expect(dE(p.object[i], p.object[j])).toBeGreaterThan(28);
+    }
   });
 });
