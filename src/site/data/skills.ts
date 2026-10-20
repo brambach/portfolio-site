@@ -56,7 +56,7 @@ export const SKILLS: Skill[] = [
       'I founded Dervo, a Mac app that runs Claude Code and Codex side by side. Ask Home for something and it finds the right thread or starts one, then splits the work into jobs by the files they touch. When one agent hits its usage limit, the thread carries on in the other.',
     ],
     evidence: [
-      { name: 'Dervo', to: '/projects/dervo', note: 'Try handing a thread from Claude to Codex.' },
+      { name: 'Dervo', to: '/projects/dervo', note: 'Claude Code and Codex side by side, in one Mac app.' },
       { name: 'Dervo on GitHub', href: 'https://github.com/brambach/dervo', note: 'A Rust and Tauri shell, a Python host that drives both agents, React on top.' },
       { name: 'Trace', href: 'https://github.com/brambach/trace', note: 'Turns Claude Code’s session files into a dashboard, with every prompt searchable.' },
     ],
@@ -90,7 +90,7 @@ export const SKILLS: Skill[] = [
     ],
     evidence: [
       { name: 'Port', to: '/projects/port', note: 'Try the hold in your browser, with the app’s sound.' },
-      { name: 'This site', href: 'https://github.com/brambach/portfolio-site', note: 'The sky follows your time of day.' },
+      { name: 'This site', href: 'https://github.com/brambach/portfolio-site', note: 'Its colors follow your time of day.' },
       { name: 'design-taste', note: 'My taste written down with evidence, so coding agents build to it. Private, since it holds other people’s screenshots.' },
     ],
   },
@@ -107,7 +107,7 @@ export const SKILLS: Skill[] = [
       'Knowing when to stop counts too. Dervo’s beta opened to a waitlist in September 2026. In October Claude shipped the same things, so I parked it. The source is on GitHub.',
     ],
     evidence: [
-      { name: 'Arro', to: '/projects/arro', note: 'It got to TestFlight, then I parked it. Cheer a sample milestone.' },
+      { name: 'Arro', to: '/projects/arro', note: 'It got to TestFlight, then I parked it.' },
       { name: 'Arro on GitHub', href: 'https://github.com/brambach/arro', note: 'Expo, React Native and Supabase, open source under MIT.' },
     ],
   },
