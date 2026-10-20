@@ -2,32 +2,63 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f4d5e0" />
     <script>
-      // Paint the sky before anything loads on the sky site's addresses, so there's no paper flash.
-      // Mirrors isSkyPath in src/sky/routes.ts.
+      // Paint the page's paper before anything loads, so there's no flash of another color. The site's pages are
+      // / and /projects/<id>, and anything else that isn't one of the older pages is its not-found page. Mirrors
+      // siteRoute in src/site/routes.ts, and PALETTES and timeOf in src/site/palette.ts.
       (function () {
-        var path = location.pathname.replace(/\/$/, '');
+        var path = location.pathname.replace(/\/+$/, '');
         var q = new URLSearchParams(location.search);
-        var drive = ['from', 'town', 'city', 'journey', 'forest'].some(function (k) { return q.has(k); });
-        var ids = ['dervo', 'arro', 'port'];
-        var project = /^\/projects\/([^/]+)$/.exec(path);
-        var sky = !q.has('look') && ((path === '' && !q.has('mile') && !drive) || (project && ids.indexOf(project[1]) >= 0));
-        if (sky) document.documentElement.setAttribute('data-sky', '');
+        var older = ['/work', '/drive', '/next', '/admin', '/previous', '/entrance-still', '/project-lab'];
+        var moving = path === '/projects' || path === '/lab' || path.indexOf('/lab/') === 0;
+        // When the browser drops a page transition it rejects with this. Nobody needs to see it as an error.
+        addEventListener('unhandledrejection', function (e) { if (e.reason && e.reason.name === 'AbortError' && /skipped/i.test(e.reason.message)) e.preventDefault(); });
+        var site = window.__notFound || moving || (path === ''
+          ? !['mile', 'from', 'town', 'city', 'journey', 'forest'].some(function (k) { return q.has(k); })
+          : older.indexOf(path) < 0);
+        if (!site) return;
+        var raw = q.get('hour'), m = raw && /^(\d{1,2})(?::(\d{2}))?$/.exec(raw), now = new Date();
+        var h = raw === null ? NaN : m ? Number(m[1]) + (m[2] ? Number(m[2]) / 60 : 0) : Number(raw);
+        if (!(h >= 0 && h <= 24)) h = now.getHours() + now.getMinutes() / 60;
+        var time = h >= 5 && h < 10 ? 'dawn' : h >= 10 && h < 16 ? 'day' : h >= 16 && h < 19.5 ? 'golden' : 'night';
+        var paper = { dawn: '#f4d5e0', day: '#eef2ee', golden: '#f6e0c6', night: '#0a0f26' }[time];
+        var root = document.documentElement;
+        root.setAttribute('data-e', time);
+        root.style.background = paper;
+        root.style.setProperty('--e-paper', paper);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', paper);
+        // Arriving on a project's page with the dots handed over (src/site/chrome.ts): hold the page before on
+        // screen until the dots are drawn here, then the page lets it go. Never longer than the hold below.
+        var work = /^\/projects\/[^/]+$/.test(path);
+        if (work && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          try {
+            var note = JSON.parse(sessionStorage.getItem('e:handoff') || 'null');
+            if (note && Date.now() - note.at < 5000 && path.split('/').pop() === note.id) {
+              root.setAttribute('data-e-arriving', '');
+              addEventListener('pagereveal', function (e) {
+                var t = e.viewTransition;
+                window.__eReveal = t;
+                if (t) [t.ready, t.finished, t.updateCallbackDone].forEach(function (p) { if (p) p.catch(function () {}); });
+              });
+            }
+          } catch (e) {}
+        }
       })();
     </script>
     <style>
-      :root[data-sky] { background: #090f1c; color-scheme: dark; }
-      :root[data-sky] body { background: linear-gradient(#090f1c, #161621 28%, #14171e 72%, #27171a); }
+      :root[data-e="night"] { color-scheme: dark; }
+      :root[data-e-arriving]::view-transition-old(root) { animation: e-vt-hold 2s linear both; }
+      :root[data-e-arriving]::view-transition-new(root) { animation: e-vt-wait 2s linear both; }
+      @keyframes e-vt-hold { from, to { opacity: 1; } }
+      @keyframes e-vt-wait { from, to { opacity: 0; } }
     </style>
-    <link rel="icon" type="image/svg+xml" href="/favicon-sky.svg?v=sky" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-sky-32.png?v=sky" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon-sky.png?v=sky" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Bryce Rambach builds the whole thing: integrations, agents, the harnesses that check them, the design and the product calls. He's looking for a founding engineer role at an AI startup in a new city."
-    />
-    <meta name="theme-color" content="#090f1c" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=e1" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=e1" />
+    <link rel="manifest" href="/site.webmanifest" />
     <!-- Sentient, the display face, comes from Fontshare (its licence doesn't allow the files in a public repo).
          Loaded without blocking the page; the stylesheets fall back to Georgia until it arrives. -->
     <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
@@ -45,25 +76,9 @@
         "jobTitle": "Software engineer"
       }
     </script>
-    <meta property="og:title" content="Bryce Rambach" />
-    <meta
-      property="og:description"
-      content="Bryce Rambach builds the whole thing: integrations, agents, the harnesses that check them, the design and the product calls. He's looking for a founding engineer role at an AI startup in a new city."
-    />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://brycerambach.com/og-sky.jpg?v=sky3" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Bryce Rambach, over a halftone sunrise on water" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Bryce Rambach" />
-    <meta
-      name="twitter:description"
-      content="Bryce Rambach builds the whole thing: integrations, agents, the harnesses that check them, the design and the product calls. He's looking for a founding engineer role at an AI startup in a new city."
-    />
-    <meta name="twitter:image" content="https://brycerambach.com/og-sky.jpg?v=sky3" />
-    <meta property="og:url" content="https://brycerambach.com" />
+    <!-- page-meta -->
     <title>Bryce Rambach</title>
+    <!-- /page-meta -->
     <script>
       // Cross-page fades (see index.css) are a nicety: when the browser skips one, say nothing.
       for (const type of ['pageswap', 'pagereveal']) {
