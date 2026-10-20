@@ -51,7 +51,7 @@ html.lenis, html.lenis body { height: auto; }
 
 /* ---- the hero: the tagline at poster size, the plane under it ------------------------------------------------- */
 .e-hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-start; padding: clamp(96px, 14vh, 150px) var(--pad) 40px; }
-.e-tag { margin: 0; font: 400 clamp(54px, 8.6vw, 160px)/0.99 var(--e-serif); letter-spacing: -0.045em; }
+.e-tag { margin: 0; font: 400 clamp(54px, min(8.6vw, 15.5svh), 160px)/0.99 var(--e-serif); letter-spacing: -0.045em; }
 .e-tag__l { display: block; white-space: nowrap; width: max-content; }
 /* The tagline waits for its font so it can be split. The header waits with it, or it would show, hide while the
    words are split, and fade back in. */
@@ -72,6 +72,11 @@ html.lenis, html.lenis body { height: auto; }
 .e-tag__beam { position: absolute; left: 0.04em; right: 0.04em; bottom: 0; height: 2px; background: var(--e-ink); transform-origin: 0 50%; opacity: 0.85; }
 .e-hero__foot { position: absolute; right: var(--pad); top: clamp(140px, 19vh, 200px); display: flex; flex-direction: column; align-items: start; gap: 22px; max-width: 300px; }
 .e-hero__sub { margin: 0; max-width: 360px; color: var(--e-soft); font-size: 15px; }
+/* Until the tagline has room beside it (a tablet, or a phone on its side), the line goes under it, where the
+   phone layout puts it, and clear of the plane, which flies in low on the right. */
+@media (min-width: 761px) and (max-width: 1099.98px), (min-width: 761px) and (max-height: 560px) {
+  .e-hero__foot { position: static; margin-top: clamp(22px, 4svh, 40px); max-width: min(360px, 46vw); }
+}
 
 /* ---- parts: the words keep the left, the object takes the right ---------------------------------------------- */
 .e-part:not(.e-hero) { position: relative; padding: clamp(110px, 20vh, 220px) var(--pad) clamp(60px, 12vh, 140px); min-height: 100svh; box-sizing: border-box; }
