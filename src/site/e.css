@@ -44,7 +44,9 @@ html.lenis, html.lenis body { height: auto; }
 .e-head::before { content: ""; position: absolute; inset: 0 0 -28px; z-index: -1; pointer-events: none;
   background: linear-gradient(to bottom, var(--e-paper) 40%, color-mix(in srgb, var(--e-paper) 0%, transparent)); }
 .e-head { isolation: isolate; }
-.e-head__name { font: italic 400 19px/1 var(--e-serif); letter-spacing: -0.01em; }
+.e-head__name { position: relative; font: italic 400 19px/1 var(--e-serif); letter-spacing: -0.01em; }
+/* The name is set small, so it's tapped through a bigger area than it shows. */
+.e-head__name::after { content: ""; position: absolute; inset: -14px -10px; }
 .e-caption { margin: 0; font: 400 10.5px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--e-faint); }
 .e-swap { display: inline-grid; overflow: hidden; padding: 2px 0; vertical-align: middle; justify-items: end; }
 .e-swap > span { grid-area: 1 / 1; white-space: nowrap; display: block; }
@@ -109,6 +111,9 @@ html.lenis, html.lenis body { height: auto; }
 .e-site { --e-dot: color-mix(in srgb, var(--e-ink) 34%, transparent); }
 .e-go { position: relative; display: inline-flex; align-items: baseline; gap: 12px; color: var(--e-ink); }
 .e-go:focus-visible { outline: 2px solid var(--e-accent); outline-offset: 5px; }
+/* At least 44px to tap, however small the words, without moving anything: a band through the link's middle. */
+.e-go::after, .e-link::after, .e-mail::after { content: ""; position: absolute; left: 0; right: 0; top: min(0px, calc(50% - 22px)); bottom: min(0px, calc(50% - 22px)); }
+.e-link, .e-mail { position: relative; }
 .e-mark { position: relative; flex: none; width: 17px; height: 17px; align-self: center; transition: translate 0.5s var(--e-spring); }
 .e-mark i { position: absolute; left: calc(var(--x) * 3.5px); top: calc(var(--y) * 3.5px); width: 3px; height: 3px; border-radius: 50%; background: var(--e-dot);
   transition: background-color 0.25s var(--e-ease) calc(var(--k) * 35ms), scale 0.45s var(--e-spring) calc(var(--k) * 35ms), opacity 0.3s var(--e-ease) calc(var(--k) * 35ms); }
