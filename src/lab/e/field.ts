@@ -118,9 +118,10 @@ export function photoFormation(g: Grid, layout: Layout, art: Art, pixels: Pixels
   const rand = seeded(seed), f = base(g, rand), tones = objectTonesOf(palette);
   const [x0, y0, x1, y1] = layout.rect;
 
-  // Stretch the photo across the tones' range, so it uses all four.
+  // Stretch the photo across the tones' range, so it uses all four. Only the person counts: the wall behind them is
+  // keyed out of the file (its alpha), and stays bare paper so the face leads.
   const ls: number[] = [];
-  for (let i = 0; i < pixels.width * pixels.height; i += 3) ls.push(lum([pixels.data[i * 4] / 255, pixels.data[i * 4 + 1] / 255, pixels.data[i * 4 + 2] / 255]));
+  for (let i = 0; i < pixels.width * pixels.height; i += 3) if (pixels.data[i * 4 + 3] >= 128) ls.push(lum([pixels.data[i * 4] / 255, pixels.data[i * 4 + 1] / 255, pixels.data[i * 4 + 2] / 255]));
   ls.sort((a, b) => a - b);
   const lo = ls[Math.floor(ls.length * 0.02)] ?? 0, hi = ls[Math.floor(ls.length * 0.98)] ?? 1, span = Math.max(0.08, hi - lo);
   // The four tones from dark to light, whatever the palette, so the photo keeps its light and shade at night too.
@@ -133,6 +134,7 @@ export function photoFormation(g: Grid, layout: Layout, art: Art, pixels: Pixels
     const u = (x - x0) / (x1 - x0), v = (y - y0) / (y1 - y0);
     const px = Math.min(pixels.width - 1, Math.floor(u * pixels.width)), py = Math.min(pixels.height - 1, Math.floor(v * pixels.height));
     const o = (py * pixels.width + px) * 4;
+    if (pixels.data[o + 3] < 128) continue;
     const raw: RGB = [pixels.data[o] / 255, pixels.data[o + 1] / 255, pixels.data[o + 2] / 255];
     const l = Math.min(1, Math.max(0, (lum(raw) - lo) / span));
     const w = Math.min(1, Math.max(0, layout.wash(x, y, u, v)));
@@ -191,7 +193,7 @@ export function objectFormation(g: Grid, layout: Layout, art: Art, pixels: Pixel
   const cls = keyArt(pixels), counts = new Uint16Array(5);
   const [ax0, ay0, ax1, ay1] = art.crop, toArtX = (u: number) => ax0 + u * (ax1 - ax0), toArtY = (v: number) => ay0 + v * (ay1 - ay0);
   const pivot = art.pivot && [box.x + ((art.pivot[0] - ax0) / (ax1 - ax0)) * box.w, box.y + ((art.pivot[1] - ay0) / (ay1 - ay0)) * box.h];
-  const lowest = new Int32Array(g.cols).fill(-1);
+  const lowest = new Int32Array(g.cols).fill(-1), steam = palette.steam ? hex(palette.steam) : null;
 
   for (let i = 0; i < g.cells; i++) {
     const cx = i % g.cols, cy = Math.floor(i / g.cols);
@@ -208,13 +210,14 @@ export function objectFormation(g: Grid, layout: Layout, art: Art, pixels: Pixel
     if (counts[4] > total * 0.76) continue;
     let t = 0;
     for (let k = 1; k < 4; k++) if (counts[k] > counts[t]) t = k;
-    const rgb = tones.rgb[t];
-    f.size[i] = 1;
-    f.col[i * 3] = rgb[0]; f.col[i * 3 + 1] = rgb[1]; f.col[i * 3 + 2] = rgb[2];
     const u = (x - box.x) / box.w, v = (y - box.y) / box.h;
     const life = art.life(toArtX(u), toArtY(v), t);
     if (typeof life === 'number') f.life[i] = life;
     else { f.life[i] = life[0]; f.aux[i * 2] = life[1]; f.aux[i * 2 + 1] = life[2]; }
+    // Steam is cream in the art, which is nearly the paper on the light pages, so it takes the palette's own.
+    const rgb = f.life[i] === LIFE.steam && steam ? steam : tones.rgb[t];
+    f.size[i] = 1;
+    f.col[i * 3] = rgb[0]; f.col[i * 3 + 1] = rgb[1]; f.col[i * 3 + 2] = rgb[2];
     if (pivot) { f.aux[i * 2] = x - pivot[0]; f.aux[i * 2 + 1] = y - pivot[1]; }
     f.key[i] = keyOf(tones.rank[t], x / g.w, y / g.h);
     if (cy > lowest[cx]) lowest[cx] = cy;
@@ -262,6 +265,81 @@ export function staticFormation(g: Grid, palette: Palette, seed = 3): Formation 
     f.key[i] = keyOf(tones.rank[t], f.pos[i * 2] / g.w, f.pos[i * 2 + 1] / g.h);
   }
   return sortOrder(f);
+}
+
+/** The quiet field the page opens on: a faint dot in every cell, still, a little darker than the paper. */
+export const FIELD_SIZE = 0.34;
+export function fieldColor(p: Palette): RGB {
+  const paper = hex(p.paper), ink = hex(p.ink), k = p.dark ? 0.16 : 0.13;
+  return [0, 1, 2].map(j => paper[j] + (ink[j] - paper[j]) * k) as RGB;
+}
+
+export type IntroPlan = {
+  /** Where each dot starts, in CSS pixels. */
+  from: Float32Array;
+  /** 1 if the dot is one of the field's at the start, 0 if it starts hidden. */
+  shown: Uint8Array;
+  /** When each dot sets off, in seconds. */
+  delay: Float32Array;
+  /** The last of those. */
+  last: number;
+};
+
+/** How the first picture assembles out of the field. Dot i ends in slot i of `f`, so afterwards it's as if `f` had
+ *  been set. Each of the picture's dots sets off from one of the field's cells, picked at random across the screen,
+ *  and comes in from that side: the cells round the picture are taken in order of their angle about it, and so are
+ *  the picture's dots, so the dots gather in instead of crossing. They go in waves, darkest tone first, the far ones
+ *  a little before the near ones. Every other field dot fades where it is. Where the picture covers a cell that
+ *  wasn't picked, a spare dot from the type pool stands in for it until it fades, so the field has no holes. */
+export function introPlan(g: Grid, f: Formation, seed = 9): IntroPlan {
+  const rand = seeded(seed), n = g.n;
+  const from = new Float32Array(n * 2), shown = new Uint8Array(n), delay = new Float32Array(n);
+  const cellX = (c: number) => ((c % g.cols) + 0.5) * g.cell, cellY = (c: number) => (Math.floor(c / g.cols) + 0.5) * g.cell;
+  // The dots that show in the picture. Drips only show once they fall, so they come in hidden.
+  const vis: number[] = [], spare: number[] = [];
+  for (let i = 0; i < n; i++) {
+    if (f.size[i] > 0 && f.life[i] !== LIFE.drip) vis.push(i);
+    else if (i >= g.cells && f.size[i] === 0) spare.push(i);
+  }
+  const visCells = vis.filter(i => i < g.cells);
+  // The cells the dots set off from: enough of the picture's own cells that the spares can cover the rest, then
+  // any cells at random.
+  const m = Math.min(vis.length, g.cells), picked = new Uint8Array(g.cells), sources: number[] = [];
+  const take = (c: number) => { if (!picked[c] && sources.length < m) { picked[c] = 1; sources.push(c); } };
+  const shuffle = (a: number[]) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const own = shuffle(visCells.slice());
+  for (let k = 0; k < Math.max(0, visCells.length - spare.length); k++) take(own[k]);
+  const all = shuffle(Array.from({ length: g.cells }, (_, c) => c));
+  for (let k = 0; sources.length < m && k < all.length; k++) take(all[k]);
+  // Pair them up by angle about the picture's middle.
+  let mx = 0, my = 0;
+  for (const i of vis) { mx += f.pos[i * 2]; my += f.pos[i * 2 + 1]; }
+  mx /= vis.length || 1; my /= vis.length || 1;
+  const angle = (x: number, y: number) => Math.atan2(y - my, x - mx);
+  const targets = vis.slice(0, m).map(i => [angle(f.pos[i * 2], f.pos[i * 2 + 1]), i]).sort((a, b) => a[0] - b[0]);
+  const starts = sources.map(c => [angle(cellX(c), cellY(c)), c]).sort((a, b) => a[0] - b[0]);
+  let far = 1;
+  for (const c of sources) far = Math.max(far, Math.hypot(cellX(c) - mx, cellY(c) - my));
+  let last = 0;
+  for (let k = 0; k < targets.length; k++) {
+    const i = targets[k][1], c = starts[k][1];
+    from[i * 2] = cellX(c); from[i * 2 + 1] = cellY(c); shown[i] = 1;
+    const wave = Math.max(0, Math.min(3, Math.floor(f.key[i]))), d = Math.hypot(cellX(c) - mx, cellY(c) - my) / far;
+    delay[i] = 0.05 + wave * 0.14 + (1 - d) * 0.18 + rand() * 0.22;
+    if (delay[i] > last) last = delay[i];
+  }
+  // The rest of the field: each cell nobody set off from keeps its dot, or a spare's, which fades in place.
+  let s = 0;
+  for (let c = 0; c < g.cells; c++) {
+    if (picked[c]) continue;
+    const i = f.size[c] > 0 && f.life[c] !== LIFE.drip ? (s < spare.length ? spare[s++] : -1) : c;
+    if (i < 0) continue;
+    from[i * 2] = cellX(c); from[i * 2 + 1] = cellY(c); shown[i] = 1;
+    delay[i] = 0.1 + rand() * 0.8;
+  }
+  // Everyone else waits hidden where they're going.
+  for (let i = 0; i < n; i++) if (!shown[i]) { from[i * 2] = f.pos[i * 2]; from[i * 2 + 1] = f.pos[i * 2 + 1]; }
+  return { from, shown, delay, last };
 }
 
 /** The work: the photos step back so the projects can have the screen, and what's left is a little dust drifting

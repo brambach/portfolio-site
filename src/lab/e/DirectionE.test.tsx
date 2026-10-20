@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import DirectionE from './DirectionE';
-import { bayer, keyArt, makeGrid, objectFormation, objectTonesOf, pair, photoFormation, sampleType, staticFormation, withType } from './field';
+import { bayer, introPlan, keyArt, makeGrid, objectFormation, objectTonesOf, pair, photoFormation, sampleType, staticFormation, withType } from './field';
 import { hex, hourFor, PALETTES, timeOf } from './palette';
 import { ART, LIFE, layoutFor, SCENE_ORDER } from './scenes';
 
@@ -97,6 +97,39 @@ describe('E’s dots', () => {
     expect(right).toBe(0);
   });
 
+  it('leaves the portrait’s keyed-out wall as bare paper', () => {
+    const g = makeGrid(280, 140, false);
+    const w = 40, h = 20, data = new Uint8ClampedArray(w * h * 4);
+    // A grey ramp, with the right half keyed out (no alpha).
+    for (let i = 0; i < w * h; i++) { const x = i % w; data.set([x * 6, x * 6, x * 6, x < w / 2 ? 255 : 0], i * 4); }
+    const layout = { rect: [0, 0, 1, 1] as [number, number, number, number], align: [0.5, 0.5] as [number, number], wash: () => 0 };
+    const f = photoFormation(g, layout, ART.intro, { width: w, height: h, data }, palette);
+    let left = 0, right = 0;
+    for (let i = 0; i < g.cells; i++) if (f.size[i]) { if (f.pos[i * 2] / g.w > 0.52) right++; else left++; }
+    expect(left).toBeGreaterThan(50);
+    expect(right).toBe(0);
+  });
+
+  it('opens on a field with one dot in every cell, and assembles the first picture out of it', () => {
+    const g = makeGrid(540, 360, false), f = objectFormation(g, whole, ART.hero, art(), palette, { drips: true });
+    const plan = introPlan(g, f);
+    // At the start every cell shows exactly one dot, whoever it belongs to.
+    const at = new Map<string, number>();
+    for (let i = 0; i < g.n; i++) if (plan.shown[i]) { const k = `${plan.from[i * 2]},${plan.from[i * 2 + 1]}`; at.set(k, (at.get(k) ?? 0) + 1); }
+    expect(at.size).toBe(g.cells);
+    expect([...at.values()].every(v => v === 1)).toBe(true);
+    // Every dot the picture shows comes in from somewhere in the field, and the drips wait hidden.
+    for (let i = 0; i < g.n; i++) {
+      if (f.size[i] > 0 && f.life[i] !== LIFE.drip) expect(plan.shown[i]).toBe(1);
+      if (f.life[i] === LIFE.drip) expect(plan.shown[i]).toBe(0);
+      expect(plan.delay[i]).toBeGreaterThanOrEqual(0);
+      expect(plan.delay[i]).toBeLessThanOrEqual(plan.last + 1);
+    }
+    // The darkest tone goes first.
+    const wave = (t: number) => { const d: number[] = []; for (let i = 0; i < g.n; i++) if (f.size[i] > 0 && f.life[i] !== LIFE.drip && Math.floor(f.key[i]) === t) d.push(plan.delay[i]); return d.reduce((a, b) => a + b, 0) / d.length; };
+    expect(wave(0)).toBeLessThan(wave(1));
+  });
+
   it('samples words into evenly spaced points, thinned to fit the pool', () => {
     const inside = (x: number, y: number) => (x > 10 && x < 90 && y > 10 && y < 40 ? 1 : 0);
     const all = sampleType(inside, () => [0, 0, 0], 100, 50, 0, 0, 4, 10000);
@@ -186,6 +219,9 @@ describe('E’s dots', () => {
     for (const p of Object.values(PALETTES)) {
       p.object.forEach((t, k) => expect(dE(t, p.paper)).toBeGreaterThan(k === 3 ? 14 : 40));
       for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) expect(dE(p.object[i], p.object[j])).toBeGreaterThan(28);
+      // The cup's steam stands out from the paper wherever it has its own tone.
+      if (p.steam) expect(dE(p.steam, p.paper)).toBeGreaterThan(30);
     }
+    expect(PALETTES.dawn.steam && PALETTES.day.steam).toBeTruthy();
   });
 });

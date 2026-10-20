@@ -4,10 +4,11 @@ import { SplitText } from 'gsap/SplitText';
 import Lenis from 'lenis';
 import { finePointer, narrow, reducedMotion, WORK } from '../content';
 import { startDots, type Dots } from './dots';
-import { dustFormation, makeGrid, objectFormation, photoFormation, sampleType, staticFormation, withType, type Formation, type Grid } from './field';
+import { buildScene, type Built, type BuildJob } from './build';
+import { FIELD_SIZE, fieldColor, makeGrid, sampleType, withType, type Formation, type Grid } from './field';
 import { hex, type Palette } from './palette';
 import { curtainPainter, peekPainter, portPicture } from './pixels';
-import { ART, coverCrop, layoutFor, SCENE_ORDER, type SceneId } from './scenes';
+import { ART, SCENE_ORDER, type SceneId } from './scenes';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -38,13 +39,53 @@ async function fontsReady(limit = 1100) {
   ]);
 }
 
-const loadImage = (src: string) => new Promise<HTMLImageElement | null>(done => {
-  const img = new Image();
-  img.decoding = 'async';
-  img.onload = () => done(img);
-  img.onerror = () => done(null);
-  img.src = src;
-});
+const offThread = typeof window !== 'undefined' && typeof Worker === 'function' && typeof OffscreenCanvas === 'function' && typeof createImageBitmap === 'function';
+const early = new Map<string, Promise<Blob | null>>();
+const fetchArt = (src: string) => {
+  let p = early.get(src);
+  if (!p) { p = fetch(src).then(r => (r.ok ? r.blob() : null)).catch(() => null); early.set(src, p); }
+  return p;
+};
+
+/** Turns pictures into dots: in a worker where there is one, so it never takes frames from the dots, and on the main
+ *  thread otherwise. */
+function builder() {
+  let worker: Worker | null = null, key = 0;
+  const waiting = new Map<number, (b: Built | null) => void>();
+  if (offThread) {
+    try {
+      worker = new Worker(new URL('./build.worker.ts', import.meta.url), { type: 'module' });
+      worker.onmessage = (e: MessageEvent<{ key: number; built?: Built; error?: string }>) => { waiting.get(e.data.key)?.(e.data.built ?? null); waiting.delete(e.data.key); };
+      worker.onerror = () => { worker?.terminate(); worker = null; waiting.forEach(done => done(null)); waiting.clear(); };
+    } catch { worker = null; }
+  }
+  async function onMain(job: BuildJob): Promise<Built | null> {
+    let img: HTMLImageElement | null = null;
+    if (job.id !== 'work') {
+      // An image that isn't in the page is as wide as its file, which is what the builder reads.
+      img = await new Promise<HTMLImageElement | null>(done => {
+        const el = new Image();
+        el.onload = () => done(el); el.onerror = () => done(null);
+        el.src = ART[job.id].src;
+      });
+      if (!img) return null;
+      await img.decode().catch(() => {});
+    }
+    const canvas = (w: number, h: number) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c.getContext('2d', { willReadFrequently: true }); };
+    return buildScene(job, img, canvas);
+  }
+  return {
+    async build(job: BuildJob): Promise<Built | null> {
+      if (worker) {
+        const blob = job.id === 'work' ? undefined : (await fetchArt(ART[job.id].src)) ?? undefined;
+        const got = await new Promise<Built | null>(done => { const k = ++key; waiting.set(k, done); worker!.postMessage({ ...job, key: k, blob }); });
+        if (got) return got;
+      }
+      return onMain(job);
+    },
+    stop() { worker?.terminate(); worker = null; waiting.forEach(done => done(null)); waiting.clear(); },
+  };
+}
 
 export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
   const still = reducedMotion(), fine = finePointer() && !still, phone = narrow();
@@ -54,6 +95,8 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
     t.addEventListener(type, fn as EventListener, opts);
     off.push(() => t.removeEventListener(type, fn as EventListener, opts));
   };
+  // The picture the page opens on starts coming first.
+  if (offThread) void fetchArt(ART.hero.src);
   let stopped = false, lenis: Lenis | null = null;
   const ctx = gsap.context(() => {}, root);
 
@@ -61,57 +104,25 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
   const canvas = root.querySelector<HTMLCanvasElement>('[data-dots]')!;
   const size = () => [canvas.clientWidth || innerWidth, canvas.clientHeight || innerHeight] as const;
   let grid: Grid = makeGrid(...size(), phone);
-  const dots: Dots | null = typeof window.WebGLRenderingContext === 'function' ? startDots(canvas, grid, { still, phone, dark: hex(palette.object[0]) }) : null;
+  const dots: Dots | null = typeof window.WebGLRenderingContext === 'function' ? startDots(canvas, grid, { still, phone, dark: hex(palette.object[0]), field: fieldColor(palette) }) : null;
   // Without WebGL the pictures are still drawn as dots, just once each and without moving.
   const flat = dots ? null : canvas.getContext('2d');
   if (!dots && !flat) canvas.style.display = 'none';
 
-  const photos = new Map<SceneId, HTMLImageElement | null>();
-  const loading = new Map<SceneId, Promise<HTMLImageElement | null>>();
-  const photo = (id: SceneId) => {
-    if (id === 'work') return Promise.resolve(null);
-    let p = loading.get(id);
-    if (!p) { p = loadImage(ART[id].src).then(img => { photos.set(id, img); return img; }); loading.set(id, p); }
-    return p;
-  };
+  // Each part's dots for the current grid, built once, off the main thread where the browser allows.
+  const build = builder();
+  off.push(() => build.stop());
+  const job = (id: SceneId, plan = false): BuildJob => ({ id, w: grid.w, h: grid.h, phone, still, palette: palette.name, plan });
   const formations = new Map<SceneId, Formation>();
-  /** A part's dots, built the first time they're needed for this screen size. */
-  function formation(id: SceneId): Formation | null {
-    let f = formations.get(id);
-    if (f) return f;
-    if (id === 'work') f = dustFormation(grid, palette);
-    else {
-      const img = photos.get(id);
-      if (!img) return null;
-      const art = ART[id], layout = layoutFor(id, phone), seed = SCENE_ORDER.indexOf(id) + 1;
-      if (art.kind === 'object') {
-        // The whole picture, at about three pixels to a dot: the dots read the pink and the four tones off it
-        // themselves, and that's plenty to keep the plane's thin trail without keying every pixel of the file.
-        const across = ((layout.rect[2] - layout.rect[0]) * grid.w) / grid.cell, k = Math.min(1, (across * 3) / img.naturalWidth);
-        const c = document.createElement('canvas');
-        c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
-        const cx = c.getContext('2d', { willReadFrequently: true });
-        if (!cx) return null;
-        cx.imageSmoothingQuality = 'high';
-        cx.drawImage(img, 0, 0, c.width, c.height);
-        f = objectFormation(grid, layout, art, cx.getImageData(0, 0, c.width, c.height), palette, { seed, drips: id === 'hero', still });
-        formations.set(id, f);
-        return f;
-      }
-      const [x0, y0, x1, y1] = layout.rect;
-      const rw = (x1 - x0) * grid.w, rh = (y1 - y0) * grid.h;
-      const pw = Math.max(1, Math.round(rw / grid.cell)), ph = Math.max(1, Math.round(rh / grid.cell));
-      const c = document.createElement('canvas');
-      c.width = pw; c.height = ph;
-      const cx = c.getContext('2d', { willReadFrequently: true });
-      if (!cx) return null;
-      const crop = coverCrop(img.naturalWidth, img.naturalHeight, rw, rh, art.focus ?? [0.5, 0.5]);
-      cx.imageSmoothingQuality = 'high';
-      cx.drawImage(img, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, pw, ph);
-      f = photoFormation(grid, layout, art, cx.getImageData(0, 0, pw, ph), palette, seed);
+  let pending = new Map<SceneId, Promise<Formation | null>>();
+  function formationFor(id: SceneId): Promise<Formation | null> {
+    let p = pending.get(id);
+    if (!p) {
+      const g = grid;
+      p = build.build(job(id)).then(b => { if (!b || g !== grid) return null; formations.set(id, b.f); return b.f; });
+      pending.set(id, p);
     }
-    formations.set(id, f);
-    return f;
+    return p;
   }
 
   function paintFlat(f: Formation) {
@@ -188,14 +199,13 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
     });
   }
 
-  let scene: SceneId | null = null, wanted: SceneId = 'hero', built = false, splitDone = false;
-  /** Move the dots to a part's photo. The first time, they come out of the static. */
+  let scene: SceneId | null = null, wanted: SceneId = 'hero', started = false, splitDone = false;
+  /** Move the dots to a part's picture. Until the intro has started, this only notes where the page is. */
   async function go(id: SceneId) {
     wanted = id;
-    await photo(id);
-    if (stopped || wanted !== id || id === scene) return;
-    const f = formation(id);
-    if (!f) return;
+    if (!started) return;
+    const f = await formationFor(id);
+    if (stopped || wanted !== id || id === scene || !f) return;
     const from = scene;
     scene = id;
     const at = SCENE_ORDER.indexOf(id), was = from ? SCENE_ORDER.indexOf(from) : 0;
@@ -203,12 +213,6 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
     swap(captionEl, caption, at >= was ? 1 : -1);
     if (!dots) { paintFlat(f); return; }
     if (still) { dots.set(f); return; }
-    if (!built) {
-      built = true;
-      // Once the plane has settled, grains start dripping off it, until the visitor scrolls.
-      dots.morph(f, { dur: 1.7, order: 'center', spread: 1.3, onDone: () => { if (id === 'hero') drip(); } });
-      return;
-    }
     // Leaving the tagline: the letters become dots where they stand, and they go first.
     if (from === 'hero' && tagShown && splitDone && tagInView()) {
       const typed = withType(grid, formations.get('hero')!, tagGlyphs(), palette);
@@ -285,18 +289,23 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
       const [w, h] = size();
       if (Math.abs(w - grid.w) < 2 && Math.abs(h - grid.h) < 2) return;
       grid = makeGrid(w, h, phone);
-      formations.clear();
-      const f = formation(scene ?? 'hero') ?? staticFormation(grid, palette);
-      if (dots) dots.reset(grid, f); else paintFlat(f);
+      formations.clear(); pending = new Map();
+      const g = grid;
+      void formationFor(scene ?? first).then(f => {
+        if (stopped || g !== grid) return;
+        if (dots) dots.reset(grid, f); else if (f) paintFlat(f);
+      });
       if (!tagShown) showTag(true);
       followTag = false;
     }, 250);
   });
   off.push(() => window.clearTimeout(resizeT));
 
-  // The page opens on static, which the first photo is built out of. With reduced motion there's no static: the
-  // first photo just appears.
-  if (dots && !still) dots.set(staticFormation(grid, palette));
+  // The page opens on a quiet field of still dots that fades in as soon as there's something to draw it with. The
+  // first picture assembles out of it. With reduced motion there's no field: the picture just appears.
+  const first = sceneAtMiddle();
+  const showDots = () => root.classList.add('has-dots');
+  if (dots && !still) { dots.field(); requestAnimationFrame(showDots); }
 
   // ---- smooth scrolling, on the same clock as GSAP --------------------------------------------------------------
   const tick = (t: number) => lenis?.raf(t * 1000);
@@ -426,31 +435,55 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
     });
   }
 
-  // ---- everything that needs the type measured first ---------------------------------------------------------
+  // ---- the intro: nothing moves until everything it needs is ready ---------------------------------------------
+  // The first picture's dots and the plan for assembling it are worked out in the worker while the field is up and
+  // the font loads. Then, with the dots held still, the tagline is split and the triggers measured, which takes a
+  // frame or two that nobody sees. One frame later the dots and the words start together, from rest.
   const ready = () => root.classList.add('is-ready');
   if (still) ready();
-  const first = sceneAtMiddle();
-  // The photo for where the page opens comes first. The rest load after it, a little at a time.
-  const firstPhoto = photo(first);
-  Promise.all([fontsReady(), Promise.race([firstPhoto, new Promise(r => setTimeout(r, 1800))])]).then(() => {
+  const g0 = grid;
+  const firstBuilt = build.build(job(first, !!dots && !still)).then(b => {
+    if (!b || g0 !== grid) return null;
+    formations.set(first, b.f); pending.set(first, Promise.resolve(b.f));
+    return b;
+  });
+  /** The rest of the pictures, one at a time, once the intro is over. */
+  function later() {
+    const rest = SCENE_ORDER.filter(id => !formations.has(id));
+    let k = 0;
+    const next = () => { if (!stopped && k < rest.length) void formationFor(rest[k++]).then(() => window.setTimeout(next, 60)); };
+    window.setTimeout(next, 300);
+  }
+  Promise.all([fontsReady(), Promise.race([firstBuilt, new Promise<null>(r => setTimeout(() => r(null), 2500))])]).then(([, b]) => {
     if (stopped) return;
     ScrollTrigger.refresh();
+    let words: gsap.core.Timeline | undefined;
     ctx.add(() => {
-      if (!still) { hero(); quiet(); hello(); }
+      if (!still) { words = hero(); quiet(); hello(); }
       triggers();
     });
-    void go(sceneAtMiddle());
     ready();
-    let k = 0;
-    const rest = SCENE_ORDER.filter(id => id !== first);
-    // Each one is turned into dots while the page is idle, so reaching a part never has to wait for that.
-    const idle = (fn: () => void) => (typeof requestIdleCallback === 'function' ? requestIdleCallback(fn, { timeout: 800 }) : setTimeout(fn, 60));
-    const next = () => {
-      if (stopped || k >= rest.length) return;
-      const id = rest[k++];
-      void photo(id).then(() => idle(() => { if (!stopped) formation(id); window.setTimeout(next, 80); }));
+    if (b) {
+      scene = first;
+      if (first !== 'hero') swap(captionEl, first === 'work' ? '' : ART[first].caption, 1);
+      if (!dots) { paintFlat(b.f); showDots(); }
+      else if (still || !b.plan) { dots.set(b.f); showDots(); }
+      // Once the plane has settled, grains start dripping off it, until the visitor scrolls.
+      else dots.intro(b.f, b.plan, { onDone: () => { if (first === 'hero') drip(); later(); } });
+    }
+    let ticks = 0;
+    const begin = () => {
+      if (++ticks < 2) return;
+      gsap.ticker.remove(begin);
+      performance.mark?.('lab-e:intro');
+      dots?.play();
+      words?.play();
+      started = true;
+      if (!b || !dots || still || !b.plan) later();
+      if (wanted !== scene) void go(wanted);
     };
-    window.setTimeout(next, 600);
+    gsap.ticker.add(begin);
+    off.push(() => gsap.ticker.remove(begin));
   });
 
   // The hero's moment: each beat of the tagline moves the way it reads, while the dots fly in out of the static.
@@ -464,7 +497,7 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
     const path = l1.querySelector('path')!, beam = l3.querySelector('.e-tag__beam')!;
     const head = root.querySelector('.e-head')!, foot = root.querySelector('[data-hero-foot]')!;
 
-    gsap.timeline({ delay: 0.15, onComplete: () => { splitDone = true; } })
+    const words = gsap.timeline({ paused: true, delay: 0.15, onComplete: () => { splitDone = true; } })
       // "I design it," : the letters come up out of their masks and lean upright, then a pen line draws under design.
       .from(s1.chars, { yPercent: 115, rotate: 10, skewX: -12, duration: 1.15, stagger: 0.035, ease: POWER }, 0.1)
       .fromTo(path, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.9, ease: 'expo.inOut' }, 0.65)
@@ -483,6 +516,7 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
     gsap.to(l2, { xPercent: 6, ease: 'none', scrollTrigger: away });
     gsap.to(l3, { xPercent: -2, yPercent: -18, ease: 'none', scrollTrigger: away });
     gsap.to(foot, { opacity: 0, y: -30, ease: 'none', scrollTrigger: { ...away, end: '40% top' } });
+    return words;
   }
 
   // Everything else is quiet: a block rises a few pixels and fades in, all of it together, once.
@@ -540,7 +574,7 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
       lenis?.destroy();
       ctx.revert();
       dots?.stop();
-      root.classList.remove('is-ready', 'has-cursor');
+      root.classList.remove('is-ready', 'has-cursor', 'has-dots');
     },
   };
 }

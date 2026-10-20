@@ -21,6 +21,18 @@ const LABELS: Record<SceneId, string> = {
   design: 'Design', product: 'Product taste', work: 'The work', contact: 'Say hello',
 };
 
+/** Runs `fn` just after the browser reports its first contentful paint, or after 400 ms if it doesn't say. */
+function afterFirstPaint(fn: () => void) {
+  let done = false, t = 0, obs: PerformanceObserver | undefined;
+  const go = () => { if (done) return; done = true; obs?.disconnect(); window.clearTimeout(cap); t = window.setTimeout(fn); };
+  const cap = window.setTimeout(go, 400);
+  try {
+    obs = new PerformanceObserver(list => { if (list.getEntries().some(e => e.name === 'first-contentful-paint')) go(); });
+    obs.observe({ type: 'paint', buffered: true });
+  } catch { /* no paint timing: the cap starts it */ }
+  return () => { done = true; obs?.disconnect(); window.clearTimeout(cap); window.clearTimeout(t); };
+}
+
 /** A part's opening: its number, a rule and its name. */
 function Rule({ id }: { id: SceneId }) {
   return <div className="e-rule" aria-hidden="true"><span>{pad(SCENE_ORDER.indexOf(id))} / {pad(SCENE_ORDER.length - 1)}</span><i data-rule /><span>{LABELS[id]}</span></div>;
@@ -45,8 +57,12 @@ export default function DirectionE() {
     html.dataset.labE = palette.name;
     html.style.setProperty('--e-paper', palette.paper);
     if (meta) meta.content = palette.paper;
-    motion.current = startDirectionE(root.current, palette);
+    // The motion starts once the words have painted, so the line under the tagline never waits on the dots, their
+    // pictures or their worker.
+    const el = root.current;
+    const cancel = afterFirstPaint(() => { motion.current = startDirectionE(el, palette); });
     return () => {
+      cancel();
       motion.current?.stop(); motion.current = null;
       delete html.dataset.labE;
       html.style.removeProperty('--e-paper');

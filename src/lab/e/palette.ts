@@ -21,6 +21,8 @@ export type Palette = {
    *  day, when the paper is nearly white), and at night the navy becomes the violet so the pictures don't sink
    *  into the dark. A test keeps every one of them clear of the paper. */
   object: [navy: string, teal: string, peach: string, cream: string];
+  /** The cup's steam, where the cream would be too close to the paper to see. */
+  steam?: string;
   dark: boolean;
 };
 
@@ -28,12 +30,12 @@ export const PALETTES: Record<TimeName, Palette> = {
   dawn: {
     name: 'dawn', paper: '#f4d5e0', ink: '#1b2140', accent: '#e3a13f', dark: false,
     tones: ['#1b2140', '#33497a', '#3d8790', '#86b4cc', '#b9cbe6', '#e99ebf', '#f5bfa2', '#fdeae4'],
-    object: ['#1b2140', '#3d8790', '#e3a13f', '#fff7f3'],
+    object: ['#1b2140', '#3d8790', '#e3a13f', '#fff7f3'], steam: '#7d9cc4',
   },
   day: {
     name: 'day', paper: '#eef2ee', ink: '#13284f', accent: '#dc9c32', dark: false,
     tones: ['#13284f', '#2a5aa6', '#4f98c8', '#a7d1ea', '#477f57', '#a3be68', '#ecd7a2', '#fbf9f1'],
-    object: ['#13284f', '#2a5aa6', '#dc9c32', '#fff3c9'],
+    object: ['#13284f', '#2a5aa6', '#dc9c32', '#fff3c9'], steam: '#7fa8d4',
   },
   golden: {
     name: 'golden', paper: '#f6e0c6', ink: '#2e1a33', accent: '#d4872a', dark: false,

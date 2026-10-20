@@ -18,6 +18,9 @@ html.lenis, html.lenis body { height: auto; }
 
 /* ---- the dots: one fixed canvas under everything, as tall as the screen gets so a phone's bar doesn't resize it */
 .e-dots { position: fixed; left: 0; top: 0; z-index: 0; width: 100vw; height: 100vh; height: 100lvh; display: block; pointer-events: none; transition: opacity 0.5s var(--lab-ease); }
+/* It's paper until there are dots to draw, then the quiet field fades in under the words. */
+.lab-e:not(.has-dots) .e-dots { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .e-dots { transition: none; } }
 .lab-e main { position: relative; z-index: 1; text-shadow: var(--e-halo); }
 
 /* ---- the running header: the name, and what the dots are showing ------------------------------------------- */
@@ -39,6 +42,8 @@ html.lenis, html.lenis body { height: auto; }
 .e-tag__l { display: block; white-space: nowrap; width: max-content; }
 /* The tagline waits for its font so it can be split. The line under it doesn't, so it's there from the first paint. */
 .lab-e:not(.is-ready) .e-tag { visibility: hidden; }
+/* The header waits with it, or it would show, hide while the words are split, and fade back in. */
+.lab-e:not(.is-ready) .e-head { opacity: 0; }
 .e-tag__l--2 { margin-left: 0.9em; font-style: italic; letter-spacing: -0.035em; }
 .e-tag__l--3 { position: relative; margin-left: 0.3em; padding-bottom: 0.06em; }
 .e-tag__design { position: relative; display: inline-block; }
