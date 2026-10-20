@@ -14,7 +14,7 @@ import type { RGB } from './palette';
 
 const VERT = `
 attribute vec3 aFrom; attribute vec3 aTo; attribute vec3 aColF; attribute vec3 aColT; attribute vec4 aMeta; attribute vec4 aAux; attribute vec2 aOff;
-uniform vec2 uView; uniform float uClock, uDur, uTime, uCell, uDpr, uIdle, uTypeFade, uFocusAt, uLoose; uniform vec2 uShiftF, uShiftT, uDrip; uniform vec3 uDark;
+uniform vec2 uView; uniform float uClock, uDur, uTime, uCell, uDpr, uIdle, uTypeFade, uFocusAt, uLoose; uniform vec2 uShiftF, uShiftT, uDrip, uLift; uniform vec3 uDark;
 varying vec3 vCol; varying float vBlur;
 const float PI = 3.14159265, TAU = 6.2831853;
 float h(float n) { return fract(sin(n) * 43758.5453); }
@@ -83,7 +83,7 @@ vec2 dust(vec2 p, float s, float t) {
 void main() {
   float seed = aMeta.z, delay = aMeta.w;
   vec2 from = aFrom.xy + (aMeta.x > 19.5 ? uShiftF : vec2(0.0));
-  vec2 to = aTo.xy + (aMeta.y > 19.5 ? uShiftT : vec2(0.0));
+  vec2 to = aTo.xy + (aMeta.y > 19.5 ? uShiftT : uLift);
   float t = clamp((uClock - delay) / uDur, 0.0, 1.0);
   float e = t < 0.5 ? 4.0 * t * t * t : 1.0 - pow(-2.0 * t + 2.0, 3.0) / 2.0;
   vec2 d = to - from; float len = length(d);
@@ -160,6 +160,9 @@ export type Dots = {
   adopt: (f: Formation) => void;
   /** How far the words a type formation was sampled from have scrolled since. */
   shift: (from: [number, number], to: [number, number]) => void;
+  /** Moves where the picture is going (and, once it's there, where it is) down the screen by `y`, so it can sit in
+   *  a space in the page and scroll with it. The next move starts from where it is and clears it. */
+  lift: (y: number) => void;
   typeFade: (v: number) => void;
   /** Grains drip off the hero's picture if they set off between these two times (seconds, on the frame clock). */
   drip: (from: number, stop: number) => void;
@@ -195,7 +198,7 @@ export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still:
   gl.vertexAttribPointer(ATTRS.length, 2, gl.FLOAT, false, 0, 0);
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-  type Uniforms = Record<'view' | 'clock' | 'dur' | 'time' | 'cell' | 'dpr' | 'idle' | 'fade' | 'shf' | 'st' | 'dark' | 'focusAt' | 'loose' | 'drip', WebGLUniformLocation | null>;
+  type Uniforms = Record<'view' | 'clock' | 'dur' | 'time' | 'cell' | 'dpr' | 'idle' | 'fade' | 'shf' | 'st' | 'lift' | 'dark' | 'focusAt' | 'loose' | 'drip', WebGLUniformLocation | null>;
   let u: Uniforms | null = null;
   /** Once the program has linked: use it, or give up on the dots if it didn't. */
   function linked() {
@@ -204,7 +207,7 @@ export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still:
     if (!gl!.getProgramParameter(prog, gl!.LINK_STATUS)) { stopped = true; canvas.style.visibility = 'hidden'; return false; }
     gl!.useProgram(prog);
     const U = (name: string) => gl!.getUniformLocation(prog, name);
-    u = { view: U('uView'), clock: U('uClock'), dur: U('uDur'), time: U('uTime'), cell: U('uCell'), dpr: U('uDpr'), idle: U('uIdle'), fade: U('uTypeFade'), shf: U('uShiftF'), st: U('uShiftT'),
+    u = { view: U('uView'), clock: U('uClock'), dur: U('uDur'), time: U('uTime'), cell: U('uCell'), dpr: U('uDpr'), idle: U('uIdle'), fade: U('uTypeFade'), shf: U('uShiftF'), st: U('uShiftT'), lift: U('uLift'),
       dark: U('uDark'), focusAt: U('uFocusAt'), loose: U('uLoose'), drip: U('uDrip') };
     return true;
   }
@@ -214,7 +217,7 @@ export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still:
   let data = new Float32Array(0), keys = new Float32Array(0), off = new Float32Array(0), vel = new Float32Array(0);
   let slot = new Uint32Array(0), owner = new Int32Array(0), active = new Uint8Array(0), list: number[] = [];
   let held = false, fresh = false, clock = 1e3, dur = 1, end = 1, time = 0, fade = 1, focusAt = -1e3, loose = 0, dripFrom = 1e9, dripStop = 1e9, stopped = false, done: (() => void) | undefined, dirty = true, offDirty = false;
-  let shiftF: [number, number] = [0, 0], shiftT: [number, number] = [0, 0];
+  let shiftF: [number, number] = [0, 0], shiftT: [number, number] = [0, 0], liftY = 0;
   let px = -1e4, py = -1e4, pvx = 0, pvy = 0, pointerOn = false, lastT = 0;
 
   function alloc(g: Grid) {
@@ -236,7 +239,7 @@ export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still:
     const o = i * STRIDE, seed = data[o + 14];
     const t = Math.min(1, Math.max(0, (clock - data[o + 15]) / dur)), e = ease(t);
     const fx = data[o] + (data[o + 12] > TYPE ? shiftF[0] : 0), fy = data[o + 1] + (data[o + 12] > TYPE ? shiftF[1] : 0);
-    const tx = data[o + 3] + (data[o + 13] > TYPE ? shiftT[0] : 0), ty = data[o + 4] + (data[o + 13] > TYPE ? shiftT[1] : 0);
+    const tx = data[o + 3] + (data[o + 13] > TYPE ? shiftT[0] : 0), ty = data[o + 4] + (data[o + 13] > TYPE ? shiftT[1] : liftY);
     const dx = tx - fx, dy = ty - fy, len = Math.hypot(dx, dy);
     const bend = (hash(seed * 3.1) - 0.5) * Math.min(len, 600) * 0.24 * Math.sin(Math.PI * e);
     const x = fx + dx * e + (len > 0.5 ? (-dy / len) * bend : 0), y = fy + dy * e + (len > 0.5 ? (dx / len) * bend : 0);
@@ -279,7 +282,7 @@ export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still:
     held = false;
     for (let i = 0; i < n; i++) { place(f, i, i, true); place(f, i, i, false); slot[i] = i; }
     index(f, null);
-    clock = 1e3; dur = 1; end = 1; focusAt = -1e3; done = undefined;
+    clock = 1e3; dur = 1; end = 1; focusAt = -1e3; done = undefined; liftY = 0;
     upload();
   }
 
@@ -294,7 +297,7 @@ export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still:
       keys[i] = cell ? x / grid.w : -1; slot[i] = i;
     }
     owner.fill(-1);
-    held = false; clock = 1e3; dur = 1; end = 1; focusAt = -1e3; done = undefined;
+    held = false; clock = 1e3; dur = 1; end = 1; focusAt = -1e3; done = undefined; liftY = 0;
     upload();
   }
 
@@ -311,7 +314,7 @@ export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still:
       slot[i] = i;
     }
     index(f, null);
-    shiftF = [0, 0]; shiftT = [0, 0]; fade = 1;
+    shiftF = [0, 0]; shiftT = [0, 0]; liftY = 0; fade = 1;
     dur = o.dur ?? 1.5; end = plan.last + dur; focusAt = end - 0.15; loose = 1;
     clock = 0; held = true; done = o.onDone;
     upload();
@@ -325,7 +328,7 @@ export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still:
     for (let i = 0; i < n; i++) typed[i] = data[i * STRIDE + 13] > TYPE ? 1 : 0;
     for (let i = 0; i < n; i++) snapshot(i);
     // The snapshot has the scroll baked in, and the caller sets where the next words are.
-    shiftF = [0, 0]; shiftT = [0, 0]; fade = 1;
+    shiftF = [0, 0]; shiftT = [0, 0]; liftY = 0; fade = 1;
     const to = pair(keys, f);
     slot = to;
     dur = o.dur ?? 1.25;
@@ -371,11 +374,13 @@ export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still:
   function push(dt: number) {
     const speed = Math.min(1, Math.hypot(pvx, pvy) / 1400), strength = (0.3 + speed * 0.7) * 6000;
     const c0 = Math.max(0, Math.floor((px - R) / grid.cell)), c1 = Math.min(grid.cols - 1, Math.floor((px + R) / grid.cell));
-    const r0 = Math.max(0, Math.floor((py - R) / grid.cell)), r1 = Math.min(grid.rows - 1, Math.floor((py + R) / grid.cell));
+    // The cells are where the picture was built, so a lifted picture is pushed from where it's drawn.
+    const ly = py - liftY;
+    const r0 = Math.max(0, Math.floor((ly - R) / grid.cell)), r1 = Math.min(grid.rows - 1, Math.floor((ly + R) / grid.cell));
     for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
       const i = owner[r * grid.cols + c];
       if (i < 0) continue;
-      const hx = (c + 0.5) * grid.cell - px, hy = (r + 0.5) * grid.cell - py, d = Math.hypot(hx, hy);
+      const hx = (c + 0.5) * grid.cell - px, hy = (r + 0.5) * grid.cell - ly, d = Math.hypot(hx, hy);
       if (d >= R || d < 0.01) continue;
       const f = (1 - d / R) ** 2 * strength * dt;
       // Pushed out from the pointer, and a little along the way it's going.
@@ -431,6 +436,7 @@ export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still:
     gl!.uniform1f(at.fade, fade);
     gl!.uniform2f(at.shf, shiftF[0], shiftF[1]);
     gl!.uniform2f(at.st, shiftT[0], shiftT[1]);
+    gl!.uniform2f(at.lift, 0, liftY);
     gl!.uniform3f(at.dark, opts.dark[0], opts.dark[1], opts.dark[2]);
     gl!.uniform1f(at.focusAt, focusAt);
     gl!.uniform1f(at.loose, opts.still ? 0 : loose);
@@ -449,6 +455,7 @@ export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still:
     set, field, intro, morph, adopt, reset, frame,
     play() { if (held) { held = false; fresh = true; } },
     shift(from, to) { shiftF = from; shiftT = to; dirty = true; },
+    lift(y) { if (y !== liftY) { liftY = y; dirty = true; } },
     typeFade(v) { fade = v; dirty = true; },
     drip(from, stop) { dripFrom = from; dripStop = stop; },
     pointer(x, y) {
