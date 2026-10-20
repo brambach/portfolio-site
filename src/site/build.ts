@@ -1,6 +1,6 @@
 import { dustFormation, introPlan, makeGrid, objectFormation, photoFormation, ringFormation, shotFormation, type Formation, type IntroPlan } from './field';
 import { PALETTES, type TimeName } from './palette';
-import { ART, containBox, coverCrop, layoutFor, SCENE_ORDER, workRect, type SceneId } from './scenes';
+import { ART, containBox, coverCrop, layoutFor, SCENE_ORDER, sideways, workRect, type SceneId } from './scenes';
 
 /* Turning a part's picture into dots. It runs in a worker (build.worker.ts) where the browser has one, so none of it
    lands on the main thread while the dots are moving, and on the main thread where it doesn't. Either way it's the
@@ -35,7 +35,7 @@ export function buildScene(job: BuildJob, img: CanvasImageSource & { width: numb
     cx.drawImage(img, 0, 0, pw, ph);
     f = shotFormation(grid, box, cx.getImageData(0, 0, pw, ph), palette);
   } else if (img) {
-    const art = ART[id], layout = layoutFor(id, phone), seed = SCENE_ORDER.indexOf(id) + 1;
+    const art = ART[id], layout = layoutFor(id, phone, sideways(grid.w, grid.h)), seed = SCENE_ORDER.indexOf(id) + 1;
     if (art.kind === 'object') {
       // The whole picture, at about three pixels to a dot: the dots read the pink and the four tones off it
       // themselves, and that's plenty to keep the plane's thin trail without keying every pixel of the file.
