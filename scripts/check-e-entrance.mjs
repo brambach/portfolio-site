@@ -67,11 +67,13 @@ await page.addInitScript((targets) => {
 if (from) {
   await page.goto(from, { waitUntil: 'load' });
   await page.waitForTimeout(3000);
-  const link = page.locator(`a[href="${new URL(url).pathname}"]`).first();
+  const link = page.locator(`a.e-index__link[href="${new URL(url).pathname}"]`).first();
   await link.scrollIntoViewIfNeeded();
   await page.waitForTimeout(1500);
   await link.click();
-  if (touch) { await page.waitForTimeout(800); await page.locator(`a.e-open[href="${new URL(url).pathname}"]`).first().click(); }
+  // On a touch screen the first tap opens the row, and its Open link leaves.
+  await page.waitForTimeout(800);
+  if (await page.locator('.e-index__row.is-open').count()) await page.locator(`a.e-open[href="${new URL(url).pathname}"]`).first().click();
   await page.waitForURL(url, { waitUntil: 'commit' });
 } else await page.goto(url, { waitUntil: 'commit' });
 await page.waitForTimeout(3200);
