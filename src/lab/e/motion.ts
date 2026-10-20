@@ -4,10 +4,10 @@ import { SplitText } from 'gsap/SplitText';
 import Lenis from 'lenis';
 import { finePointer, narrow, reducedMotion, WORK } from '../content';
 import { startDots, type Dots } from './dots';
-import { dustFormation, makeGrid, photoFormation, sampleType, staticFormation, withType, type Formation, type Grid } from './field';
+import { dustFormation, makeGrid, objectFormation, photoFormation, sampleType, staticFormation, withType, type Formation, type Grid } from './field';
 import { hex, type Palette } from './palette';
 import { curtainPainter, peekPainter, portPicture } from './pixels';
-import { coverCrop, layoutFor, PHOTOS, SCENE_ORDER, type SceneId } from './scenes';
+import { ART, coverCrop, layoutFor, SCENE_ORDER, type SceneId } from './scenes';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -15,11 +15,11 @@ gsap.registerPlugin(ScrollTrigger, SplitText);
    once, and every listener added here comes off with it.
 
    Each part of the page has one moment, and it's the dots: when a part reaches the middle of the screen, the dots
-   leave the last photo and fly to their places in the next one. That's a trigger, not a scrub, so the scene
-   always finishes the move it started, whatever the scroll does next. Everything else is quiet. Blocks rise a
-   few pixels and fade in once, and the type moves the way B's does.
+   leave the last object and fly to their places in the next one, arrive a little loose and snap sharp. That's a
+   trigger, not a scrub, so the scene always finishes the move it started, whatever the scroll does next.
+   Everything else is quiet. Blocks rise a few pixels and fade in once, and the type moves the way B's does.
 
-   With reduced motion nothing splits or flies. Each part's photo is drawn as still dots when you reach it. */
+   With reduced motion nothing splits or flies. Each part's picture is drawn as still dots when you reach it. */
 
 export type EMotion = { stop: () => void; curtain: (name: string, href: string) => void };
 
@@ -61,8 +61,8 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
   const canvas = root.querySelector<HTMLCanvasElement>('[data-dots]')!;
   const size = () => [canvas.clientWidth || innerWidth, canvas.clientHeight || innerHeight] as const;
   let grid: Grid = makeGrid(...size(), phone);
-  const dots: Dots | null = typeof window.WebGLRenderingContext === 'function' ? startDots(canvas, grid, { still, phone }) : null;
-  // Without WebGL the photos are still drawn as dots, just once each and without moving.
+  const dots: Dots | null = typeof window.WebGLRenderingContext === 'function' ? startDots(canvas, grid, { still, phone, dark: hex(palette.object[0]) }) : null;
+  // Without WebGL the pictures are still drawn as dots, just once each and without moving.
   const flat = dots ? null : canvas.getContext('2d');
   if (!dots && !flat) canvas.style.display = 'none';
 
@@ -71,7 +71,7 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
   const photo = (id: SceneId) => {
     if (id === 'work') return Promise.resolve(null);
     let p = loading.get(id);
-    if (!p) { p = loadImage(PHOTOS[id].src).then(img => { photos.set(id, img); return img; }); loading.set(id, p); }
+    if (!p) { p = loadImage(ART[id].src).then(img => { photos.set(id, img); return img; }); loading.set(id, p); }
     return p;
   };
   const formations = new Map<SceneId, Formation>();
@@ -83,17 +83,32 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
     else {
       const img = photos.get(id);
       if (!img) return null;
-      const layout = layoutFor(id, phone), [x0, y0, x1, y1] = layout.rect;
+      const art = ART[id], layout = layoutFor(id, phone), seed = SCENE_ORDER.indexOf(id) + 1;
+      if (art.kind === 'object') {
+        // The whole picture, at about three pixels to a dot: the dots read the pink and the four tones off it
+        // themselves, and that's plenty to keep the plane's thin trail without keying every pixel of the file.
+        const across = ((layout.rect[2] - layout.rect[0]) * grid.w) / grid.cell, k = Math.min(1, (across * 3) / img.naturalWidth);
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
+        const cx = c.getContext('2d', { willReadFrequently: true });
+        if (!cx) return null;
+        cx.imageSmoothingQuality = 'high';
+        cx.drawImage(img, 0, 0, c.width, c.height);
+        f = objectFormation(grid, layout, art, cx.getImageData(0, 0, c.width, c.height), palette, { seed, drips: id === 'hero', still });
+        formations.set(id, f);
+        return f;
+      }
+      const [x0, y0, x1, y1] = layout.rect;
       const rw = (x1 - x0) * grid.w, rh = (y1 - y0) * grid.h;
       const pw = Math.max(1, Math.round(rw / grid.cell)), ph = Math.max(1, Math.round(rh / grid.cell));
       const c = document.createElement('canvas');
       c.width = pw; c.height = ph;
       const cx = c.getContext('2d', { willReadFrequently: true });
       if (!cx) return null;
-      const crop = coverCrop(img.naturalWidth, img.naturalHeight, rw, rh, PHOTOS[id].focus);
+      const crop = coverCrop(img.naturalWidth, img.naturalHeight, rw, rh, art.focus ?? [0.5, 0.5]);
       cx.imageSmoothingQuality = 'high';
       cx.drawImage(img, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, pw, ph);
-      f = photoFormation(grid, layout, PHOTOS[id], [img.naturalWidth, img.naturalHeight], cx.getImageData(0, 0, pw, ph), palette, SCENE_ORDER.indexOf(id) + 1);
+      f = photoFormation(grid, layout, art, cx.getImageData(0, 0, pw, ph), palette, seed);
     }
     formations.set(id, f);
     return f;
@@ -184,13 +199,14 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
     const from = scene;
     scene = id;
     const at = SCENE_ORDER.indexOf(id), was = from ? SCENE_ORDER.indexOf(from) : 0;
-    const caption = id === 'work' ? '' : PHOTOS[id].caption;
+    const caption = id === 'work' ? '' : ART[id].caption;
     swap(captionEl, caption, at >= was ? 1 : -1);
     if (!dots) { paintFlat(f); return; }
     if (still) { dots.set(f); return; }
     if (!built) {
       built = true;
-      dots.morph(f, { dur: 1.7, order: 'center', spread: 1.3 });
+      // Once the plane has settled, grains start dripping off it, until the visitor scrolls.
+      dots.morph(f, { dur: 1.7, order: 'center', spread: 1.3, onDone: () => { if (id === 'hero') drip(); } });
       return;
     }
     // Leaving the tagline: the letters become dots where they stand, and they go first.
@@ -207,7 +223,7 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
       const typed = withType(grid, f, tagGlyphs(), palette);
       followTag = true;
       dots.morph(typed, {
-        dur: 1.3, order: 'sweep',
+        dur: 1.3, order: 'sweep', focus: false,
         onDone: () => {
           showTag(true, 0.35);
           ctx.add(() => gsap.fromTo(fadeT, { v: 1 }, { v: 0, duration: 0.35, ease: 'power2.out', onUpdate: () => dots.typeFade(fadeT.v), onComplete: () => { followTag = false; } }));
@@ -218,6 +234,17 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
     dots.morph(f);
   }
   const fadeT = { v: 1 };
+
+  // ---- the scroll cue: a slow trickle of grains off the bottom of the plane, past the bottom of the screen ----
+  // It's the dots, so there's nothing in the page for it, and the line under the tagline stays the first thing
+  // painted. Scrolling stops it for good: grains already falling finish, and no new ones set off.
+  let scrolled = false, dripAt = 1e9;
+  const drip = () => { if (dots && !still && !scrolled) { dripAt = performance.now() / 1000; dots.drip(dripAt, 1e9); } };
+  on(window, 'scroll', () => {
+    if (scrolled || window.scrollY < 4) return;
+    scrolled = true;
+    dots?.drip(dripAt, performance.now() / 1000);
+  }, { passive: true });
   const tagInView = () => { const r = tag.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; };
 
   // The part in the middle of the screen is the one the dots make.
@@ -448,8 +475,7 @@ export function startDirectionE(root: HTMLElement, palette: Palette): EMotion {
       // "and build it." : the letters go up like columns from the baseline, middle first, and a beam goes in under them.
       .from(s3.chars, { scaleY: 0, transformOrigin: '50% 100%', duration: 0.75, stagger: { each: 0.035, from: 'center' }, ease: EXPO }, 0.95)
       .fromTo(beam, { scaleX: 0 }, { scaleX: 1, duration: 0.8, ease: 'expo.inOut' }, 1.2)
-      .from(head, { opacity: 0, y: -12, duration: 1, ease: EXPO }, 1.1)
-      .from(foot.querySelector('.e-hero__cue'), { y: 16, opacity: 0, duration: 1, ease: EXPO }, 1.4);
+      .from(head, { opacity: 0, y: -12, duration: 1, ease: EXPO }, 1.1);
 
     // Scrolling away, the three lines drift apart a little, at different speeds.
     const away = { trigger: '.e-hero', start: 'top top', end: 'bottom top', scrub: 0.6 };

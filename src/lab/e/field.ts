@@ -1,5 +1,5 @@
 import { hex, lum, type Palette, type RGB } from './palette';
-import { coverCrop, LIFE, type Layout, type Photo } from './scenes';
+import { containBox, LIFE, type Art, type Layout } from './scenes';
 
 /* The dots, as numbers. Nothing here touches the page, so it's all testable.
 
@@ -9,15 +9,17 @@ import { coverCrop, LIFE, type Layout, type Photo } from './scenes';
    position across the screen, and the dot at each rank goes to the slot at the same rank, so dark dots go to dark
    places and light to light, and each tone sweeps across together instead of scattering. */
 
-export type Grid = { w: number; h: number; cell: number; cols: number; rows: number; cells: number; typeSlots: number; n: number; typeGap: number };
+export type Grid = { w: number; h: number; cell: number; cols: number; rows: number; cells: number; typeSlots: number; n: number; typeGap: number; drips: number };
 
-/** One dot per cell. Cells grow on big screens so there are never more than about 30,000 dots, and phones get
- *  fewer. */
+/** One dot per cell, plus the pool. Cells are big enough that the objects read as bold, crisp dots (9px on a
+ *  laptop, 7 on a phone), and grow on big screens so there are never more than about 30,000 dots, and phones get
+ *  fewer. The tagline's dots keep their own finer spacing, so the words stay sharp. The last few dots of the pool
+ *  are the ones that drip off the hero's picture. */
 export function makeGrid(w: number, h: number, phone: boolean): Grid {
-  const budget = phone ? 9000 : 30000;
-  const cell = Math.max(phone ? 6.5 : 7, Math.sqrt((w * h) / budget));
+  const budget = phone ? 9000 : 30000, fine = Math.max(phone ? 6.5 : 7, Math.sqrt((w * h) / budget));
+  const cell = Math.max(phone ? 7 : 9, fine);
   const cols = Math.ceil(w / cell), rows = Math.ceil(h / cell), cells = cols * rows, typeSlots = phone ? 2600 : 5200;
-  return { w, h, cell, cols, rows, cells, typeSlots, n: cells + typeSlots, typeGap: cell * (phone ? 0.62 : 0.7) };
+  return { w, h, cell, cols, rows, cells, typeSlots, n: cells + typeSlots, typeGap: fine * (phone ? 0.62 : 0.7), drips: phone ? 18 : 28 };
 }
 
 export type Formation = {
@@ -27,6 +29,8 @@ export type Formation = {
   size: Float32Array;
   col: Float32Array;
   life: Float32Array;
+  /** Two numbers per slot that go with its life (see LIFE in scenes.ts). */
+  aux: Float32Array;
   /** Where the slot ranks. Hidden slots rank below every tone. */
   key: Float32Array;
   order: Uint32Array;
@@ -57,6 +61,13 @@ export function tonesOf(p: Palette): Tones {
   return t;
 }
 
+/** The palette's four object tones with the paper last. A tone's rank is its place in the art (navy, teal,
+ *  peach, cream), so a morph sends navy to navy, cream to cream, whatever the palette makes of them. */
+export function objectTonesOf(p: Palette): Tones {
+  const rgb = [...p.object, p.paper].map(hex);
+  return { rgb, rank: [0, 1, 2, 3, 4], paper: 4 };
+}
+
 /** The nearest tone to a color, weighting the channels the way eyes do. */
 export function nearest(c: RGB, rgb: RGB[]) {
   let best = 0, bestD = Infinity;
@@ -69,7 +80,7 @@ export function nearest(c: RGB, rgb: RGB[]) {
 }
 
 function empty(n: number): Formation {
-  return { pos: new Float32Array(n * 2), size: new Float32Array(n), col: new Float32Array(n * 3), life: new Float32Array(n), key: new Float32Array(n), order: new Uint32Array(n) };
+  return { pos: new Float32Array(n * 2), size: new Float32Array(n), col: new Float32Array(n * 3), life: new Float32Array(n), aux: new Float32Array(n * 2), key: new Float32Array(n), order: new Uint32Array(n) };
 }
 
 /** Where a slot ranks: its tone first, then a little by where it sits, mostly left to right. */
@@ -100,19 +111,20 @@ function base(g: Grid, rand: () => number) {
 
 export type Pixels = { width: number; height: number; data: Uint8ClampedArray | number[] };
 
-/** A photo as dots. `pixels` is the photo already cropped to the layout's rectangle and scaled to about one pixel
- *  per cell (the page does that with a canvas). */
-export function photoFormation(g: Grid, layout: Layout, photo: Photo, photoSize: [number, number], pixels: Pixels, palette: Palette, seed = 7): Formation {
-  const rand = seeded(seed), f = base(g, rand), tones = tonesOf(palette), paper = tones.rgb[tones.paper];
+/** A photo as dots, for the portrait. `pixels` is the photo already cropped to the layout's rectangle and scaled
+ *  to about one pixel per cell (the page does that with a canvas). It's dithered into the same four tones as the
+ *  objects, so the morphs in and out of it pair navy with navy, and its edges dissolve in blocks. */
+export function photoFormation(g: Grid, layout: Layout, art: Art, pixels: Pixels, palette: Palette, seed = 7): Formation {
+  const rand = seeded(seed), f = base(g, rand), tones = objectTonesOf(palette);
   const [x0, y0, x1, y1] = layout.rect;
-  const rw = (x1 - x0) * g.w, rh = (y1 - y0) * g.h;
-  const crop = coverCrop(photoSize[0], photoSize[1], rw, rh, photo.focus);
 
-  // Stretch each photo across the palette's range, so a bright beach and a dark aurora both use all the tones.
+  // Stretch the photo across the tones' range, so it uses all four.
   const ls: number[] = [];
   for (let i = 0; i < pixels.width * pixels.height; i += 3) ls.push(lum([pixels.data[i * 4] / 255, pixels.data[i * 4 + 1] / 255, pixels.data[i * 4 + 2] / 255]));
   ls.sort((a, b) => a - b);
   const lo = ls[Math.floor(ls.length * 0.02)] ?? 0, hi = ls[Math.floor(ls.length * 0.98)] ?? 1, span = Math.max(0.08, hi - lo);
+  // The four tones from dark to light, whatever the palette, so the photo keeps its light and shade at night too.
+  const ladder = [0, 1, 2, 3].sort((a, b) => lum(tones.rgb[a]) - lum(tones.rgb[b]));
 
   for (let i = 0; i < g.cells; i++) {
     const cx = i % g.cols, cy = Math.floor(i / g.cols);
@@ -122,22 +134,117 @@ export function photoFormation(g: Grid, layout: Layout, photo: Photo, photoSize:
     const px = Math.min(pixels.width - 1, Math.floor(u * pixels.width)), py = Math.min(pixels.height - 1, Math.floor(v * pixels.height));
     const o = (py * pixels.width + px) * 4;
     const raw: RGB = [pixels.data[o] / 255, pixels.data[o + 1] / 255, pixels.data[o + 2] / 255];
-    // On the light palettes the middle tones are lifted, so a photo sits on the page soft, like the reference.
-    const l = lum(raw), l2 = Math.min(1, Math.max(0, (l - lo) / span)) ** (palette.dark ? 1.05 : 0.78);
-    // Levels, then a little more color, so the nearest tone is picked by hue as well as by light.
-    let c = raw.map(ch => Math.min(1, Math.max(0, l2 + (ch - l) * 1.25))) as RGB;
+    const l = Math.min(1, Math.max(0, (lum(raw) - lo) / span));
     const w = Math.min(1, Math.max(0, layout.wash(x, y, u, v)));
-    c = c.map((ch, k) => ch + (paper[k] - ch) * w * 0.85) as RGB;
-    const d = (bayer(cx, cy) - 0.5) * 0.2;
-    const t = nearest([c[0] + d, c[1] + d, c[2] + d], tones.rgb);
     // The dissolve: in blocks of three cells, then finer, so the edge breaks up like the reference's.
     const block = bayer(Math.floor(cx / 3), Math.floor(cy / 3)) * 0.72 + bayer(cx, cy) * 0.28;
-    if (t === tones.paper || 1 - w < block) continue;
+    if (1 - w < block) continue;
+    // Light picks the step on the ladder, dithered. The step nearest the paper is left as paper, so the face has
+    // air round it: the brightest on a light page, the darkest at night.
+    let step = Math.floor(l * 4.6 + (bayer(cx, cy) - 0.5) * 0.9);
+    if (palette.dark) step -= 1;
+    if (palette.dark ? step < 0 : step > 3) continue;
+    const t = ladder[Math.min(3, Math.max(0, step))], rgb = tones.rgb[t];
+    f.size[i] = 1;
+    f.col[i * 3] = rgb[0]; f.col[i * 3 + 1] = rgb[1]; f.col[i * 3 + 2] = rgb[2];
+    f.life[i] = art.life(u * art.size[0], v * art.size[1], t) as number;
+    f.key[i] = keyOf(tones.rank[t], x, y);
+  }
+  return sortOrder(f);
+}
+
+/** The colors the art is drawn in (navy, teal, peach, cream), as the generator made them. The pink round them is
+ *  read off the corners of each picture. */
+const ART_TONES: RGB[] = [[20, 45, 90], [45, 140, 150], [245, 165, 128], [250, 236, 212]].map(c => c.map(v => v / 255) as RGB);
+
+/** Which of the art's four tones each pixel is, or 4 for the pink it stands on. */
+export function keyArt(pixels: Pixels): Uint8Array {
+  const { width: w, height: h, data } = pixels, out = new Uint8Array(w * h);
+  const corner: RGB[] = [];
+  for (const [cx, cy] of [[0, 0], [w - 6, 0], [0, h - 6], [w - 6, h - 6]]) for (let y = cy; y < cy + 6; y++) for (let x = cx; x < cx + 6; x++) {
+    const o = (y * w + x) * 4; corner.push([data[o] / 255, data[o + 1] / 255, data[o + 2] / 255]);
+  }
+  const mid = (k: number) => corner.map(c => c[k]).sort((a, b) => a - b)[corner.length >> 1];
+  const refs = [...ART_TONES, [mid(0), mid(1), mid(2)] as RGB];
+  // The same distance as nearest(), written out flat: it runs once per pixel.
+  for (let i = 0; i < w * h; i++) {
+    const r = data[i * 4] / 255, g = data[i * 4 + 1] / 255, bl = data[i * 4 + 2] / 255;
+    let best = 0, bestD = Infinity;
+    for (let k = 0; k < 5; k++) {
+      const t = refs[k], dr = r - t[0], dg = g - t[1], db = bl - t[2], rm = (r + t[0]) / 2;
+      const d = (2 + rm) * dr * dr + 4 * dg * dg + (3 - rm) * db * db;
+      if (d < bestD) { bestD = d; best = k; }
+    }
+    out[i] = best;
+  }
+  return out;
+}
+
+/** One of the bold objects as dots. The whole picture is fitted into the layout's rectangle. Each cell takes the
+ *  tone most of its pixels are, and is left as paper unless about a quarter of it is object, so thin lines like
+ *  the plane's dashed trail survive. With `drips`, the last few dots of the pool sit on the object's lower edge,
+ *  ready to fall (or, with reduced motion, lie in a small heap at the bottom of the screen). */
+export function objectFormation(g: Grid, layout: Layout, art: Art, pixels: Pixels, palette: Palette, opts: { seed?: number; drips?: boolean; still?: boolean } = {}): Formation {
+  const rand = seeded(opts.seed ?? 5), f = base(g, rand), tones = objectTonesOf(palette);
+  const [x0, y0, x1, y1] = layout.rect;
+  const box = containBox(pixels.width, pixels.height, x0 * g.w, y0 * g.h, (x1 - x0) * g.w, (y1 - y0) * g.h, layout.align);
+  const cls = keyArt(pixels), counts = new Uint16Array(5);
+  const [ax0, ay0, ax1, ay1] = art.crop, toArtX = (u: number) => ax0 + u * (ax1 - ax0), toArtY = (v: number) => ay0 + v * (ay1 - ay0);
+  const pivot = art.pivot && [box.x + ((art.pivot[0] - ax0) / (ax1 - ax0)) * box.w, box.y + ((art.pivot[1] - ay0) / (ay1 - ay0)) * box.h];
+  const lowest = new Int32Array(g.cols).fill(-1);
+
+  for (let i = 0; i < g.cells; i++) {
+    const cx = i % g.cols, cy = Math.floor(i / g.cols);
+    const x = f.pos[i * 2], y = f.pos[i * 2 + 1];
+    // The pixels under this cell.
+    const u0 = (x - g.cell / 2 - box.x) / box.w, u1 = (x + g.cell / 2 - box.x) / box.w;
+    const v0 = (y - g.cell / 2 - box.y) / box.h, v1 = (y + g.cell / 2 - box.y) / box.h;
+    if (u1 <= 0 || u0 >= 1 || v1 <= 0 || v0 >= 1) continue;
+    const px0 = Math.max(0, Math.floor(u0 * pixels.width)), px1 = Math.min(pixels.width, Math.max(px0 + 1, Math.ceil(u1 * pixels.width)));
+    const py0 = Math.max(0, Math.floor(v0 * pixels.height)), py1 = Math.min(pixels.height, Math.max(py0 + 1, Math.ceil(v1 * pixels.height)));
+    counts.fill(0);
+    for (let py = py0; py < py1; py++) for (let px = px0; px < px1; px++) counts[cls[py * pixels.width + px]]++;
+    const total = (px1 - px0) * (py1 - py0);
+    if (counts[4] > total * 0.76) continue;
+    let t = 0;
+    for (let k = 1; k < 4; k++) if (counts[k] > counts[t]) t = k;
     const rgb = tones.rgb[t];
     f.size[i] = 1;
     f.col[i * 3] = rgb[0]; f.col[i * 3 + 1] = rgb[1]; f.col[i * 3 + 2] = rgb[2];
-    f.life[i] = photo.life((crop.sx + u * crop.sw) / photoSize[0], (crop.sy + v * crop.sh) / photoSize[1], raw);
-    f.key[i] = keyOf(tones.rank[t], x, y);
+    const u = (x - box.x) / box.w, v = (y - box.y) / box.h;
+    const life = art.life(toArtX(u), toArtY(v), t);
+    if (typeof life === 'number') f.life[i] = life;
+    else { f.life[i] = life[0]; f.aux[i * 2] = life[1]; f.aux[i * 2 + 1] = life[2]; }
+    if (pivot) { f.aux[i * 2] = x - pivot[0]; f.aux[i * 2 + 1] = y - pivot[1]; }
+    f.key[i] = keyOf(tones.rank[t], x / g.w, y / g.h);
+    if (cy > lowest[cx]) lowest[cx] = cy;
+  }
+
+  if (opts.drips) {
+    // The bottom edge of the object, one cell per column, and a few of those picked to drip.
+    const edge: number[] = [];
+    for (let c = 0; c < g.cols; c++) if (lowest[c] >= 0) edge.push(lowest[c] * g.cols + c);
+    const heapX = edge.length ? edge.reduce((s, i) => s + f.pos[i * 2], 0) / edge.length : g.w / 2;
+    for (let k = 0; k < g.drips && edge.length; k++) {
+      const s = g.n - g.drips + k, from = edge[Math.floor(rand() * edge.length)];
+      f.col.set(f.col.subarray(from * 3, from * 3 + 3), s * 3);
+      f.key[s] = f.key[from] + 0.0001 * (k + 1);
+      if (opts.still) {
+        // A small heap where the sand would have piled up: rows of 7, 5, 3 and 1, and any left over not shown.
+        const rows = [7, 5, 3, 1];
+        let r = 0, left = k;
+        while (r < rows.length && left >= rows[r]) { left -= rows[r]; r++; }
+        if (r >= rows.length) continue;
+        f.pos[s * 2] = heapX + (left - (rows[r] - 1) / 2) * g.cell * 0.9;
+        f.pos[s * 2 + 1] = g.h - g.cell * (0.5 + r * 0.8);
+        f.size[s] = 0.8;
+        f.life[s] = LIFE.still;
+      } else {
+        f.pos[s * 2] = f.pos[from * 2]; f.pos[s * 2 + 1] = f.pos[from * 2 + 1];
+        f.size[s] = 0.75;
+        f.life[s] = LIFE.drip;
+      }
+    }
   }
   return sortOrder(f);
 }
@@ -178,10 +285,11 @@ export type Glyph = { x: number; y: number; c: RGB };
 
 /** A formation with the type pool set into the shape of some words (points sampled from the type on screen). */
 export function withType(g: Grid, f: Formation, glyphs: Glyph[], palette: Palette): Formation {
-  const out: Formation = { pos: f.pos.slice(), size: f.size.slice(), col: f.col.slice(), life: f.life.slice(), key: f.key.slice(), order: f.order };
+  const out: Formation = { pos: f.pos.slice(), size: f.size.slice(), col: f.col.slice(), life: f.life.slice(), aux: f.aux.slice(), key: f.key.slice(), order: f.order };
   const tones = tonesOf(palette), rank = tones.rank[nearest(hex(palette.ink), tones.rgb)];
   const s = (g.typeGap / g.cell) * 0.98;
-  for (let k = 0; k < Math.min(glyphs.length, g.typeSlots); k++) {
+  // The last few slots are the drips, so the words stop short of them.
+  for (let k = 0; k < Math.min(glyphs.length, g.typeSlots - g.drips); k++) {
     const i = g.cells + k, gl = glyphs[k];
     out.pos[i * 2] = gl.x; out.pos[i * 2 + 1] = gl.y;
     out.size[i] = s;
