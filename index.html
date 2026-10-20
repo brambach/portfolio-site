@@ -13,7 +13,7 @@
         var project = /^\/projects\/([^/]+)$/.exec(path);
         var sky = !q.has('look') && ((path === '' && !q.has('mile') && !drive) || (project && ids.indexOf(project[1]) >= 0));
         if (sky) document.documentElement.setAttribute('data-sky', '');
-        if (/^\/lab(\/[abc])?$/.test(path)) document.documentElement.setAttribute('data-lab', '');
+        if (/^\/lab(\/[a-d])?$/.test(path)) document.documentElement.setAttribute('data-lab', '');
       })();
     </script>
     <style>
