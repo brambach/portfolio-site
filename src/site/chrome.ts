@@ -3,17 +3,21 @@ import gsap from 'gsap';
 /* What E's home page and its project pages share: the pointer, and the notes they leave each other in session
    storage when the dots are handed from one page to the next. */
 
-/** Runs `fn` just after the browser reports its first contentful paint, or after 400 ms if it doesn't say. Both of
- *  E's pages start their dots this way, so the words never wait on them. */
+/** Runs `fn` once the browser has painted the page's first frame: its first contentful paint, or the end of the
+ *  first frame it draws, whichever it says first, and after 400 ms if it says neither (a tab in the background). Both
+ *  of E's pages start their dots this way, so the words never wait on them. The words start hidden (e.css), so
+ *  there may be no contentful paint until they come in, and the frame is what's waited for. */
 export function afterFirstPaint(fn: () => void) {
-  let done = false, t = 0, obs: PerformanceObserver | undefined;
-  const go = () => { if (done) return; done = true; obs?.disconnect(); window.clearTimeout(cap); t = window.setTimeout(fn); };
+  let done = false, t = 0, raf = 0, obs: PerformanceObserver | undefined;
+  const go = () => { if (done) return; done = true; obs?.disconnect(); window.clearTimeout(cap); cancelAnimationFrame(raf); t = window.setTimeout(fn); };
   const cap = window.setTimeout(go, 400);
+  // A task queued from a frame callback runs after that frame is painted.
+  raf = requestAnimationFrame(() => { raf = 0; window.setTimeout(go); });
   try {
     obs = new PerformanceObserver(list => { if (list.getEntries().some(e => e.name === 'first-contentful-paint')) go(); });
     obs.observe({ type: 'paint', buffered: true });
-  } catch { /* no paint timing: the cap starts it */ }
-  return () => { done = true; obs?.disconnect(); window.clearTimeout(cap); window.clearTimeout(t); };
+  } catch { /* no paint timing: the frame or the cap starts it */ }
+  return () => { done = true; obs?.disconnect(); window.clearTimeout(cap); window.clearTimeout(t); cancelAnimationFrame(raf); };
 }
 
 type On = (t: Window | Element | Document, type: string, fn: (e: never) => void, opts?: AddEventListenerOptions) => void;

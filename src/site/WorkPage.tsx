@@ -20,7 +20,8 @@ const longest = (name: string) => ({ '--L': Math.max(4, ...name.split(' ').map(w
 
 /** A part's opening: a rule with a label at each end, the way E's parts open. */
 function Rule({ left, right, top = false }: { left: string; right: string; top?: boolean }) {
-  return <div className="e-rule" aria-hidden="true"><span>{left}</span><i {...(top ? { 'data-top-rule': '' } : { 'data-rule': '' })} /><span>{right}</span></div>;
+  const label = top ? { 'data-top-label': '' } : {};
+  return <div className="e-rule" aria-hidden="true"><span {...label}>{left}</span><i {...(top ? { 'data-top-rule': '' } : { 'data-rule': '' })} /><span {...label}>{right}</span></div>;
 }
 
 /** A project's name, set twice so the letters can roll from upright to italic (as on E's index). */
