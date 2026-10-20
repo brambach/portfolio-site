@@ -19,7 +19,7 @@
 .e-wp__line { margin: 18px 0 0; font: italic 400 clamp(22px, 2.2vw, 34px)/1.18 var(--e-serif); letter-spacing: -0.02em; color: var(--e-soft); }
 .e-wp__facts { margin: auto 0 0; padding-top: clamp(36px, 7vh, 80px); display: grid; gap: 14px; }
 .e-wp__facts div { display: grid; grid-template-columns: 76px 1fr; gap: 14px; align-items: baseline; }
-.e-wp__facts dt { font: 400 10.5px/1.4 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--e-faint); }
+.e-wp__facts dt { font: 400 11px/1.4 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--e-faint); }
 .e-wp__facts dd { margin: 0; font-size: 15px; line-height: 1.5; color: var(--e-soft); }
 .e-wp__facts .e-go { font-size: 15px; color: var(--e-ink); }
 .e-wp__back { margin-top: 26px; font-size: 15px; min-height: 44px; align-items: center !important; }
@@ -79,6 +79,7 @@
   .e-wp__name, .e-wp__nextname { font-size: min(17vw, calc(86vw / (var(--L) * 0.5))); }
   .e-wp .e-wp__next { padding-top: 46svh; min-height: 100svh; }
   .e-wp__facts div { grid-template-columns: 1fr; gap: 4px; }
+  .e-wp__facts dt, .e-hold__how { font-size: 12px; }
   .e-wp__shots.is-tall { grid-template-columns: 1fr 1fr; }
   .e-wp.is-ring .e-wp__top { padding-top: calc(46svh + 56px); }
   .e-hold { --cx: 50vw; --cy: 25.25lvh; --d: calc(min(86vw, 33.5lvh) * 0.72); }

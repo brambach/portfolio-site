@@ -54,12 +54,24 @@ export default function Home() {
     const el = root.current;
     // Back from a project: open where the visitor left off.
     const y = takeReturn();
+    let unhook = () => {};
     if (y !== null) window.scrollTo(0, y);
-    // A link to a part (/#work, where /projects goes) opens on it.
-    else if (location.hash.length > 1) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
+    // A link to a part (/#work, where /projects and a project's way back go) opens on it, and stays on it when the
+    // display face arrives and the words above it change height, unless the visitor has already moved.
+    else if (location.hash.length > 1) {
+      const part = document.getElementById(decodeURIComponent(location.hash.slice(1)));
+      part?.scrollIntoView();
+      let moved = false;
+      const move = () => { moved = true; };
+      const types = ['wheel', 'touchstart', 'keydown', 'pointerdown'];
+      types.forEach(type => addEventListener(type, move, { once: true, passive: true }));
+      unhook = () => { moved = true; types.forEach(type => removeEventListener(type, move)); };
+      void document.fonts?.ready.then(() => { if (!moved) part?.scrollIntoView(); });
+    }
     const cancel = afterFirstPaint(() => { motion.current = startHome(el, palette); });
     return () => {
       cancel();
+      unhook();
       motion.current?.stop(); motion.current = null;
       delete html.dataset.e;
       html.style.removeProperty('--e-paper');
@@ -170,6 +182,8 @@ export default function Home() {
           </div>
         </div>
         <p className="e-sign"><span>{SIGN}</span></p>
+        {/* On a phone the waving hand ends the page here, under the words (motion.ts). */}
+        <div className="e-close__rest" data-hand-rest aria-hidden="true" />
       </footer>
     </main>
 

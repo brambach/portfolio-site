@@ -20,7 +20,8 @@ const longest = (name: string) => ({ '--L': Math.max(4, ...name.split(' ').map(w
 
 /** A part's opening: a rule with a label at each end, the way E's parts open. */
 function Rule({ left, right, top = false }: { left: string; right: string; top?: boolean }) {
-  return <div className="e-rule" aria-hidden="true"><span>{left}</span><i {...(top ? { 'data-top-rule': '' } : { 'data-rule': '' })} /><span>{right}</span></div>;
+  const label = top ? { 'data-top-label': '' } : {};
+  return <div className="e-rule" aria-hidden="true"><span {...label}>{left}</span><i {...(top ? { 'data-top-rule': '' } : { 'data-rule': '' })} /><span {...label}>{right}</span></div>;
 }
 
 /** A project's name, set twice so the letters can roll from upright to italic (as on E's index). */
@@ -117,7 +118,9 @@ export default function WorkPage({ id }: { id: WorkId }) {
           <div><dt>Status</dt><dd>{work.status}</dd></div>
           {work.link && <div><dt>See it</dt><dd><ELink href={work.link.href} away cursor="Read">{work.link.label}</ELink></dd></div>}
         </dl>
-        <ELink className="e-wp__back" href={home} onClick={back} back cursor="Back" data-lead>Back to the work</ELink>
+        {/* Always the work part of the home page, however this page was reached: a direct link has no page before it,
+            and after back and forward the one before may not be E's. */}
+        <ELink className="e-wp__back" href={homeHref(search, '#work')} back cursor="Back" data-lead>Back to the work</ELink>
         {ring
           ? <div className="e-hold" data-phase={phase}>
               <button className="e-hold__ring" aria-label={phase === 'closed' ? 'Open Port' : 'Hold to close Port'} aria-describedby="e-hold-how"

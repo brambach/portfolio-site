@@ -13,8 +13,14 @@
         var q = new URLSearchParams(location.search);
         var older = ['/work', '/drive', '/next', '/admin', '/previous', '/entrance-still', '/project-lab'];
         var moving = path === '/projects' || path === '/lab' || path.indexOf('/lab/') === 0;
-        // When the browser drops a page transition it rejects with this. Nobody needs to see it as an error.
-        addEventListener('unhandledrejection', function (e) { if (e.reason && e.reason.name === 'AbortError' && /skipped/i.test(e.reason.message)) e.preventDefault(); });
+        // When the browser can't run a page-to-page fade it drops it: "skipped" (AbortError), or "aborted because of
+        // invalid state" (InvalidStateError) when the screen changed size on the way, as a phone's toolbar does. If
+        // it drops it before the page is handed the transition, nothing can catch its promises, so they arrive
+        // here. Only those two, and only from a transition: anything else is still reported.
+        addEventListener('unhandledrejection', function (e) {
+          var r = e.reason;
+          if (r && ((r.name === 'AbortError' && /skipped/i.test(r.message)) || (r.name === 'InvalidStateError' && /transition/i.test(r.message)))) e.preventDefault();
+        });
         var site = window.__notFound || moving || (path === ''
           ? !['mile', 'from', 'town', 'city', 'journey', 'forest'].some(function (k) { return q.has(k); })
           : older.indexOf(path) < 0);

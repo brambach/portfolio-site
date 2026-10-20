@@ -129,9 +129,11 @@ const frame = (edge: number) => (_x: number, _y: number, u: number, v: number) =
 const none = () => 0;
 
 /** Where a scene sits. On a wide screen the words keep the left and the object takes the right half, as big as
- *  it fits. On a phone it takes the top of the screen. The hero's plane flies in under the tagline, low on the
+ *  it fits. On a phone it takes the top of the screen. `sideways` is a phone on its side (see `sideways` below). The hero's plane flies in under the tagline, low on the
  *  right, so the dots dripping off it have the bottom of the screen to fall through. */
-export function layoutFor(id: SceneId, phone: boolean): Layout {
+export function layoutFor(id: SceneId, phone: boolean, sideways = false): Layout {
+  // A phone on its side has no room under the tagline, so the plane flies in low on the right, beside it.
+  if (id === 'hero' && phone && sideways) return { rect: [0.56, 0.58, 0.97, 0.96], align: [0.75, 0.5], wash: none };
   if (id === 'hero') return phone
     ? { rect: [0.05, 0.6, 0.95, 0.88], align: [0.5, 0.5], wash: none }
     : { rect: [0.3, 0.44, 0.97, 0.93], align: [0.75, 0.5], wash: none };
@@ -161,3 +163,6 @@ export function containBox(pw: number, ph: number, rx: number, ry: number, rw: n
 export function workRect(phone: boolean): { rect: [number, number, number, number]; align: [number, number] } {
   return phone ? { rect: [0.07, 0.085, 0.93, 0.42], align: [0.5, 0.5] } : { rect: [0.5, 0.15, 0.95, 0.86], align: [0.5, 0.45] };
 }
+
+/** A phone on its side: short and wider than tall. e.css's matching rule is (max-height: 560px) and landscape. */
+export const sideways = (w: number, h: number) => h < 560 && w > h;
