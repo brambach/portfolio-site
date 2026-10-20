@@ -92,12 +92,16 @@ html.lenis, html.lenis body { height: auto; }
 .e-skill__line { margin: 0 0 clamp(28px, 5vh, 48px); font: italic 400 clamp(22px, 2.2vw, 34px)/1.18 var(--e-serif); letter-spacing: -0.02em; color: var(--e-soft); }
 .e-skill__body p { margin: 0 0 18px; font-size: 17px; line-height: 1.62; color: var(--e-soft); }
 .e-proof, .e-list { list-style: none; margin: 32px 0 0; padding: 0; }
+/* The proof is a name and a note side by side when the column has room for both, and the note under the name when
+   it doesn't (a phone, and a tablet, where the words share the screen with the picture). */
+.e-proof { container-type: inline-size; }
 .e-proof li, .e-list li { position: relative; display: grid; grid-template-columns: minmax(150px, auto) 1fr; gap: 6px 22px; padding: 12px 0 14px; transition: opacity 0.4s var(--e-ease); }
 .e-proof:hover li:not(:hover), .e-list:hover li:not(:hover) { opacity: 0.55; }
 .e-proof__name { align-self: start; font-size: 16px; width: max-content; }
 .e-proof__name.is-private { display: inline-flex; gap: 10px; align-items: baseline; }
 .e-proof__name.is-private small { font: 400 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--e-faint); }
 .e-proof__note, .e-list li > span { color: var(--e-faint); font-size: 14px; line-height: 1.55; }
+@container (max-width: 470px) { .e-proof li { grid-template-columns: 1fr; gap: 4px; } }
 
 /* ---- links (links.tsx): a mark made of dots, and a dotted line under the words that fills in gold --------------
    Four dots in a row stay on the site and grow a head pointing right. Four on a diagonal open a new tab and point
@@ -223,7 +227,7 @@ html.lenis, html.lenis body { height: auto; }
   .e-part:not(.e-hero):not(.e-work) > * { max-width: none; }
   .e-skill__name { font-size: clamp(44px, 13vw, 92px); }
   .e-skill__body p { font-size: 16px; }
-  .e-proof li, .e-list li { grid-template-columns: 1fr; }
+  .e-list li { grid-template-columns: 1fr; }
   .e-list li { gap: 4px; padding: 14px 0 16px; }
   .e-list li > span { padding-left: 27px; }
   .e-index__link { grid-template-columns: 30px 1fr; grid-template-areas: "no name" "no kind" "no title"; gap: 8px 12px; }
