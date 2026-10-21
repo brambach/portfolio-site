@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Home from './Home';
 import WorkPage from './WorkPage';
 import { WORK_IDS } from './routes';
+import { SCENE_ORDER } from './scenes';
 
 /* The phone and tablet pass: the way back from a project, where the hand ends up on a phone, and the CSS that keeps
    the words clear and the links big enough to tap. jsdom doesn't lay anything out, so the sizes are checked in the
@@ -79,5 +80,38 @@ describe('The plane on a phone on its side', () => {
     expect(x0).toBeGreaterThan(0.5);
     expect(y0).toBeGreaterThan(0.5);
     expect(layoutFor('hero', true)).toEqual(layoutFor('hero', true, false));
+  });
+});
+
+describe('The dots on a phone, as the words scroll over them', () => {
+  it('show fully until a word reaches the foot of their band, and not at all once one is halfway up', async () => {
+    const { bandShown } = await import('./scenes');
+    const word = (top: number, bottom = top + 20, width = 300) => ({ top, bottom, width });
+    expect(bandShown(100, 500, [])).toBe(1);
+    expect(bandShown(100, 500, [word(600), word(20, 80)])).toBe(1);
+    expect(bandShown(100, 500, [word(495)])).toBeGreaterThan(0.99);
+    expect(bandShown(100, 500, [word(400)])).toBeCloseTo(0.5);
+    expect(bandShown(100, 500, [word(300)])).toBe(0);
+    // A block that runs past the top of the band still covers it, and one with nothing showing doesn't count.
+    expect(bandShown(100, 500, [word(-200, 120)])).toBe(0);
+    expect(bandShown(100, 500, [word(300, 340, 0)])).toBe(1);
+  });
+
+  it('count everything there is to read past the hero, labels and hints included', async () => {
+    const { READING } = await import('./motion');
+    const { container } = render(<Home />);
+    const reading = [...container.querySelectorAll(READING)];
+    expect(container.querySelectorAll('.e-rule').length).toBe(SCENE_ORDER.length - 1);
+    for (const sel of ['.e-rule', '.e-work__hint', '.e-intro__big', '.e-hello', '.e-sign']) {
+      for (const el of container.querySelectorAll(sel)) expect(reading).toContain(el);
+    }
+    expect(container.querySelector('.e-hero__sub')!.closest(READING)).toBeNull();
+    // Every word in a part past the hero is inside one of them.
+    const walk = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+      const el = n.parentElement!;
+      if (!n.textContent!.trim() || el.closest('.e-sr') || !el.closest('[data-scene]:not([data-scene="hero"])')) continue;
+      expect(el.closest(READING)).not.toBeNull();
+    }
   });
 });

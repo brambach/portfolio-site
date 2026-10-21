@@ -11,7 +11,7 @@ import { saveHandoff, saveReturn, snapshotOf, startCursor } from './chrome';
 import { FIELD_SIZE, fieldColor, makeGrid, sampleType, withType, type Formation, type Grid } from './field';
 import { hex, type Palette } from './palette';
 import { peekPainter, portPicture } from './pixels';
-import { ART, layoutFor, SCENE_ORDER, sideways, type SceneId } from './scenes';
+import { ART, bandShown, layoutFor, SCENE_ORDER, sideways, type SceneId } from './scenes';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -28,6 +28,10 @@ gsap.registerPlugin(ScrollTrigger, SplitText);
 export type EMotion = { stop: () => void; leave: (id: WorkId, href: string) => void };
 
 const EXPO = 'expo.out', POWER = 'power4.out';
+
+/** Everything to read on the home page past the hero: every block of every part but its screen-reader text. A phone's
+ *  dots fade by these (startHome), so a label or hint added to a part is counted without being listed. */
+export const READING = '[data-scene]:not([data-scene="hero"]) > :not(.e-sr)';
 
 /** Sentient comes from Fontshare with its stylesheet loading late, so wait (briefly) for it before splitting, or
  *  the lines would be measured in Georgia. */
@@ -268,24 +272,18 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
   // space above the words, and never morph under something being read. The band is where the current scene's
   // picture sits (layoutFor), so the hand, like every other scene, shows above Say hello and fades as the words
   // and links rise over it, rather than waving a second time at the foot of the page.
-  const readEls = q<HTMLElement>('.e-intro__big, .e-intro__small, .e-skill__name, .e-skill__line, .e-skill__body, .e-work__title, .e-index, .e-hello, .e-mail, .e-close__cols, .e-sign');
-  const smooth = (e: number, a: number, b: number) => { const t = Math.min(1, Math.max(0, (e - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const reading = q<HTMLElement>(READING);
   let shown = 1;
-  const fade = () => {
+  const fade = (dt: number) => {
     if (!scene) return;
     const H = grid.h, [, y0, , y1] = layoutFor(scene, phone, sideways(grid.w, grid.h)).rect;
-    const top = y0 * H, bot = y1 * H;
-    // The leading (highest) edge of the reading text now in the band.
-    let lead = bot;
-    for (const el of readEls) {
-      const r = el.getBoundingClientRect();
-      if (r.bottom <= top || r.top >= bot || r.width < 1) continue;
-      lead = Math.min(lead, Math.max(top, r.top));
-    }
-    // 0 when the text sits at the foot of the band, 1 once it has climbed halfway up it.
-    const target = 1 - smooth((bot - lead) / Math.max(1, bot - top), 0, 0.5);
-    shown += (target - shown) * 0.2;
-    canvas.style.opacity = shown < 0.995 ? shown.toFixed(3) : '';
+    const target = bandShown(y0 * H, y1 * H, reading.map(el => el.getBoundingClientRect()));
+    shown += (target - shown) * (1 - Math.exp(-dt / 0.075));
+    // It's eased here, so the canvas's own half-second opacity transition (for its first showing, and for leaving)
+    // is off while this runs. Restarted every frame, it left the dots trailing the words by half their fade.
+    const on = shown < 0.995;
+    canvas.style.transition = on ? 'none' : '';
+    canvas.style.opacity = on ? shown.toFixed(3) : '';
   };
 
   let last = performance.now();
@@ -295,7 +293,7 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
     last = now;
     if (document.hidden || !dots) return;
     if (followTag) dots.shift([0, 0], [0, tag.getBoundingClientRect().top - tagTop]);
-    if (phone && !leaving) fade();
+    if (phone && !leaving) fade(dt);
     dots.frame(now / 1000, dt);
   };
   gsap.ticker.add(frame);
@@ -414,7 +412,7 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
     if (leaving) return;
     leaving = true;
     lenis?.stop();
-    canvas.style.opacity = '';
+    canvas.style.transition = ''; canvas.style.opacity = '';
     gsap.to(peek, { autoAlpha: 0, duration: 0.3, ease: 'power2.in', overwrite: 'auto' });
     gsap.to([main, head], { autoAlpha: 0, duration: 0.45, ease: 'power2.out', overwrite: 'auto' });
     const g = grid, built = build.build({ ...job('work'), ...('ring' in work.hero ? { id: 'ring' } : { id: 'shot', src: work.hero.src }) });
@@ -436,7 +434,7 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
   // the dots drawing the project. Put the part back.
   on(window, 'pageshow', (e: PageTransitionEvent) => {
     if (!e.persisted || !leaving) return;
-    leaving = false; shown = 1; canvas.style.opacity = '';
+    leaving = false; shown = 1; canvas.style.transition = ''; canvas.style.opacity = '';
     gsap.to([main, head], { autoAlpha: 1, duration: 0.5, ease: 'power2.out', overwrite: 'auto' });
     lenis?.start();
     const f = scene && formations.get(scene);
