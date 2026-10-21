@@ -164,5 +164,13 @@ export function workRect(phone: boolean): { rect: [number, number, number, numbe
   return phone ? { rect: [0.07, 0.085, 0.93, 0.42], align: [0.5, 0.5] } : { rect: [0.5, 0.15, 0.95, 0.86], align: [0.5, 0.45] };
 }
 
+/** How strongly a phone draws its picture while the words scroll up through the band it sits in (`top` to `bot`, in
+ *  pixels): fully until the highest of them reaches the band's foot, not at all once it has climbed halfway up. */
+export function bandShown(top: number, bot: number, words: Iterable<{ top: number; bottom: number; width: number }>) {
+  let lead = bot;
+  for (const r of words) if (r.bottom > top && r.top < bot && r.width >= 1) lead = Math.min(lead, Math.max(top, r.top));
+  return 1 - ramp(0, 0.5, (bot - lead) / Math.max(1, bot - top));
+}
+
 /** A phone on its side: short and wider than tall. e.css's matching rule is (max-height: 560px) and landscape. */
 export const sideways = (w: number, h: number) => h < 560 && w > h;
