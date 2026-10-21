@@ -11,7 +11,7 @@ import { saveHandoff, saveReturn, snapshotOf, startCursor } from './chrome';
 import { FIELD_SIZE, fieldColor, makeGrid, sampleType, withType, type Formation, type Grid } from './field';
 import { hex, type Palette } from './palette';
 import { peekPainter, portPicture } from './pixels';
-import { ART, SCENE_ORDER, type SceneId } from './scenes';
+import { ART, bandShown, layoutFor, SCENE_ORDER, sideways, type SceneId } from './scenes';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -28,6 +28,10 @@ gsap.registerPlugin(ScrollTrigger, SplitText);
 export type EMotion = { stop: () => void; leave: (id: WorkId, href: string) => void };
 
 const EXPO = 'expo.out', POWER = 'power4.out';
+
+/** Everything to read on the home page past the hero: every block of every part but its screen-reader text. A phone's
+ *  dots fade by these (startHome), so a label or hint added to a part is counted without being listed. */
+export const READING = '[data-scene]:not([data-scene="hero"]) > :not(.e-sr)';
 
 /** Sentient comes from Fontshare with its stylesheet loading late, so wait (briefly) for it before splitting, or
  *  the lines would be measured in Georgia. */
@@ -263,22 +267,23 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
     return id;
   }
 
-  // On a phone the words scroll up over the photo, so once a part's words reach the top half of the screen its
-  // scene steps back to let them be read. The next part brings it back with its morph.
-  // The hand is the exception: there's no next part to bring it back, and at the foot of the page its place would be
-  // over the last links. So it sits in the space above Say hello and scrolls away with it, and the same dots wait in
-  // a space left for them under the last line (data-hand-rest), where the page ends.
-  let backed = false;
-  const close = root.querySelector<HTMLElement>('[data-scene="contact"]'), rest = root.querySelector<HTMLElement>('[data-hand-rest]');
-  const handLift = () => {
-    const H = grid.h, above = close!.getBoundingClientRect().top - H * 0.03;
-    return above + H * 0.42 > 0 ? above : rest!.getBoundingClientRect().top - H * 0.04;
-  };
-  const stepBack = () => {
-    if (scene === 'contact' && close && rest) { dots?.lift(handLift()); if (backed) { backed = false; canvas.style.opacity = ''; } return; }
-    const el = scene && scene !== 'hero' ? root.querySelector<HTMLElement>(`[data-scene="${scene}"]`) : null;
-    const back = !!el && el.getBoundingClientRect().top < -innerHeight * 0.08;
-    if (back !== backed) { backed = back; canvas.style.opacity = back ? '0.32' : ''; }
+  // On a phone the dots sit in a band near the top of the screen and the words scroll up through it. So the band
+  // fades out by however much reading text covers it: the dots are only ever at full strength in their own clear
+  // space above the words, and never morph under something being read. The band is where the current scene's
+  // picture sits (layoutFor), so the hand, like every other scene, shows above Say hello and fades as the words
+  // and links rise over it, rather than waving a second time at the foot of the page.
+  const reading = q<HTMLElement>(READING);
+  let shown = 1;
+  const fade = (dt: number) => {
+    if (!scene) return;
+    const H = grid.h, [, y0, , y1] = layoutFor(scene, phone, sideways(grid.w, grid.h)).rect;
+    const target = bandShown(y0 * H, y1 * H, reading.map(el => el.getBoundingClientRect()));
+    shown += (target - shown) * (1 - Math.exp(-dt / 0.075));
+    // It's eased here, so the canvas's own half-second opacity transition (for its first showing, and for leaving)
+    // is off while this runs. Restarted every frame, it left the dots trailing the words by half their fade.
+    const on = shown < 0.995;
+    canvas.style.transition = on ? 'none' : '';
+    canvas.style.opacity = on ? shown.toFixed(3) : '';
   };
 
   let last = performance.now();
@@ -288,7 +293,7 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
     last = now;
     if (document.hidden || !dots) return;
     if (followTag) dots.shift([0, 0], [0, tag.getBoundingClientRect().top - tagTop]);
-    if (phone && !leaving) stepBack();
+    if (phone && !leaving) fade(dt);
     dots.frame(now / 1000, dt);
   };
   gsap.ticker.add(frame);
@@ -407,7 +412,7 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
     if (leaving) return;
     leaving = true;
     lenis?.stop();
-    canvas.style.opacity = '';
+    canvas.style.transition = ''; canvas.style.opacity = '';
     gsap.to(peek, { autoAlpha: 0, duration: 0.3, ease: 'power2.in', overwrite: 'auto' });
     gsap.to([main, head], { autoAlpha: 0, duration: 0.45, ease: 'power2.out', overwrite: 'auto' });
     const g = grid, built = build.build({ ...job('work'), ...('ring' in work.hero ? { id: 'ring' } : { id: 'shot', src: work.hero.src }) });
@@ -429,7 +434,7 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
   // the dots drawing the project. Put the part back.
   on(window, 'pageshow', (e: PageTransitionEvent) => {
     if (!e.persisted || !leaving) return;
-    leaving = false; backed = false;
+    leaving = false; shown = 1; canvas.style.transition = ''; canvas.style.opacity = '';
     gsap.to([main, head], { autoAlpha: 1, duration: 0.5, ease: 'power2.out', overwrite: 'auto' });
     lenis?.start();
     const f = scene && formations.get(scene);
