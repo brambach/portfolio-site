@@ -11,7 +11,7 @@ import { saveHandoff, saveReturn, snapshotOf, startCursor } from './chrome';
 import { FIELD_SIZE, fieldColor, makeGrid, sampleType, withType, type Formation, type Grid } from './field';
 import { hex, type Palette } from './palette';
 import { peekPainter, portPicture } from './pixels';
-import { ART, SCENE_ORDER, type SceneId } from './scenes';
+import { ART, layoutFor, SCENE_ORDER, sideways, type SceneId } from './scenes';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -263,22 +263,29 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
     return id;
   }
 
-  // On a phone the words scroll up over the photo, so once a part's words reach the top half of the screen its
-  // scene steps back to let them be read. The next part brings it back with its morph.
-  // The hand is the exception: there's no next part to bring it back, and at the foot of the page its place would be
-  // over the last links. So it sits in the space above Say hello and scrolls away with it, and the same dots wait in
-  // a space left for them under the last line (data-hand-rest), where the page ends.
-  let backed = false;
-  const close = root.querySelector<HTMLElement>('[data-scene="contact"]'), rest = root.querySelector<HTMLElement>('[data-hand-rest]');
-  const handLift = () => {
-    const H = grid.h, above = close!.getBoundingClientRect().top - H * 0.03;
-    return above + H * 0.42 > 0 ? above : rest!.getBoundingClientRect().top - H * 0.04;
-  };
-  const stepBack = () => {
-    if (scene === 'contact' && close && rest) { dots?.lift(handLift()); if (backed) { backed = false; canvas.style.opacity = ''; } return; }
-    const el = scene && scene !== 'hero' ? root.querySelector<HTMLElement>(`[data-scene="${scene}"]`) : null;
-    const back = !!el && el.getBoundingClientRect().top < -innerHeight * 0.08;
-    if (back !== backed) { backed = back; canvas.style.opacity = back ? '0.32' : ''; }
+  // On a phone the dots sit in a band near the top of the screen and the words scroll up through it. So the band
+  // fades out by however much reading text covers it: the dots are only ever at full strength in their own clear
+  // space above the words, and never morph under something being read. The band is where the current scene's
+  // picture sits (layoutFor), so the hand, like every other scene, shows above Say hello and fades as the words
+  // and links rise over it, rather than waving a second time at the foot of the page.
+  const readEls = q<HTMLElement>('.e-intro__big, .e-intro__small, .e-skill__name, .e-skill__line, .e-skill__body, .e-work__title, .e-index, .e-hello, .e-mail, .e-close__cols, .e-sign');
+  const smooth = (e: number, a: number, b: number) => { const t = Math.min(1, Math.max(0, (e - a) / (b - a))); return t * t * (3 - 2 * t); };
+  let shown = 1;
+  const fade = () => {
+    if (!scene) return;
+    const H = grid.h, [, y0, , y1] = layoutFor(scene, phone, sideways(grid.w, grid.h)).rect;
+    const top = y0 * H, bot = y1 * H;
+    // The leading (highest) edge of the reading text now in the band.
+    let lead = bot;
+    for (const el of readEls) {
+      const r = el.getBoundingClientRect();
+      if (r.bottom <= top || r.top >= bot || r.width < 1) continue;
+      lead = Math.min(lead, Math.max(top, r.top));
+    }
+    // 0 when the text sits at the foot of the band, 1 once it has climbed halfway up it.
+    const target = 1 - smooth((bot - lead) / Math.max(1, bot - top), 0, 0.5);
+    shown += (target - shown) * 0.2;
+    canvas.style.opacity = shown < 0.995 ? shown.toFixed(3) : '';
   };
 
   let last = performance.now();
@@ -288,7 +295,7 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
     last = now;
     if (document.hidden || !dots) return;
     if (followTag) dots.shift([0, 0], [0, tag.getBoundingClientRect().top - tagTop]);
-    if (phone && !leaving) stepBack();
+    if (phone && !leaving) fade();
     dots.frame(now / 1000, dt);
   };
   gsap.ticker.add(frame);
@@ -429,7 +436,7 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
   // the dots drawing the project. Put the part back.
   on(window, 'pageshow', (e: PageTransitionEvent) => {
     if (!e.persisted || !leaving) return;
-    leaving = false; backed = false;
+    leaving = false; shown = 1; canvas.style.opacity = '';
     gsap.to([main, head], { autoAlpha: 1, duration: 0.5, ease: 'power2.out', overwrite: 'auto' });
     lenis?.start();
     const f = scene && formations.get(scene);
