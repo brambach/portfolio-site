@@ -32,13 +32,14 @@ describe('A project’s way back', () => {
 });
 
 describe('The hand on a phone', () => {
-  it('has a space of its own under the last line, shown only on a phone', () => {
+  it('waves once: no second space is left for it under the last line', () => {
     const { container } = render(<Home />);
-    const rest = container.querySelector('[data-hand-rest]')!;
-    expect(rest).toBeInTheDocument();
-    expect(rest.previousElementSibling).toHaveClass('e-sign');
-    expect(css).toMatch(/\.e-close__rest \{ display: none; \}/);
-    expect(css).toMatch(/@media \(max-width: 760px\) \{[\s\S]*\.e-close__rest \{ display: block; height: 46lvh; \}/);
+    // The close ends on the sign-off. There is no separate resting place that would show the hand a second time.
+    expect(container.querySelector('[data-hand-rest]')).toBeNull();
+    const close = container.querySelector('[data-scene="contact"]')!;
+    expect(close.lastElementChild).toHaveClass('e-sign');
+    expect(css).not.toMatch(/e-close__rest/);
+    expect(css).not.toMatch(/46lvh/);
   });
 });
 

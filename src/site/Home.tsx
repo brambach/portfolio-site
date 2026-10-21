@@ -182,8 +182,6 @@ export default function Home() {
           </div>
         </div>
         <p className="e-sign"><span>{SIGN}</span></p>
-        {/* On a phone the waving hand ends the page here, under the words (motion.ts). */}
-        <div className="e-close__rest" data-hand-rest aria-hidden="true" />
       </footer>
     </main>
 
