@@ -34,10 +34,32 @@ describe('The home page', () => {
     expect(toc).toHaveAttribute('id', 'work');
   });
 
+  it('shows the bot team as a relay, in the order a job moves through it, with x boss apart', () => {
+    const { container } = render(<Home />);
+    const bots = container.querySelector('#bots')!;
+    expect(within(bots as HTMLElement).getByRole('heading', { level: 2 })).toHaveTextContent('my bots hand work to each other.');
+    const names = [...bots.querySelectorAll('.bt__stations .bt__name')].map(n => n.textContent);
+    expect(names).toEqual(['luna', 'code boss', 'architect', 'the build', 'reviewer']);
+    expect(bots.querySelector('.bt__side')).toHaveTextContent('x boss');
+    expect(bots).toHaveTextContent('job: redesign brycerambach.com');
+    expect(bots).toHaveTextContent('a real handoff. this page is the job.');
+  });
+
+  it('links the other work to its pages, and dervo to its full story', () => {
+    const { container } = render(<Home />);
+    const more = within(container.querySelector<HTMLElement>('#more')!);
+    expect(more.getAllByRole('link').map(a => a.getAttribute('href'))).toEqual(['/projects/arro', '/projects/port', '/projects/dervo']);
+    expect(more.getByRole('link', { name: /^arro/ })).toHaveTextContent('a missed day is never public.');
+    expect(more.getByRole('link', { name: /dervo, the full story/ })).toBeInTheDocument();
+  });
+
   it('ends with the email, the way to reach him', () => {
     render(<Home />);
     const footer = screen.getByRole('contentinfo');
     expect(within(footer).getByRole('link', { name: 'bryce.rambach@gmail.com' })).toHaveAttribute('href', 'mailto:bryce.rambach@gmail.com');
+    expect(within(footer).getAllByRole('link').slice(1).map(a => a.getAttribute('href'))).toEqual(['https://www.linkedin.com/in/bryce-rambach/', 'https://x.com/brycerambach', 'https://github.com/brambach']);
+    expect(footer).toHaveTextContent('designed and built by me, which is sort of the point.');
+    expect(footer).not.toHaveTextContent(/let's connect|open to chat/i);
   });
 
   it('says dervo stopped, never that it was parked, and uses no em or en dashes', () => {
