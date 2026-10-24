@@ -100,4 +100,8 @@ describe('The home page on a phone', () => {
     expect(home).toMatch(/\.vig \{[^}]*aspect-ratio: 4\.4 \/ 1;/);
     expect(phone).toMatch(/\.vig \{ aspect-ratio: 7 \/ 4;/);
   });
+  it('clears the other dervo beats while a link in one has focus', () => {
+    expect(home).toMatch(/\.dv__lines:has\(\.dv__beat:focus-within\) \.dv__beat:not\(:focus-within\) \{ opacity: 0 !important;/);
+    expect(home).toMatch(/\.dv__text:has\(\.dv__beat:focus-within\) \.dv__count \{ visibility: hidden; \}/);
+  });
 });
