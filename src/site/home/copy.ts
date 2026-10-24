@@ -86,15 +86,31 @@ export const PORTAL_MOCK = {
 
 export const BOTS = {
   label: 'bot team',
+  numeral: 'iii',
   headline: 'my bots hand work to each other.',
+  body: 'luna leads. she takes the ask and hands it to the right bot. x boss runs the writing side.',
+  /** The coding chain, in the order a job moves through it. */
+  stations: [
+    { name: 'luna', mark: 'L', note: 'takes the ask: redo this site. hands it to code boss.' },
+    { name: 'code boss', mark: 'C', note: 'turns it into a coding job.' },
+    { name: 'architect', mark: 'A', note: 'sketches the plan. sections, files, perf budget.' },
+    { name: 'the build', mark: 'B', note: 'claude code writes it, one section at a time.' },
+    { name: 'reviewer', mark: 'R', note: 'checks it before anything ships.' },
+  ],
+  side: { name: 'x boss', mark: 'X', note: 'runs the writing side.' },
+  slip: { label: 'job: redesign', text: 'brycerambach.com' },
+  caption: 'a real handoff. this page is the job.',
 };
 
 export const MORE = {
   label: 'more work',
+  numeral: 'iv',
   rows: [
-    { name: 'arro', line: 'a daily movement streak for families who live apart. a missed day is never public.', href: '/projects/arro' },
-    { name: 'port', line: 'hold for a second and the screen folds into a line.', href: '/projects/port' },
+    { id: 'arro', name: 'arro', line: 'a daily movement streak for families who live apart. a missed day is never public.' },
+    { id: 'port', name: 'port', line: 'hold for a second and the screen folds into a line.' },
   ],
+  read: 'read',
+  story: { id: 'dervo', label: 'dervo, the full story' },
 };
 
 export const FOOTER = {

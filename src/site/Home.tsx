@@ -4,7 +4,9 @@ import LazyScene from './home/LazyScene';
 import DervoStill from './home/scenes/DervoStill';
 import PortalStill from './home/scenes/PortalStill';
 import Hero from './home/scenes/Hero';
-import { BotsPlaceholder, FooterPlaceholder, MorePlaceholder } from './home/scenes/Placeholders';
+import BotTeam from './home/scenes/BotTeam';
+import Footer from './home/scenes/Footer';
+import MoreWork from './home/scenes/MoreWork';
 import './home/look-d.css';
 
 /* The home page, in look D: an engraved edition on cream paper. The order here is the page's order. Scenes with
@@ -44,10 +46,10 @@ export default function Home() {
     <Ornament />
     <LazyScene className="pt-host" load={loadPortal} still={<PortalStill />} />
     <Ornament />
-    <BotsPlaceholder />
+    <BotTeam />
     <Ornament />
-    <MorePlaceholder />
+    <MoreWork />
     <Ornament />
-    <FooterPlaceholder />
+    <Footer />
   </main>;
 }
