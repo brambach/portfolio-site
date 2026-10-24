@@ -1,7 +1,6 @@
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
-import Lenis from 'lenis';
 import { finePointer, narrow, reducedMotion, WORK } from './content';
 import { pageWorkById } from './work';
 import type { WorkId } from './routes';
@@ -105,7 +104,7 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
   };
   // The picture the page opens on starts coming first.
   if (offThread) void fetchArt(ART.hero.src);
-  let stopped = false, leaving = false, lenis: Lenis | null = null;
+  let stopped = false, leaving = false;
   const ctx = gsap.context(() => {}, root);
 
   // ---- the dots -------------------------------------------------------------------------------------------------
@@ -325,14 +324,6 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
   const showDots = () => root.classList.add('has-dots');
   if (dots && !still) { dots.field(); requestAnimationFrame(showDots); }
 
-  // ---- smooth scrolling, on the same clock as GSAP --------------------------------------------------------------
-  const tick = (t: number) => lenis?.raf(t * 1000);
-  if (!still) {
-    lenis = new Lenis({ duration: 1.1, easing: t => 1 - Math.pow(1 - t, 4), autoRaf: false });
-    lenis.on('scroll', ScrollTrigger.update);
-    gsap.ticker.add(tick);
-    gsap.ticker.lagSmoothing(0);
-  }
   const ro = new ResizeObserver(() => ScrollTrigger.refresh());
   ro.observe(root);
   off.push(() => ro.disconnect());
@@ -411,7 +402,6 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
     if (still || stopped || !dots || !work) { location.href = href; return; }
     if (leaving) return;
     leaving = true;
-    lenis?.stop();
     canvas.style.transition = ''; canvas.style.opacity = '';
     gsap.to(peek, { autoAlpha: 0, duration: 0.3, ease: 'power2.in', overwrite: 'auto' });
     gsap.to([main, head], { autoAlpha: 0, duration: 0.45, ease: 'power2.out', overwrite: 'auto' });
@@ -436,7 +426,6 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
     if (!e.persisted || !leaving) return;
     leaving = false; shown = 1; canvas.style.transition = ''; canvas.style.opacity = '';
     gsap.to([main, head], { autoAlpha: 1, duration: 0.5, ease: 'power2.out', overwrite: 'auto' });
-    lenis?.start();
     const f = scene && formations.get(scene);
     if (f && dots) dots.morph(f, { order: 'center', dur: 0.9, spread: 0.4 });
   });
@@ -588,8 +577,6 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
     stop() {
       stopped = true;
       off.forEach(fn => fn());
-      gsap.ticker.remove(tick);
-      lenis?.destroy();
       ctx.revert();
       dots?.stop();
       root.classList.remove('is-ready', 'has-cursor', 'has-dots');
