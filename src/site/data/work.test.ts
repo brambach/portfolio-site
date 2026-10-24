@@ -25,7 +25,7 @@ describe('the work on the home page’s index', () => {
     }
   });
   it('has the files the pages link to', () => {
-    for (const file of ['/projects/port/close.wav', '/favicon.svg', '/favicon.ico', '/apple-touch-icon.png', '/og/home.jpg']) {
+    for (const file of ['/projects/port/close.wav', '/favicon.svg', '/favicon.ico', '/apple-touch-icon.png', '/og/home-look-d.jpg']) {
       expect(existsSync(publicFile(file)), file).toBe(true);
     }
   });
