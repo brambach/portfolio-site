@@ -316,6 +316,7 @@
   white-space: nowrap;
 }
 .dv__cur[data-flip] .dv__tag { left: auto; right: 4px; }
+.dv__cur[data-rest] .dv__tag { opacity: 0; transition: opacity 140ms cubic-bezier(.4,0,1,1); }
 .dv__ring { position: absolute; left: -15px; top: -15px; width: 32px; height: 32px; border-radius: 50%; box-shadow: 0 0 0 1.5px var(--primary); opacity: 0; }
 
 @media (prefers-reduced-motion: reduce) {

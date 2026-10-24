@@ -56,8 +56,8 @@ function paintTally(root: Element, t: number) {
   });
 }
 
-function Cursor({ ref, dim }: { ref?: Ref<HTMLDivElement>; dim?: boolean }) {
-  return <div ref={ref} className="dv__cur" data-dim={dim ? '' : undefined} aria-hidden="true">
+function Cursor({ ref, dim, rest }: { ref?: Ref<HTMLDivElement>; dim?: boolean; rest?: boolean }) {
+  return <div ref={ref} className="dv__cur" data-dim={dim ? '' : undefined} data-rest={rest ? '' : undefined} aria-hidden="true">
     <span className="dv__ring" />
     <span className="dv__press">
       <svg className="dv__arrow" viewBox="0 0 16 22"><path d="M1.5 1.5v16.2l4.1-3.9 2.9 6.5 2.9-1.3-2.8-6.3h5.7Z" /></svg>
@@ -177,6 +177,9 @@ function Lite() {
 function LiteFrame({ variant, beat, done }: { variant: MockVariant; beat: number; done: Set<number> }) {
   const { before, after } = liteStates(beat);
   const [state, setState] = useState<MockState>(() => (done.has(beat) ? after : before));
+  // A phone's frame is too tight for the cursor's label to sit anywhere without covering a line of the app, so
+  // it rides along while the cursor glides in and goes once it lands.
+  const [rest, setRest] = useState(() => done.has(beat));
   const mock = useRef<HTMLDivElement>(null);
   const cur = useRef<HTMLDivElement>(null);
   const anchors = useRef<Anchors>({});
@@ -219,14 +222,14 @@ function LiteFrame({ variant, beat, done }: { variant: MockVariant; beat: number
         };
         frames.push(requestAnimationFrame(tick));
       }
-      timers.push(window.setTimeout(() => { if (step.click) press(el); setState(after); }, 700));
+      timers.push(window.setTimeout(() => { if (step.click) press(el); setState(after); setRest(true); }, 700));
     }, { threshold: 0, rootMargin: '0px 0px -40% 0px' });
     io.observe(box);
     return () => { io.disconnect(); timers.forEach(clearTimeout); frames.forEach(cancelAnimationFrame); };
   }, []);
 
   return <Fit zoom={ZOOM.hand} onSize={setSize}>
-    <DervoMock ref={mock} state={state} variant={variant} size={size} beat={beat}><Cursor ref={cur} dim={state.quiet} /></DervoMock>
+    <DervoMock ref={mock} state={state} variant={variant} size={size} beat={beat}><Cursor ref={cur} dim={state.quiet} rest={rest} /></DervoMock>
   </Fit>;
 }
 
