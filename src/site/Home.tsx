@@ -1,13 +1,16 @@
 import { useEffect } from 'react';
 import Ornament from './home/art/Ornament';
+import LazyScene from './home/LazyScene';
+import DervoStill from './home/scenes/DervoStill';
 import Hero from './home/scenes/Hero';
-import { BotsPlaceholder, DervoPlaceholder, FooterPlaceholder, MorePlaceholder, PortalPlaceholder } from './home/scenes/Placeholders';
+import { BotsPlaceholder, FooterPlaceholder, MorePlaceholder, PortalPlaceholder } from './home/scenes/Placeholders';
 import './home/look-d.css';
 
 /* The home page, in look D: an engraved edition on cream paper. The order here is the page's order. Scenes with
    heavy motion load their own code later (home/LazyScene.tsx), so the first load is the words and one drawing. */
 
 const PAPER = '#f3eee3';
+const loadDervo = () => import('./home/scenes/Dervo');
 
 export default function Home() {
   useEffect(() => {
@@ -35,7 +38,7 @@ export default function Home() {
   return <main className="home">
     <Hero />
     <Ornament />
-    <DervoPlaceholder />
+    <LazyScene className="dv-host" load={loadDervo} still={<DervoStill />} />
     <Ornament />
     <PortalPlaceholder />
     <Ornament />

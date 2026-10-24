@@ -15,7 +15,9 @@ const idle = (fn: () => void) => {
 
 export default function LazyScene({ load, still, className }: { load: Loader; still: ReactNode; className?: string }) {
   const box = useRef<HTMLDivElement>(null);
-  const [Scene] = useState(() => lazy(load));
+  // If the scene's code can't load (a dropped connection, a deploy mid-visit), its still stays rather than the
+  // whole page failing.
+  const [Scene] = useState(() => lazy(() => load().catch(() => ({ default: () => <>{still}</> }))));
   const [near, setNear] = useState(false);
 
   useEffect(() => {

@@ -43,9 +43,11 @@ export const DERVO = {
     "every run says what it checked, and what it didn't.",
     "then claude shipped the same things, so i stopped building it. the source is open.",
   ],
+  numeral: 'i',
   source: { label: 'read the source', href: 'https://github.com/brambach/dervo' },
-  page: '/projects/dervo',
+  story: { label: 'the full story', href: '/projects/dervo' },
   mock: 'sample data',
+  newTab: ' (opens in a new tab)',
 };
 
 export const PORTAL = {

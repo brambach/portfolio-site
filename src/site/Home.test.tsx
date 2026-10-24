@@ -117,6 +117,14 @@ describe('A scene that loads later', () => {
     expect(await screen.findByText('scene')).toBeInTheDocument();
     expect(screen.queryByText('still')).toBeNull();
   });
+
+  it('keeps its still if the scene\'s code fails to load', async () => {
+    let reject!: (e: Error) => void;
+    const load = () => new Promise<{ default: () => ReactElement }>((_, r) => { reject = r; });
+    render(<LazyScene load={load} still={<p>still</p>} />);
+    await act(async () => reject(new Error('offline')));
+    expect(await screen.findByText('still')).toBeInTheDocument();
+  });
 });
 
 function walk(dir: string): string[] {
