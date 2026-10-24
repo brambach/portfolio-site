@@ -139,10 +139,10 @@
 .vig__rise { animation: vig-rise 2.8s var(--ease-statement) 160ms both; }
 .vig__plate[data-risen] .vig__rise { animation: none; }
 /* The water breathes out and back once, slowly, while it's on screen, then holds still. */
-.vig__glints { animation: vig-breathe 14s ease-in-out 2 alternate forwards; }
+.vig__glints { animation: vig-breathe 5s ease-in-out 1 forwards; }
 .vig__plate[data-off] .vig__glints { animation-play-state: paused; }
 @keyframes vig-rise { from { transform: translateY(var(--rise, 24px)); } to { transform: none; } }
-@keyframes vig-breathe { from { opacity: .72; transform: none; } to { opacity: .46; transform: translateX(-6px); } }
+@keyframes vig-breathe { 0%, 100% { opacity: .72; transform: none; } 50% { opacity: .46; transform: translateX(-6px); } }
 
 /* The words arrive once: an 8px rise and a fade, 40ms apart. */
 .hero__in { animation: home-arrive 640ms var(--ease-statement) both; }
@@ -452,7 +452,7 @@
    goes down the list a desk every --step: the row it's at takes a pale wash and an orchid lozenge, and the bot
    marks it in its own hand, pressed in once (visibility and transform, so a note is either away or at full ink).
    The slip gives a small nudge at each handoff. It runs once, then rests fully marked. */
-.bt { --step: 2s; --t0: .5s; --n: 1.25rem; --desk: 12.5rem; --pad: var(--s7); }
+.bt { --step: .9s; --t0: .4s; --n: 1.25rem; --desk: 12.5rem; --pad: var(--s7); }
 .bt__body { margin-top: var(--s5); max-width: 560px; color: var(--ink-2); text-wrap: pretty; }
 .bt__cap { margin-top: var(--s6); color: var(--faint); line-height: 1.5; }
 .bt__fig { margin: var(--s8) 0 0; }
@@ -572,7 +572,7 @@
 /* Once, a desk at a time, from the first time most of the slip is in view. */
 .bt__row::before, .bt__row::after { animation: bt-now var(--step) linear calc(var(--t0) + var(--i) * var(--step)) 1 both; }
 .bt__row::after { animation-name: bt-here; }
-.bt__mark { visibility: hidden; animation: bt-ink 520ms var(--ease-statement) calc(var(--t0) + var(--i) * var(--step) + .5s) 1 forwards; }
+.bt__mark { visibility: hidden; animation: bt-ink 520ms var(--ease-statement) calc(var(--t0) + (var(--i) + .25) * var(--step)) 1 forwards; }
 .bt__slip { animation: bt-hand calc(var(--step) * 5) var(--ease-move) var(--t0) 1 forwards; }
 @keyframes bt-now { 0% { opacity: 0; } 8%, 84% { opacity: .6; } 100% { opacity: 0; } }
 @keyframes bt-here { 0% { opacity: 0; } 8%, 84% { opacity: 1; } 100% { opacity: 0; } }
