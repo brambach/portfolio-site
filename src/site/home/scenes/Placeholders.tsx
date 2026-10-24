@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import { BOTS, DERVO, FOOTER, MORE, PORTAL, type SectionId } from '../copy';
+import { BOTS, FOOTER, MORE, PORTAL, type SectionId } from '../copy';
 
 /* PLACEHOLDERS. Static stand-ins so the page is whole and every contents link lands somewhere. Each one is replaced
-   by its real scene in a later run: Dervo.tsx (lazy, via LazyScene), Portal.tsx (lazy), BotTeam.tsx, MoreWork.tsx
+   by its real scene in a later run: Portal.tsx (lazy), BotTeam.tsx, MoreWork.tsx
    and Footer.tsx. Keep the ids: the contents page and /#work links point at them. */
 
 function Placeholder({ id, numeral, label, headline, children }: { id: SectionId; numeral?: string; label?: string; headline: string; children?: ReactNode }) {
@@ -15,7 +15,6 @@ function Placeholder({ id, numeral, label, headline, children }: { id: SectionId
   </section>;
 }
 
-export const DervoPlaceholder = () => <Placeholder id="dervo" numeral="i" label={DERVO.label} headline={DERVO.beats[0]} />;
 export const PortalPlaceholder = () => <Placeholder id="portal" numeral="ii" label={PORTAL.label} headline={PORTAL.headline} />;
 export const BotsPlaceholder = () => <Placeholder id="bots" numeral="iii" label={BOTS.label} headline={BOTS.headline} />;
 

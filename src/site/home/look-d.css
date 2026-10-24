@@ -189,6 +189,91 @@
 .orn__rules { flex: 1; height: 22px; fill: none; stroke: currentColor; stroke-width: .6px; stroke-opacity: .38; }
 .orn__lens { flex: none; }
 
+/* ---------- i. dervo (the frame; the app inside it is home/scenes/dervo-mock.css) ---------- */
+.dv { scroll-margin-top: 0; }
+.dv__label span { color: var(--faint); }
+.dv__count {
+  font: 500 var(--fs-label)/1 var(--font-text);
+  letter-spacing: .06em;
+  font-variant-numeric: tabular-nums;
+  color: var(--faint);
+}
+.dv__n { color: var(--ink-2); }
+.dv__line {
+  font: 400 clamp(1.875rem, 2.75vw, 2.625rem)/1.12 var(--font-display);
+  letter-spacing: -0.014em;
+  color: var(--display-ink);
+  text-wrap: pretty;
+}
+.dv__links { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--s5); row-gap: var(--s2); margin-top: var(--s6); }
+.dv__src, .dv__story {
+  position: relative;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color var(--dur-calm) var(--ease-out), color var(--dur-calm) var(--ease-out);
+}
+.dv__src { color: var(--primary); font-weight: 500; }
+.dv__story { color: var(--muted); font-size: var(--fs-read); }
+.dv__src:hover, .dv__story:hover { text-decoration-color: currentColor; }
+.dv__story:hover { color: var(--action-ink); }
+.dv__src::after, .dv__story::after { content: ""; position: absolute; inset: -12px -6px; }
+.dv__fig { margin: 0; }
+/* The window: white, raised, cut to its design shape so the scaled app fills it exactly. */
+.dv__screen {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--w) / var(--h);
+  overflow: hidden;
+  border-radius: var(--r3);
+  background: var(--raised);
+  box-shadow: var(--float);
+}
+.dv__cap { margin-top: var(--s3); color: var(--faint); }
+
+/* full: the stage sticks while the section scrolls by under it. */
+/* The section is a little wider than the page's column: the window wants the room. */
+.home > .dv-host { width: min(100% - 2 * var(--gutter), 1360px); }
+.dv--full { height: 420vh; }
+.dv__stage {
+  position: sticky; top: 0;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 34fr) minmax(0, 62fr);
+  column-gap: 4%;
+  align-items: center;
+}
+.dv--full .dv__label { margin-bottom: var(--s6); }
+.dv--full .dv__count { margin-bottom: var(--s4); }
+.dv__lines { display: grid; }
+.dv__beat { grid-area: 1 / 1; }
+.dv__beat:not(:first-child) { opacity: 0; pointer-events: none; }
+.dv__beat:focus-within { opacity: 1 !important; transform: none !important; pointer-events: auto !important; }
+.dv--full .dv__screen { width: min(100%, (100vh - 176px) * var(--w) / var(--h)); }
+
+/* lite: six frames, one beat each. */
+.dv--lite, .dv--still { padding-block: var(--s9); }
+.dv--lite .dv__label { margin-bottom: var(--s7); }
+.dv__frames { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s8); }
+.dv__frame { max-width: 480px; }
+.dv--lite .dv__count { margin-bottom: var(--s3); }
+.dv--lite .dv__line { font-size: 1.625rem; line-height: 1.16; }
+.dv--lite .dv__fig { margin-top: var(--s5); }
+
+/* still: the beats as a list beside the finished app. */
+.dv--still { display: grid; grid-template-columns: minmax(0, 34fr) minmax(0, 62fr); column-gap: 4%; align-items: center; }
+.dv--still .dv__label { margin-bottom: var(--s5); }
+.dv__list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s4); }
+.dv__list li {
+  display: grid; grid-template-columns: var(--s5) 1fr; align-items: baseline;
+  font: 400 1.375rem/1.2 var(--font-display);
+  color: var(--display-ink);
+  text-wrap: pretty;
+}
+.dv__num { font: 500 var(--fs-label)/1 var(--font-text); font-variant-numeric: tabular-nums; color: var(--faint); }
+.dv__narrow { display: none; }
+
 /* ---------- sections (placeholders until their scenes land) ---------- */
 .sec { padding-block: var(--s9); scroll-margin-top: var(--s5); }
 .sec__label { margin-bottom: var(--s5); }
@@ -251,6 +336,12 @@
   .toc__link { grid-template-columns: var(--s6) auto minmax(var(--s5), 1fr); row-gap: 2px; padding: var(--s3) 0; }
   .toc__line { grid-column: 2 / -1; text-align: left; }
   .sec { padding-block: var(--s8); }
+  .dv--lite { padding-block: var(--s8); }
+  .dv--lite .dv__label { margin-bottom: var(--s6); }
+  .dv--still { grid-template-columns: 1fr; row-gap: var(--s7); padding-block: var(--s8); }
+  .dv__list li { font-size: 1.25rem; }
+  .dv__wide { display: none; }
+  .dv__narrow { display: grid; gap: var(--s5); max-width: 480px; }
   .more a { grid-template-columns: 1fr; row-gap: 2px; }
   .foot { padding-top: var(--s8); }
 }
