@@ -37,34 +37,38 @@ const MOVE = 0.04;
 
 export const STEPS: Step[] = [
   // 1. three threads
-  { at: 0.04, cursor: 'new-thread', click: true, state: { threads: 1 }, move: 0.035 },
-  { at: 0.075, click: true, state: { threads: 2 } },
-  { at: 0.11, click: true, state: { threads: 3 } },
-  { at: 0.15, cursor: [0.66, 0.6], move: 0.03 },
+  { at: 0.034, cursor: 'new-thread', click: true, state: { threads: 1 }, move: 0.03 },
+  { at: 0.063, click: true, state: { threads: 2 } },
+  { at: 0.092, click: true, state: { threads: 3 } },
+  { at: 0.128, cursor: [0.66, 0.6], move: 0.032 },
   // 2. open one, flip the agent
-  { at: 0.21, cursor: 'thread-ideas', click: true, state: { open: true, run: 1 } },
-  { at: 0.265, cursor: 'agent-codex', click: true, state: { agent: 'codex' } },
-  { at: 0.305, cursor: 'chips', state: { run: 2 } },
+  { at: 0.187, cursor: 'thread-ideas', click: true, state: { open: true, run: 1 } },
+  { at: 0.246, cursor: 'agent-codex', click: true, state: { agent: 'codex' } },
+  { at: 0.289, cursor: 'chips', state: { run: 2 } },
   // 3. split
-  { at: 0.39, cursor: 'split', click: true, state: { split: true } },
-  { at: 0.44, cursor: 'sub-threads', state: { run: 3 }, move: 0.045 },
+  { at: 0.381, cursor: 'split', click: true, state: { split: true } },
+  { at: 0.435, cursor: 'sub-threads', state: { run: 3 }, move: 0.045 },
   // 4. the beta card comes in (the real numbers count up beside the line, outside the window)
   { at: 0.505, state: { beta: true } },
-  { at: 0.545, cursor: 'beta' },
-  { at: 0.6, state: { run: 4 } },
+  { at: 0.549, cursor: 'beta' },
+  { at: 0.608, state: { run: 4 } },
   // 5. the report, then approve
-  { at: 0.69, state: { review: 'ready', run: 5 } },
-  { at: 0.725, cursor: 'not-checked' },
-  { at: 0.785, cursor: 'approve', click: true, state: { review: 'approved' } },
+  { at: 0.705, state: { review: 'ready', run: 5 } },
+  { at: 0.743, cursor: 'not-checked' },
+  { at: 0.808, cursor: 'approve', click: true, state: { review: 'approved' } },
   // 6. everything stops
-  { at: 0.87, cursor: REST, state: { quiet: true }, move: 0.06 },
+  { at: 0.891, cursor: REST, state: { quiet: true }, move: 0.05 },
 ];
 
-export const BEATS = DERVO.beats.map((line, i) => ({ at: i / DERVO.beats.length, line }));
+/** Where each beat starts. The pin scrolls 200vh, so 0.01 is 2vh. The middle four get 36vh each; the first and
+ *  last get 28vh, since beat 1 is already on screen while the section scrolls in and beat 6 stays while it
+ *  scrolls out. */
+const BEAT_AT = [0, 0.14, 0.32, 0.5, 0.68, 0.86];
+export const BEATS = DERVO.beats.map((line, i) => ({ at: BEAT_AT[i], line }));
 
 /** Beat 4's two real numbers (page copy beside the line, not the sample window), counted up with the clock
  *  between these points. */
-export const TALLY = { from: 0.515, to: 0.625 };
+export const TALLY = { from: 0.516, to: 0.635 };
 export const TALLIES = DERVO.tallies;
 
 /** On a phone each beat is its own frame: it shows the state just before its main step, then plays that one step
@@ -105,8 +109,8 @@ export const tallyText = (to: number, plus: boolean, t: number) =>
   Math.round(to * t).toLocaleString('en-US') + (plus && t >= 1 ? '+' : '');
 
 /** The beat on screen at p, and how far each line is in (1) or out (0), crossfading through nothing at each
- *  boundary so two lines never overlap. */
-const FADE = 0.022;
+ *  boundary so two lines never overlap. Each fade is 2.5vh, so every line holds still and whole for most of its beat. */
+export const FADE = 0.0125;
 export function beatAt(p: number) {
   let i = 0;
   while (i + 1 < BEATS.length && p >= BEATS[i + 1].at) i++;

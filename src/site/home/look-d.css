@@ -247,7 +247,7 @@
 /* full: the stage sticks while the section scrolls by under it. */
 /* The section is wider than the page's column: the window wants the room. */
 .home > .dv-host { width: min(100% - 2 * var(--gutter), 1520px); }
-.dv--full { height: 420vh; }
+.dv--full { height: 300vh; }
 /* The window takes about two thirds of the width and four fifths of the height; the words stretch to its height,
    the label on its top edge and the beat line a third of the way down. */
 .dv__stage {

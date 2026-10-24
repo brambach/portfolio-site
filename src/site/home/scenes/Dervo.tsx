@@ -9,7 +9,7 @@ import {
 } from './dervo-script';
 
 /* i. dervo: an agent's cursor drives the app while you scroll, and you watch it work.
-   full: the stage sticks for 420vh and one clock (the scroll, smoothed by a 0.6s scrub) draws everything from the
+   full: the stage sticks for 300vh and one clock (the scroll, smoothed by a 0.6s scrub) draws everything from the
    pure script in dervo-script.ts: the cursor's place, which beat line shows, the app's state and beat 4's count.
    Sticky CSS does the pinning, so the page never reflows or jumps when the code lands; ScrollTrigger only reads
    the scroll. lite: six frames, each plays its one step when it comes into view. still: the finished app.

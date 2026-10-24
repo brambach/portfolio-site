@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DERVO } from '../copy';
-import { BEATS, LITE, MOCK, STEPS, TALLIES, beatAt, cursorAt, lineAt, liteStates, stateAt, tallyAt, tallyText } from './dervo-script';
+import { BEATS, LITE, MOCK, STEPS, TALLIES, TALLY, beatAt, cursorAt, lineAt, liteStates, stateAt, tallyAt, tallyText } from './dervo-script';
 
 const strings = (v: unknown): string[] => typeof v === 'string' ? [v] : v && typeof v === 'object' ? Object.values(v).flatMap(strings) : [];
 const increasing = (xs: number[]) => xs.every((x, i) => i === 0 || x > xs[i - 1]);
@@ -40,6 +40,23 @@ describe('The dervo script', () => {
     }
     expect(beatAt(0.5)).toBe(3);
     expect(lineAt(5, 1).o).toBe(1);
+  });
+
+  it('holds every line whole and still for a stretch of its beat', () => {
+    // The pin scrolls 200vh, so 0.15 is 30vh. Beat 1 and beat 6 are also on screen while the section scrolls in
+    // and out, so they need less of the clock.
+    BEATS.forEach((_, i) => {
+      let still = 0;
+      for (let p = 0; p <= 1; p += 0.0005) { const { o, y } = lineAt(i, p); if (o === 1 && y === 0) still += 0.0005; }
+      expect(still, `beat ${i + 1}`).toBeGreaterThanOrEqual(i === 0 || i === BEATS.length - 1 ? 0.12 : 0.15);
+    });
+  });
+
+  it('finishes the count and lands the cursor while their beats still show', () => {
+    expect(TALLY.from).toBeGreaterThanOrEqual(BEATS[3].at);
+    expect(TALLY.to).toBeLessThan(BEATS[4].at);
+    expect(tallyAt(BEATS[4].at - 0.02)).toBe(1);
+    expect(STEPS[STEPS.length - 1].at).toBeLessThan(0.95);
   });
 
   it('moves the cursor without jumps', () => {
