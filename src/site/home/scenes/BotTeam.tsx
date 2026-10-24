@@ -2,10 +2,11 @@ import { useEffect, useRef, type CSSProperties } from 'react';
 import { BOTS } from '../copy';
 import { useMotionMode } from '../motion-mode';
 
-/* iii. the bot team: a relay on an engraved rule. A white job slip rests at each bot for two seconds, then passes
-   to the next, and the bot holding it brightens. The loop is CSS (look-d.css, 16s), so this file only draws the
-   parts and pauses the loop while the section is off screen. On a phone the rule stands up and the slip travels
-   down it. Reduced motion: the slip rests at reviewer and every bot sits at full ink. */
+/* iii. the bot team: a relay on an engraved rule. A white job ticket docks above each bot, and the bot holding it
+   inks in while the one before it dims. The loop is CSS (look-d.css, 17s), so this file only draws the parts,
+   starts the loop the first time the relay comes into view, and pauses it while it's off screen. On a phone the
+   rule stands up and the ticket travels down it. Reduced motion: the ticket rests at reviewer and every bot sits at
+   full ink. */
 
 const TICK = 5;
 
@@ -25,17 +26,18 @@ function Rule({ dir }: { dir: 'h' | 'v' }) {
   </svg>;
 }
 
-/** A small engraved roundel: a ring of fine ticks between two hairlines, the bot's letter in the middle. */
+/** An engraved roundel: a double ring, a band of fine ticks, an inner ring, the bot's letter in the middle. */
 function Roundel({ mark }: { mark: string }) {
-  const ticks = Array.from({ length: 36 }, (_, i) => {
-    const a = (i / 36) * 2 * Math.PI, c = Math.cos(a), s = Math.sin(a);
-    return `M${(24 + 19.2 * c).toFixed(2)},${(24 + 19.2 * s).toFixed(2)}L${(24 + 21.6 * c).toFixed(2)},${(24 + 21.6 * s).toFixed(2)}`;
+  const ticks = Array.from({ length: 48 }, (_, i) => {
+    const a = (i / 48) * 2 * Math.PI, c = Math.cos(a), s = Math.sin(a);
+    return `M${(28 + 21.4 * c).toFixed(2)},${(28 + 21.4 * s).toFixed(2)}L${(28 + 24 * c).toFixed(2)},${(28 + 24 * s).toFixed(2)}`;
   }).join('');
   return <span className="bt__mark" aria-hidden="true">
     <span className="bt__glow" />
-    <svg viewBox="0 0 48 48" focusable="false">
-      <circle cx="24" cy="24" r="23" />
-      <circle cx="24" cy="24" r="18" />
+    <svg viewBox="0 0 56 56" focusable="false">
+      <circle cx="28" cy="28" r="27.2" />
+      <circle cx="28" cy="28" r="25.6" />
+      <circle cx="28" cy="28" r="20.6" />
       <path d={ticks} />
     </svg>
     <span className="bt__letter">{mark}</span>
@@ -48,16 +50,30 @@ export default function BotTeam() {
 
   useEffect(() => {
     const el = relay.current;
-    if (!el || mode === 'still' || typeof IntersectionObserver !== 'function') return;
-    const io = new IntersectionObserver(([e]) => { el.toggleAttribute('data-off', !e.isIntersecting); });
+    if (!el || mode === 'still') return;
+    if (typeof IntersectionObserver !== 'function') { el.setAttribute('data-run', ''); return; }
+    const io = new IntersectionObserver(([e]) => {
+      el.toggleAttribute('data-off', !e.isIntersecting);
+      if (e.isIntersecting) el.setAttribute('data-run', '');
+    });
     io.observe(el);
     return () => io.disconnect();
   }, [mode]);
 
   return <section id="bots" className="sec bt" data-motion={mode} aria-labelledby="bots-h">
-    <p className="label sec__label"><span aria-hidden="true">{BOTS.numeral} ·</span>{BOTS.label}</p>
-    <h2 id="bots-h" className="sec__head">{BOTS.headline}</h2>
-    <p className="bt__body">{BOTS.body}</p>
+    <div className="bt__intro">
+      <p className="label sec__label"><span aria-hidden="true">{BOTS.numeral} ·</span>{BOTS.label}</p>
+      <h2 id="bots-h" className="sec__head">{BOTS.headline}</h2>
+      <p className="bt__body">{BOTS.body}</p>
+    </div>
+    <div className="bt__side">
+      <Rule dir="h" />
+      <Roundel mark={BOTS.side.mark} />
+      <span className="bt__text">
+        <span className="bt__name">{BOTS.side.name}</span>
+        <span className="bt__note">{BOTS.side.note}</span>
+      </span>
+    </div>
     <figure className="bt__fig">
       <div ref={relay} className="bt__relay">
         <Rule dir="h" />
@@ -72,15 +88,16 @@ export default function BotTeam() {
           </li>)}
         </ol>
         <span className="bt__carrier" aria-hidden="true">
-          <span className="bt__slip"><span className="bt__slip-k">{BOTS.slip.label}</span> {BOTS.slip.text}</span>
-        </span>
-      </div>
-      <div className="bt__side">
-        <Rule dir="h" />
-        <Roundel mark={BOTS.side.mark} />
-        <span className="bt__text">
-          <span className="bt__name">{BOTS.side.name}</span>
-          <span className="bt__note">{BOTS.side.note}</span>
+          <span className="bt__slip">
+            <span className="bt__slip-k">{BOTS.slip.label}</span>{' '}
+            <span className="bt__slip-t">{BOTS.slip.text}</span>{' '}
+            <span className="bt__slip-who">
+              {BOTS.slip.holder}{' '}
+              <span className="bt__who">
+                {BOTS.stations.map((s, i) => <span key={s.name} style={{ '--i': i } as CSSProperties}>{s.name}</span>)}
+              </span>
+            </span>
+          </span>
         </span>
       </div>
       <figcaption className="label bt__cap">{BOTS.caption}</figcaption>
