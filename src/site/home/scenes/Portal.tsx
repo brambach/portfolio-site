@@ -186,6 +186,11 @@ function Full() {
         });
       });
       revert = () => ctx.revert();
+    }, () => {
+      // No GSAP, no scrub: the cells sit in their slots (and stay there through any remeasure).
+      if (!alive) return;
+      clock.current.p = 1;
+      draw();
     });
     return () => { alive = false; revert(); };
   }, []);
