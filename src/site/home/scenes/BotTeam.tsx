@@ -1,4 +1,4 @@
-import { useEffect, useRef, type CSSProperties } from 'react';
+import { useEffect, useId, useRef, type CSSProperties } from 'react';
 import { BOTS } from '../copy';
 import { useMotionMode } from '../motion-mode';
 
@@ -13,7 +13,8 @@ const TICK = 5;
 /** The rule, as on a banknote's border: two hairlines with fine ticks between them. Drawn in user units, so the
  *  ticks keep their spacing at any width. */
 function Rule({ dir }: { dir: 'h' | 'v' }) {
-  const id = `bt-ticks-${dir}`, h = dir === 'h';
+  // Unique per rule, so two on a page never share a pattern; no colons, so url(#id) always resolves.
+  const id = `bt-ticks-${dir}-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`, h = dir === 'h';
   return <svg className={`bt__rule bt__rule--${dir}`} aria-hidden="true" focusable="false">
     <defs>
       <pattern id={id} width={h ? TICK : 6} height={h ? 6 : TICK} patternUnits="userSpaceOnUse">
