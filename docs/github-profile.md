@@ -1,9 +1,9 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/banner-dark.svg">
-  <img alt="Bryce Rambach. the city, open to founding roles in a new city." src="assets/banner-light.svg" width="100%">
+  <img alt="Bryce Rambach. Open to founding roles, and open to moving." src="assets/banner-light.svg" width="100%">
 </picture>
 
-Hey, I'm Bryce. I graduated from college in May 2026 with a CS degree. I build agent tooling and care a lot about how software feels. Right now I'm looking at founding or product engineer roles at early-stage AI startups in a new city.
+Hey, I'm Bryce. I graduated from college in May 2026 with a CS degree. I build agent tooling and care a lot about how software feels. Right now I'm looking at founding or product engineer roles at early-stage AI startups, and I'm open to moving.
 
 ### What I'm building
 
