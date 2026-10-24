@@ -94,7 +94,7 @@ describe('The home page on a phone', () => {
   });
   it('gives the small links in the header and footer a 44px band to tap', () => {
     expect(home).toMatch(/\.hero__name::after, \.hero__links a::after \{ content: ""; position: absolute; inset: -16px -8px; \}/);
-    expect(home).toMatch(/\.foot__links a::after \{ content: ""; position: absolute; inset: -16px -8px; \}/);
+    expect(home).toMatch(/\.foot__links a \{ padding: 14px 12px; margin-inline: -12px; \}/);
   });
   it('keeps the engraving\'s box the same shape before and after it is drawn', () => {
     expect(home).toMatch(/\.vig \{[^}]*aspect-ratio: 4\.4 \/ 1;/);

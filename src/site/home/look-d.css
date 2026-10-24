@@ -656,7 +656,10 @@
   transition: color var(--dur-calm) var(--ease-out);
 }
 .foot__links a:hover { color: var(--action-ink); }
-.foot__links a::after { content: ""; position: absolute; inset: -16px -8px; }
+/* A 44px tall tap target that moves nothing: an inline box's padding doesn't touch the line, and the side padding
+   is given back in margin. Neighbours meet in the gap without overlapping. The focus ring stays close to the word. */
+.foot__links a { padding: 14px 12px; margin-inline: -12px; }
+.foot__links a:focus-visible { outline-offset: -8px; }
 .foot .orn { margin-top: var(--s8); }
 .foot__sign { margin-top: var(--s5); color: var(--ink-2); font-size: var(--fs-read); }
 .home .foot__colophon { margin-top: var(--s2); line-height: 1.6; color: var(--faint); }
