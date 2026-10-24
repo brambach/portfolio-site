@@ -96,19 +96,21 @@ export const BOTS = {
   label: 'bot team',
   numeral: 'iii',
   headline: 'my bots hand work to each other.',
-  body: 'luna leads. she takes the ask and hands it to the right bot. x boss runs the writing side.',
-  /** The coding chain, in the order a job moves through it. */
+  body: 'luna leads. she takes the ask and hands it to the right bot.',
+  /** The work order, printed. The job is this site. */
+  slip: { title: 'work order', no: 'no. iii', field: 'job', job: 'redesign brycerambach.com', desk: 'desk', note: 'handoff note' },
+  /** The coding chain, in the order a job moves through it. Each bot marks the slip in its own hand. */
   stations: [
-    { name: 'luna', mark: 'L', note: 'takes the ask: redo this site. hands it to code boss.' },
-    { name: 'code boss', mark: 'C', note: 'turns it into a coding job.' },
-    { name: 'architect', mark: 'A', note: 'sketches the plan. sections, files, perf budget.' },
-    { name: 'the build', mark: 'B', note: 'claude code writes it, one section at a time.' },
-    { name: 'reviewer', mark: 'R', note: 'checks it before anything ships.' },
+    { name: 'luna', role: 'takes the ask', hand: 'sign', note: 'redo this site. to code boss.', signed: 'luna' },
+    { name: 'code boss', role: 'turns it into a coding job', hand: 'stamp', note: 'to architect' },
+    { name: 'architect', role: 'sketches the plan', hand: 'script', note: 'six sections, files, a perf budget.' },
+    { name: 'the build', role: 'claude code writes it', hand: 'typed', note: 'one section at a time.' },
+    { name: 'reviewer', role: 'checks it before anything ships', hand: 'check', note: 'checked before it ships.' },
   ],
-  side: { name: 'x boss', mark: 'X', note: 'runs the writing side.' },
-  slip: { label: 'job', text: 'redesign brycerambach.com', holder: 'with:' },
+  /** The other desk, on the slip's stub: not on this job's route. */
+  side: { name: 'x boss', role: 'runs the writing side.' },
   caption: 'a real handoff. this page is the job.',
-};
+} as const;
 
 export const MORE = {
   label: 'more work',
