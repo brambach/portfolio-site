@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react';
+import { Component, lazy, Suspense, useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react';
 
 /* A scene whose code loads later. Its still (a static picture of the scene, the same size as the real one) paints
    with the page, so nothing waits on the scene's JS and nothing moves when it lands. The real scene mounts when the
@@ -12,6 +12,13 @@ const idle = (fn: () => void) => {
   const id = window.setTimeout(fn, 1200);
   return () => window.clearTimeout(id);
 };
+
+/** If the scene throws once it's running, its still takes its place rather than the whole page going blank. */
+class Fallback extends Component<{ still: ReactNode; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  render() { return this.state.failed ? this.props.still : this.props.children; }
+}
 
 export default function LazyScene({ load, still, className }: { load: Loader; still: ReactNode; className?: string }) {
   const box = useRef<HTMLDivElement>(null);
@@ -34,6 +41,6 @@ export default function LazyScene({ load, still, className }: { load: Loader; st
   }, [near]);
 
   return <div ref={box} className={className}>
-    {near ? <Suspense fallback={still}><Scene /></Suspense> : still}
+    {near ? <Fallback still={still}><Suspense fallback={still}><Scene /></Suspense></Fallback> : still}
   </div>;
 }

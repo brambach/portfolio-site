@@ -91,7 +91,7 @@ function Full() {
   const [steps, setSteps] = useState(0);
   const [size, setSize] = useState<Size>(SIZE.wide);
   const state = steps ? stateAt(STEPS[steps - 1].at) : stateAt(-1);
-  const clock = useRef({ p: 0, last: 0, anchors: {} as Anchors, size, draw: () => {} });
+  const clock = useRef({ p: 0, last: 0, anchors: {} as Anchors, size, alive: false, draw: () => {} });
   clock.current.size = size;
 
   useLayoutEffect(() => {
@@ -99,16 +99,20 @@ function Full() {
     const lines = [...sec.querySelectorAll<HTMLElement>('.dv__beat')];
     const count = sec.querySelector('.dv__n')!;
     let beat = 0, done = 0, tally = -1;
+    c.alive = true;
     c.draw = () => {
+      // ScrollTrigger can call in while the scene is being torn down (a resize or motion change swaps it out).
+      const el = cur.current, box = mock.current;
+      if (!c.alive || !el || !box) return;
       const { p } = c, [W, H] = c.size;
-      place(cur.current!, cursorAt(p, c.anchors, W, H), W);
+      place(el, cursorAt(p, c.anchors, W, H), W);
       // A click only plays going forwards, and not when a jump skips over it.
-      if (p - c.last < 0.06 && clicksBetween(c.last, p).length) press(cur.current!);
+      if (p - c.last < 0.06 && clicksBetween(c.last, p).length) press(el);
       c.last = p;
       const n = stepsBy(p);
       if (n !== done) { done = n; setSteps(n); }
       const t = tallyAt(p);
-      if (t !== tally) { tally = t; paintTally(mock.current!, t); }
+      if (t !== tally) { tally = t; paintTally(box, t); }
       lines.forEach((el, i) => {
         const { o, y } = lineAt(i, p);
         el.style.opacity = String(o);
@@ -119,6 +123,7 @@ function Full() {
       if (b !== beat) { beat = b; count.textContent = String(b + 1); }
     };
     c.draw();
+    return () => { c.alive = false; };
   }, []);
 
   useAnchors(mock, size, a => { clock.current.anchors = a; clock.current.draw(); });
@@ -132,7 +137,7 @@ function Full() {
         gsap.to(t, {
           p: 1, ease: 'none',
           scrollTrigger: { trigger: root.current, start: 'top top', end: 'bottom bottom', scrub: 0.6 },
-          onUpdate: () => { c.p = t.p; c.draw(); },
+          onUpdate: () => { if (!alive) return; c.p = t.p; c.draw(); },
         });
       });
       revert = () => ctx.revert();
@@ -166,12 +171,14 @@ function LiteFrame({ variant, beat }: { variant: MockVariant; beat: number }) {
 
   useAnchors(mock, size, a => {
     anchors.current = a;
-    const [W, H] = dims.current, el = cur.current!;
+    const [W, H] = dims.current, el = cur.current;
+    if (!el) return;
     place(el, resolve(played.current ? def.to : def.from, a, W, H), W);
   });
 
   useEffect(() => {
-    const box = mock.current!;
+    const box = mock.current;
+    if (!box) return;
     if (counts) paintTally(box, 0);
     const timers: number[] = [], frames: number[] = [];
     const io = new IntersectionObserver(entries => {
@@ -179,7 +186,8 @@ function LiteFrame({ variant, beat }: { variant: MockVariant; beat: number }) {
       played.current = true;
       io.disconnect();
       const [W, H] = dims.current;
-      const a = resolve(def.from, anchors.current, W, H), b = resolve(def.to, anchors.current, W, H), el = cur.current!;
+      const a = resolve(def.from, anchors.current, W, H), b = resolve(def.to, anchors.current, W, H), el = cur.current;
+      if (!el) return;
       const path = Array.from({ length: 17 }, (_, k) => { const [x, y] = arc(a, b, glide(k / 16)); return { transform: `translate3d(${x}px,${y}px,0)` }; });
       place(el, b, W);
       el.animate(path, { duration: 700, easing: 'linear' });
@@ -215,7 +223,7 @@ function StillMock({ variant }: { variant: MockVariant }) {
   const mock = useRef<HTMLDivElement>(null);
   const cur = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<Size>(SIZE[variant]);
-  useAnchors(mock, size, a => { const at = a.approve ?? a['sub-threads']; if (at) place(cur.current!, [at[0] + 10, at[1] + 6], size[0]); });
+  useAnchors(mock, size, a => { const at = a.approve ?? a['sub-threads']; if (at && cur.current) place(cur.current, [at[0] + 10, at[1] + 6], size[0]); });
   return <Fit base={SIZE[variant]} zoom={variant === 'wide' ? ZOOM.desk : ZOOM.hand} onSize={setSize}>
     <DervoMock ref={mock} state={FINISHED} variant={variant} size={size}><Cursor ref={cur} /></DervoMock>
   </Fit>;
