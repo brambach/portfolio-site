@@ -138,8 +138,8 @@
 /* The sun rises once from behind the far range. */
 .vig__rise { animation: vig-rise 2.8s var(--ease-statement) 160ms both; }
 .vig__plate[data-risen] .vig__rise { animation: none; }
-/* The water breathes, slowly, while it's on screen. */
-.vig__glints { animation: vig-breathe 14s ease-in-out infinite alternate; }
+/* The water breathes out and back once, slowly, while it's on screen, then holds still. */
+.vig__glints { animation: vig-breathe 14s ease-in-out 2 alternate forwards; }
 .vig__plate[data-off] .vig__glints { animation-play-state: paused; }
 @keyframes vig-rise { from { transform: translateY(var(--rise, 24px)); } to { transform: none; } }
 @keyframes vig-breathe { from { opacity: .72; transform: none; } to { opacity: .46; transform: translateX(-6px); } }
@@ -430,7 +430,7 @@
    leaves reviewer and comes back to luna while it's out of sight. Every per-bot part runs the same loop shifted by
    its --i, so a bot inks in as the ticket arrives and dims as the next one takes it. Nothing runs until the relay
    first comes into view (data-run), so the story starts at luna. */
-.bt { --mark: 56px; --zone: 172px; --dim: .58; --T: 17s; --step: 3.4s; --ticket: 236px; }
+.bt { --mark: 56px; --zone: 172px; --dim: .58; --T: 17s; --step: 3.4s; --ticket: 236px; --runs: 1.9; }
 .bt__body { margin-top: var(--s5); max-width: 560px; color: var(--ink-2); text-wrap: pretty; }
 .bt__fig { margin: var(--s8) 0 0; }
 .bt__relay { position: relative; padding-top: var(--zone); }
@@ -548,15 +548,17 @@
   .bt__fig { grid-column: 1 / -1; margin-top: var(--s7); }
 }
 
+/* The ticket goes round twice and stops with reviewer: the carrier runs --runs laps (1.9 lands it at the last bot),
+   and each bot, started (1 - i/5) of a lap early, runs that much longer so every clock stops at the same moment. */
 .bt__station, .bt__station .bt__glow, .bt__station .bt__name::after, .bt__who > span {
-  animation: var(--T) linear calc(var(--i) * var(--step) - var(--T)) infinite;
+  animation: var(--T) linear calc(var(--i) * var(--step) - var(--T)) calc(var(--runs) + 1 - var(--i) * .2) forwards;
 }
 .bt__station { animation-name: bt-lit; }
 .bt__station .bt__glow { animation-name: bt-glow; }
 .bt__station .bt__name::after { animation-name: bt-draw; animation-timing-function: var(--ease-statement); }
 .bt__who > span { animation-name: bt-who; }
-.bt__carrier { animation: bt-run-x var(--T) cubic-bezier(.65, 0, .35, 1) infinite; }
-.bt__slip { animation: bt-slip var(--T) cubic-bezier(.45, 0, .55, 1) infinite; }
+.bt__carrier { animation: bt-run-x var(--T) cubic-bezier(.65, 0, .35, 1) var(--runs) forwards; }
+.bt__slip { animation: bt-slip var(--T) cubic-bezier(.45, 0, .55, 1) var(--runs) forwards; }
 
 /* Station i docks at i * 20% and is handed on 2.4s (14.118%) later. */
 @keyframes bt-run-x {

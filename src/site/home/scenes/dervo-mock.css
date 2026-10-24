@@ -47,15 +47,15 @@
 .dm__g[data-s="done"] path { stroke: var(--done); stroke-width: 1.5; }
 .dm__g[data-s="idle"] circle { stroke: var(--line-strong); }
 
-/* "working", in small caps, breathing slowly. Not a spinner. */
+/* "working", in small caps, breathing a few times and then steady. Not a spinner. */
 .dm__live {
   font: 600 11px/1 var(--font-text);
   letter-spacing: .08em;
   text-transform: uppercase;
   color: var(--running);
-  animation: dm-breathe 1.2s ease-in-out infinite alternate;
+  animation: dm-breathe 1.2s ease-in-out 4 alternate forwards;
 }
-.dm[data-quiet] .dm__live { animation: none; }
+.dm[data-quiet] .dm__live, .dv--still .dm__live { animation: none; }
 @keyframes dm-breathe { from { opacity: 1; } to { opacity: .35; } }
 
 .dm__small, .dm__group, .dm__label, .dm__plabel, .dm__ledger p > span {
