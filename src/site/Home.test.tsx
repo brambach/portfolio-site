@@ -89,6 +89,23 @@ describe('The home page', () => {
     expect(container.querySelector('#portal')).toHaveTextContent("doesn't map yet. needs you.");
   });
 
+  it('links the portal to its page', () => {
+    const { container } = render(<Home />);
+    const portal = within(container.querySelector<HTMLElement>('#portal')!);
+    expect(portal.getByRole('link', { name: 'the full story' })).toHaveAttribute('href', '/projects/integration-portal');
+    expect(screen.getByRole('navigation', { name: 'contents' })).toHaveTextContent('integration portal');
+  });
+
+  it('sets dervo\'s real numbers as page copy beside beat 4, outside the sample window', () => {
+    const { container } = render(<Home />);
+    const dervo = container.querySelector<HTMLElement>('#dervo')!;
+    const tally = dervo.querySelector('.dv__tally')!;
+    expect(tally).toHaveTextContent('18beta testers');
+    expect(tally).toHaveTextContent('1,500+agent tasks');
+    expect(tally.closest('.dv__screen, figure')).toBeNull();
+    dervo.querySelectorAll('.dv__screen').forEach(w => expect(w).not.toHaveTextContent(/beta testers|agent tasks|1,500/));
+  });
+
   it('keeps the old dot art, its motion and GSAP out of the home page', () => {
     const files = ['Home.tsx', ...walk(path.join(__dirname, 'home'))].map(f => readFileSync(path.resolve(__dirname, f), 'utf8'));
     for (const src of files) {

@@ -8,7 +8,9 @@ import { useMotionMode, type MotionMode } from '../motion-mode';
    full: one sticky stage 420vh tall, the beat line on the left, the window on the right filling most of the screen.
    lite: six stacked frames, a beat line and a window each. Each window is a zoomed crop of the part of the app its
    beat is about, as tall as that crop: on a phone one half of the app, on a tablet both halves side by side.
-   still: every beat line as a list, beside the finished app. */
+   still: every beat line as a list, beside the finished app.
+   Beat 4's two real numbers sit under its line as page copy in every mode, never in the window (that's sample data).
+   They're drawn finished here; the scene counts them up. */
 
 export type MockVariant = 'wide' | 'side' | 'main';
 /** Each window's fixed design size; the app is drawn at this size and scaled to fit. */
@@ -42,6 +44,19 @@ const Label = () => <h2 id="dervo-h" className="label dv__label"><span aria-hidd
 const Caption = () => <figcaption className="label dv__cap">{DERVO.mock}</figcaption>;
 const Count = ({ i }: { i: number }) => <p className="dv__count" aria-hidden="true"><span className="dv__n">{i + 1}</span> / {DERVO.beats.length}</p>;
 
+/** The index of the beat with the real numbers. */
+export const TALLY_BEAT = 3;
+
+/** Beat 4's numbers, set large under its line. The line already says them, so screen readers skip these. */
+function Tally() {
+  return <div className="dv__tally" aria-hidden="true">
+    {DERVO.tallies.map(t => <p key={t.label} className="dv__stat">
+      <b><span data-tally={t.to}>{t.to.toLocaleString('en-US')}</span><span data-plus="">{t.plus ? '+' : ''}</span></b>
+      <span className="label">{t.label}</span>
+    </p>)}
+  </div>;
+}
+
 function Links() {
   return <p className="dv__links">
     <a className="dv__src" href={DERVO.source.href} target="_blank" rel="noopener noreferrer">{DERVO.source.label}<span className="sr">{DERVO.newTab}</span></a>
@@ -57,6 +72,7 @@ export function DervoLayout({ mode, screen, label, rootRef }: { mode: MotionMode
       {beats.map((line, i) => <li key={i} className="dv__frame" data-beat={i}>
         <Count i={i} />
         <p className="dv__line">{line}</p>
+        {i === TALLY_BEAT && <Tally />}
         <figure className="dv__fig">
           <Window variant={LITE_FRAMES[i].pane} beat={i} screen={screen} label={label} lite />
           {i === 0 && <Caption />}
@@ -69,7 +85,7 @@ export function DervoLayout({ mode, screen, label, rootRef }: { mode: MotionMode
   if (mode === 'still') return <section id="dervo" ref={rootRef} className="dv dv--still" aria-labelledby="dervo-h">
     <div className="dv__text">
       <Label />
-      <ol className="dv__list">{beats.map((line, i) => <li key={i}><span className="dv__num" aria-hidden="true">{i + 1}</span>{line}</li>)}</ol>
+      <ol className="dv__list">{beats.map((line, i) => <li key={i}><span className="dv__num" aria-hidden="true">{i + 1}</span><span>{line}{i === TALLY_BEAT && <Tally />}</span></li>)}</ol>
       <Links />
     </div>
     <figure className="dv__fig">
@@ -90,6 +106,7 @@ export function DervoLayout({ mode, screen, label, rootRef }: { mode: MotionMode
         <ol className="sr">{beats.map((line, i) => <li key={i}>{line}</li>)}</ol>
         <div className="dv__lines">{beats.map((line, i) => <div key={i} className="dv__beat">
           <p className="dv__line" aria-hidden="true">{line}</p>
+          {i === TALLY_BEAT && <Tally />}
           {i === beats.length - 1 && <Links />}
         </div>)}</div>
       </div>

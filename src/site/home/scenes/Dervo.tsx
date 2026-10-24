@@ -1,16 +1,16 @@
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode, type Ref, type RefObject } from 'react';
 import { loadGsap } from '../gsap';
 import { useMotionMode } from '../motion-mode';
-import DervoMock, { measureAnchors, paintTally, type Size } from './DervoMock';
-import { DervoLayout, SIZE, ZOOM, type MockVariant } from './DervoStill';
+import DervoMock, { measureAnchors, type Size } from './DervoMock';
+import { DervoLayout, SIZE, TALLY_BEAT, ZOOM, type MockVariant } from './DervoStill';
 import {
-  BEATS, LITE, MOCK, STEPS, arc, beatAt, clicksBetween, cursorAt, glide, lineAt, liteStates, resolve, stateAt, stepsBy, tallyAt,
+  LITE, MOCK, STEPS, TALLIES, arc, beatAt, clicksBetween, cursorAt, glide, lineAt, liteStates, resolve, stateAt, stepsBy, tallyAt, tallyText,
   type Anchors, type MockState,
 } from './dervo-script';
 
 /* i. dervo: an agent's cursor drives the app while you scroll, and you watch it work.
    full: the stage sticks for 420vh and one clock (the scroll, smoothed by a 0.6s scrub) draws everything from the
-   pure script in dervo-script.ts: the cursor's place, which beat line shows, the app's state and the ledger's count.
+   pure script in dervo-script.ts: the cursor's place, which beat line shows, the app's state and beat 4's count.
    Sticky CSS does the pinning, so the page never reflows or jumps when the code lands; ScrollTrigger only reads
    the scroll. lite: six frames, each plays its one step when it comes into view. still: the finished app.
    The app is never drawn smaller than its zoom (DervoStill ZOOM): a window too small for all of it gets less of it. */
@@ -46,6 +46,15 @@ const TABLET = '(min-width: 600px)';
 const onTablet = (fn: () => void) => { const m = matchMedia(TABLET); m.addEventListener('change', fn); return () => m.removeEventListener('change', fn); };
 /** Lite on a tablet: room for both halves of the app in each frame. */
 const useTablet = () => useSyncExternalStore(onTablet, () => matchMedia(TABLET).matches, () => false);
+
+/** Beat 4's numbers at t (0 to 1), written straight into the page so a scrubbed count doesn't redraw anything. */
+function paintTally(root: Element, t: number) {
+  root.querySelectorAll<HTMLElement>('[data-tally]').forEach((el, i) => {
+    const { to, plus } = TALLIES[i];
+    el.textContent = tallyText(to, false, t);
+    (el.nextElementSibling as HTMLElement | null)?.toggleAttribute('data-plus', plus && t >= 1);
+  });
+}
 
 function Cursor({ ref, dim }: { ref?: Ref<HTMLDivElement>; dim?: boolean }) {
   return <div ref={ref} className="dv__cur" data-dim={dim ? '' : undefined} aria-hidden="true">
@@ -112,7 +121,7 @@ function Full() {
       const n = stepsBy(p);
       if (n !== done) { done = n; setSteps(n); }
       const t = tallyAt(p);
-      if (t !== tally) { tally = t; paintTally(box, t); }
+      if (t !== tally) { tally = t; paintTally(sec, t); }
       lines.forEach((el, i) => {
         const { o, y } = lineAt(i, p);
         el.style.opacity = String(o);
@@ -172,7 +181,7 @@ function LiteFrame({ variant, beat }: { variant: MockVariant; beat: number }) {
   const [size, setSize] = useState<Size>(SIZE[variant]);
   const dims = useRef(size);
   dims.current = size;
-  const def = LITE[beat], step = STEPS[def.step], counts = beat === BEATS.length - 3;
+  const def = LITE[beat], step = STEPS[def.step], counts = beat === TALLY_BEAT;
 
   useAnchors(mock, size, a => {
     anchors.current = a;
@@ -182,9 +191,9 @@ function LiteFrame({ variant, beat }: { variant: MockVariant; beat: number }) {
   });
 
   useEffect(() => {
-    const box = mock.current;
-    if (!box) return;
-    if (counts) paintTally(box, 0);
+    const box = mock.current, frame = box?.closest('.dv__frame');
+    if (!box || !frame) return;
+    if (counts) paintTally(frame, 0);
     const timers: number[] = [], frames: number[] = [];
     const io = new IntersectionObserver(entries => {
       if (played.current || !entries.some(e => e.isIntersecting)) return;
@@ -201,7 +210,7 @@ function LiteFrame({ variant, beat }: { variant: MockVariant; beat: number }) {
         const t0 = performance.now();
         const tick = (now: number) => {
           const t = Math.min(1, (now - t0) / 900);
-          paintTally(box, 1 - (1 - t) ** 3);
+          paintTally(frame, 1 - (1 - t) ** 3);
           if (t < 1) frames.push(requestAnimationFrame(tick));
         };
         frames.push(requestAnimationFrame(tick));
@@ -213,7 +222,7 @@ function LiteFrame({ variant, beat }: { variant: MockVariant; beat: number }) {
   }, []);
 
   return <Fit zoom={ZOOM.hand} onSize={setSize}>
-    <DervoMock ref={mock} state={state} variant={variant} size={size} beat={beat} tally={counts ? 0 : 1}><Cursor ref={cur} dim={state.quiet} /></DervoMock>
+    <DervoMock ref={mock} state={state} variant={variant} size={size} beat={beat}><Cursor ref={cur} dim={state.quiet} /></DervoMock>
   </Fit>;
 }
 

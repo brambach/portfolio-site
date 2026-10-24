@@ -15,8 +15,8 @@ export type MockState = {
   open: boolean;
   agent: Agent;
   split: boolean;
-  /** The beta ledger shows in the sidebar. */
-  ledger: boolean;
+  /** The beta card shows in the sidebar. */
+  beta: boolean;
   /** Steps of the run done, 0 to 5. */
   run: number;
   review: Review;
@@ -24,11 +24,11 @@ export type MockState = {
   quiet: boolean;
 };
 
-export type Anchor = 'new-thread' | 'thread-ideas' | 'agent-codex' | 'chips' | 'split' | 'sub-threads' | 'ledger' | 'not-checked' | 'approve';
+export type Anchor = 'new-thread' | 'thread-ideas' | 'agent-codex' | 'chips' | 'split' | 'sub-threads' | 'beta' | 'not-checked' | 'approve';
 export type Point = Anchor | [number, number];
 export type Step = { at: number; cursor?: Point; click?: boolean; state?: Partial<MockState>; move?: number };
 
-export const START: MockState = { threads: 0, open: false, agent: 'claude', split: false, ledger: false, run: 0, review: 'none', quiet: false };
+export const START: MockState = { threads: 0, open: false, agent: 'claude', split: false, beta: false, run: 0, review: 'none', quiet: false };
 export const CURSOR_START: Point = [0.62, 0.62];
 export const REST: Point = [0.6, 0.82];
 
@@ -48,9 +48,9 @@ export const STEPS: Step[] = [
   // 3. split
   { at: 0.39, cursor: 'split', click: true, state: { split: true } },
   { at: 0.44, cursor: 'sub-threads', state: { run: 3 }, move: 0.045 },
-  // 4. the ledger counts up
-  { at: 0.505, state: { ledger: true } },
-  { at: 0.545, cursor: 'ledger' },
+  // 4. the beta card comes in (the real numbers count up beside the line, outside the window)
+  { at: 0.505, state: { beta: true } },
+  { at: 0.545, cursor: 'beta' },
   { at: 0.6, state: { run: 4 } },
   // 5. the report, then approve
   { at: 0.69, state: { review: 'ready', run: 5 } },
@@ -62,12 +62,10 @@ export const STEPS: Step[] = [
 
 export const BEATS = DERVO.beats.map((line, i) => ({ at: i / DERVO.beats.length, line }));
 
-/** The two numbers, counted up with the clock between these points. */
+/** Beat 4's two real numbers (page copy beside the line, not the sample window), counted up with the clock
+ *  between these points. */
 export const TALLY = { from: 0.515, to: 0.625 };
-export const TALLIES = [
-  { label: 'beta testers', to: 18, plus: false },
-  { label: 'agent tasks', to: 1500, plus: true },
-];
+export const TALLIES = DERVO.tallies;
 
 /** On a phone each beat is its own frame: it shows the state just before its main step, then plays that one step
  *  (the cursor's move and click) once, and lands on the state at the end of the beat. */
@@ -75,7 +73,7 @@ export const LITE: { step: number; from: Point; to: Point }[] = [
   { step: 2, from: [0.78, 0.82], to: 'new-thread' },
   { step: 5, from: [0.3, 0.78], to: 'agent-codex' },
   { step: 7, from: [0.5, 0.8], to: 'split' },
-  { step: 10, from: [0.82, 0.42], to: 'ledger' },
+  { step: 10, from: [0.82, 0.42], to: 'beta' },
   { step: 14, from: [0.82, 0.5], to: 'approve' },
   { step: 15, from: [0.45, 0.6], to: [0.74, 0.78] },
 ];
@@ -175,6 +173,8 @@ export const MOCK = {
   ],
   subs: ['ideas store', 'ideas screen'],
   stamp: ['shipped to beta', 'oct 2, 2026'],
+  /** The card at the foot of the sidebar. No numbers: the real ones are page copy, outside the window. */
+  beta: [['channel', 'beta'], ['updates', 'on']],
   catchUp: {
     title: 'catch up', since: 'since 11:20 pm', moved: (n: number) => (n ? `${n} thread${n > 1 ? 's' : ''} moved` : 'nothing moved yet'), left: 'since you left', go: 'go through these',
     needs: {
@@ -206,7 +206,7 @@ export const MOCK = {
   review: {
     head: 'ready for your review',
     when: 'finished 1:52 am',
-    summary: 'ideas are stored per project, modelled on project_knowledge.py.',
+    summary: 'ideas are stored per project, modeled on project_knowledge.py.',
     sections: [
       { key: 'changed', items: ['ideas are stored per project. each idea is the group key.'] },
       { key: 'checked', items: ['44 backend tests pass. with the mirror off, 5 of the 10 new ones fail, so they bite.'] },

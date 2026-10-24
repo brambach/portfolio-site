@@ -26,7 +26,7 @@ export const CONTENTS: { label: string; rows: { id: SectionId; numeral: string; 
   label: 'contents',
   rows: [
     { id: 'dervo', numeral: 'i', name: 'dervo', line: 'run more agents than you can watch.' },
-    { id: 'portal', numeral: 'ii', name: 'client ops portal', line: 'if a field maps wrong, someone gets paid wrong.' },
+    { id: 'portal', numeral: 'ii', name: 'integration portal', line: 'if a field maps wrong, someone gets paid wrong.' },
     { id: 'bots', numeral: 'iii', name: 'bot team', line: 'my bots hand work to each other.' },
     { id: 'more', numeral: 'iv', name: 'arro', line: 'a missed day is never public.' },
     { id: 'more', numeral: 'v', name: 'port', line: 'hold for a second and the screen folds into a line.' },
@@ -41,7 +41,12 @@ export const DERVO = {
     'threads split into sub-threads. i built it on my own and shipped it first, to the beta on oct 2, 2026, before claude code had nested sessions.',
     '18 beta testers signed on, and dervo ran 1,500+ agent tasks.',
     "every run says what it checked, and what it didn't.",
-    "then claude shipped the same things, so i stopped building it. the source is open.",
+    "then claude shipped the same things, so i stopped building it. the source is public.",
+  ],
+  /** The two real numbers in beat 4, counted up beside its line as page copy, never inside the sample window. */
+  tallies: [
+    { label: 'beta testers', to: 18, plus: false },
+    { label: 'agent tasks', to: 1500, plus: true },
   ],
   numeral: 'i',
   source: { label: 'read the source', href: 'https://github.com/brambach/dervo' },
@@ -51,11 +56,12 @@ export const DERVO = {
 };
 
 export const PORTAL = {
-  label: 'client ops portal',
+  label: 'integration portal',
   headline: 'if a field maps wrong, someone gets paid wrong.',
   body: 'from july to october 2026 i built hr and payroll integrations for an hr and payroll consultancy. this is a redrawn mock with made-up data.',
   numeral: 'ii',
   failed: "doesn't map yet. needs you.",
+  story: { label: 'the full story', href: '/projects/integration-portal' },
   review: 'review',
   tray: 'raw export',
   before: 'before',
