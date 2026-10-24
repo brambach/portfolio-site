@@ -41,7 +41,7 @@ describe('The home page', () => {
     const names = [...bots.querySelectorAll('.bt__stations .bt__name')].map(n => n.textContent);
     expect(names).toEqual(['luna', 'code boss', 'architect', 'the build', 'reviewer']);
     expect(bots.querySelector('.bt__side')).toHaveTextContent('x boss');
-    expect(bots).toHaveTextContent('job: redesign brycerambach.com');
+    expect(bots.querySelector('.bt__slip')).toHaveTextContent('job redesign brycerambach.com');
     expect(bots).toHaveTextContent('a real handoff. this page is the job.');
   });
 

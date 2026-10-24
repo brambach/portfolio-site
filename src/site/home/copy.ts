@@ -98,7 +98,7 @@ export const BOTS = {
     { name: 'reviewer', mark: 'R', note: 'checks it before anything ships.' },
   ],
   side: { name: 'x boss', mark: 'X', note: 'runs the writing side.' },
-  slip: { label: 'job: redesign', text: 'brycerambach.com' },
+  slip: { label: 'job', text: 'redesign brycerambach.com', holder: 'with:' },
   caption: 'a real handoff. this page is the job.',
 };
 
