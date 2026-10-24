@@ -25,7 +25,10 @@ describe('The home page', () => {
     const { container } = render(<Home />);
     const toc = screen.getByRole('navigation', { name: 'contents' });
     const links = within(toc).getAllByRole('link');
-    expect(links.map(a => a.getAttribute('href'))).toEqual(['#dervo', '#portal', '#bots', '#more', '#more']);
+    expect(links.map(a => a.getAttribute('href'))).toEqual(['#dervo', '#portal', '#bots', '#more-arro', '#more-port']);
+    for (const a of links) expect(container.querySelector(a.getAttribute('href')!), a.getAttribute('href')!).not.toBeNull();
+    expect(container.querySelector('#more-arro')!.closest('#more')).not.toBeNull();
+    expect(container.querySelector('#more-port')).toHaveTextContent('port');
     expect(links[0]).toHaveTextContent('dervo');
     expect(links[0]).toHaveTextContent('run more agents than you can watch.');
     const ids = [...container.querySelectorAll('section[id]')].map(s => s.id);

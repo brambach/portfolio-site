@@ -10,7 +10,7 @@ export default function MoreWork() {
   return <section id="more" className="sec mw" aria-labelledby="more-h">
     <h2 id="more-h" className="label sec__label"><span aria-hidden="true">{MORE.numeral} ·</span>{MORE.label}</h2>
     <ul className="mw__rows">
-      {MORE.rows.map(r => <li key={r.id}>
+      {MORE.rows.map(r => <li key={r.id} id={`more-${r.id}`} className="mw__item">
         <a className="mw__row" href={workHref(r.id)}>
           <span className="mw__name">{r.name}</span>
           <span className="mw__line">{r.line}</span>
