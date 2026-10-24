@@ -449,179 +449,146 @@
 }
 
 /* ---------- iii. the bot team (home/scenes/BotTeam.tsx) ---------- */
-/* One loop, 17s, a station every 3.4s: the ticket rests 2.4s at a bot and takes a second to pass to the next, then
-   leaves reviewer and comes back to luna while it's out of sight. Every per-bot part runs the same loop shifted by
-   its --i, so a bot inks in as the ticket arrives and dims as the next one takes it. Nothing runs until the relay
-   first comes into view (data-run), so the story starts at luna. */
-.bt { --mark: 56px; --zone: 172px; --dim: .58; --T: 17s; --step: 3.4s; --ticket: 236px; --runs: 1.9; }
+/* A work order off a pad: a torn top, a printed frame, a routing list of desks, a stub below a perforation. The job
+   goes down the list a desk every --step: the row it's at takes a pale wash and an orchid lozenge, and the bot
+   marks it in its own hand, pressed in once (visibility and transform, so a note is either away or at full ink).
+   The slip gives a small nudge at each handoff. It runs once, then rests fully marked. */
+.bt { --step: 2s; --t0: .5s; --n: 1.25rem; --desk: 12.5rem; --pad: var(--s7); }
 .bt__body { margin-top: var(--s5); max-width: 560px; color: var(--ink-2); text-wrap: pretty; }
+.bt__cap { margin-top: var(--s6); color: var(--faint); line-height: 1.5; }
 .bt__fig { margin: var(--s8) 0 0; }
-.bt__relay { position: relative; padding-top: var(--zone); }
 
-.bt__rule { position: absolute; display: block; overflow: visible; color: var(--display-ink); stroke: currentColor; stroke-width: .6px; fill: none; }
-.bt__rule line { stroke-opacity: .42; }
-.bt__ticks { opacity: .3; }
-/* Edge to edge of the column, fading out in the gutters. */
-.bt__rule--h {
-  left: calc(var(--gutter) * -1); top: calc(var(--zone) + var(--mark) / 2 - 5px);
-  width: calc(100% + 2 * var(--gutter)); height: 10px;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 var(--gutter), #000 calc(100% - var(--gutter)), transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 var(--gutter), #000 calc(100% - var(--gutter)), transparent);
-}
-.bt__rule--v { display: none; }
-
-.bt__stations { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); column-gap: var(--s5); }
-.bt__station { opacity: var(--dim); }
-.bt__mark { position: relative; display: block; width: var(--mark); height: var(--mark); color: var(--display-ink); }
-.bt__mark svg { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: currentColor; overflow: visible; }
-.bt__mark circle { stroke-width: .7px; stroke-opacity: .78; }
-.bt__mark circle:first-child { fill: var(--paper); stroke-width: .9px; }
-.bt__mark circle:nth-child(2) { stroke-width: .5px; stroke-opacity: .6; }
-.bt__mark path { stroke-width: .5px; stroke-opacity: .45; }
-/* The pale wash inside the ring while the bot holds the ticket. */
-.bt__glow { position: absolute; inset: 8px; border-radius: 50%; background: var(--running-wash); opacity: 0; }
-.bt__letter {
-  position: absolute; inset: 0;
-  display: grid; place-items: center;
-  padding-top: 3px;
-  font: 400 1.75rem/1 var(--font-display);
-  color: var(--display-ink);
-}
-.bt__text { display: block; margin-top: var(--s4); }
-.bt__name {
-  display: block;
-  font: 500 0.8125rem/1.4 var(--font-text);
-  letter-spacing: var(--label-track);
-  text-transform: uppercase;
-  color: var(--ink);
-}
-/* The hairline that draws under a bot's name when the ticket lands. */
-.bt__station .bt__name::after {
-  content: "";
-  display: block;
-  width: min(100%, 10rem); height: 1px;
-  margin-top: 7px;
-  background: var(--display-ink);
-  opacity: 0;
-  transform: scaleX(0);
-  transform-origin: 0 50%;
-}
-.bt__note { display: block; margin-top: var(--s3); max-width: 24ch; font-size: 1rem; line-height: 1.55; color: var(--ink-2); text-wrap: pretty; }
-
-/* The ticket rides a carrier one station wide, so each handoff is the carrier's own width: transform only, no
-   measuring. */
-.bt__carrier { position: absolute; left: 0; top: 0; width: calc((100% + var(--s5)) / 5); height: var(--zone); pointer-events: none; }
 .bt__slip {
-  position: absolute; left: -10px; bottom: 26px;
-  display: block;
-  width: min(var(--ticket), 100% - 4px);
-  padding: 13px 16px 11px;
-  border-radius: 4px;
-  background: var(--raised);
-  box-shadow: var(--lift);
-  color: var(--ink);
-  transform: rotate(-1.5deg);
-  transform-origin: 30% 100%;
+  position: relative;
+  max-width: 660px;
+  rotate: -.8deg;
+  filter: drop-shadow(0 0 .5px rgb(74 37 96 / .22)) drop-shadow(0 22px 26px rgb(74 37 96 / .16));
 }
-.bt__slip-k {
-  display: block;
-  font: 500 var(--fs-label)/1.3 var(--font-text);
+/* The paper: a torn top edge, cut with a mask of small teeth, and a printed frame inside it. */
+.bt__paper {
+  position: relative;
+  padding: calc(var(--pad) + 6px) var(--pad) var(--s6);
+  background: var(--raised);
+  color: var(--ink);
+  -webkit-mask: conic-gradient(from -45deg at 50% 100%, #000 90deg, #0000 0) 0 0 / 10px 6px repeat-x, linear-gradient(#000 0 0) 0 6px / 100% calc(100% - 6px) no-repeat;
+  mask: conic-gradient(from -45deg at 50% 100%, #000 90deg, #0000 0) 0 0 / 10px 6px repeat-x, linear-gradient(#000 0 0) 0 6px / 100% calc(100% - 6px) no-repeat;
+}
+.bt__paper::before {
+  content: ""; position: absolute; inset: calc(var(--s4) + 6px) var(--s4) var(--s4);
+  border: 1px solid var(--line); pointer-events: none;
+}
+.bt__head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s4); padding-bottom: var(--s3); border-bottom: 3px double var(--line-strong); }
+.bt__title { font: 400 2.25rem/1.05 var(--font-display); letter-spacing: -0.015em; color: var(--display-ink); }
+.bt__no, .bt__k {
+  font: 500 0.8125rem/1.3 var(--font-text);
   letter-spacing: var(--label-track);
   text-transform: uppercase;
   color: var(--muted);
 }
-.bt__slip-t { display: block; margin-top: 5px; font: 500 1.0625rem/1.3 var(--font-text); letter-spacing: -0.01em; text-wrap: balance; }
-/* Below a perforation, with a notch punched at each end: who holds it now. */
-.bt__slip-who {
-  position: relative;
-  display: block;
-  margin: 12px -16px 0; padding: 10px 16px 0;
+.bt__job { display: flex; align-items: baseline; gap: var(--s4); margin-top: var(--s5); padding-bottom: var(--s2); border-bottom: 1px solid var(--line-strong); }
+.bt__job-t { font: 500 1.25rem/1.3 var(--font-text); letter-spacing: -0.01em; color: var(--ink); }
+
+/* The routing list. Every row, the column heads and the stub share one grid: number, desk, note. */
+.bt__cols, .bt__row, .bt__stub {
+  display: grid; grid-template-columns: var(--n) minmax(0, var(--desk)) minmax(0, 1fr); column-gap: var(--s4);
+}
+.bt__cols { margin-top: var(--s6); padding-bottom: var(--s2); }
+.bt__cols::before { content: ""; }
+.bt__route { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-strong); }
+.bt__row { position: relative; align-items: center; min-height: 4.25rem; padding-block: var(--s3); border-bottom: 1px solid var(--line); }
+/* Where the job is now: a wash under the row, and an orchid lozenge in the margin. Decoration only. */
+.bt__row::before {
+  content: ""; position: absolute; inset: 0 calc(var(--s3) * -1); z-index: -1;
+  background: var(--running-wash); opacity: 0;
+}
+.bt__row::after {
+  content: ""; position: absolute; left: calc(var(--s4) * -1 - 2px); top: 50%; width: 7px; height: 7px; margin-top: -3.5px;
+  background: var(--accent); transform: rotate(45deg); opacity: 0;
+}
+.bt__route { isolation: isolate; }
+.bt__n { align-self: center; font: 500 var(--fs-small)/1 var(--font-text); color: var(--muted); font-variant-numeric: tabular-nums; }
+.bt__desk { display: flex; flex-direction: column; gap: 2px; }
+.bt__name { font: 500 0.8125rem/1.4 var(--font-text); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--ink); }
+.bt__role { font-size: var(--fs-small); line-height: 1.45; color: var(--muted); text-wrap: pretty; }
+
+/* The hands. */
+.bt__mark { display: flex; align-items: center; gap: var(--s3); min-width: 0; transform-origin: 0 50%; }
+.bt__typed { font: 500 var(--fs-read)/1.4 var(--font-text); color: var(--ink-2); }
+/* luna: a typed line, signed on a rule. */
+.bt__mark--sign { flex-wrap: wrap; column-gap: var(--s4); row-gap: 0; }
+.bt__sig {
+  min-width: 4.5rem; padding: 0 var(--s3) 1px;
+  border-bottom: 1px solid var(--muted);
+  font: 400 1.625rem/1 var(--font-display); color: var(--display-ink); text-align: center;
+}
+/* code boss: a rubber stamp in the blue, a double box, a little rough where the ink missed. */
+.bt__mark--stamp { rotate: -5deg; }
+.bt__stamp {
+  padding: 5px 10px 4px;
+  border: 1.5px solid currentColor; border-radius: 3px;
+  box-shadow: inset 0 0 0 2px var(--raised), inset 0 0 0 2.75px currentColor;
+  font: 700 0.875rem/1.2 var(--font-text); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--primary);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='40'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -14 9.6'/%3E%3C/filter%3E%3Crect width='90' height='40' filter='url(%23r)'/%3E%3C/svg%3E") 0 0 / 90px 40px;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='40'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -14 9.6'/%3E%3C/filter%3E%3Crect width='90' height='40' filter='url(%23r)'/%3E%3C/svg%3E") 0 0 / 90px 40px;
+}
+/* architect: a note in the margin, by hand, the view's one italic. */
+.bt__mark--script { rotate: -1.5deg; font: italic 400 1.4375rem/1.15 var(--font-display); color: var(--display-ink); text-wrap: balance; }
+/* reviewer: a tick, then the word. */
+.bt__mark--check svg { flex: none; width: 28px; height: 24px; fill: none; stroke: var(--display-ink); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* The stub, past the perforation: x boss, on the same grid, off this job's route. */
+.bt__stub {
+  position: relative; align-items: center;
+  margin: var(--s6) calc(var(--pad) * -1) 0; padding: var(--s5) var(--pad) 0;
   background: radial-gradient(circle, var(--line-strong) .9px, transparent 1.3px) 0 0 / 6px 3px repeat-x;
-  font-size: var(--fs-small); line-height: 1.4;
-  color: var(--muted);
 }
-.bt__slip-who::before, .bt__slip-who::after {
-  content: ""; position: absolute; top: -4px; width: 9px; height: 9px; border-radius: 50%;
-  background: var(--paper); box-shadow: inset 0 0 0 .5px rgb(74 37 96 / .1);
-}
-.bt__slip-who::before { left: -4.5px; }
-.bt__slip-who::after { right: -4.5px; }
-.bt__who { display: inline-grid; }
-.bt__who > span { grid-area: 1 / 1; font-weight: 500; color: var(--ink-2); opacity: 0; }
+.bt__stub::before { content: ""; }
+.bt__stub .bt__desk { grid-column: 2 / -1; flex-direction: row; flex-wrap: wrap; align-items: baseline; column-gap: var(--s4); }
 
-/* x boss: apart from the relay, on a short rule of its own: the writing side. */
-.bt__side { --mark: 48px; position: relative; margin-top: var(--s7); opacity: .8; }
-.bt__side .bt__rule--h {
-  left: 0; top: calc(var(--mark) / 2 - 5px); width: calc(100% + var(--gutter));
-  -webkit-mask-image: linear-gradient(90deg, #000 60%, transparent);
-  mask-image: linear-gradient(90deg, #000 60%, transparent);
-}
-.bt__side .bt__mark { flex: none; }
-.bt__side .bt__letter { font-size: 1.5rem; }
-.bt__side .bt__glow { display: none; }
-.bt__side .bt__text { margin-top: var(--s3); }
-.bt__side .bt__note { margin-top: var(--s1); max-width: none; }
-.bt__cap { margin-top: var(--s7); color: var(--faint); }
-
-/* Wide: the words on the left, x boss on the right as the quieter second track, level with the last line of the
-   words, and the relay under both across the whole column. */
+/* Wide: the words on the left, the slip big on the right. */
 @media (min-width: 1100px) {
-  .bt { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); column-gap: var(--s8); }
-  .bt__side { align-self: end; margin: 0 0 6px; }
-  .bt__fig { grid-column: 1 / -1; margin-top: var(--s7); }
+  .bt { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: var(--s8); align-items: start; }
+  .bt__intro { padding-top: var(--s2); }
+  .bt__fig { margin: var(--s4) 0 0; justify-self: end; width: 100%; max-width: 660px; }
+}
+@media (max-width: 759.98px) {
+  .bt { --pad: var(--s5); --n: .75rem; }
+  .bt__fig { margin-top: var(--s7); margin-inline: calc(var(--s2) * -1); }
+  .bt__slip { rotate: -.6deg; }
+  .bt__paper::before { inset: calc(var(--s3) + 6px) var(--s2) var(--s2); }
+  .bt__title { font-size: 1.875rem; }
+  .bt__job { flex-direction: column; gap: 2px; }
+  .bt__job-t { font-size: 1.125rem; }
+  .bt__cols { display: none; }
+  .bt__route { margin-top: var(--s5); }
+  .bt__row { grid-template-columns: var(--n) minmax(0, 1fr); row-gap: var(--s2); padding-block: var(--s4); align-items: start; }
+  .bt__n { align-self: start; padding-top: 2px; }
+  .bt__row .bt__mark { grid-column: 2; }
+  .bt__row::after { left: calc(var(--s3) * -1 - 2px); top: calc(var(--s4) + 6px); margin-top: 0; }
+  .bt__stub { grid-template-columns: var(--n) minmax(0, 1fr); }
+  .bt__mark--script { font-size: 1.3125rem; }
 }
 
-/* The ticket goes round twice and stops with reviewer: the carrier runs --runs laps (1.9 lands it at the last bot),
-   and each bot, started (1 - i/5) of a lap early, runs that much longer so every clock stops at the same moment. */
-.bt__station, .bt__station .bt__glow, .bt__station .bt__name::after, .bt__who > span {
-  animation: var(--T) linear calc(var(--i) * var(--step) - var(--T)) calc(var(--runs) + 1 - var(--i) * .2) forwards;
+/* Once, a desk at a time, from the first time most of the slip is in view. */
+.bt__row::before, .bt__row::after { animation: bt-now var(--step) linear calc(var(--t0) + var(--i) * var(--step)) 1 both; }
+.bt__row::after { animation-name: bt-here; }
+.bt__mark { visibility: hidden; animation: bt-ink 520ms var(--ease-statement) calc(var(--t0) + var(--i) * var(--step) + .5s) 1 forwards; }
+.bt__slip { animation: bt-hand calc(var(--step) * 5) var(--ease-move) var(--t0) 1 forwards; }
+@keyframes bt-now { 0% { opacity: 0; } 8%, 84% { opacity: .6; } 100% { opacity: 0; } }
+@keyframes bt-here { 0% { opacity: 0; } 8%, 84% { opacity: 1; } 100% { opacity: 0; } }
+/* Pressed onto the paper: in at full ink, a touch large, settling flat. */
+@keyframes bt-ink { from { visibility: visible; transform: scale(1.16); } to { visibility: visible; transform: none; } }
+/* Lifted and set back down as each desk passes it on. */
+@keyframes bt-hand {
+  0%, 17%, 23%, 37%, 43%, 57%, 63%, 77%, 83%, 100% { transform: none; }
+  20%, 40%, 60%, 80% { transform: translate(3px, -5px) rotate(.35deg); }
 }
-.bt__station { animation-name: bt-lit; }
-.bt__station .bt__glow { animation-name: bt-glow; }
-.bt__station .bt__name::after { animation-name: bt-draw; animation-timing-function: var(--ease-statement); }
-.bt__who > span { animation-name: bt-who; }
-.bt__carrier { animation: bt-run-x var(--T) cubic-bezier(.65, 0, .35, 1) var(--runs) forwards; }
-.bt__slip { animation: bt-slip var(--T) cubic-bezier(.45, 0, .55, 1) var(--runs) forwards; }
-
-/* Station i docks at i * 20% and is handed on 2.4s (14.118%) later. */
-@keyframes bt-run-x {
-  0%, 14.118% { transform: none; }
-  20%, 34.118% { transform: translateX(100%); }
-  40%, 54.118% { transform: translateX(200%); }
-  60%, 74.118% { transform: translateX(300%); }
-  80%, 96.4% { transform: translateX(400%); }
-  96.5%, 100% { transform: none; }
-}
-@keyframes bt-run-y {
-  0%, 14.118% { transform: none; }
-  20%, 34.118% { transform: translateY(100%); }
-  40%, 54.118% { transform: translateY(200%); }
-  60%, 74.118% { transform: translateY(300%); }
-  80%, 96.4% { transform: translateY(400%); }
-  96.5%, 100% { transform: none; }
-}
-/* Lifted a little in transit, set down square-ish at each bot. */
-@keyframes bt-slip {
-  0%, 14.118%, 20%, 34.118%, 40%, 54.118%, 60%, 74.118%, 80%, 94.118% { opacity: 1; transform: rotate(-1.5deg); }
-  17.06%, 37.06%, 57.06%, 77.06% { opacity: 1; transform: translateY(-8px) rotate(-.3deg); }
-  96.4% { opacity: 0; transform: translateY(-6px) rotate(-1.5deg); }
-  97.6% { opacity: 0; transform: translateY(6px) rotate(-1.5deg); }
-  100% { opacity: 1; transform: rotate(-1.5deg); }
-}
-/* In a bot's own time: the ticket lands at 0%, the next bot takes it at 20%. */
-@keyframes bt-lit { 0%, 20% { opacity: 1; } 23%, 97% { opacity: var(--dim); } 100% { opacity: 1; } }
-@keyframes bt-glow { 0%, 20% { opacity: 1; } 23%, 97% { opacity: 0; } 100% { opacity: 1; } }
-@keyframes bt-draw {
-  0% { opacity: .45; transform: scaleX(0); }
-  6%, 20% { opacity: .45; transform: none; }
-  23% { opacity: 0; transform: none; }
-  23.1%, 100% { opacity: 0; transform: scaleX(0); }
-}
-@keyframes bt-who { 0%, 18.5% { opacity: 1; } 20%, 98.5% { opacity: 0; } 100% { opacity: 1; } }
-
-/* Before it's first seen, and off screen, the loop waits. */
-.bt__relay:is(:not([data-run]), [data-off]) :is(.bt__station, .bt__glow, .bt__name, .bt__carrier, .bt__slip, .bt__who > span),
-.bt__relay:is(:not([data-run]), [data-off]) .bt__name::after { animation-play-state: paused; }
+/* Before it's first seen, and off screen, it waits. */
+.bt__slip:is(:not([data-run]), [data-off]),
+.bt__slip:is(:not([data-run]), [data-off]) .bt__mark,
+.bt__slip:is(:not([data-run]), [data-off]) .bt__row::before,
+.bt__slip:is(:not([data-run]), [data-off]) .bt__row::after { animation-play-state: paused; }
 
 /* ---------- iv. more work ---------- */
 .mw__rows { list-style: none; margin: 0; padding: 0; max-width: 1000px; }
@@ -695,37 +662,8 @@
 .foot__sign { margin-top: var(--s5); color: var(--ink-2); font-size: var(--fs-read); }
 .home .foot__colophon { margin-top: var(--s2); line-height: 1.6; color: var(--faint); }
 
-/* ---------- the bot team stands up ---------- */
-/* Under 900px five columns get too narrow for the notes: the rule runs down the left, a bot to a row, and each row
-   keeps room under its note where the ticket docks. Rows are all one height, so each handoff is again the
-   carrier's own height. */
+/* ---------- more work, narrower ---------- */
 @media (max-width: 899.98px) {
-  .bt { --mark: 48px; --ticket: 280px; --slip-h: 100px; }
-  .bt__relay { padding-top: 0; }
-  .bt__relay > .bt__rule--h { display: none; }
-  .bt__rule--v {
-    display: block;
-    left: calc(var(--mark) / 2 - 5px); top: calc(var(--s6) * -1);
-    width: 10px; height: calc(100% + var(--s6));
-    -webkit-mask-image: linear-gradient(transparent, #000 var(--s6), #000 80%, transparent);
-    mask-image: linear-gradient(transparent, #000 var(--s6), #000 80%, transparent);
-  }
-  .bt__stations { grid-template-columns: minmax(0, 1fr); grid-auto-rows: 1fr; }
-  .bt__station { display: flex; align-items: flex-start; gap: var(--s4); padding-bottom: calc(var(--slip-h) + var(--s6)); }
-  .bt__mark { flex: none; }
-  .bt__letter { font-size: 1.5rem; }
-  .bt__relay .bt__text { flex: 1; min-width: 0; margin-top: 0; }
-  .bt__name { display: flex; flex-direction: column; justify-content: center; min-height: var(--mark); }
-  .bt__station .bt__name::after { margin-top: 5px; width: 4rem; }
-  .bt__note { margin-top: var(--s1); max-width: 36ch; }
-  .bt__carrier { left: calc(var(--mark) + var(--s4)); right: 0; width: auto; height: 20%; animation-name: bt-run-y; }
-  .bt__slip { left: -2px; bottom: calc(var(--s6) - 6px); width: min(var(--ticket), 100% - 6px); padding: 10px 14px 9px; transform-origin: 20% 100%; }
-  .bt__slip-t { font-size: var(--fs-read); }
-  .bt__slip-who { margin: 9px -14px 0; padding: 8px 14px 0; }
-  .bt__side { display: flex; align-items: flex-start; gap: var(--s4); margin-top: var(--s6); }
-  .bt__side .bt__rule--h { display: none; }
-  .bt__side .bt__text { margin-top: 0; }
-  .bt__side .bt__name { display: flex; align-items: center; min-height: var(--mark); }
   .mw__row { grid-template-columns: minmax(0, 1fr) auto; row-gap: var(--s2); }
   .mw__line { grid-column: 1 / -1; grid-row: 2; max-width: 52ch; }
   .mw__row--quiet { grid-template-columns: auto auto; }
@@ -779,20 +717,10 @@
 @media (prefers-reduced-motion: reduce) {
   .hero__in, .vig__rise, .vig__glints { animation: none; }
 }
-/* The bot team: the ticket rests with reviewer, the last to hold it, and every bot is at full ink. */
-.bt[data-motion="still"] :is(.bt__station, .bt__glow, .bt__carrier, .bt__slip, .bt__who > span),
-.bt[data-motion="still"] .bt__name::after { animation: none; }
-.bt[data-motion="still"] .bt__station { opacity: 1; }
-.bt[data-motion="still"] .bt__station:last-child .bt__glow,
-.bt[data-motion="still"] .bt__who > span:last-child { opacity: 1; }
-.bt[data-motion="still"] .bt__station:last-child .bt__name::after { opacity: .45; transform: none; }
-.bt[data-motion="still"] .bt__carrier { transform: translateX(400%); }
-@media (max-width: 899.98px) { .bt[data-motion="still"] .bt__carrier { transform: translateY(400%); } }
+/* The bot team: the slip paints fully marked. */
+.bt[data-motion="still"] :is(.bt__slip, .bt__mark), .bt[data-motion="still"] .bt__row::before, .bt[data-motion="still"] .bt__row::after { animation: none; }
+.bt[data-motion="still"] .bt__mark { visibility: visible; }
 @media (prefers-reduced-motion: reduce) {
-  .bt :is(.bt__station, .bt__glow, .bt__carrier, .bt__slip, .bt__who > span), .bt .bt__name::after { animation: none; }
-  .bt .bt__station { opacity: 1; }
-  .bt .bt__station:last-child .bt__glow, .bt .bt__who > span:last-child { opacity: 1; }
-  .bt .bt__station:last-child .bt__name::after { opacity: .45; transform: none; }
-  .bt .bt__carrier { transform: translateX(400%); }
+  .bt :is(.bt__slip, .bt__mark), .bt .bt__row::before, .bt .bt__row::after { animation: none; }
+  .bt .bt__mark { visibility: visible; }
 }
-@media (prefers-reduced-motion: reduce) and (max-width: 899.98px) { .bt .bt__carrier { transform: translateY(400%); } }

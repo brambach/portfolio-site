@@ -37,14 +37,15 @@ describe('The home page', () => {
     expect(toc).toHaveAttribute('id', 'work');
   });
 
-  it('shows the bot team as a relay, in the order a job moves through it, with x boss apart', () => {
+  it('shows the bot team as one work order, routed in the order a job moves, with x boss on the stub', () => {
     const { container } = render(<Home />);
     const bots = container.querySelector('#bots')!;
     expect(within(bots as HTMLElement).getByRole('heading', { level: 2 })).toHaveTextContent('my bots hand work to each other.');
-    const names = [...bots.querySelectorAll('.bt__stations .bt__name')].map(n => n.textContent);
+    const names = [...bots.querySelectorAll('.bt__route .bt__name')].map(n => n.textContent);
     expect(names).toEqual(['luna', 'code boss', 'architect', 'the build', 'reviewer']);
-    expect(bots.querySelector('.bt__side')).toHaveTextContent('x boss');
-    expect(bots.querySelector('.bt__slip')).toHaveTextContent('job redesign brycerambach.com');
+    expect(bots.querySelectorAll('.bt__route .bt__mark')).toHaveLength(5);
+    expect(bots.querySelector('.bt__stub')).toHaveTextContent('x boss');
+    expect(bots.querySelector('.bt__slip')).toHaveTextContent('redesign brycerambach.com');
     expect(bots).toHaveTextContent('a real handoff. this page is the job.');
   });
 
