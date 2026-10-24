@@ -253,7 +253,11 @@
 .dv__lines { display: grid; }
 .dv__beat { grid-area: 1 / 1; }
 .dv__beat:not(:first-child) { opacity: 0; pointer-events: none; }
+/* Tabbing to the links mid-scroll brings their beat forward and clears the others (and the count, which would
+   name the wrong beat) so the words never sit on top of each other. */
 .dv__beat:focus-within { opacity: 1 !important; transform: none !important; pointer-events: auto !important; }
+.dv__lines:has(.dv__beat:focus-within) .dv__beat:not(:focus-within) { opacity: 0 !important; pointer-events: none !important; }
+.dv__text:has(.dv__beat:focus-within) .dv__count { visibility: hidden; }
 
 /* lite: six frames, one beat each. */
 .dv--lite, .dv--still { padding-block: var(--s9); }
