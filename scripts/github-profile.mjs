@@ -37,7 +37,7 @@ const THEMES = {
   },
 };
 const W = 1200, H = 320, ROAD = 258, DASH = 52;
-const LABEL = 'Bryce Rambach. San Francisco, open to founding roles in SF or NYC.';
+const LABEL = 'Bryce Rambach. Open to founding roles, and open to moving.';
 
 // The flat 911 from src/projects/FlatCar.tsx, facing right, in its 320 x 120 box.
 const wheel = (c, cx) => `<g transform="translate(${cx} 90)">
@@ -130,10 +130,10 @@ const banner = (t) => `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" heig
     <rect width="${W}" height="${H}" fill="${t.paper}"/>
     ${sky(t)}
     <path d="M560 ${ROAD} C700 236 820 214 960 222 C1060 228 1130 206 1200 196 L1200 ${ROAD} Z" fill="${t.hill}"/>
-    <text class="label" x="76" y="96">SAN FRANCISCO, CA</text>
+    <text class="label" x="76" y="96">OPEN TO MOVING</text>
     <text class="name" x="70" y="180">Bryce <tspan class="em">Rambach</tspan></text>
     <circle class="dot" cx="82" cy="224.5" r="5" fill="${t.green}"/>
-    <text class="label" x="98" y="230">OPEN TO FOUNDING ROLES IN SF OR NYC</text>
+    <text class="label" x="98" y="230">OPEN TO FOUNDING ROLES</text>
     <rect y="${ROAD}" width="${W}" height="${H - ROAD}" fill="${t.road}"/>
     <rect y="${ROAD}" width="${W}" height="3" fill="${t.edge}"/>
     <g class="dash">
