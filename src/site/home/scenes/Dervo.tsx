@@ -166,18 +166,21 @@ function Full() {
 
 function Lite() {
   const tablet = useTablet();
-  return <DervoLayout mode="lite" label={MOCK.label} screen={(v, i) => <LiteFrame key={tablet ? 'wide' : v} variant={tablet ? 'wide' : v} beat={i} />} />;
+  // Which frames have played, kept here so a frame that's played stays played whatever happens to it.
+  const played = useRef(new Set<number>());
+  return <DervoLayout mode="lite" label={MOCK.label} screen={(v, i) => <LiteFrame variant={tablet ? 'wide' : v} beat={i} done={played.current} />} />;
 }
 
 /** One phone frame: it waits in the state before its step, then when its top is in the upper 60% of the screen the cursor glides in
- *  (700ms), clicks, and the app lands on the end of the beat. Once. */
-function LiteFrame({ variant, beat }: { variant: MockVariant; beat: number }) {
+ *  (700ms), clicks, and the app lands on the end of the beat. Once, even if the screen turns or resizes across the
+ *  tablet width: the frame keeps its place and only redraws its app at the new variant. */
+function LiteFrame({ variant, beat, done }: { variant: MockVariant; beat: number; done: Set<number> }) {
   const { before, after } = liteStates(beat);
-  const [state, setState] = useState<MockState>(before);
+  const [state, setState] = useState<MockState>(() => (done.has(beat) ? after : before));
   const mock = useRef<HTMLDivElement>(null);
   const cur = useRef<HTMLDivElement>(null);
   const anchors = useRef<Anchors>({});
-  const played = useRef(false);
+  const played = useRef(done.has(beat));
   const [size, setSize] = useState<Size>(SIZE[variant]);
   const dims = useRef(size);
   dims.current = size;
@@ -193,11 +196,12 @@ function LiteFrame({ variant, beat }: { variant: MockVariant; beat: number }) {
   useEffect(() => {
     const box = mock.current, frame = box?.closest('.dv__frame');
     if (!box || !frame) return;
-    if (counts) paintTally(frame, 0);
+    if (counts && !played.current) paintTally(frame, 0);
     const timers: number[] = [], frames: number[] = [];
     const io = new IntersectionObserver(entries => {
       if (played.current || !entries.some(e => e.isIntersecting)) return;
       played.current = true;
+      done.add(beat);
       io.disconnect();
       const [W, H] = dims.current;
       const a = resolve(def.from, anchors.current, W, H), b = resolve(def.to, anchors.current, W, H), el = cur.current;
