@@ -76,7 +76,7 @@ describe('The home page', () => {
 
   it('names no city and no employer', () => {
     const all = strings(COPY).join(' ');
-    expect(all).not.toMatch(/\bsf\b|san francisco|new york/i);
+    expect(all).not.toMatch(/\bsf\b|\bnyc\b|san francisco|new york/i);
     expect(COPY.PORTAL.body).toContain('an hr and payroll consultancy');
   });
 

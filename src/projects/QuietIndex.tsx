@@ -434,7 +434,7 @@ export default function QuietIndex() {
           <ul>
             <motion.li {...rise(0.05)}>open to founding engineer roles at early ai startups.</motion.li>
             <motion.li {...rise(0.12)}>day <StreakNumber value={streakDay} /> of the running streak.</motion.li>
-            <motion.li {...rise(0.19)}>next: sf or nyc, soon.</motion.li>
+            <motion.li {...rise(0.19)}>next: open to moving, wherever the team is.</motion.li>
           </ul>
         </section>
       </main>
