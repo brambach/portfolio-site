@@ -18,22 +18,25 @@ export default function Portal() {
 type Cell = {
   chip: HTMLElement; raw: HTMLElement; clean?: HTMLElement; fly: HTMLElement; well: HTMLElement;
   /** Where it sits in the tray (px, deg) and where it lands, as an offset from its tray spot and a scale, in the
-   *  tray's own (tilted) frame; via is the arc's control point. */
-  from: { x: number; y: number; r: number }; to: { x: number; y: number; r: number; s: number }; via: { x: number; y: number };
+   *  tray's own (tilted) frame; c1 and c2 are the path's control points. */
+  from: { x: number; y: number; r: number }; to: { x: number; y: number; r: number; s: number }; c1: Pt; c2: Pt;
   /** When it leaves, from 0 to 1 over the run. */
   order: number; failed: boolean;
   /** Sitting in its slot: drawn at scale 1 with no scale pair, so the table's text is crisp. */
   landed: boolean;
 };
 
+type Pt = { x: number; y: number };
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+const mix = (a: Pt, b: Pt, t: number): Pt => ({ x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t) });
 const clamp = (t: number) => Math.min(1, Math.max(0, t));
 /** Eases in gently and out long, so a cell clears the tray quickly and settles slowly into its own slot. */
 const ease = (t: number) => (1 - Math.cos(Math.PI * t ** 0.8)) / 2;
-/** Along the arc at e: a quadratic curve through via, lifted a touch at the top of the arc. */
+const bez = (a: number, b: number, c: number, d: number, e: number) => { const u = 1 - e; return u * u * u * a + 3 * u * u * e * b + 3 * u * e * e * c + e * e * e * d; };
+/** Along the path at e: a cubic curve through c1 and c2, lifted a touch at the top of the arc. */
 const pose = (c: Cell, e: number) => {
-  const u = 1 - e, k = (a: number, b: number, v: number) => u * u * a + 2 * u * e * b + e * e * v, lift = Math.sin(Math.PI * e);
-  return `translate3d(${k(c.from.x, c.via.x, c.to.x)}px,${k(c.from.y, c.via.y, c.to.y)}px,0) rotate(${lerp(c.from.r, c.to.r, e)}deg) scale(${lerp(1, c.to.s, e) * (1 + 0.04 * lift)})`;
+  const lift = Math.sin(Math.PI * e);
+  return `translate3d(${bez(c.from.x, c.c1.x, c.c2.x, c.to.x, e)}px,${bez(c.from.y, c.c1.y, c.c2.y, c.to.y, e)}px,0) rotate(${lerp(c.from.r, c.to.r, e)}deg) scale(${lerp(1, c.to.s, e) * (1 + 0.04 * lift)})`;
 };
 const rest = (c: Cell) => `translate3d(${c.to.x}px,${c.to.y}px,0)${c.to.r ? ` rotate(${c.to.r}deg)` : ''}`;
 /** A fixed 0..1 per cell, so the sweep and the bows are the same every visit. */
@@ -55,6 +58,14 @@ function useCells(stage: RefObject<HTMLElement | null>, onMeasure: (cells: Cell[
       const tray = el.querySelector<HTMLElement>('.pt__tray')!;
       const tilt = parseFloat(getComputedStyle(tray).getPropertyValue('--tilt')) || 0, th = (tilt * Math.PI) / 180;
       const cos = Math.cos(th), sin = Math.sin(th);
+      const rot = (p: Pt): Pt => ({ x: p.x * cos - p.y * sin, y: p.x * sin + p.y * cos });
+      const unrot = (p: Pt): Pt => ({ x: p.x * cos + p.y * sin, y: -p.x * sin + p.y * cos });
+      // The words' block (side by side, the cells cross the page beside it): no cell's corner may enter it.
+      let wr = -Infinity, wb = -Infinity;
+      for (const w of el.parentElement!.querySelector('.pt__text')?.children ?? []) {
+        const r = w.getBoundingClientRect();
+        if (r.width) { wr = Math.max(wr, r.right + 16); wb = Math.max(wb, r.bottom + 16); }
+      }
       tray.style.transform = 'none';
       const box = tray.getBoundingClientRect(), ox = box.left + box.width / 2, oy = box.top + box.height / 2;
       chips.forEach((chip, k) => {
@@ -76,9 +87,32 @@ function useCells(stage: RefObject<HTMLElement | null>, onMeasure: (cells: Cell[
         const side = k % cols === cols - 1 ? 1 : ((Math.floor(k / cols) + k) % 2) * 2 - 1;
         const bow = side * (0.08 + 0.12 * hash(k, 1));
         const via = { x: (m.x + to.x) / 2 - (to.y - m.y) * bow, y: (m.y + to.y) / 2 + (to.x - m.x) * bow };
+        // Plan the path on the page (a cell's top left corner, since it grows right and down from there). The bowed
+        // arc is the first choice; if it would cut across the words, it bends towards falling first and turning
+        // left only once it's below them, then falls a little deeper, until it's clear.
+        const page = (p: Pt) => { const q = rot(p); return { x: ax + q.x, y: ay + q.y }; };
+        const p0 = page(m), p3 = page(to), v = page(via);
+        const clear = (c1: Pt, c2: Pt) => {
+          for (let i = 1; i < 40; i++) {
+            const e = i / 40;
+            if (bez(p0.x, c1.x, c2.x, p3.x, e) < wr && bez(p0.y, c1.y, c2.y, p3.y, e) < wb) return false;
+          }
+          return true;
+        };
+        let c1 = mix(p0, v, 2 / 3), c2 = mix(p3, v, 2 / 3);
+        if (!clear(c1, c2)) {
+          const d1 = c1, d2 = c2;
+          for (let j = 1; j <= 12; j++) {
+            const turn = { x: Math.max(p0.x, wr), y: p3.y + Math.max(0, j - 4) * 14 };
+            c1 = mix(d1, turn, Math.min(1, j / 4));
+            c2 = mix(d2, { x: lerp(turn.x, p3.x, 0.25), y: turn.y }, Math.min(1, j / 4));
+            if (clear(c1, c2)) break;
+          }
+        }
+        const frame = (p: Pt) => unrot({ x: p.x - ax, y: p.y - ay });
         cells.push({
           chip, raw: chip.querySelector('.pt__raw')!, clean, fly: chip.querySelector('.pt__fly')!, well: wells[k],
-          from: m, to, via,
+          from: m, to, c1: frame(c1), c2: frame(c2),
           // A loose diagonal sweep from the tray's top left, shuffled a little.
           order: Math.floor(k / cols) + (k % cols) * 0.7 + hash(k, 2) * 1.6, failed, landed: false,
         });
@@ -99,6 +133,8 @@ function useCells(stage: RefObject<HTMLElement | null>, onMeasure: (cells: Cell[
 /** The run's shape: the first cell leaves at 0, the last at LEAVE, each takes TRAVEL, and the stuck row's note
  *  arrives over the last stretch. */
 const LEAVE = 0.54, TRAVEL = 0.3, NOTE: [number, number] = [0.84, 0.98];
+/** Over each trip: the raw value fades out over this stretch, then the clean one fades in from CLEAN_IN to the end. */
+const RAW_OUT: [number, number] = [0.6, 0.83], CLEAN_IN = 0.86;
 
 function paint(cells: Cell[], root: HTMLElement, p: number) {
   for (const c of cells) {
@@ -108,11 +144,11 @@ function paint(cells: Cell[], root: HTMLElement, p: number) {
     if (landed !== c.landed) { c.landed = landed; c.clean!.style.transform = landed ? 'none' : `scale(${1 / c.to.s})`; }
     // The stuck one stays a little lifted, a loose scrap on the table.
     c.fly.style.opacity = String(c.failed && t > 0.5 ? lerp(0.9, 0.35, (t - 0.5) * 2) : Math.sin(Math.PI * t) * 0.9);
-    // The value resolves in the last part of the trip, as a crossfade, once it's nearly over its slot.
-    const f = clamp((t - 0.7) / 0.27);
-    c.well.style.opacity = String(1 - f);
+    // The value resolves as it comes over its slot: the raw one is gone before the clean one shows, never both.
+    const out = clamp((t - RAW_OUT[0]) / (RAW_OUT[1] - RAW_OUT[0])), f = clamp((t - CLEAN_IN) / (1 - CLEAN_IN));
+    c.well.style.opacity = String(1 - (c.failed ? out : f));
     if (c.failed) continue;
-    c.raw.style.opacity = String(1 - f);
+    c.raw.style.opacity = String(1 - out);
     if (c.clean) c.clean.style.opacity = String(f);
   }
   const q = clamp((p - NOTE[0]) / (NOTE[1] - NOTE[0])), note = root.querySelector<HTMLElement>('.pt__note')!;
@@ -152,7 +188,7 @@ function Full() {
  *  every ScrollTrigger refresh. */
 const wide = () => matchMedia('(min-width: 1100px)').matches;
 
-const STATEMENT = 'cubic-bezier(.16,1,.3,1)', OUT = 'cubic-bezier(.2,.7,.2,1)';
+const STATEMENT = 'cubic-bezier(.16,1,.3,1)';
 
 /** Phones: when most of the figure is on screen the cells travel once, 900ms each, 40ms apart. */
 function Lite() {
@@ -174,14 +210,17 @@ function Lite() {
       io.disconnect();
       const by = [...s.cells].sort((a, b) => a.order - b.order);
       by.forEach((c, i) => {
-        const delay = i * 40, fade = { duration: 380, delay: delay + 480, easing: OUT, fill: 'both' as const };
-        const path = Array.from({ length: 9 }, (_, j) => ({ transform: pose(c, j / 8) }));
-        s.running.push(c.chip.animate(path, { duration: 900, delay, easing: STATEMENT, fill: 'both' }));
-        s.running.push(c.fly.animate([{ opacity: 0 }, { opacity: 0.9, offset: 0.35 }, { opacity: c.failed ? 0.35 : 0 }], { duration: 900, delay, fill: 'both' }));
-        s.running.push(c.well.animate([{ opacity: 1 }, { opacity: 0 }], fade));
+        const delay = i * 40, trip = { duration: 900, delay, fill: 'both' as const };
+        // The raw value is out by 60% of the time (the cell's mostly there by then) and the clean one in after 70%.
+        const rawOut = [{ opacity: 1 }, { opacity: 1, offset: 0.4 }, { opacity: 0, offset: 0.6 }, { opacity: 0 }];
+        const cleanIn = [{ opacity: 0 }, { opacity: 0, offset: 0.7 }, { opacity: 1 }];
+        const path = Array.from({ length: 17 }, (_, j) => ({ transform: pose(c, j / 16) }));
+        s.running.push(c.chip.animate(path, { ...trip, easing: STATEMENT }));
+        s.running.push(c.fly.animate([{ opacity: 0 }, { opacity: 0.9, offset: 0.35 }, { opacity: c.failed ? 0.35 : 0 }], trip));
+        s.running.push(c.well.animate(c.failed ? rawOut : cleanIn.map(k => ({ ...k, opacity: 1 - k.opacity })), trip));
         if (c.failed) return;
-        s.running.push(c.raw.animate([{ opacity: 1 }, { opacity: 0 }], fade));
-        if (c.clean) s.running.push(c.clean.animate([{ opacity: 0 }, { opacity: 1 }], fade));
+        s.running.push(c.raw.animate(rawOut, trip));
+        if (c.clean) s.running.push(c.clean.animate(cleanIn, trip));
       });
       const after = { delay: by.length * 40 + 760, fill: 'both' as const, easing: STATEMENT };
       s.running.push(
