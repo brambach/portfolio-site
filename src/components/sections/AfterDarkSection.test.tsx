@@ -25,4 +25,10 @@ describe('AfterDarkSection', () => {
     expect(screen.getByText('the good part of the day')).toBeInTheDocument();
     expect(screen.getByText('made it.')).toBeInTheDocument();
   });
+
+  it('is open to moving and names no city', () => {
+    const { container } = render(<AfterDarkSection />);
+    expect(screen.getByText('open to moving · soon')).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/\bs[f]\b|\bn[y]c\b|san fr[a]ncisco|new y[o]rk/i);
+  });
 });
