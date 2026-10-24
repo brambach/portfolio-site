@@ -7,7 +7,9 @@ import { useMotionMode, type MotionMode } from '../motion-mode';
    the cells, so swapping in the real scene moves nothing.
    full and lite: the export's cells sit crooked in the tray and the table waits with empty slots. Portal.tsx carries
    each cell from its spot in the tray to its slot in the table.
-   still: the finished table with the one value that doesn't map, and the export small above it as the before. */
+   still: the finished table with the one value that doesn't map, and the export beside the words as the before.
+   From 1100px the words and the export share the first row, the export tilted on the right, and the table runs
+   under both; the figure spans the section on a subgrid so its parts sit in the section's own columns. */
 
 const { columns, rows } = PORTAL_MOCK;
 export const FAILED = rows.length - 1;
@@ -80,9 +82,11 @@ function Table({ still }: { still: boolean }) {
 export function PortalLayout({ mode, rootRef, stageRef }: { mode: MotionMode; rootRef?: Ref<HTMLElement>; stageRef?: Ref<HTMLElement> }) {
   const still = mode === 'still';
   return <section id="portal" ref={rootRef} className={`sec pt pt--${mode}`} aria-labelledby="portal-h">
-    <p className="label sec__label"><span aria-hidden="true">{PORTAL.numeral} ·</span>{PORTAL.label}</p>
-    <h2 id="portal-h" className="sec__head">{PORTAL.headline}</h2>
-    <p className="pt__body">{PORTAL.body}</p>
+    <div className="pt__text">
+      <p className="label sec__label"><span aria-hidden="true">{PORTAL.numeral} ·</span>{PORTAL.label}</p>
+      <h2 id="portal-h" className="sec__head">{PORTAL.headline}</h2>
+      <p className="pt__body">{PORTAL.body}</p>
+    </div>
     <figure ref={stageRef} className="pt__stage" role="img" aria-label={PORTAL.art}>
       <div className="pt__in">
         <p className="label pt__cap">{still ? PORTAL.before : PORTAL.tray}</p>
