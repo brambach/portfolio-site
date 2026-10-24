@@ -4,7 +4,7 @@ import { homeHref, WORK_IDS, workHref, type WorkId } from './routes';
 import { afterFirstPaint, askReturn, paintSnapshot, takeHandoff } from './chrome';
 import { makeGrid } from './field';
 import { ECursor, ELink, Mark } from './links';
-import { paletteFor } from './palette';
+import { PALETTES } from './palette';
 import { startWorkPage, type WorkMotion } from './work-motion';
 import { pageWorkById, nextWork, SHOT_SIZE } from './work';
 import './e.css';
@@ -37,7 +37,8 @@ export default function WorkPage({ id }: { id: WorkId }) {
   const [sound, setSound] = useState(true);
   // The screens further down wait until the page has painted, so they never hold up its first paint.
   const [later, setLater] = useState(false);
-  const palette = useMemo(() => paletteFor(location.search), []);
+  // The day paper at every hour: the home is cream paper all day, so nothing it links to turns dark at night.
+  const palette = PALETTES.day;
   const search = location.search, home = homeHref(search);
   const snap = useRef<HTMLCanvasElement>(null), arriving = useRef(false);
 
