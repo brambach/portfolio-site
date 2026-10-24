@@ -68,6 +68,14 @@ function Sidebar({ state, variant, tally }: { state: MockState; variant: MockVar
         <NavIcon i={i} />{n}<span>{i === 0 ? (state.threads || '') : i === 2 ? 1 : ''}</span>
       </li>)}
     </ul>}
+    {variant === 'wide' && <>
+      <p className="dm__group">{MOCK.older.group}<span>{MOCK.older.threads.length}</span></p>
+      <ul className="dm__older">
+        {MOCK.older.threads.map((t, i) => <li key={t.name} className="dm__t" data-on="">
+          <Glyph s={i || state.quiet ? 'idle' : 'review'} /><span className="dm__tn">{t.name}</span><span className="dm__meta">{t.time}</span>
+        </li>)}
+      </ul>
+    </>}
     <div className="dm__new" data-anchor="new-thread" data-ax=".3">
       <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M7 2.5v9M2.5 7h9" /></svg>{MOCK.newThread}
     </div>
@@ -110,6 +118,7 @@ function NavIcon({ i }: { i: number }) {
 function CatchUp({ state }: { state: MockState }) {
   const st = status(state);
   const live = [st.ideas, st.connector, st.live];
+  const { needs, next } = MOCK.catchUp;
   return <div className="dm__catch dm__layer" data-on={on(!state.open)}>
     <div className="dm__catchhead">
       <div>
@@ -117,6 +126,12 @@ function CatchUp({ state }: { state: MockState }) {
         <p className="dm__since">{MOCK.catchUp.since} · {MOCK.catchUp.moved(state.threads)}</p>
       </div>
       <span className="dm__btn">{MOCK.catchUp.go}</span>
+    </div>
+    <p className="dm__label">{needs.label}</p>
+    <div className="dm__needs">
+      <p className="dm__nhead"><Glyph s="review" /><span><b>{needs.name}</b><small>{needs.sub}</small></span></p>
+      <dl>{needs.rows.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
+      <p className="dm__nact"><span className="dm__btn dm__btn--ink">{needs.answer}</span><span className="dm__btn">{needs.open}</span></p>
     </div>
     <p className="dm__label">{MOCK.catchUp.left}</p>
     <ul className="dm__left">
@@ -126,13 +141,18 @@ function CatchUp({ state }: { state: MockState }) {
         <Meta s={live[i]} time={t.time + ' am'} />
       </li>)}
     </ul>
+    <p className="dm__label">{next.label}</p>
+    <ul className="dm__next">
+      {next.items.map(([t, when]) => <li key={t}><Glyph s="idle" /><span>{t}</span><small>{when}</small></li>)}
+    </ul>
   </div>;
 }
 
-function Steps({ state }: { state: MockState }) {
+/** The run's steps; in the panel each done one also says when. */
+function Steps({ state, times }: { state: MockState; times?: boolean }) {
   return <ol className="dm__steps">
     {MOCK.steps.map((s, i) => <li key={s} data-done={on(state.run > i || state.quiet)} data-now={on(state.run === i + 1 && state.run < 5 && !state.quiet)}>
-      <Glyph s={state.run > i ? 'done' : 'idle'} /><span>{s}</span>
+      <Glyph s={state.run > i ? 'done' : 'idle'} /><span>{s}{times && <small className="dm__swap"><span data-on={on(state.run <= i)}>{MOCK.queued}</span><span data-on={on(state.run > i)}>{MOCK.stepTimes[i]}</span></small>}</span>
     </li>)}
   </ol>;
 }
@@ -153,9 +173,6 @@ function Thread({ state, variant }: { state: MockState; variant: MockVariant }) 
             <svg viewBox="0 0 14 14" aria-hidden="true"><path d={i ? 'M2.5 4h9v5.5h-9ZM1.5 11h11' : 'M5 7.5a2.5 2.5 0 1 1 2.3-1.5L11.5 10v1.5H10V10.5H8.5V9'} /></svg>{c}
           </span>)}
         </span>
-        {variant === 'wide' && <span className="dm__btn dm__split" data-anchor="split">
-          <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M4 2.5v9M4 5.5c0 2.5 6 1 6 4.5M4 5.5c0 2 4 1.5 4 6" /></svg>{MOCK.split}
-        </span>}
       </div>
       <div className="dm__stack">
         <div className="dm__run dm__layer" data-on={on(review === 'none')}>
@@ -168,6 +185,10 @@ function Thread({ state, variant }: { state: MockState; variant: MockVariant }) 
             <p>{MOCK.doing}{variant === 'wide' && MOCK.planLead}</p>
             {variant === 'wide' ? <ol className="dm__plan">{MOCK.plan.map(l => <li key={l}>{l}</li>)}</ol> : <Steps state={state} />}
           </div>
+          {variant === 'wide' && <div className="dm__code" data-on={on(state.run >= 2 || state.quiet)}>
+            <p><span>{MOCK.code.file}</span><span>{MOCK.code.n}</span></p>
+            <pre>{MOCK.code.lines.join('\n')}</pre>
+          </div>}
           <p className="dm__note" data-on={on(split)}>
             <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 2v4.5c0 1.5 1 2.5 2.5 2.5H11M8.5 6.5 11 9l-2.5 2.5" /></svg>
             <span>{MOCK.splitNote}: <b>{MOCK.subs[0]}</b>, <b>{MOCK.subs[1]}</b></span>
@@ -195,6 +216,10 @@ function Thread({ state, variant }: { state: MockState; variant: MockVariant }) 
           </div>
         </div>
       </div>
+      {variant === 'wide' && <p className="dm__reply">
+        <span className="dm__swap"><span data-on={on(agent === 'claude')}>{MOCK.reply(MOCK.agents.claude)}</span><span data-on={on(agent === 'codex')}>{MOCK.reply(MOCK.agents.codex)}</span></span>
+        <i><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M7 11.5v-9M3 6.5l4-4 4 4" /></svg></i>
+      </p>}
     </div>
     {variant === 'wide' && <div className="dm__panel">
       <span className="dm__seg dm__seg--quiet" data-agent="claude"><i className="dm__thumb" /><span data-on="">{MOCK.panel.tabs[0]}</span><span>{MOCK.panel.tabs[1]}</span></span>
@@ -205,11 +230,18 @@ function Thread({ state, variant }: { state: MockState; variant: MockVariant }) 
         </span>
       </p>
       <p className="dm__plabel">{MOCK.panel.steps}</p>
-      <Steps state={state} />
+      <Steps state={state} times />
       <p className="dm__plabel">{MOCK.panel.files}</p>
       <ul className="dm__files">
         {MOCK.files.map((f, i) => <li key={f.name} data-on={on(state.run >= 2 + i)}><span>{f.name}</span><span>{f.n}</span></li>)}
       </ul>
+      <div className="dm__runinfo">
+        <p className="dm__plabel">{MOCK.run.label}</p>
+        <dl>
+        <div><dt>{MOCK.run.agent}</dt><dd className="dm__swap"><span data-on={on(agent === 'claude')}>{MOCK.agents.claude}</span><span data-on={on(agent === 'codex')}>{MOCK.agents.codex}</span></dd></div>
+        {MOCK.run.rows.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
+        </dl>
+      </div>
     </div>}
   </div>;
 }
@@ -227,6 +259,11 @@ export default function DervoMock({ ref, state, variant, tally = 1, children }: 
             <span data-on={on(!state.open)}>{MOCK.crumb.home}</span>
             <span data-on={on(state.open)}>{MOCK.crumb.thread[0]} <i>/</i> <em>{MOCK.crumb.thread[1]}</em></span>
           </span>
+          {variant === 'wide' && <span className="dm__layer dm__hsplit" data-on={on(state.open)}>
+            <span className="dm__btn" data-anchor="split">
+              <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M4 2.5v9M4 5.5c0 2.5 6 1 6 4.5M4 5.5c0 2 4 1.5 4 6" /></svg>{MOCK.split}
+            </span>
+          </span>}
         </p>
         <div className="dm__stack dm__mainstack">
           {variant === 'wide' && <CatchUp state={state} />}

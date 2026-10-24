@@ -233,24 +233,27 @@
 .dv__cap { margin-top: var(--s3); color: var(--faint); }
 
 /* full: the stage sticks while the section scrolls by under it. */
-/* The section is a little wider than the page's column: the window wants the room. */
-.home > .dv-host { width: min(100% - 2 * var(--gutter), 1360px); }
+/* The section is wider than the page's column: the window wants the room. */
+.home > .dv-host { width: min(100% - 2 * var(--gutter), 1520px); }
 .dv--full { height: 420vh; }
+/* The window takes about two thirds of the width and four fifths of the height; the words stretch to its height,
+   the label on its top edge and the beat line a third of the way down. */
 .dv__stage {
   position: sticky; top: 0;
   height: 100vh;
   display: grid;
-  grid-template-columns: minmax(0, 34fr) minmax(0, 62fr);
-  column-gap: 4%;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr) min(70%, 82vh * var(--ar));
+  column-gap: var(--s7);
+  align-content: center;
 }
-.dv--full .dv__label { margin-bottom: var(--s6); }
-.dv--full .dv__count { margin-bottom: var(--s4); }
+.dv--full .dv__text { display: grid; grid-template-rows: auto 1fr auto auto 1.7fr; padding-bottom: var(--s6); }
+.dv--full .dv__count { grid-row: 3; margin-bottom: var(--s4); }
+.dv--full .dv__lines { grid-row: 4; }
+.dv--full .dv__line { font-size: clamp(1.75rem, 2.3vw, 2.5rem); line-height: 1.14; }
 .dv__lines { display: grid; }
 .dv__beat { grid-area: 1 / 1; }
 .dv__beat:not(:first-child) { opacity: 0; pointer-events: none; }
 .dv__beat:focus-within { opacity: 1 !important; transform: none !important; pointer-events: auto !important; }
-.dv--full .dv__screen { width: min(100%, (100vh - 176px) * var(--w) / var(--h)); }
 
 /* lite: six frames, one beat each. */
 .dv--lite, .dv--still { padding-block: var(--s9); }
