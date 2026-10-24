@@ -553,7 +553,7 @@
   transition: opacity var(--dur-calm) var(--ease-out), transform var(--dur-calm) var(--ease-out);
 }
 .mw__row:hover::before, .mw__row:focus-visible::before { opacity: 1; transform: none; }
-.mw__name { font: 400 2rem/1.1 var(--font-display); letter-spacing: -0.012em; color: var(--display-ink); }
+.mw__name { font: 500 clamp(1.5rem, 1.75vw, 1.625rem)/1.2 var(--font-text); letter-spacing: -0.018em; color: var(--display-ink); }
 .mw__line { color: var(--ink-2); text-wrap: pretty; }
 .mw__read {
   display: inline-flex; align-items: center; gap: var(--s2);
@@ -651,7 +651,7 @@
   .dv__wide { display: none; }
   .dv__narrow { display: grid; gap: var(--s5); max-width: 480px; }
   .mw__row { margin-inline: calc(var(--s4) * -1); padding: var(--s4); }
-  .mw__name { font-size: 1.75rem; }
+  .mw__name { font-size: 1.25rem; }
   .foot__about { font-size: 1.1875rem; }
   /* A phone keeps four columns: who, what they're paid, where, which state. */
   .pt { --xh: 26px; --slot: 28px; --x-cols: 1fr 1.25fr 1fr .5fr; --t-cols: 1fr 1.4fr 1.3fr .45fr; }
