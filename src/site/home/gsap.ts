@@ -15,6 +15,10 @@ export function loadGsap() {
     ScrollTrigger.config({ ignoreMobileResize: true });
     void document.fonts?.ready.then(() => ScrollTrigger.refresh());
     return { gsap, ScrollTrigger };
+  }).catch(e => {
+    // A failed load (a dropped connection, a deploy mid-visit) isn't kept, so the next scene tries again.
+    loading = null;
+    throw e;
   });
   return loading;
 }

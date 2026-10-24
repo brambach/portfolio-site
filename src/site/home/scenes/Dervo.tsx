@@ -141,6 +141,11 @@ function Full() {
         });
       });
       revert = () => ctx.revert();
+    }, () => {
+      // No GSAP, no scrub: show the end, with every beat's links in reach.
+      if (!alive) return;
+      clock.current.p = 1;
+      clock.current.draw();
     });
     return () => { alive = false; revert(); };
   }, []);
