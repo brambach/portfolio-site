@@ -18,9 +18,15 @@ const sitePages = (): Plugin => ({
     const index = bundle['index.html'];
     if (!index || index.type !== 'asset') throw new Error('site-pages: no index.html in the build');
     const html = String(index.source);
+    // The home's two faces, preloaded on the home page only: its CSS arrives with its chunk, after the JS, so
+    // without this the serif headline would wait on a round trip it doesn't need.
+    const font = (re: RegExp) => Object.keys(bundle).find(f => re.test(f));
+    const preload = [/instrument-serif-latin-400-normal-[\w-]+\.woff2$/, /hanken-grotesk-latin-wght-normal-[\w-]+\.woff2$/]
+      .map(font).filter(Boolean)
+      .map(f => `<link rel="preload" href="/${f}" as="font" type="font/woff2" crossorigin />`).join('\n    ');
     for (const page of PAGES) {
       const source = withMeta(html, page);
-      if (page.file === 'index.html') index.source = source;
+      if (page.file === 'index.html') index.source = preload ? source.replace('<!-- page-meta -->', `${preload}\n    <!-- page-meta -->`) : source;
       else this.emitFile({ type: 'asset', fileName: page.file, source });
     }
     this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: sitemap() });

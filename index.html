@@ -25,16 +25,22 @@
           ? !['mile', 'from', 'town', 'city', 'journey', 'forest'].some(function (k) { return q.has(k); })
           : older.indexOf(path) < 0);
         if (!site) return;
+        var root = document.documentElement;
+        var meta = document.querySelector('meta[name="theme-color"]');
+        // The home page is look D: one cream paper at every hour (src/site/home/look-d.css).
+        if (path === '' && !window.__notFound) {
+          root.style.background = '#f3eee3';
+          if (meta) meta.setAttribute('content', '#f3eee3');
+          return;
+        }
         var raw = q.get('hour'), m = raw && /^(\d{1,2})(?::(\d{2}))?$/.exec(raw), now = new Date();
         var h = raw === null ? NaN : m ? Number(m[1]) + (m[2] ? Number(m[2]) / 60 : 0) : Number(raw);
         if (!(h >= 0 && h <= 24)) h = now.getHours() + now.getMinutes() / 60;
         var time = h >= 5 && h < 10 ? 'dawn' : h >= 10 && h < 16 ? 'day' : h >= 16 && h < 19.5 ? 'golden' : 'night';
         var paper = { dawn: '#f4d5e0', day: '#eef2ee', golden: '#f6e0c6', night: '#0a0f26' }[time];
-        var root = document.documentElement;
         root.setAttribute('data-e', time);
         root.style.background = paper;
         root.style.setProperty('--e-paper', paper);
-        var meta = document.querySelector('meta[name="theme-color"]');
         if (meta) meta.setAttribute('content', paper);
         // Arriving on a project's page with the dots handed over (src/site/chrome.ts): hold the page before on
         // screen until the dots are drawn here, then the page lets it go. Never longer than the hold below.

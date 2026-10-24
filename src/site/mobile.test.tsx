@@ -1,10 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import Home from './Home';
 import WorkPage from './WorkPage';
 import { WORK_IDS } from './routes';
-import { SCENE_ORDER } from './scenes';
 
 /* The phone and tablet pass: the way back from a project, where the hand ends up on a phone, and the CSS that keeps
    the words clear and the links big enough to tap. jsdom doesn't lay anything out, so the sizes are checked in the
@@ -18,6 +16,7 @@ beforeEach(() => {
 });
 afterEach(() => { vi.restoreAllMocks(); sessionStorage.clear(); });
 
+const home = readFileSync(`${process.cwd()}/src/site/home/look-d.css`, 'utf8');
 const css = ['./e.css', './work.css', './not-found.css'].map(f => readFileSync(new URL(f, import.meta.url), 'utf8')).join('\n');
 // The page's own index.html, read from the repo (vitest serves a URL for it, not a file).
 const index = readFileSync(`${process.cwd()}/index.html`, 'utf8');
@@ -29,18 +28,6 @@ describe('A project’s way back', () => {
     expect(back).toHaveAttribute('href', '/#work');
     // A plain link: nothing in the page decides to go somewhere else instead.
     expect(back.onclick).toBeNull();
-  });
-});
-
-describe('The hand on a phone', () => {
-  it('waves once: no second space is left for it under the last line', () => {
-    const { container } = render(<Home />);
-    // The close ends on the sign-off. There is no separate resting place that would show the hand a second time.
-    expect(container.querySelector('[data-hand-rest]')).toBeNull();
-    const close = container.querySelector('[data-scene="contact"]')!;
-    expect(close.lastElementChild).toHaveClass('e-sign');
-    expect(css).not.toMatch(/e-close__rest/);
-    expect(css).not.toMatch(/46lvh/);
   });
 });
 
@@ -96,22 +83,21 @@ describe('The dots on a phone, as the words scroll over them', () => {
     expect(bandShown(100, 500, [word(-200, 120)])).toBe(0);
     expect(bandShown(100, 500, [word(300, 340, 0)])).toBe(1);
   });
+});
 
-  it('count everything there is to read past the hero, labels and hints included', async () => {
-    const { READING } = await import('./motion');
-    const { container } = render(<Home />);
-    const reading = [...container.querySelectorAll(READING)];
-    expect(container.querySelectorAll('.e-rule').length).toBe(SCENE_ORDER.length - 1);
-    for (const sel of ['.e-rule', '.e-work__hint', '.e-intro__big', '.e-hello', '.e-sign']) {
-      for (const el of container.querySelectorAll(sel)) expect(reading).toContain(el);
-    }
-    expect(container.querySelector('.e-hero__sub')!.closest(READING)).toBeNull();
-    // Every word in a part past the hero is inside one of them.
-    const walk = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
-    for (let n = walk.nextNode(); n; n = walk.nextNode()) {
-      const el = n.parentElement!;
-      if (!n.textContent!.trim() || el.closest('.e-sr') || !el.closest('[data-scene]:not([data-scene="hero"])')) continue;
-      expect(el.closest(READING)).not.toBeNull();
-    }
+describe('The home page on a phone', () => {
+  const phone = home.slice(home.indexOf('@media (max-width: 759.98px)'));
+  it('sets nothing under 12px, and its labels at 13px on a phone', () => {
+    const rems = [...home.matchAll(/--fs-[a-z]+: ([\d.]+)rem/g)].map(m => Number(m[1]) * 16);
+    expect(Math.min(...rems)).toBeGreaterThanOrEqual(12);
+    expect(phone).toMatch(/--fs-label: 0\.8125rem/);
+  });
+  it('gives the small links in the header and footer a 44px band to tap', () => {
+    expect(home).toMatch(/\.hero__name::after, \.hero__links a::after \{ content: ""; position: absolute; inset: -16px -8px; \}/);
+    expect(home).toMatch(/\.foot__links a::after \{ content: ""; position: absolute; inset: -16px -8px; \}/);
+  });
+  it('keeps the engraving\'s box the same shape before and after it is drawn', () => {
+    expect(home).toMatch(/\.vig \{[^}]*aspect-ratio: 4\.4 \/ 1;/);
+    expect(phone).toMatch(/\.vig \{ aspect-ratio: 7 \/ 4;/);
   });
 });
