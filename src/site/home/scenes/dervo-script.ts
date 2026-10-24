@@ -176,7 +176,8 @@ export const MOCK = {
     { name: 'live board', time: '3:40', note: 'running its checks.' },
   ],
   subs: ['ideas store', 'ideas screen'],
-  stamp: ['shipped to beta', 'oct 2, 2026'],
+  /** A sample time on the mock's clock. The real beta date is page copy (beat 3), outside the window. */
+  stamp: ['shipped to beta', '12:40 am'],
   /** The card at the foot of the sidebar. No numbers: the real ones are page copy, outside the window. */
   beta: [['channel', 'beta'], ['updates', 'on']],
   catchUp: {
