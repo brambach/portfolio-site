@@ -50,18 +50,16 @@ describe('The site’s project pages: what they say', () => {
 });
 
 describe('The site’s links', () => {
-  it('sends the index to the project pages, and says which links open a new tab, with no arrow glyphs', () => {
+  it('sends the home page to the project pages, and says which links open a new tab, with no arrow glyphs', () => {
     const { container } = render(<Home />);
-    for (const id of ['dervo', 'arro', 'port']) expect(container.querySelector(`[data-work="${id}"] .e-index__link`)).toHaveAttribute('href', `/projects/${id}`);
-    for (const name of ['LinkedIn', 'X', 'GitHub', 'Fire Station #33', 'Apple Picker']) {
+    const more = container.querySelector('#more')!;
+    for (const id of ['arro', 'port']) expect(within(more as HTMLElement).getByRole('link', { name: new RegExp(`^${id}`) })).toHaveAttribute('href', `/projects/${id}`);
+    for (const name of ['linkedin', 'x', 'github']) {
       const link = screen.getAllByRole('link').find(l => l.textContent === `${name} (opens in a new tab)`)!;
       expect(link).toBeDefined();
       expect(link).toHaveAttribute('target', '_blank');
     }
-    expect(screen.getAllByRole('link').find(l => l.textContent === 'The drive')).not.toHaveAttribute('target');
-    const close = container.querySelector('.e-close')!.textContent!;
-    expect(close).not.toMatch(/[↗→]/);
-    expect(container.querySelector('.e-index')!.textContent).not.toMatch(/[↗→]/);
+    expect(screen.getByRole('contentinfo').textContent).not.toMatch(/[↗→]/);
   });
 });
 

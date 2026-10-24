@@ -89,7 +89,7 @@ export function AfterDarkSection() {
               src="/images/city-dusk.jpg"
               alt="a city skyline at dusk"
               caption="next stop →"
-              sub="sf or nyc · soon"
+              sub="open to moving · soon"
               rotate={3}
               tape="left"
               imgClassName="h-[136px]"

@@ -3,7 +3,6 @@ import {
   motion, useMotionTemplate, useMotionValueEvent, useReducedMotion, useScroll, useSpring,
   useTransform, useVelocity, type MotionValue,
 } from 'motion/react';
-import { useLenis } from 'lenis/react';
 import { SmoothScroll } from '../components/SmoothScroll';
 import { archive, projectById, type Project } from './catalog';
 import { email } from '../lib/site';
@@ -79,7 +78,6 @@ function Drive() {
   const [travel, setTravel] = useState(0);
   const [stop, setStop] = useState(-1);
   const [revving, setRevving] = useState(false);
-  const lenis = useLenis();
 
   useLayoutEffect(() => {
     const el = track.current;
@@ -145,8 +143,7 @@ function Drive() {
     const panel = event.currentTarget.closest<HTMLElement>('.sp-panel') ?? event.currentTarget;
     const top = (section.current?.offsetTop ?? 0) + panel.offsetLeft + panel.offsetWidth / 2 - window.innerWidth / 2;
     const clamped = Math.max(section.current?.offsetTop ?? 0, Math.min(top, (section.current?.offsetTop ?? 0) + travel));
-    if (lenis) lenis.scrollTo(clamped, { immediate: true });
-    else window.scrollTo({ top: clamped });
+    window.scrollTo({ top: clamped, behavior: 'instant' });
   };
 
   // Coming back from a study: /?mile=lucid parks the car at that billboard. Images and fonts
@@ -175,15 +172,12 @@ function Drive() {
       if (!panel) return;
       const start = section.current?.offsetTop ?? 0;
       const top = Math.max(start, Math.min(start + panel.offsetLeft + panel.offsetWidth / 2 - window.innerWidth / 2, start + travel));
-      // the page is taller than Lenis last measured, so tell it before asking it to scroll
-      lenis?.resize();
-      if (lenis) lenis.scrollTo(top, { immediate: true, force: true });
-      else window.scrollTo({ top });
+      window.scrollTo({ top, behavior: 'instant' });
     };
     aim();
     const timers = [200, 600, 1400].map(ms => window.setTimeout(aim, ms));
     return () => timers.forEach(window.clearTimeout);
-  }, [travel, lenis]);
+  }, [travel]);
 
   const current = stop >= 0 && stop < road.length ? road[stop] : null;
 

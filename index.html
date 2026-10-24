@@ -24,17 +24,53 @@
         var site = window.__notFound || moving || (path === ''
           ? !['mile', 'from', 'town', 'city', 'journey', 'forest'].some(function (k) { return q.has(k); })
           : older.indexOf(path) < 0);
+        // Sentient, the display face of a project's page and the not-found page (src/site/e.css), comes from
+        // Fontshare (its licence doesn't allow the files in a public repo). The home is look D, set in its own
+        // self-hosted faces, and the older pages bring their own (/next asks for Sentient itself, in QuietIndex.tsx),
+        // so only these pages ask for it. Added from here it doesn't block the page; the stylesheets fall back to
+        // Georgia until it arrives.
+        if (site && (path !== '' || window.__notFound)) {
+          [['preconnect', 'https://api.fontshare.com'], ['preconnect', 'https://cdn.fontshare.com'],
+           ['stylesheet', 'https://api.fontshare.com/v2/css?f[]=sentient@400,400i&display=swap']].forEach(function (l) {
+            var link = document.createElement('link');
+            link.rel = l[0];
+            link.href = l[1];
+            if (l[0] === 'preconnect') link.crossOrigin = '';
+            document.head.appendChild(link);
+          });
+        }
         if (!site) return;
+        var root = document.documentElement;
+        var meta = document.querySelector('meta[name="theme-color"]');
+        // The home page is look D: one cream paper at every hour (src/site/home/look-d.css).
+        if (path === '' && !window.__notFound) {
+          // Its faces for the first screen, preloaded here and nowhere else: its CSS arrives with its chunk, after
+          // the JS, so without this the headline would wait on a round trip it doesn't need. The build fills the
+          // list (vite.config.ts).
+          [/* home-fonts */].forEach(function (href) {
+            var link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'font';
+            link.type = 'font/woff2';
+            link.crossOrigin = '';
+            link.href = href;
+            document.head.appendChild(link);
+          });
+          root.style.background = '#f3eee3';
+          if (meta) meta.setAttribute('content', '#f3eee3');
+          return;
+        }
         var raw = q.get('hour'), m = raw && /^(\d{1,2})(?::(\d{2}))?$/.exec(raw), now = new Date();
         var h = raw === null ? NaN : m ? Number(m[1]) + (m[2] ? Number(m[2]) / 60 : 0) : Number(raw);
         if (!(h >= 0 && h <= 24)) h = now.getHours() + now.getMinutes() / 60;
         var time = h >= 5 && h < 10 ? 'dawn' : h >= 10 && h < 16 ? 'day' : h >= 16 && h < 19.5 ? 'golden' : 'night';
+        // A project's page and the not-found page keep the day paper at every hour, like the home's one cream
+        // paper, so the home never links into the night look (WorkPage.tsx and NotFound.tsx do the same).
+        if (!moving) time = 'day';
         var paper = { dawn: '#f4d5e0', day: '#eef2ee', golden: '#f6e0c6', night: '#0a0f26' }[time];
-        var root = document.documentElement;
         root.setAttribute('data-e', time);
         root.style.background = paper;
         root.style.setProperty('--e-paper', paper);
-        var meta = document.querySelector('meta[name="theme-color"]');
         if (meta) meta.setAttribute('content', paper);
         // Arriving on a project's page with the dots handed over (src/site/chrome.ts): hold the page before on
         // screen until the dots are drawn here, then the page lets it go. Never longer than the hold below.
@@ -65,12 +101,6 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=e1" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=e1" />
     <link rel="manifest" href="/site.webmanifest" />
-    <!-- Sentient, the display face, comes from Fontshare (its licence doesn't allow the files in a public repo).
-         Loaded without blocking the page; the stylesheets fall back to Georgia until it arrives. -->
-    <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
-    <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
-    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=sentient@400,400i&display=swap" media="print" onload="this.media='all'" />
-    <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=sentient@400,400i&display=swap" /></noscript>
     <meta name="author" content="Bryce Rambach" />
     <script type="application/ld+json">
       {

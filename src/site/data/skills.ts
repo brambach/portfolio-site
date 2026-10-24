@@ -104,7 +104,7 @@ export const SKILLS: Skill[] = [
     project: 'arro',
     body: [
       'Arro is a daily movement streak for families who live apart, and most of its calls are about what it won’t show. A missed day is never public: it says “Maya still has today”, never “Maya broke the streak”. No rankings, no red badges, and one nudge a day at most.',
-      'Knowing when to stop counts too. Dervo’s beta opened to a waitlist in September 2026. In October Claude shipped the same things, so I parked it. The source is on GitHub.',
+      'Knowing when to stop counts too. Dervo’s beta opened to a waitlist in September 2026. In October Claude shipped the same things, so I stopped building it. The source is on GitHub.',
     ],
     evidence: [
       { name: 'Arro', to: '/projects/arro', note: 'It’s on TestFlight.' },

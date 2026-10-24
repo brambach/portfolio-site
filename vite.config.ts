@@ -18,8 +18,15 @@ const sitePages = (): Plugin => ({
     const index = bundle['index.html'];
     if (!index || index.type !== 'asset') throw new Error('site-pages: no index.html in the build');
     const html = String(index.source);
+    // The home's faces for its first screen (the headline's serif, roman and its italic, and Hanken), handed to the
+    // route script in index.html, which preloads them on the home page only: /work, /next and the rest get this
+    // file too and don't use them.
+    const font = (re: RegExp) => Object.keys(bundle).find(f => re.test(f));
+    const fonts = [/instrument-serif-latin-400-normal-[\w-]+\.woff2$/, /instrument-serif-latin-400-italic-[\w-]+\.woff2$/,
+      /hanken-grotesk-latin-wght-normal-[\w-]+\.woff2$/].map(font).filter(Boolean).map(f => JSON.stringify(`/${f}`));
+    if (!html.includes('[/* home-fonts */]')) throw new Error('site-pages: no home-fonts list in index.html');
     for (const page of PAGES) {
-      const source = withMeta(html, page);
+      const source = withMeta(html, page).replace('[/* home-fonts */]', `[${fonts.join(', ')}]`);
       if (page.file === 'index.html') index.source = source;
       else this.emitFile({ type: 'asset', fileName: page.file, source });
     }
