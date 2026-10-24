@@ -53,7 +53,7 @@ Touch controls work too. The scene credits (models, sounds, textures) are in the
 
 ## Built with
 
-React 19, TypeScript, Vite 6 and Tailwind 4 for the pages, plus plain CSS where a component owns its look. [Motion](https://motion.dev) and Lenis for the movement, Three.js r185 for the drive, Vitest for tests. It deploys on Vercel, and the functions in `api/` back the race times and a private admin page.
+React 19, TypeScript, Vite 6 and Tailwind 4 for the pages, plus plain CSS where a component owns its look. [Motion](https://motion.dev) and [GSAP](https://gsap.com) for the movement, Three.js r185 for the drive, Vitest for tests. It deploys on Vercel, and the functions in `api/` back the race times and a private admin page.
 
 ## Run it
 
