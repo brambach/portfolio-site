@@ -194,9 +194,11 @@
 .dm__next small { color: var(--faint); font-size: 12px; }
 
 .dm__thread { min-height: 0; }
-.dm[data-v="wide"] .dm__thread { display: grid; grid-template-columns: minmax(0, 1fr) 196px; }
+.dm[data-panel] .dm__thread { display: grid; grid-template-columns: minmax(0, 1fr) 196px; }
+.dm__thread { display: grid; }
 .dm__tbody { display: flex; flex-direction: column; min-height: 0; padding: 4px 22px 16px; }
 .dm__tools { flex: none; display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.dm:not([data-panel]) .dm__tools { flex-wrap: wrap; row-gap: 8px; }
 .dm__seg { position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; padding: 3px; border-radius: 999px; background: var(--sunk); font-size: 12px; font-weight: 500; }
 .dm__seg > span { position: relative; padding: 4px 12px; text-align: center; color: var(--faint); white-space: nowrap; }
 .dm__seg > span[data-on] { color: var(--ink); }
@@ -279,7 +281,17 @@
 .dm__files li[data-on] { opacity: 1; }
 .dm__files li span + span { color: var(--done); font-variant-numeric: tabular-nums; }
 
-/* The phone's half of the window. */
+/* A narrow window: the catch up page closer to its edges. */
+.dm[data-narrow] .dm__catch { padding-inline: 22px; }
+
+/* The phone's halves of the window, each cropped to what its beat is about. */
+.dm[data-v="side"] .dm__label { padding: 0 7px; }
+.dm[data-v="side"] .dm__needs { margin-top: 6px; padding-inline: 14px; }
+.dm[data-v="side"] .dm__needs dl, .dm[data-v="side"] .dm__nact { margin-left: 0; }
+.dm[data-v="side"] .dm__needs dl > div { grid-template-columns: 40px minmax(0, 1fr); }
+.dm[data-v="side"] .dm__ledger { margin-top: 14px; }
+.dm[data-v="main"] :is(.dm__crumb b, .dm__rhead span, .dm__ok span) { display: none; }
+.dm[data-v="main"] .dm__rhead { padding-bottom: 10px; box-shadow: inset 0 -1px 0 var(--line); }
 .dm[data-v="main"] .dm__crumb { padding: 0 16px; }
 .dm[data-v="main"] .dm__tbody { padding: 2px 16px 16px; }
 .dm[data-v="main"] .dm__tools { gap: 6px; }
