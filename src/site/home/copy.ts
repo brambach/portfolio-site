@@ -77,10 +77,10 @@ export const PORTAL = {
 export const PORTAL_MOCK = {
   columns: [
     { key: 'id', from: 'Emp #', to: 'employee id' },
-    { key: 'name', from: 'first nm', to: 'first name', phone: 'employee' },
+    { key: 'name', from: 'first nm', to: 'first name', phone: 'employee', tiny: 'name' },
     { key: 'hire', from: 'Hire Dt', to: 'hire date' },
     { key: 'pay', from: 'PAY_RATE', to: 'pay rate' },
-    { key: 'dept', from: 'dept code', to: 'department' },
+    { key: 'dept', from: 'dept code', to: 'department', tiny: 'dept' },
     { key: 'state', from: 'st', to: 'state' },
   ],
   rows: [
