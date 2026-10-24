@@ -20,16 +20,18 @@ export const HERO = {
 };
 
 export type SectionId = 'dervo' | 'portal' | 'bots' | 'more';
+/** Where a contents row lands: a section, or arro's or port's own row in more work. */
+export type ContentsTarget = SectionId | 'more-arro' | 'more-port';
 
-/** The contents page, in page order. arro and port share the more work section. */
-export const CONTENTS: { label: string; rows: { id: SectionId; numeral: string; name: string; line: string }[] } = {
+/** The contents page, in page order. arro and port share the more work section, so each lands on its own row there. */
+export const CONTENTS: { label: string; rows: { id: ContentsTarget; numeral: string; name: string; line: string }[] } = {
   label: 'contents',
   rows: [
     { id: 'dervo', numeral: 'i', name: 'dervo', line: 'run more agents than you can watch.' },
     { id: 'portal', numeral: 'ii', name: 'integration portal', line: 'if a field maps wrong, someone gets paid wrong.' },
     { id: 'bots', numeral: 'iii', name: 'bot team', line: 'my bots hand work to each other.' },
-    { id: 'more', numeral: 'iv', name: 'arro', line: 'a missed day is never public.' },
-    { id: 'more', numeral: 'v', name: 'port', line: 'hold for a second and the screen folds into a line.' },
+    { id: 'more-arro', numeral: 'iv', name: 'arro', line: 'a missed day is never public.' },
+    { id: 'more-port', numeral: 'v', name: 'port', line: 'hold for a second and the screen folds into a line.' },
   ],
 };
 
