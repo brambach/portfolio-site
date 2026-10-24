@@ -30,7 +30,7 @@ export type Step = { at: number; cursor?: Point; click?: boolean; state?: Partia
 
 export const START: MockState = { threads: 0, open: false, agent: 'claude', split: false, ledger: false, run: 0, review: 'none', quiet: false };
 export const CURSOR_START: Point = [0.62, 0.62];
-export const REST: Point = [0.84, 0.84];
+export const REST: Point = [0.6, 0.82];
 
 /** How long a move takes, on the same clock. It ends on the step's `at`. */
 const MOVE = 0.04;
@@ -40,7 +40,7 @@ export const STEPS: Step[] = [
   { at: 0.04, cursor: 'new-thread', click: true, state: { threads: 1 }, move: 0.035 },
   { at: 0.075, click: true, state: { threads: 2 } },
   { at: 0.11, click: true, state: { threads: 3 } },
-  { at: 0.15, cursor: [0.5, 0.5], move: 0.03 },
+  { at: 0.15, cursor: [0.66, 0.6], move: 0.03 },
   // 2. open one, flip the agent
   { at: 0.21, cursor: 'thread-ideas', click: true, state: { open: true, run: 1 } },
   { at: 0.265, cursor: 'agent-codex', click: true, state: { agent: 'codex' } },
@@ -175,7 +175,17 @@ export const MOCK = {
   ],
   subs: ['ideas store', 'ideas screen'],
   stamp: ['shipped to beta', 'oct 2, 2026'],
-  catchUp: { title: 'catch up', since: 'since 11:20 pm', moved: (n: number) => (n ? `${n} thread${n > 1 ? 's' : ''} moved` : 'nothing moved yet'), left: 'since you left', go: 'go through these' },
+  catchUp: {
+    title: 'catch up', since: 'since 11:20 pm', moved: (n: number) => (n ? `${n} thread${n > 1 ? 's' : ''} moved` : 'nothing moved yet'), left: 'since you left', go: 'go through these',
+    needs: {
+      label: 'needs you', name: 'first run setup', sub: 'asked you one thing before it carries on.',
+      rows: [['task', 'make first run setup shorter.'], ['asks', 'should it ask for the codex login first, or after the first thread?']],
+      answer: 'answer', open: 'open thread',
+    },
+    next: { label: 'next up', items: [['move settings into one file', 'tomorrow'], ['test the codex login on a clean mac', 'fri'], ['write the beta notes', 'mon']] },
+  },
+  /** An older group in the sidebar, there from the start. */
+  older: { group: 'releases', threads: [{ name: 'first run setup', time: 'now' }, { name: 'update and restart', time: 'mon' }] },
   crumb: { home: 'home', thread: ['threads', 'ideas storage'] },
   agents: { claude: 'claude code', codex: 'codex' },
   chips: ['your login', 'local'],
@@ -185,8 +195,13 @@ export const MOCK = {
   planLead: ' the plan:',
   plan: ['keep ideas next to project knowledge, one file per project.', 'make each idea the group key for its threads.', 'test it with the group mirror on and off.'],
   splitNote: 'split into 2 sub-threads',
+  code: { file: 'project_ideas.py', n: '+252', lines: ['def ideas_path(project):', '    return project.root / "ideas.json"', '', 'def group_key(idea):', '    return idea.slug'] },
+  reply: (agent: string) => `reply to ${agent}`,
+  run: { label: 'this run', rows: [['login', 'yours'], ['runs on', 'this mac'], ['branch', 'mvp1']], agent: 'agent' },
   panel: { tabs: ['progress', 'preview'], working: '6 min so far', finished: 'finished 1:52 am · 14 min', steps: 'steps', files: 'changed files' },
   steps: ['read project_knowledge.py', 'wrote the ideas store', 'wrote its tests', 'ran the backend tests', 'wrote the report'],
+  queued: 'queued',
+  stepTimes: ['1:38 am', '1:41 am · 3 min', '1:44 am · 2 min', '1:46 am · 3 s', '1:52 am'],
   files: [{ name: 'project_ideas.py', n: '+252' }, { name: 'test_project_ideas.py', n: '+187' }],
   review: {
     head: 'ready for your review',

@@ -5,13 +5,13 @@ import { useMotionMode, type MotionMode } from '../motion-mode';
 /* The dervo section's frame: the words, and a white window for each screen, sized exactly as the scene will be. It's
    in the first load and paints as the still until the scene's code arrives (LazyScene), so swapping in the real
    scene moves nothing. Dervo.tsx draws the same frame with the app inside each window.
-   full: one sticky stage 420vh tall, the beat line on the left, the window on the right.
+   full: one sticky stage 420vh tall, the beat line on the left, the window on the right filling most of the screen.
    lite: six stacked frames, a beat line and a window each.
    still: every beat line as a list, beside the finished app. */
 
 export type MockVariant = 'wide' | 'side' | 'main';
 /** Each window's fixed design size; the app is drawn at this size and scaled to fit. */
-export const SIZE: Record<MockVariant, [number, number]> = { wide: [880, 560], side: [360, 460], main: [360, 520] };
+export const SIZE: Record<MockVariant, [number, number]> = { wide: [840, 650], side: [360, 460], main: [360, 520] };
 /** Which half of the app each phone frame shows. */
 export const LITE_PANES: MockVariant[] = ['side', 'main', 'side', 'side', 'main', 'side'];
 
@@ -70,7 +70,7 @@ export function DervoLayout({ mode, screen, label, rootRef }: { mode: MotionMode
   </section>;
 
   return <section id="dervo" ref={rootRef} className="dv dv--full" aria-labelledby="dervo-h">
-    <div className="dv__stage">
+    <div className="dv__stage" style={{ '--ar': SIZE.wide[0] / SIZE.wide[1] } as CSSProperties}>
       <div className="dv__text">
         <Label />
         <Count i={0} />
