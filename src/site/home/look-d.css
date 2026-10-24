@@ -206,7 +206,7 @@
   text-wrap: pretty;
 }
 .dv__links { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--s5); row-gap: var(--s2); margin-top: var(--s6); }
-.dv__src, .dv__story {
+.dv__src, .dv__story, .pt__story {
   position: relative;
   text-decoration: underline;
   text-decoration-color: transparent;
@@ -215,10 +215,22 @@
   transition: text-decoration-color var(--dur-calm) var(--ease-out), color var(--dur-calm) var(--ease-out);
 }
 .dv__src { color: var(--primary); font-weight: 500; }
-.dv__story { color: var(--muted); font-size: var(--fs-read); }
-.dv__src:hover, .dv__story:hover { text-decoration-color: currentColor; }
-.dv__story:hover { color: var(--action-ink); }
-.dv__src::after, .dv__story::after { content: ""; position: absolute; inset: -12px -6px; }
+.dv__story, .pt__story { color: var(--muted); font-size: var(--fs-read); }
+.dv__src:hover, .dv__story:hover, .pt__story:hover { text-decoration-color: currentColor; }
+.dv__story:hover, .pt__story:hover { color: var(--action-ink); }
+.dv__src::after, .dv__story::after, .pt__story::after { content: ""; position: absolute; inset: -12px -6px; }
+/* Beat 4's real numbers: page copy under the line, in the serif, each with its label under it. */
+.dv__tally { display: flex; flex-wrap: wrap; column-gap: var(--s7); row-gap: var(--s4); margin-top: var(--s5); }
+.dv__stat { display: grid; justify-items: start; row-gap: var(--s2); }
+.dv__stat b {
+  font: 400 clamp(2.75rem, 4vw, 4rem)/1 var(--font-display);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--display-ink);
+}
+.dv__stat b > span + span { opacity: 0; }
+.dv__stat b > span[data-plus] { opacity: 1; }
+.dv__stat .label { color: var(--muted); }
 .dv__fig { margin: 0; }
 /* The window: white, raised, cut to its design shape so the scaled app fills it exactly. */
 .dv__screen {
@@ -251,7 +263,9 @@
 .dv--full .dv__lines { grid-row: 4; }
 .dv--full .dv__line { font-size: clamp(1.75rem, 2.3vw, 2.5rem); line-height: 1.14; }
 .dv__lines { display: grid; }
-.dv__beat { grid-area: 1 / 1; }
+.dv__beat { grid-area: 1 / 1; position: relative; }
+/* The numbers hang under beat 4's line, in the space below the words, so the lines keep their places. */
+.dv--full .dv__tally { position: absolute; left: 0; right: 0; top: 100%; margin-top: var(--s6); }
 .dv__beat:not(:first-child) { opacity: 0; pointer-events: none; }
 /* Tabbing to the links mid-scroll brings their beat forward and clears the others (and the count, which would
    name the wrong beat) so the words never sit on top of each other. */
@@ -286,12 +300,15 @@
   color: var(--display-ink);
   text-wrap: pretty;
 }
+.dv--still .dv__stat b { font-size: 2.5rem; }
+.dv--lite .dv__stat b { font-size: 3rem; }
 .dv__num { font: 500 var(--fs-label)/1 var(--font-text); font-variant-numeric: tabular-nums; color: var(--faint); }
 .dv__narrow { display: none; }
 
 /* ---------- ii. the portal (the frame and its cells; home/scenes/Portal.tsx moves them) ---------- */
 .pt { --xh: 24px; --slot: 28px; --x-cols: .8fr 1fr 1.15fr 1.2fr 1fr .55fr; --t-cols: .9fr 1fr 1.15fr 1.3fr 1.2fr .6fr; }
 .pt__body { margin-top: var(--s5); max-width: 560px; color: var(--ink-2); text-wrap: pretty; }
+.pt__more { margin-top: var(--s4); }
 .pt__stage { margin: var(--s8) 0 0; display: grid; grid-template-columns: minmax(0, 1fr); row-gap: var(--s7); }
 .pt__in { max-width: 560px; }
 .pt__table { max-width: 820px; }

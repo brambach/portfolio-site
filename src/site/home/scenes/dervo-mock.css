@@ -58,7 +58,7 @@
 .dm[data-quiet] .dm__live, .dv--still .dm__live { animation: none; }
 @keyframes dm-breathe { from { opacity: 1; } to { opacity: .35; } }
 
-.dm__small, .dm__group, .dm__label, .dm__plabel, .dm__ledger p > span {
+.dm__small, .dm__group, .dm__label, .dm__plabel, .dm__beta p > span {
   font: 600 11px/1 var(--font-text);
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -138,18 +138,16 @@
 .dm__stamp span + span { font-variant-numeric: tabular-nums; color: var(--muted); }
 .dm__tree[data-on] .dm__stamp { opacity: 1; transform: none; }
 
-.dm__ledger {
+.dm__beta {
   margin-top: auto; padding: 10px 7px 0;
   box-shadow: inset 0 1px 0 var(--line);
   opacity: 0; transform: translateY(6px);
   transition: opacity 320ms var(--ease-out), transform 480ms var(--ease-statement);
 }
-.dm__ledger[data-on] { opacity: 1; transform: none; }
-.dm__ledger p { display: flex; align-items: baseline; justify-content: space-between; height: 22px; }
-.dm__ledger b { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--ink); }
-.dm__ledger b > span + span { opacity: 0; }
-.dm__ledger b > span[data-plus] { opacity: 1; }
-.dm[data-v="side"] .dm__ledger { padding-top: 12px; }
+.dm__beta[data-on] { opacity: 1; transform: none; }
+.dm__beta p { display: flex; align-items: baseline; justify-content: space-between; height: 22px; }
+.dm__beta b { font-size: 13px; font-weight: 500; color: var(--ink); }
+.dm[data-v="side"] .dm__beta { padding-top: 12px; }
 
 /* ---------- main ---------- */
 .dm__main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
@@ -289,7 +287,7 @@
 .dm[data-v="side"] .dm__needs { margin-top: 6px; padding-inline: 14px; }
 .dm[data-v="side"] .dm__needs dl, .dm[data-v="side"] .dm__nact { margin-left: 0; }
 .dm[data-v="side"] .dm__needs dl > div { grid-template-columns: 40px minmax(0, 1fr); }
-.dm[data-v="side"] .dm__ledger { margin-top: 14px; }
+.dm[data-v="side"] .dm__beta { margin-top: 14px; }
 .dm[data-v="main"] :is(.dm__crumb b, .dm__rhead span, .dm__ok span) { display: none; }
 .dm[data-v="main"] .dm__rhead { padding-bottom: 10px; box-shadow: inset 0 -1px 0 var(--line); }
 .dm[data-v="main"] .dm__crumb { padding: 0 16px; }

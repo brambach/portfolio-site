@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode, Ref } from 'react';
-import { MOCK, TALLIES, tallyText, type MockState } from './dervo-script';
+import { MOCK, type MockState } from './dervo-script';
 import type { MockVariant } from './DervoStill';
 import './dervo-mock.css';
 
@@ -28,7 +28,7 @@ function parts(variant: MockVariant, beat: number | undefined, [w, h]: Size) {
     ws: wide || beat !== 3,
     tree: variant !== 'side' || beat !== 0,
     needs: variant === 'side' && beat === 0,
-    ledger: variant !== 'side' || at(3, 5),
+    beta: variant !== 'side' || at(3, 5),
     tools: wide ? beat !== 4 : beat === 1,
     plan: wide && (!tight || beat === 1),
     code: wide && !tight,
@@ -71,7 +71,7 @@ function status(state: MockState) {
   };
 }
 
-function Sidebar({ state, variant, tally, show }: { state: MockState; variant: MockVariant; tally: number; show: Parts }) {
+function Sidebar({ state, variant, show }: { state: MockState; variant: MockVariant; show: Parts }) {
   const st = status(state);
   const [ideas, connector, live] = MOCK.threads;
   // Newest on top: the list sits one row higher for every thread not started yet, so a new one slides the rest
@@ -133,11 +133,8 @@ function Sidebar({ state, variant, tally, show }: { state: MockState; variant: M
       <p className="dm__label">{MOCK.catchUp.needs.label}</p>
       <Needs rows={false} />
     </>}
-    {show.ledger && <div className="dm__ledger" data-on={on(state.ledger)} data-anchor="ledger" data-ax=".5">
-      {TALLIES.map(t => <p key={t.label}>
-        <span>{t.label}</span>
-        <b><span data-tally={t.to}>{tallyText(t.to, false, tally)}</span><span data-plus={on(t.plus && tally >= 1)}>{t.plus ? '+' : ''}</span></b>
-      </p>)}
+    {show.beta && <div className="dm__beta" data-on={on(state.beta)} data-anchor="beta" data-ax=".5">
+      {MOCK.beta.map(([k, v]) => <p key={k}><span>{k}</span><b>{v}</b></p>)}
     </div>}
   </div>;
 }
@@ -286,15 +283,15 @@ function Thread({ state, show }: { state: MockState; show: Parts }) {
   </div>;
 }
 
-export default function DervoMock({ ref, state, variant, size, beat, tally = 1, children }: {
-  ref?: Ref<HTMLDivElement>; state: MockState; variant: MockVariant; size: Size; beat?: number; tally?: number; children?: ReactNode;
+export default function DervoMock({ ref, state, variant, size, beat, children }: {
+  ref?: Ref<HTMLDivElement>; state: MockState; variant: MockVariant; size: Size; beat?: number; children?: ReactNode;
 }) {
   const show = parts(variant, beat, size);
   return <div ref={ref} className="dm" data-v={variant} data-quiet={on(state.quiet)} data-panel={on(show.panel)} data-narrow={on(show.narrow)}
     style={{ width: size[0], height: size[1] }}>
     <div className="dm__bar"><i /><i /><i /></div>
     <div className="dm__body">
-      {variant !== 'main' && <Sidebar state={state} variant={variant} tally={tally} show={show} />}
+      {variant !== 'main' && <Sidebar state={state} variant={variant} show={show} />}
       {variant !== 'side' && <div className="dm__main">
         <p className="dm__crumb">
           <b>{MOCK.workspace.name}</b>
@@ -316,16 +313,6 @@ export default function DervoMock({ ref, state, variant, size, beat, tally = 1, 
     </div>
     {children}
   </div>;
-}
-
-/** The ledger's numbers at t (0 to 1), written straight into the page so a scrubbed count doesn't redraw the app. */
-export function paintTally(root: Element, t: number) {
-  root.querySelectorAll<HTMLElement>('[data-tally]').forEach((el, i) => {
-    const { to, plus } = TALLIES[i];
-    el.textContent = tallyText(to, false, t);
-    const p = el.nextElementSibling as HTMLElement | null;
-    if (p) p.toggleAttribute('data-plus', plus && t >= 1);
-  });
 }
 
 /** Where each data-anchor element's aim point is, in the window's own pixels. offsetLeft and offsetTop ignore

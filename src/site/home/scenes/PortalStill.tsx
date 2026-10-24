@@ -86,6 +86,7 @@ export function PortalLayout({ mode, rootRef, stageRef }: { mode: MotionMode; ro
       <p className="label sec__label"><span aria-hidden="true">{PORTAL.numeral} ·</span>{PORTAL.label}</p>
       <h2 id="portal-h" className="sec__head">{PORTAL.headline}</h2>
       <p className="pt__body">{PORTAL.body}</p>
+      <p className="pt__more"><a className="pt__story" href={PORTAL.story.href}>{PORTAL.story.label}</a></p>
     </div>
     <figure ref={stageRef} className="pt__stage" role="img" aria-label={PORTAL.art}>
       <div className="pt__in">

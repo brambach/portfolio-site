@@ -27,7 +27,7 @@ describe('The dervo script', () => {
 
   it('starts empty and ends approved, split, counted and quiet', () => {
     expect(stateAt(0)).toMatchObject({ threads: 0, open: false, review: 'none' });
-    expect(stateAt(1)).toMatchObject({ threads: 3, open: true, agent: 'codex', split: true, ledger: true, run: 5, review: 'approved', quiet: true });
+    expect(stateAt(1)).toMatchObject({ threads: 3, open: true, agent: 'codex', split: true, beta: true, run: 5, review: 'approved', quiet: true });
     expect(tallyAt(1)).toBe(1);
     expect(TALLIES.map(t => tallyText(t.to, t.plus, 1))).toEqual(['18', '1,500+']);
     expect(tallyText(1500, true, 0.5)).not.toContain('+');
@@ -43,7 +43,7 @@ describe('The dervo script', () => {
   });
 
   it('moves the cursor without jumps', () => {
-    const anchors = { 'new-thread': [40, 200], 'thread-ideas': [80, 300], 'agent-codex': [400, 90], chips: [520, 90], split: [700, 90], 'sub-threads': [90, 340], ledger: [100, 520], 'not-checked': [300, 360], approve: [260, 470] } as const;
+    const anchors = { 'new-thread': [40, 200], 'thread-ideas': [80, 300], 'agent-codex': [400, 90], chips: [520, 90], split: [700, 90], 'sub-threads': [90, 340], beta: [100, 520], 'not-checked': [300, 360], approve: [260, 470] } as const;
     let prev = cursorAt(0, anchors as never, 880, 560);
     for (let p = 0.001; p <= 1; p += 0.001) {
       const now = cursorAt(p, anchors as never, 880, 560);
@@ -60,6 +60,10 @@ describe('The dervo script', () => {
       expect(STEPS[l.step].at).toBeGreaterThanOrEqual(BEATS[i].at);
       expect(i === 3 || JSON.stringify(before) !== JSON.stringify(after), `frame ${i + 1}`).toBe(true);
     });
+  });
+
+  it('keeps the real numbers out of the sample window', () => {
+    for (const s of strings(MOCK)) expect(s, s).not.toMatch(/\b18\b|1,?500|beta testers|agent tasks/);
   });
 
   it('writes its sample data lowercase, with no em or en dashes and no "parked"', () => {
