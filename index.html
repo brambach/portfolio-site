@@ -37,6 +37,9 @@
         var h = raw === null ? NaN : m ? Number(m[1]) + (m[2] ? Number(m[2]) / 60 : 0) : Number(raw);
         if (!(h >= 0 && h <= 24)) h = now.getHours() + now.getMinutes() / 60;
         var time = h >= 5 && h < 10 ? 'dawn' : h >= 10 && h < 16 ? 'day' : h >= 16 && h < 19.5 ? 'golden' : 'night';
+        // A project's page and the not-found page keep the day paper at every hour, like the home's one cream
+        // paper, so the home never links into the night look (WorkPage.tsx and NotFound.tsx do the same).
+        if (!moving) time = 'day';
         var paper = { dawn: '#f4d5e0', day: '#eef2ee', golden: '#f6e0c6', night: '#0a0f26' }[time];
         root.setAttribute('data-e', time);
         root.style.background = paper;
