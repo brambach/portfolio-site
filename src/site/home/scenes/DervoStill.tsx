@@ -31,11 +31,13 @@ export const LITE_FRAMES: { pane: MockVariant; phone: number; tablet: number }[]
 
 type Screen = (variant: MockVariant, beat: number) => ReactNode;
 
+/** A window with a label is one picture to a screen reader; one without is hidden from it, so a reader hears the
+ *  long description once and never the sample app's own words. */
 function Window({ variant, beat, screen, label, lite }: { variant: MockVariant; beat: number; screen?: Screen; label?: string; lite?: boolean }) {
   const [w, h] = SIZE[variant];
   const style = lite ? { '--hp': LITE_FRAMES[beat].phone, '--ht': LITE_FRAMES[beat].tablet, '--z': ZOOM.hand } : { '--w': w, '--h': h };
   return <div className="dv__screen" data-v={variant} style={style as CSSProperties}
-    {...(label ? { role: 'img', 'aria-label': label } : {})}>
+    {...(label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true })}>
     {screen?.(variant, beat)}
   </div>;
 }
@@ -74,7 +76,8 @@ export function DervoLayout({ mode, screen, label, rootRef }: { mode: MotionMode
         <p className="dv__line">{line}</p>
         {i === TALLY_BEAT && <Tally />}
         <figure className="dv__fig">
-          <Window variant={LITE_FRAMES[i].pane} beat={i} screen={screen} label={label} lite />
+          {/* The six frames show one run, so only the first describes it. */}
+          <Window variant={LITE_FRAMES[i].pane} beat={i} screen={screen} label={i === 0 ? label : undefined} lite />
           {i === 0 && <Caption />}
         </figure>
         {i === beats.length - 1 && <Links />}
