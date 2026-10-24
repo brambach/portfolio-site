@@ -340,9 +340,8 @@
   transform-origin: 0 0;
 }
 .pt--on .pt__go { will-change: transform; }
-/* What the export looked like stays behind, faint, under each cell that leaves. */
-.pt__ghost { opacity: .34; }
-.pt__ghost .pt__raw { background: none; }
+/* The empty spot a cell leaves in the tray: an outline with no value in it, which fades as the cell goes. */
+.pt__ghost { box-shadow: inset 0 0 0 .5px rgb(74 37 96 / .16); }
 .pt__raw { position: absolute; inset: 0; color: var(--ink-2); background: #fcfaf5; }
 .pt__chip[data-end] .pt__raw { text-align: right; }
 .pt__ws { color: var(--faint); opacity: .6; }

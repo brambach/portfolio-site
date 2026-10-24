@@ -43,7 +43,7 @@ function Tray({ moving }: { moving: boolean }) {
         const { r: turn, x, y } = messy(r * columns.length + c);
         const style = { '--r': `${turn}deg`, '--jx': `${x}px`, '--jy': `${y}px` } as CSSProperties;
         return <span key={c} className="pt__src" data-col={columns[c].key}>
-          {moving && <span className="pt__chip pt__ghost" style={style} data-end={numeric(from) ? '' : undefined}><span className="pt__raw">{raw(from)}</span></span>}
+          {moving && <span className="pt__chip pt__ghost" style={style} />}
           <span className="pt__chip pt__go" style={style} data-end={numeric(from) ? '' : undefined}>
             {moving && <span className="pt__fly" />}
             <span className="pt__raw">{raw(from)}</span>
