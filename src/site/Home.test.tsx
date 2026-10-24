@@ -58,6 +58,15 @@ describe('The home page', () => {
     expect(COPY.PORTAL.body).toContain('an hr and payroll consultancy');
   });
 
+  it('shows the portal as a mapping where exactly one value needs a person', () => {
+    const { rows, columns } = COPY.PORTAL_MOCK;
+    expect(rows.every(r => r.length === columns.length)).toBe(true);
+    const stuck = rows.flatMap(r => r.filter(([, to]) => to === null));
+    expect(stuck).toEqual([['OPS-9?', null]]);
+    const { container } = render(<Home />);
+    expect(container.querySelector('#portal')).toHaveTextContent("doesn't map yet. needs you.");
+  });
+
   it('keeps the old dot art, its motion and GSAP out of the home page', () => {
     const files = ['Home.tsx', ...walk(path.join(__dirname, 'home'))].map(f => readFileSync(path.resolve(__dirname, f), 'utf8'));
     for (const src of files) {
