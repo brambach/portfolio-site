@@ -263,6 +263,14 @@
 .dv--lite .dv__count { margin-bottom: var(--s3); }
 .dv--lite .dv__line { font-size: 1.625rem; line-height: 1.16; }
 .dv--lite .dv__fig { margin-top: var(--s5); }
+/* A lite window is as tall as its crop of the app, zoomed (--z). */
+.dv--lite .dv__screen { aspect-ratio: auto; height: calc(var(--hp) * var(--z) * 1px); }
+/* A tablet: the frame takes the column's width and shows both halves of the app. */
+@media (min-width: 600px) {
+  .dv__frame { max-width: 880px; }
+  .dv--lite .dv__line { max-width: 22em; }
+  .dv--lite .dv__screen { height: calc(var(--ht) * var(--z) * 1px); }
+}
 
 /* still: the beats as a list beside the finished app. */
 .dv--still { display: grid; grid-template-columns: minmax(0, 34fr) minmax(0, 62fr); column-gap: 4%; align-items: center; }

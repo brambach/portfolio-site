@@ -1,16 +1,44 @@
 import type { CSSProperties, ReactNode, Ref } from 'react';
 import { MOCK, TALLIES, tallyText, type MockState } from './dervo-script';
-import { SIZE, type MockVariant } from './DervoStill';
+import type { MockVariant } from './DervoStill';
 import './dervo-mock.css';
 
 /* The dervo app, rebuilt in HTML from its real screens (public/projects/dervo): a sidebar of threads, the catch up
    page, a thread with its run and report, and the progress panel. It draws one state and nothing else; every change
    between states is a CSS fade or slide on a layer that's always there, so the elements the cursor aims at keep
-   their places and can be measured once. It's drawn at a fixed size and scaled to fit, so the scene's cursor
-   coordinates never change with the screen. `wide` is the desktop window; `side` and `main` are its two halves,
-   one per phone frame. */
+   their places and can be measured once. It's drawn at a design size and scaled to fit, so the scene's cursor
+   coordinates only change when the window does. `wide` is the desktop window; `side` and `main` are its two
+   halves, one per phone frame. */
 
 type Status = 'working' | 'review' | 'done' | 'idle';
+export type Size = [number, number];
+
+/** What a window shows. The desktop window drops what doesn't fit its design size, in this order: the progress
+ *  panel, the releases and next up, then the nav, the code, the plan, the reply box and the report's first and last
+ *  sections. A lite frame (`beat` set) shows only what its beat is about; without one, a phone half shows the
+ *  finished app. */
+function parts(variant: MockVariant, beat: number | undefined, [w, h]: Size) {
+  const wide = variant === 'wide', roomy = wide && h >= 640, tight = wide && h < 540;
+  const at = (...b: number[]) => beat === undefined || b.includes(beat);
+  return {
+    panel: wide && w >= 836,
+    narrow: wide && w < 660,
+    older: roomy || (wide && beat === 0),
+    nav: wide && (!tight || beat === 0 || beat === 1),
+    ws: wide || beat !== 3,
+    tree: variant !== 'side' || beat !== 0,
+    needs: variant === 'side' && beat === 0,
+    ledger: variant !== 'side' || at(3, 5),
+    tools: wide ? beat !== 4 : beat === 1,
+    plan: wide && (!tight || beat === 1),
+    code: wide && !tight,
+    reply: wide ? !tight || beat !== undefined : beat === 1,
+    summary: wide,
+    whole: wide && !tight,
+    next: roomy,
+  };
+}
+type Parts = ReturnType<typeof parts>;
 
 const on = (b: boolean) => (b ? '' : undefined);
 
@@ -43,7 +71,7 @@ function status(state: MockState) {
   };
 }
 
-function Sidebar({ state, variant, tally }: { state: MockState; variant: MockVariant; tally: number }) {
+function Sidebar({ state, variant, tally, show }: { state: MockState; variant: MockVariant; tally: number; show: Parts }) {
   const st = status(state);
   const [ideas, connector, live] = MOCK.threads;
   // Newest on top: the list sits one row higher for every thread not started yet, so a new one slides the rest
@@ -54,21 +82,21 @@ function Sidebar({ state, variant, tally }: { state: MockState; variant: MockVar
     { t: ideas, made: 1, s: st.ideas },
   ];
   return <div className="dm__side">
-    <div className="dm__ws">
+    {show.ws && <div className="dm__ws">
       <span className="dm__mark">d</span>
       <span><b>{MOCK.workspace.name}</b><small>{MOCK.workspace.path}</small></span>
       <svg viewBox="0 0 10 14" aria-hidden="true"><path d="M2 5l3-3 3 3M2 9l3 3 3-3" /></svg>
-    </div>
-    <div className="dm__search">
+    </div>}
+    {show.nav && <div className="dm__search">
       <svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="6" cy="6" r="4" /><path d="M9 9l3 3" /></svg>
       {MOCK.search}<kbd>⌘k</kbd>
-    </div>
-    {variant === 'wide' && <ul className="dm__nav">
+    </div>}
+    {show.nav && <ul className="dm__nav">
       {MOCK.nav.map((n, i) => <li key={n} data-sel={on(i === 0 && !state.open)}>
         <NavIcon i={i} />{n}<span>{i === 0 ? (state.threads || '') : i === 2 ? 1 : ''}</span>
       </li>)}
     </ul>}
-    {variant === 'wide' && <>
+    {show.older && <>
       <p className="dm__group">{MOCK.older.group}<span>{MOCK.older.threads.length}</span></p>
       <ul className="dm__older">
         {MOCK.older.threads.map((t, i) => <li key={t.name} className="dm__t" data-on="">
@@ -94,19 +122,23 @@ function Sidebar({ state, variant, tally }: { state: MockState; variant: MockVar
             : <Meta s={s} time={t.time} />}
         </li>;
       })}
-      <li className="dm__tree" data-on={on(state.split)} data-anchor="sub-threads" data-ax=".46" data-ay=".3">
+      {show.tree && <li className="dm__tree" data-on={on(state.split)} data-anchor="sub-threads" data-ax=".46" data-ay=".3">
         {MOCK.subs.map((name, i) => <span key={name} className="dm__sub" style={{ '--i': i } as CSSProperties}>
           <Glyph s={st.sub} /><span className="dm__tn">{name}</span><Meta s={st.sub} time={i ? '1:49' : '1:48'} />
         </span>)}
         <span className="dm__stamp"><span>{MOCK.stamp[0]}</span><span>{MOCK.stamp[1]}</span></span>
-      </li>
+      </li>}
     </ul>
-    <div className="dm__ledger" data-on={on(state.ledger)} data-anchor="ledger" data-ax=".5">
+    {show.needs && <>
+      <p className="dm__label">{MOCK.catchUp.needs.label}</p>
+      <Needs rows={false} />
+    </>}
+    {show.ledger && <div className="dm__ledger" data-on={on(state.ledger)} data-anchor="ledger" data-ax=".5">
       {TALLIES.map(t => <p key={t.label}>
         <span>{t.label}</span>
         <b><span data-tally={t.to}>{tallyText(t.to, false, tally)}</span><span data-plus={on(t.plus && tally >= 1)}>{t.plus ? '+' : ''}</span></b>
       </p>)}
-    </div>
+    </div>}
   </div>;
 }
 
@@ -115,7 +147,17 @@ function NavIcon({ i }: { i: number }) {
   return <svg viewBox="0 0 14 14" aria-hidden="true"><path d={d} /></svg>;
 }
 
-function CatchUp({ state }: { state: MockState }) {
+/** The one thread waiting on you. */
+function Needs({ rows = true }: { rows?: boolean }) {
+  const { needs } = MOCK.catchUp;
+  return <div className="dm__needs">
+    <p className="dm__nhead"><Glyph s="review" /><span><b>{needs.name}</b><small>{needs.sub}</small></span></p>
+    {rows && <dl>{needs.rows.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>}
+    <p className="dm__nact"><span className="dm__btn dm__btn--ink">{needs.answer}</span><span className="dm__btn">{needs.open}</span></p>
+  </div>;
+}
+
+function CatchUp({ state, show }: { state: MockState; show: Parts }) {
   const st = status(state);
   const live = [st.ideas, st.connector, st.live];
   const { needs, next } = MOCK.catchUp;
@@ -128,11 +170,7 @@ function CatchUp({ state }: { state: MockState }) {
       <span className="dm__btn">{MOCK.catchUp.go}</span>
     </div>
     <p className="dm__label">{needs.label}</p>
-    <div className="dm__needs">
-      <p className="dm__nhead"><Glyph s="review" /><span><b>{needs.name}</b><small>{needs.sub}</small></span></p>
-      <dl>{needs.rows.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
-      <p className="dm__nact"><span className="dm__btn dm__btn--ink">{needs.answer}</span><span className="dm__btn">{needs.open}</span></p>
-    </div>
+    <Needs rows={show.whole} />
     <p className="dm__label">{MOCK.catchUp.left}</p>
     <ul className="dm__left">
       {MOCK.threads.map((t, i) => <li key={t.name} data-on={on(state.threads > i)}>
@@ -141,10 +179,12 @@ function CatchUp({ state }: { state: MockState }) {
         <Meta s={live[i]} time={t.time + ' am'} />
       </li>)}
     </ul>
-    <p className="dm__label">{next.label}</p>
-    <ul className="dm__next">
-      {next.items.map(([t, when]) => <li key={t}><Glyph s="idle" /><span>{t}</span><small>{when}</small></li>)}
-    </ul>
+    {show.next && <>
+      <p className="dm__label">{next.label}</p>
+      <ul className="dm__next">
+        {next.items.map(([t, when]) => <li key={t}><Glyph s="idle" /><span>{t}</span><small>{when}</small></li>)}
+      </ul>
+    </>}
   </div>;
 }
 
@@ -157,12 +197,12 @@ function Steps({ state, times }: { state: MockState; times?: boolean }) {
   </ol>;
 }
 
-function Thread({ state, variant }: { state: MockState; variant: MockVariant }) {
+function Thread({ state, show }: { state: MockState; show: Parts }) {
   const { agent, review, split } = state;
   const r = MOCK.review;
   return <div className="dm__thread dm__layer" data-on={on(state.open)}>
     <div className="dm__tbody">
-      <div className="dm__tools">
+      {show.tools && <div className="dm__tools">
         <span className="dm__seg" data-agent={agent}>
           <i className="dm__thumb" />
           <span data-on={on(agent === 'claude')}>{MOCK.agents.claude}</span>
@@ -173,7 +213,7 @@ function Thread({ state, variant }: { state: MockState; variant: MockVariant }) 
             <svg viewBox="0 0 14 14" aria-hidden="true"><path d={i ? 'M2.5 4h9v5.5h-9ZM1.5 11h11' : 'M5 7.5a2.5 2.5 0 1 1 2.3-1.5L11.5 10v1.5H10V10.5H8.5V9'} /></svg>{c}
           </span>)}
         </span>
-      </div>
+      </div>}
       <div className="dm__stack">
         <div className="dm__run dm__layer" data-on={on(review === 'none')}>
           <p className="dm__ask">{MOCK.ask}</p>
@@ -182,10 +222,10 @@ function Thread({ state, variant }: { state: MockState; variant: MockVariant }) 
               <span className="dm__swap"><span data-on={on(agent === 'claude')}>{MOCK.agents.claude}</span><span data-on={on(agent === 'codex')}>{MOCK.agents.codex}</span></span>
               <Live />
             </p>
-            <p>{MOCK.doing}{variant === 'wide' && MOCK.planLead}</p>
-            {variant === 'wide' ? <ol className="dm__plan">{MOCK.plan.map(l => <li key={l}>{l}</li>)}</ol> : <Steps state={state} />}
+            <p>{MOCK.doing}{show.plan && MOCK.planLead}</p>
+            {show.plan && <ol className="dm__plan">{MOCK.plan.map(l => <li key={l}>{l}</li>)}</ol>}
           </div>
-          {variant === 'wide' && <div className="dm__code" data-on={on(state.run >= 2 || state.quiet)}>
+          {show.code && <div className="dm__code" data-on={on(state.run >= 2 || state.quiet)}>
             <p><span>{MOCK.code.file}</span><span>{MOCK.code.n}</span></p>
             <pre>{MOCK.code.lines.join('\n')}</pre>
           </div>}
@@ -197,9 +237,9 @@ function Thread({ state, variant }: { state: MockState; variant: MockVariant }) 
         <div className="dm__review dm__layer" data-on={on(review !== 'none')} data-done={on(review === 'approved')}>
           <div className="dm__card">
             <p className="dm__rhead"><Glyph s={review === 'approved' ? 'done' : 'review'} /><b>{r.head}</b><span>{r.when}</span></p>
-            <p className="dm__summary">{r.summary}</p>
+            {show.summary && <p className="dm__summary">{r.summary}</p>}
             <dl className="dm__report">
-              {r.sections.map(s => <div key={s.key} data-k={s.key === 'not checked' ? 'not' : undefined}>
+              {r.sections.filter((_, i) => show.whole || (i > 0 && i < r.sections.length - 1)).map(s => <div key={s.key} data-k={s.key === 'not checked' ? 'not' : undefined}>
                 <dt {...(s.key === 'not checked' ? { 'data-anchor': 'not-checked', 'data-ax': '.6' } : {})}>{s.key}</dt>
                 {s.items.map(it => <dd key={it}>{it}</dd>)}
               </div>)}
@@ -216,12 +256,12 @@ function Thread({ state, variant }: { state: MockState; variant: MockVariant }) 
           </div>
         </div>
       </div>
-      {variant === 'wide' && <p className="dm__reply">
+      {show.reply && <p className="dm__reply">
         <span className="dm__swap"><span data-on={on(agent === 'claude')}>{MOCK.reply(MOCK.agents.claude)}</span><span data-on={on(agent === 'codex')}>{MOCK.reply(MOCK.agents.codex)}</span></span>
         <i><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M7 11.5v-9M3 6.5l4-4 4 4" /></svg></i>
       </p>}
     </div>
-    {variant === 'wide' && <div className="dm__panel">
+    {show.panel && <div className="dm__panel">
       <span className="dm__seg dm__seg--quiet" data-agent="claude"><i className="dm__thumb" /><span data-on="">{MOCK.panel.tabs[0]}</span><span>{MOCK.panel.tabs[1]}</span></span>
       <p className="dm__pstat">
         <span className="dm__swap">
@@ -246,12 +286,15 @@ function Thread({ state, variant }: { state: MockState; variant: MockVariant }) 
   </div>;
 }
 
-export default function DervoMock({ ref, state, variant, tally = 1, children }: { ref?: Ref<HTMLDivElement>; state: MockState; variant: MockVariant; tally?: number; children?: ReactNode }) {
-  const [w, h] = SIZE[variant];
-  return <div ref={ref} className="dm" data-v={variant} data-quiet={on(state.quiet)} style={{ width: w, height: h }}>
+export default function DervoMock({ ref, state, variant, size, beat, tally = 1, children }: {
+  ref?: Ref<HTMLDivElement>; state: MockState; variant: MockVariant; size: Size; beat?: number; tally?: number; children?: ReactNode;
+}) {
+  const show = parts(variant, beat, size);
+  return <div ref={ref} className="dm" data-v={variant} data-quiet={on(state.quiet)} data-panel={on(show.panel)} data-narrow={on(show.narrow)}
+    style={{ width: size[0], height: size[1] }}>
     <div className="dm__bar"><i /><i /><i /></div>
     <div className="dm__body">
-      {variant !== 'main' && <Sidebar state={state} variant={variant} tally={tally} />}
+      {variant !== 'main' && <Sidebar state={state} variant={variant} tally={tally} show={show} />}
       {variant !== 'side' && <div className="dm__main">
         <p className="dm__crumb">
           <b>{MOCK.workspace.name}</b>
@@ -266,8 +309,8 @@ export default function DervoMock({ ref, state, variant, tally = 1, children }: 
           </span>}
         </p>
         <div className="dm__stack dm__mainstack">
-          {variant === 'wide' && <CatchUp state={state} />}
-          <Thread state={state} variant={variant} />
+          {variant === 'wide' && <CatchUp state={state} show={show} />}
+          <Thread state={state} show={show} />
         </div>
       </div>}
     </div>
