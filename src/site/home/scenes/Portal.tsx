@@ -204,7 +204,7 @@ const wide = () => matchMedia('(min-width: 1100px)').matches;
 
 const STATEMENT = 'cubic-bezier(.16,1,.3,1)';
 
-/** Phones: when most of the figure is on screen the cells travel once, 900ms each, 40ms apart. */
+/** Phones: when the figure's top is in the upper 60% of the screen (short and landscape screens too) the cells travel once, 900ms each, 40ms apart. */
 function Lite() {
   const stage = useRef<HTMLElement>(null);
   const state = useRef({ cells: [] as Cell[], played: false, running: [] as Animation[] });
@@ -248,7 +248,7 @@ function Lite() {
         running.forEach(a => a.cancel());
         s.running = [];
       }, () => {});
-    }, { threshold: 0.45 });
+    }, { threshold: 0, rootMargin: '0px 0px -40% 0px' });
     io.observe(el);
     return () => { io.disconnect(); s.running.forEach(a => a.cancel()); };
   }, []);
