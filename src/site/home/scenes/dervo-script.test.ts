@@ -83,6 +83,11 @@ describe('The dervo script', () => {
     for (const s of strings(MOCK)) expect(s, s).not.toMatch(/\b18\b|1,?500|beta testers|agent tasks/);
   });
 
+  it('keeps the real beta date in the page copy, not the sample window', () => {
+    for (const s of strings(MOCK)) expect(s, s).not.toMatch(/\boct\b|2026/);
+    expect(DERVO.beats[2]).toContain('to the beta on oct 2, 2026');
+  });
+
   it('writes its sample data lowercase, with no em or en dashes and no "parked"', () => {
     const all = [...strings(MOCK), ...BEATS.map(b => b.line)];
     for (const s of all) {
