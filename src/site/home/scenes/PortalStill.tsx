@@ -31,8 +31,10 @@ function raw(v: string) {
 /** A spreadsheet puts numbers on the right and text on the left, so the export's alignment wobbles with its data. */
 const numeric = (v: string) => /^\d[\d.,]*$/.test(v);
 
-function Head({ to, phone }: { to: string; phone?: string }) {
-  return phone ? <><span className="pt__wide">{to}</span><span className="pt__narrow">{phone}</span></> : <>{to}</>;
+/** A column's heading: the full name, a phone's, and the shortest for the narrowest phones. */
+function Head({ to, phone, tiny }: { to: string; phone?: string; tiny?: string }) {
+  if (!phone && !tiny) return <>{to}</>;
+  return <><span className="pt__wide">{to}</span><span className="pt__narrow">{phone ?? to}</span>{tiny && <span className="pt__tiny">{tiny}</span>}</>;
 }
 
 function Tray({ moving }: { moving: boolean }) {
