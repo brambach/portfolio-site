@@ -151,16 +151,25 @@ function paint(cells: Cell[], root: HTMLElement, p: number) {
     c.raw.style.opacity = String(1 - out);
     if (c.clean) c.clean.style.opacity = String(f);
   }
-  const q = clamp((p - NOTE[0]) / (NOTE[1] - NOTE[0])), note = root.querySelector<HTMLElement>('.pt__note')!;
-  note.style.opacity = String(q);
-  note.style.transform = `translateY(${(1 - q) * 6}px)`;
-  root.querySelector<HTMLElement>('.pt__rule')!.style.transform = `scaleY(${q})`;
+  const q = clamp((p - NOTE[0]) / (NOTE[1] - NOTE[0])), note = root.querySelector<HTMLElement>('.pt__note'), rule = root.querySelector<HTMLElement>('.pt__rule');
+  if (note) {
+    note.style.opacity = String(q);
+    note.style.transform = `translateY(${(1 - q) * 6}px)`;
+  }
+  if (rule) rule.style.transform = `scaleY(${q})`;
 }
 
 function Full() {
   const stage = useRef<HTMLElement>(null);
-  const clock = useRef({ p: 0, cells: [] as Cell[] });
-  const draw = () => paint(clock.current.cells, stage.current!, clock.current.p);
+  const clock = useRef({ p: 0, cells: [] as Cell[], alive: false });
+  // ScrollTrigger can call in while the scene is being torn down (a resize or motion change swaps it out).
+  const draw = () => { const el = stage.current; if (clock.current.alive && el) paint(clock.current.cells, el, clock.current.p); };
+
+  useLayoutEffect(() => {
+    const c = clock.current;
+    c.alive = true;
+    return () => { c.alive = false; };
+  }, []);
 
   useCells(stage, cells => { clock.current.cells = cells; draw(); });
 
@@ -173,7 +182,7 @@ function Full() {
         gsap.to(t, {
           p: 1, ease: 'none',
           scrollTrigger: { trigger: stage.current, start: () => (wide() ? 'top 40%' : 'top 70%'), end: () => (wide() ? 'bottom 75%' : 'center 38%'), scrub: 0.6, toggleClass: { targets: stage.current!, className: 'pt--on' } },
-          onUpdate: () => { clock.current.p = t.p; draw(); },
+          onUpdate: () => { if (!alive) return; clock.current.p = t.p; draw(); },
         });
       });
       revert = () => ctx.revert();
@@ -199,11 +208,12 @@ function Lite() {
     const s = state.current;
     s.cells = cells;
     // After the play (or a resize mid play), the cells simply sit in their slots.
-    if (s.played) { s.running.forEach(a => a.cancel()); s.running = []; paint(cells, stage.current!, 1); }
+    if (s.played && stage.current) { s.running.forEach(a => a.cancel()); s.running = []; paint(cells, stage.current, 1); }
   });
 
   useEffect(() => {
-    const el = stage.current!, s = state.current;
+    const el = stage.current, s = state.current;
+    if (!el) return;
     const io = new IntersectionObserver(entries => {
       if (s.played || !entries.some(e => e.isIntersecting)) return;
       s.played = true;
@@ -223,10 +233,9 @@ function Lite() {
         if (c.clean) s.running.push(c.clean.animate(cleanIn, trip));
       });
       const after = { delay: by.length * 40 + 760, fill: 'both' as const, easing: STATEMENT };
-      s.running.push(
-        el.querySelector('.pt__note')!.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { ...after, duration: 480 }),
-        el.querySelector('.pt__rule')!.animate([{ transform: 'scaleY(0)' }, { transform: 'none' }], { ...after, duration: 480 }),
-      );
+      const note = el.querySelector('.pt__note'), rule = el.querySelector('.pt__rule');
+      if (note) s.running.push(note.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { ...after, duration: 480 }));
+      if (rule) s.running.push(rule.animate([{ transform: 'scaleY(0)' }, { transform: 'none' }], { ...after, duration: 480 }));
       const running = s.running;
       void Promise.all(running.map(a => a.finished)).then(() => {
         if (s.running !== running) return;
