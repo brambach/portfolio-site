@@ -160,7 +160,7 @@ function Lite() {
   return <DervoLayout mode="lite" label={MOCK.label} screen={(v, i) => <LiteFrame key={tablet ? 'wide' : v} variant={tablet ? 'wide' : v} beat={i} />} />;
 }
 
-/** One phone frame: it waits in the state before its step, then when most of it is on screen the cursor glides in
+/** One phone frame: it waits in the state before its step, then when its top is in the upper 60% of the screen the cursor glides in
  *  (700ms), clicks, and the app lands on the end of the beat. Once. */
 function LiteFrame({ variant, beat }: { variant: MockVariant; beat: number }) {
   const { before, after } = liteStates(beat);
@@ -207,7 +207,7 @@ function LiteFrame({ variant, beat }: { variant: MockVariant; beat: number }) {
         frames.push(requestAnimationFrame(tick));
       }
       timers.push(window.setTimeout(() => { if (step.click) press(el); setState(after); }, 700));
-    }, { threshold: 0.6 });
+    }, { threshold: 0, rootMargin: '0px 0px -40% 0px' });
     io.observe(box);
     return () => { io.disconnect(); timers.forEach(clearTimeout); frames.forEach(cancelAnimationFrame); };
   }, []);
