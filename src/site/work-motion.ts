@@ -1,7 +1,6 @@
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
-import Lenis from 'lenis';
 import { finePointer, narrow, reducedMotion } from './content';
 import type { WorkId } from './routes';
 import type { BuildJob } from './build';
@@ -47,7 +46,7 @@ export function startWorkPage(root: HTMLElement, palette: Palette, work: PageWor
   };
   const hj = heroJob(work);
   if (hj.src) void fetchArt(hj.src);
-  let stopped = false, leaving = false, lenis: Lenis | null = null;
+  let stopped = false, leaving = false;
   const ctx = gsap.context(() => {}, root);
 
   // ---- the dots -------------------------------------------------------------------------------------------------
@@ -134,14 +133,7 @@ export function startWorkPage(root: HTMLElement, palette: Palette, work: PageWor
   });
   off.push(() => window.clearTimeout(resizeT));
 
-  // ---- smooth scrolling, the pointer -----------------------------------------------------------------------------
-  const tick = (t: number) => lenis?.raf(t * 1000);
-  if (!still) {
-    lenis = new Lenis({ duration: 1.1, easing: t => 1 - Math.pow(1 - t, 4), autoRaf: false });
-    lenis.on('scroll', ScrollTrigger.update);
-    gsap.ticker.add(tick);
-    gsap.ticker.lagSmoothing(0);
-  }
+  // ---- the pointer -----------------------------------------------------------------------------------------------
   const ro = new ResizeObserver(() => ScrollTrigger.refresh());
   ro.observe(root);
   off.push(() => ro.disconnect());
@@ -240,7 +232,6 @@ export function startWorkPage(root: HTMLElement, palette: Palette, work: PageWor
     if (still || stopped || !dots) { location.href = href; return; }
     if (leaving) return;
     leaving = true;
-    lenis?.stop();
     gsap.to([main, head], { autoAlpha: 0, duration: 0.4, ease: 'power2.out', overwrite: 'auto' });
     const g = grid, already = part === 'next' && !dots.busy;
     const late = window.setTimeout(() => { location.href = href; }, 2200);
@@ -256,7 +247,6 @@ export function startWorkPage(root: HTMLElement, palette: Palette, work: PageWor
     if (!e.persisted || !leaving) return;
     leaving = false;
     gsap.to([main, head], { autoAlpha: 1, duration: 0.5, ease: 'power2.out', overwrite: 'auto' });
-    lenis?.start();
     const p = part;
     part = null;
     if (p) void go(p);
@@ -310,8 +300,6 @@ export function startWorkPage(root: HTMLElement, palette: Palette, work: PageWor
     stop() {
       stopped = true;
       off.forEach(fn => fn());
-      gsap.ticker.remove(tick);
-      lenis?.destroy();
       ctx.revert();
       dots?.stop();
       root.classList.remove('is-ready', 'has-cursor', 'has-dots');

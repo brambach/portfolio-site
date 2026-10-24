@@ -29,7 +29,7 @@ describe('the work on the home page’s index', () => {
       expect(existsSync(publicFile(file)), file).toBe(true);
     }
   });
-  it('sends Dervo visitors to the source, now that it’s parked', () => {
+  it('sends Dervo visitors to the source, now that I’ve stopped building it', () => {
     expect(workById('dervo')?.link?.href).toBe('https://github.com/brambach/dervo');
   });
 });

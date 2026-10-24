@@ -410,7 +410,7 @@ export default function QuietIndex() {
           </p>
           <p className="qi-in" style={at(1)}>
             <W>Most recently that was </W><a className="ink-link" href={`/projects/dervo${lookQuery(look)}`}><W>Dervo</W></a><W>, a Mac app for running Claude Code and
-            Codex side by side. It tells you what finished, what's stuck and what needs you. I parked it in October 2026.</W>
+            Codex side by side. It tells you what finished, what's stuck and what needs you. I stopped building it in October 2026.</W>
           </p>
           <p className="qi-in" style={at(1.12)}>
             <W>As an employee I designed and built an integration portal for HR and payroll teams. There's also Lucid, Arro,
