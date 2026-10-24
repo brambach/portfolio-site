@@ -5,7 +5,7 @@ import { useMotionMode, type MotionMode } from '../motion-mode';
 /* The dervo section's frame: the words, and a white window for each screen, sized exactly as the scene will be. It's
    in the first load and paints as the still until the scene's code arrives (LazyScene), so swapping in the real
    scene moves nothing. Dervo.tsx draws the same frame with the app inside each window.
-   full: one sticky stage 420vh tall, the beat line on the left, the window on the right filling most of the screen.
+   full: one sticky stage 300vh tall, the beat line on the left, the window on the right filling most of the screen.
    lite: six stacked frames, a beat line and a window each. Each window is a zoomed crop of the part of the app its
    beat is about, as tall as that crop: on a phone one half of the app, on a tablet both halves side by side.
    still: every beat line as a list, beside the finished app.
