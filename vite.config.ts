@@ -18,15 +18,16 @@ const sitePages = (): Plugin => ({
     const index = bundle['index.html'];
     if (!index || index.type !== 'asset') throw new Error('site-pages: no index.html in the build');
     const html = String(index.source);
-    // The home's two faces, preloaded on the home page only: its CSS arrives with its chunk, after the JS, so
-    // without this the serif headline would wait on a round trip it doesn't need.
+    // The home's faces for its first screen (the headline's serif, roman and its italic, and Hanken), handed to the
+    // route script in index.html, which preloads them on the home page only: /work, /next and the rest get this
+    // file too and don't use them.
     const font = (re: RegExp) => Object.keys(bundle).find(f => re.test(f));
-    const preload = [/instrument-serif-latin-400-normal-[\w-]+\.woff2$/, /hanken-grotesk-latin-wght-normal-[\w-]+\.woff2$/]
-      .map(font).filter(Boolean)
-      .map(f => `<link rel="preload" href="/${f}" as="font" type="font/woff2" crossorigin />`).join('\n    ');
+    const fonts = [/instrument-serif-latin-400-normal-[\w-]+\.woff2$/, /instrument-serif-latin-400-italic-[\w-]+\.woff2$/,
+      /hanken-grotesk-latin-wght-normal-[\w-]+\.woff2$/].map(font).filter(Boolean).map(f => JSON.stringify(`/${f}`));
+    if (!html.includes('[/* home-fonts */]')) throw new Error('site-pages: no home-fonts list in index.html');
     for (const page of PAGES) {
-      const source = withMeta(html, page);
-      if (page.file === 'index.html') index.source = preload ? source.replace('<!-- page-meta -->', `${preload}\n    <!-- page-meta -->`) : source;
+      const source = withMeta(html, page).replace('[/* home-fonts */]', `[${fonts.join(', ')}]`);
+      if (page.file === 'index.html') index.source = source;
       else this.emitFile({ type: 'asset', fileName: page.file, source });
     }
     this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: sitemap() });
