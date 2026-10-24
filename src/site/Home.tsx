@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import Ornament from './home/art/Ornament';
 import LazyScene from './home/LazyScene';
 import DervoStill from './home/scenes/DervoStill';
+import PortalStill from './home/scenes/PortalStill';
 import Hero from './home/scenes/Hero';
-import { BotsPlaceholder, FooterPlaceholder, MorePlaceholder, PortalPlaceholder } from './home/scenes/Placeholders';
+import { BotsPlaceholder, FooterPlaceholder, MorePlaceholder } from './home/scenes/Placeholders';
 import './home/look-d.css';
 
 /* The home page, in look D: an engraved edition on cream paper. The order here is the page's order. Scenes with
@@ -11,6 +12,7 @@ import './home/look-d.css';
 
 const PAPER = '#f3eee3';
 const loadDervo = () => import('./home/scenes/Dervo');
+const loadPortal = () => import('./home/scenes/Portal');
 
 export default function Home() {
   useEffect(() => {
@@ -40,7 +42,7 @@ export default function Home() {
     <Ornament />
     <LazyScene className="dv-host" load={loadDervo} still={<DervoStill />} />
     <Ornament />
-    <PortalPlaceholder />
+    <LazyScene className="pt-host" load={loadPortal} still={<PortalStill />} />
     <Ornament />
     <BotsPlaceholder />
     <Ornament />
