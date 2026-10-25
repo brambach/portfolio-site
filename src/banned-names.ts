@@ -7,7 +7,9 @@
 // followed by another date part, so DD-MM-YYYY and DD.MM.YYYY pass.
 const ABBR = /(?<![\w+/=-])D[D][iI]?(?![\w+/=]|[-./](?:MM|YY))/;
 
-// Plain English uses the payroll vendor's two words together, as in a key pay rise.
+// Plain English uses the payroll vendor's two words together, as in a key pay rise. Only that exact form passes:
+// both words lowercase, one space between them, then one space and a pay word. Joined, hyphenated, capitalised or
+// wider spaced forms are the vendor and are always caught. Case is spelled out in the pattern for that reason.
 const PAY_WORDS = 'rise|raise|increase|cut|gap|freeze|review|deal|issue|issues|point|points|grade|award|change|changes|decision|decisions|dispute|claim|claims|offer|talks';
 
 // English titles that use the same word as the rostering vendor.
@@ -22,7 +24,7 @@ export const BANNED: RegExp[] = [
   /(?<![a-z0-9])hi[\s_-]?b[o]b/i,
   /(?<![a-z0-9])net[\s_-]?su[i]te/i,
   /work[a]to/i,
-  new RegExp(`(?<![a-z0-9])key[\\s_-]?p[a]y(?![a-z])(?!\\s+(?:${PAY_WORDS})\\b)`, 'i'),
+  new RegExp(`(?<![A-Za-z0-9])(?!k[e]y p[a]y (?:${PAY_WORDS})\\b)[Kk][Ee][Yy][\\s_-]*[Pp][Aa][Yy](?![A-Za-z])`),
   /\bmy[o]b\b/i,
   /employ[m]ent[\s_-]*hero/i,
   /fresh[_-]?d[e]sk/i,
