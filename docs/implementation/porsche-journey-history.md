@@ -71,7 +71,6 @@ No purchases, commits, pushes or deployments without specific authorization. Con
 - `docs/implementation/porsche-quality-list.md`: unresolved bugs and quality requirements.
 - `src/prototype/VERIFICATION.md`: current evidence and testing boundaries.
 - `.codex/review/`: review screenshots and performance samples.
-- `docs/superpowers/specs/2026-09-03-fog-to-firelight-creative-direction.md`: preserved earlier direction.
 
 ## Connected route progress, 6 September
 

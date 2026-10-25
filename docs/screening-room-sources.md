@@ -49,4 +49,4 @@ Sources in `../archive/bryce-digital-demos/`:
 
 Encoded locally as 1280-pixel-wide H.264 at 30fps, CRF 25, with fast-start metadata and no audio. Still previews are extracted at eight seconds. Sampled the recordings at eight and eighteen seconds to review their displayed content. Their historical figures and interface states aren't presented as current. The Crypto clip is dark in the original recording; the portfolio doesn't alter its interface or invent a brighter live product.
 
-The archive's other entries are grounded in `project-discovery-deep.md`. The research report preserves Brian Ly and Kien Tu as coauthors. Unrecovered workspace names remain separate from built work.
+The archive's other entries are grounded in earlier discovery notes. The research report preserves Brian Ly and Kien Tu as coauthors. Unrecovered workspace names remain separate from built work.
