@@ -47,19 +47,25 @@ describe('The site’s project pages: what they say', () => {
     for (const other of WORK_PAGES.filter(o => o.id !== id && !w.name.includes(o.name))) expect(before).not.toContain(other.name);
     for (const s of w.shots) expect(screen.getByAltText(s.alt)).toBeInTheDocument();
   });
+
+  it('presents lucid as finished, never as in development', () => {
+    const { container } = render(<WorkPage id="lucid" />);
+    expect(container.textContent).not.toMatch(/in development|development work|in progress|\bwip\b/i);
+  });
 });
 
 describe('The site’s links', () => {
-  it('sends the home page to the project pages, and says which links open a new tab, with no arrow glyphs', () => {
-    const { container } = render(<Home />);
-    const more = container.querySelector('#more')!;
-    for (const id of ['arro', 'port']) expect(within(more as HTMLElement).getByRole('link', { name: new RegExp(`^${id}`) })).toHaveAttribute('href', `/projects/${id}`);
-    for (const name of ['linkedin', 'x', 'github']) {
-      const link = screen.getAllByRole('link').find(l => l.textContent === `${name} (opens in a new tab)`)!;
-      expect(link).toBeDefined();
-      expect(link).toHaveAttribute('target', '_blank');
+  it('sends the home page to the project pages, opens the links off the site in a new tab, with no arrow glyphs', () => {
+    render(<Home />);
+    const work = within(screen.getByRole('region', { name: 'work' }));
+    for (const id of ['dervo', 'integration-portal', 'arro', 'lucid', 'port']) expect(work.getAllByRole('link').some(a => a.getAttribute('href') === `/projects/${id}`), id).toBe(true);
+    for (const name of ['linkedin', 'x @brycerambach', 'github']) {
+      for (const link of screen.getAllByRole('link', { name })) {
+        expect(link).toHaveAttribute('target', '_blank');
+        expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+      }
     }
-    expect(screen.getByRole('contentinfo').textContent).not.toMatch(/[↗→]/);
+    expect(screen.getByRole('main').textContent).not.toMatch(/[↗→]/);
   });
 });
 

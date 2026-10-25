@@ -57,12 +57,20 @@ const WORK: Card[] = [
     source: 'https://github.com/brambach/arro',
   },
   {
-    id: 'lucid', name: 'lucid', kind: 'in development',
+    id: 'lucid', name: 'lucid', kind: 'web app',
     what: 'an integration workspace that follows a request into scope, specs and delivery.',
     facts: ['every mapped value carries its source.'],
     shots: [{ src: '/projects/lucid/spec.png', alt: 'a lucid specification for a nightly employee sync' }],
   },
 ];
+
+/* port has no screenshot to show, so it gets a quieter row under the cards: the words, and a way to try the hold. */
+const PORT = {
+  id: 'port', name: 'port', kind: 'swiftui prototype',
+  what: 'an iphone app for putting your phone down at night. hold for a second and the screen folds into a line.',
+  fact: 'its page lets you try the hold in your browser, with the app’s sound.',
+  source: 'https://github.com/brambach/port',
+};
 
 export default function Home() {
   useEffect(() => {
@@ -105,7 +113,17 @@ export default function Home() {
           </div>
         </article>)}
       </div>
-      <p className="s-also">smaller things: <a href="/projects/port">port</a>, a swiftui prototype where you hold for a second and the screen folds into a line.</p>
+      <article className="s-small">
+        <div className="s-head"><h3>{PORT.name}</h3><span className="s-label">{PORT.kind}</span></div>
+        <div>
+          <p className="s-what">{PORT.what}</p>
+          <p className="s-facts">{PORT.fact}</p>
+        </div>
+        <div className="s-more">
+          <a href={`/projects/${PORT.id}`}>the full story</a>
+          <a href={PORT.source} {...NEW_TAB}>source</a>
+        </div>
+      </article>
     </section>
 
     <section id="about" className="s-sec s-about" aria-label="about">
