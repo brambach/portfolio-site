@@ -4,13 +4,13 @@
 // has a boundary so dates, hashes, identifiers and plain English words that only look similar pass.
 
 // No letter, digit or joining mark before or after, so YYYY-MM-DD, MM/DD/YYYY and base64 like +DD/ pass.
-const ABBR = /(?<![\w+/=-])DD[iI]?(?![\w+/=])/;
+const ABBR = /(?<![\w+/=-])D[D][iI]?(?![\w+/=])/;
 
 // English titles that use the same word as the rostering vendor.
 const TITLES = 'mayor|head|editor|director|chief|principal|minister|sheriff|manager|governor|leader|commissioner|secretary|general|chair|premier|registrar|clerk|commander|warden|dean|coach';
 
 export const BANNED: RegExp[] = [
-  /digital[\s_.-]*direct[i]ons/i,
+  /digit[a]l[\s_.-]*direct[i]ons/i,
   ABBR,
   /\bdd[\s_-]?portal/i,
   /\/dd\//,

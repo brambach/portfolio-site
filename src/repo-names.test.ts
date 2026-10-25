@@ -58,8 +58,8 @@ const findings = (text: string, where: string) => BANNED.flatMap(re => {
 describe('The banned names list', () => {
   const caught = [
     j('Digital ', 'Directions'), j('digital', 'directions', '.com'), j('digital-', 'directions'),
-    j('the ', 'DD', ' portal'), j('keep ', 'DD', '-specific content out'), j('the ', 'DD', 'i concept'),
-    j('dd', '-portal'), j('dd', 'portal'), j('dd', '_portal'), j('/Users/bryce/', 'dd', '/integration'),
+    j('the ', 'D', 'D', ' portal'), j('keep ', 'D', 'D', '-specific content out'), j('the ', 'D', 'D', 'i concept'),
+    j('dd', '-portal'), j('dd', 'portal'), j('dd', '_portal'), j('/Users/bryce/', 'd', 'd', '/integration'),
     j('Swy', 'ftX'),
     j('Hi', 'Bob'), j('hi', '-bob'), j('hi', '_bob'), j('hi', ' bob'),
     j('Net', 'Suite'), j('net', '-suite'), j('net', '_suite'), j('a ', 'net', ' suite', ' sync'),
@@ -75,8 +75,8 @@ describe('The banned names list', () => {
     j('one ', 'person', ' integrations'),
   ];
   const passes = [
-    'YYYY-MM-DD', 'MM/DD/YYYY', 'DD/MM/YYYY', 'abc+DD/xyz==', 'keyPayload', 'apiKeyPayload', 'a key pay rise',
-    j('dep', 'uty mayor'), j('Dep', 'uty Head of School'), j('inter', 'net suite'), j('cabi', 'net suite'),
+    j('YYYY-MM-', 'D', 'D'), j('MM/', 'D', 'D', '/YYYY'), j('D', 'D', '/MM/YYYY'), j('abc+', 'D', 'D', '/xyz=='), j('key', 'Payload'), j('apiKey', 'Payload'), j('a key', ' pay rise'),
+    j('dep', 'uty mayor'), j('Dep', 'uty Head of School'), j('inter', 'net', ' suite'), j('cabi', 'net', ' suite'),
     j('chi', 'bob'), '<dd>role</dd>', 'a fresh desk by the window', 'the only integration test',
     'a solo trip', 'one person owns a product from the api to the buttons', 'an operating system for exactly one person',
     'sole trader', 'only developers',
