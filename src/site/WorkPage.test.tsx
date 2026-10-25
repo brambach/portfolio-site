@@ -52,7 +52,7 @@ describe('The site’s project pages: what they say', () => {
     const text = container.textContent!;
     for (const k of ['line', 'category', 'role', 'status', 'introduction', 'decision', 'engineering', 'boundary'] as const) expect(text).toContain(lower(w[k]));
     expect(text).not.toMatch(/[–—·]/);
-    expect(text).not.toMatch(/parked|in development/i);
+    expect(text).not.toMatch(/parked|in development|contract|jul to oct|july to october/i);
     expect(screen.getByRole('link', { name: 'back to the work' })).toHaveAttribute('href', '/#work');
     expect(screen.getByRole('link', { name: `next: ${next.name.toLowerCase()}` })).toHaveAttribute('href', `/projects/${next.id}`);
     expect(document.title).toBe(`${w.name.toLowerCase()}, bryce rambach`);
