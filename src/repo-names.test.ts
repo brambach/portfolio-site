@@ -64,7 +64,8 @@ describe('The banned names list', () => {
     j('Hi', 'Bob'), j('hi', '-bob'), j('hi', '_bob'), j('hi', ' bob'),
     j('Net', 'Suite'), j('net', '-suite'), j('net', '_suite'), j('a ', 'net', ' suite', ' sync'),
     j('Work', 'ato'),
-    j('Key', 'Pay'), j('key', '-pay'), j('key', '_pay'),
+    j('Key', 'Pay'), j('key', '-pay'), j('key', '_pay'), j('Key', ' Pay'), j('key', ' pay', ' payroll'),
+    j('a ', 'Key', ' Pay', ' integration'),
     j('MY', 'OB'),
     j('Employment', ' Hero'), j('employment', 'hero', '.com'), j('Employment', 'Hero'), j('employment', '-hero'),
     j('Fresh', 'desk'), j('fresh', '-desk'),
@@ -73,13 +74,14 @@ describe('The banned names list', () => {
     j('only', '\nintegrations'), j('the ', 'sole', ' integrations developer'), j('sole', ' technical', ' hire'),
     j('sole', ' engineer'), j('solo', ' developer'), j('solo', ' integrator'), j('a one-', 'person', ' team'),
     j('one ', 'person', ' integrations'),
+    j('the ', 'only', ' developer', ' on the team'), j('the ', 'sole', ' dev'), j('the ', 'sole', ' integrator'), j('a one-', 'man', ' team'),
   ];
   const passes = [
-    j('YYYY-MM-', 'D', 'D'), j('MM/', 'D', 'D', '/YYYY'), j('D', 'D', '/MM/YYYY'), j('abc+', 'D', 'D', '/xyz=='), j('key', 'Payload'), j('apiKey', 'Payload'), j('a key', ' pay rise'),
+    j('YYYY-MM-', 'D', 'D'), j('MM/', 'D', 'D', '/YYYY'), j('D', 'D', '/MM/YYYY'), j('D', 'D', '-MM-YYYY'), j('D', 'D', '.MM.YYYY'), j('MM.', 'D', 'D', '.YYYY'), j('abc+', 'D', 'D', '/xyz=='), j('key', 'Payload'), j('apiKey', 'Payload'), j('a key', ' pay rise'), j('the key', ' pay issues'),
     j('dep', 'uty mayor'), j('Dep', 'uty Head of School'), j('inter', 'net', ' suite'), j('cabi', 'net', ' suite'),
     j('chi', 'bob'), '<dd>role</dd>', 'a fresh desk by the window', 'the only integration test',
     'a solo trip', 'one person owns a product from the api to the buttons', 'an operating system for exactly one person',
-    'sole trader', 'only developers',
+    'sole trader', 'only developers', 'the only person who knew', 'sole developers', 'sole devices',
   ];
   it.each(caught)('catches %j', text => expect(isBanned(text)).toBe(true));
   it.each(passes)('lets %j through', text => expect(isBanned(text)).toBe(false));
