@@ -1,0 +1,65 @@
+/* A project's page in the home's simple look. The home's tokens and classes come in whole (inlined at build, so the
+   home's own chunk doesn't change); below are only the few rules a project page adds: a narrower reading column,
+   the facts, the screenshots and port's hold. */
+@import "./simple.css";
+
+.s-wp > main > * { width: min(100% - 2 * var(--gutter), 760px); }
+
+.s-wp-top { padding-top: clamp(48px, 9vw, 104px); }
+.s-wp-top h1 { font: 400 clamp(2.75rem, 7vw, 4.75rem)/1.02 var(--font-display); letter-spacing: -0.02em; color: var(--display-ink); text-wrap: balance; }
+.s-wp-top > .s-label { margin-top: var(--s3); }
+.s-wp-line { margin-top: var(--s4); font: 400 clamp(1.375rem, 2.6vw, 1.75rem)/1.3 var(--font-display); color: var(--ink-2); }
+.s-wp-facts { margin-top: var(--s5); display: grid; gap: var(--s2); font-size: .9375rem; color: var(--muted); }
+.s-wp-facts > div { display: grid; grid-template-columns: 4.5rem 1fr; gap: var(--s4); }
+.s-wp-facts dt { color: var(--faint); }
+.s-wp-facts dd { color: var(--ink-2); }
+.s-wp-facts a { color: var(--primary); border-bottom: 1px solid transparent; }
+.s-wp-facts a:hover { border-color: currentColor; }
+
+.s-wp-sec { padding-top: clamp(40px, 7vw, 72px); }
+.s-wp-sec > .s-label { display: block; margin-bottom: var(--s4); }
+.s-wp-sec p { max-width: 640px; color: var(--ink); text-wrap: pretty; }
+.s-wp-sec p.is-quiet { color: var(--muted); }
+
+/* The screenshots, as they are: full column wide, the tall phone ones narrower and two by two from 560px. */
+.s-wp-shots { display: grid; gap: var(--s7); padding-top: clamp(40px, 7vw, 72px); }
+.s-wp-shot img { display: block; width: 100%; max-width: 100%; height: auto; border-radius: 10px; background: var(--sunk); box-shadow: var(--card-edge), 0 1px 2px rgb(74 37 96 / .06); }
+.s-wp-shot figcaption { margin-top: var(--s3); max-width: 640px; font-size: .9375rem; color: var(--muted); text-wrap: pretty; }
+.s-wp-shot figcaption b { font-weight: 500; color: var(--ink); }
+.s-wp-shots.is-tall { gap: var(--s7) var(--s6); }
+.s-wp-shots.is-tall .s-wp-shot { max-width: 320px; width: 100%; justify-self: center; }
+.s-wp-shot.is-tall img { border-radius: 18px; }
+@media (min-width: 560px) {
+  .s-wp-shots.is-tall { grid-template-columns: 1fr 1fr; align-items: start; }
+  .s-wp-shots.is-tall .s-wp-shot { max-width: none; }
+}
+
+.s-wp-next { margin-top: clamp(48px, 8vw, 88px); padding-top: var(--s5); border-top: 1px solid var(--line); flex-wrap: wrap; justify-content: space-between; }
+
+/* port's hold: a small screen with a ring. Held for a second it folds into a line, the line draws in, and it's quiet. */
+.s-port { margin-top: var(--s6); max-width: 420px; }
+.s-port__screen { position: relative; isolation: isolate; aspect-ratio: 4 / 3; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; overflow: hidden; box-shadow: var(--card-edge); }
+.s-port__band { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: var(--accent-wash); }
+.s-port__line { position: absolute; left: 0; pointer-events: none; top: 50%; width: 100%; height: 2px; margin-top: -1px; background: var(--display-ink); opacity: 0; }
+.s-port__ring {
+  width: 112px; height: 112px; border-radius: 50%; border: 2px solid var(--display-ink); background: var(--paper);
+  color: var(--display-ink); font: 500 var(--fs-label)/1.2 var(--font-text); letter-spacing: var(--label-track); text-transform: uppercase;
+  cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none;
+  transition: transform 1s var(--ease-out), border-color var(--dur-calm) var(--ease-out), opacity 200ms var(--ease-out);
+}
+.s-port__ring:hover { border-color: var(--primary); }
+.s-port[data-phase="holding"] .s-port__ring { transform: scale(.9); border-color: var(--primary); color: var(--primary); }
+.s-port[data-phase="closing"] .s-port__ring { opacity: 0; }
+.s-port[data-phase="closing"] .s-port__band { animation: s-port-fold .83s cubic-bezier(.45, 0, .9, .6) both; }
+.s-port[data-phase="closing"] .s-port__line { animation: s-port-draw .42s .83s cubic-bezier(.7, 0, 1, .5) both; }
+.s-port[data-phase="closed"] .s-port__band { opacity: 0; }
+.s-port[data-phase="closed"] .s-port__ring { width: auto; height: auto; padding: 10px 16px; border-radius: 999px; border-width: 1px; background: none; }
+@keyframes s-port-fold { 0% { transform: scaleY(1); } 99% { transform: scaleY(.004); opacity: 1; } 100% { transform: scaleY(.004); opacity: 0; } }
+@keyframes s-port-draw { from { opacity: 1; transform: scaleX(1); } to { opacity: 0; transform: scaleX(0); } }
+.s-port .s-port__how { margin-top: var(--s3); display: flex; justify-content: space-between; align-items: baseline; gap: var(--s4); font-size: .9375rem; color: var(--muted); }
+.s-port__how b { font-weight: 500; color: var(--ink); }
+.s-port__sound { flex: none; min-height: 32px; border: 0; border-bottom: 1px solid var(--line-strong); background: none; padding: 2px 0; color: var(--primary); font: inherit; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) {
+  .s-port__ring { transition: none; }
+  .s-port[data-phase="holding"] .s-port__ring { transform: none; }
+}

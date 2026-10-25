@@ -31,10 +31,13 @@ const extra: Record<WorkId, Pick<PageWork, 'hero' | 'shots' | 'link'>> = {
   // From LucidStudy.tsx.
   lucid: {
     hero: { src: '/projects/lucid/spec.png' },
-    shots: [{ src: '/projects/lucid/mapping.png', alt: 'Original Lucid preview showing five mappings with their evidence categories', title: 'Every value carries its source.', text: 'The specification brings fields, transformations and risk into one readable document.' }],
+    shots: [
+      { src: '/projects/lucid/spec.png', alt: 'A Lucid specification for a nightly employee sync' },
+      { src: '/projects/lucid/mapping.png', alt: 'Original Lucid preview showing five mappings with their evidence categories', title: 'Every value carries its source.', text: 'The specification brings fields, transformations and risk into one readable document.' },
+    ],
   },
   // The cover the project collection uses. The portal's study redraws everything else.
-  'integration-portal': { hero: { src: '/projects/portal/hub.webp' }, shots: [] },
+  'integration-portal': { hero: { src: '/projects/portal/hub.webp' }, shots: [{ src: '/projects/portal/hub.webp', alt: 'The integration portal’s home screen, with one mapping waiting for review' }] },
   // From the AgentSky study's three artifacts (project-lab/ProjectLab.tsx).
   agentsky: {
     hero: { src: '/project-lab/sky.png' },
