@@ -86,7 +86,7 @@ describe('The home page', () => {
     const { container } = render(<Home />);
     const about = screen.getByRole('region', { name: 'about' });
     const [first, second] = about.querySelectorAll('p');
-    expect(first.textContent).toMatch(/^i'm a remote employee at an hr and payroll consultancy, its integrations developer\. alongside that, i founded dervo\.$/);
+    expect(first.textContent).toMatch(/^i'm a remote employee at an hr and payroll consultancy\. alongside that, i founded dervo\.$/);
     expect(first).toHaveTextContent('remote employee');
     expect(first).toHaveTextContent('alongside that, i founded dervo');
     expect(second.textContent).toMatch(/to the words on the buttons\.$/);
