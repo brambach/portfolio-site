@@ -60,17 +60,6 @@
   --fs-lead: 1.0625rem;   /* 17 */
   --fs-label: 0.75rem;    /* 12, 13 on a phone */
 }
-.vig { position: relative; margin: var(--s4) calc(var(--gutter) * -1) 0; aspect-ratio: 4.4 / 1; color: var(--display-ink); }
-.vig__plate {
-  position: absolute; inset: 0;
-  -webkit-mask-image: linear-gradient(90deg, transparent, rgb(0 0 0 / .55) 8%, #000 16%, #000 84%, rgb(0 0 0 / .55) 92%, transparent), linear-gradient(transparent, #000 18%, #000 82%, rgb(0 0 0 / .4) 93%, transparent);
-  mask-image: linear-gradient(90deg, transparent, rgb(0 0 0 / .55) 8%, #000 16%, #000 84%, rgb(0 0 0 / .55) 92%, transparent), linear-gradient(transparent, #000 18%, #000 82%, rgb(0 0 0 / .4) 93%, transparent);
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
-}
-.vig__plate svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.vig__sun, .vig__glints { fill: var(--primary); }
-.vig__glints { opacity: .72; }
 
 /* ---------- the simple page ---------- */
 .home {
@@ -110,8 +99,10 @@
 .s-links a:hover { color: var(--primary); border-color: var(--primary); }
 /* The horizon runs edge to edge. It's a direct child of the main, so it opts out of the column's width; a negative
    gutter margin on the column's width only slid it left and cut it off at the right. Its height holds at 245px on a
-   wide screen, so the plate gets longer, not taller; the mask fades both ends into the paper. */
-.home > main > .vig { width: 100%; margin: var(--s5) 0 0; aspect-ratio: auto; height: clamp(96px, 19vw, 245px); opacity: .85; }
+   wide screen, so the plate gets longer, not taller; the mask fades both ends into the paper. It's a whole number of
+   pixels tall: the picture is drawn at the plate's rounded size, so a fractional height would resample it and the
+   parts cropped to their own boxes would land a hair off the full-plate ones. */
+.home > main > .vig { width: 100%; margin: var(--s5) 0 0; aspect-ratio: auto; height: clamp(96px, 19vw, 245px); height: round(clamp(96px, 19vw, 245px), 1px); opacity: .85; }
 
 .s-sec { padding-top: clamp(48px, 8vw, 88px); }
 .s-sec > .s-label { display: block; margin: 0 0 var(--s5); }

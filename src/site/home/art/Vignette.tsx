@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { vignette } from './vignette';
+import './vignette.css';
 
 /* The hero's engraving. Its box keeps its size from CSS (an aspect ratio per width), so the page doesn't shift when
    the drawing lands. It's drawn after the first paint, at the box's own size, and again if the box changes width.

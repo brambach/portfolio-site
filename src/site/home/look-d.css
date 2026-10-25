@@ -132,7 +132,7 @@
   -webkit-mask-composite: source-in;
   mask-composite: intersect;
 }
-.vig__plate svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.vig__plate > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .vig__sun, .vig__glints { fill: var(--primary); }
 .vig__glints { opacity: .72; }
 /* The sun rises once from behind the far range. */

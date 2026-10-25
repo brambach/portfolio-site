@@ -1,0 +1,20 @@
+/* The hero's engraving: the plate, its mask and where each part sits. */
+.vig { position: relative; margin: var(--s4) calc(var(--gutter) * -1) 0; aspect-ratio: 4.4 / 1; color: var(--display-ink); }
+.vig__plate {
+  position: absolute; inset: 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, rgb(0 0 0 / .55) 8%, #000 16%, #000 84%, rgb(0 0 0 / .55) 92%, transparent), linear-gradient(transparent, #000 18%, #000 82%, rgb(0 0 0 / .4) 93%, transparent);
+  mask-image: linear-gradient(90deg, transparent, rgb(0 0 0 / .55) 8%, #000 16%, #000 84%, rgb(0 0 0 / .55) 92%, transparent), linear-gradient(transparent, #000 18%, #000 82%, rgb(0 0 0 / .4) 93%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+/* Only the land layers fill the plate (`.vig__plate svg` would blow a bird's svg up to the whole plate). The sun,
+   its glow, the glints and the birds sit in their own small boxes, placed by the drawing. */
+.vig__plate > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.vig__plate > .vig__halo, .vig__plate > .vig__sun, .vig__plate > .vig__glints { inset: auto; width: auto; height: auto; }
+.vig__bird { position: absolute; }
+.vig__bird > svg { display: block; }
+.vig__sun, .vig__glints { fill: var(--primary); }
+.vig__halo stop { stop-color: var(--primary); }
+/* The glow is drawn but not shown yet. */
+.vig__halo { opacity: 0; }
+.vig__glints { opacity: .72; }

@@ -4,10 +4,22 @@
    the paper at the edges. The halftone sun, in the one blue, sits behind the far range, clipped to the sky so it can
    rise from behind it, and glints on the water under it.
 
-   Pure and deterministic: the same size always draws the same picture. It returns three SVGs stacked in one box,
-   so the sun and the glints can move on their own layers without repainting the hills:
-   .vig__sun (bottom), .vig__land, .vig__glints (top). Lengths are in CSS pixels at the given size, so draw it at
-   the size it's shown. Under 760px wide it draws the narrow variant: a bigger sun and coarser rules. */
+   Pure and deterministic: the same size always draws the same picture. It returns each part in PARTS as its own
+   element stacked in one box, so any part can move on its own layer without repainting the rest. Lengths are in CSS
+   pixels at the given size, so draw it at the size it's shown. Under 760px wide it draws the narrow variant: a
+   bigger sun and coarser rules. */
+
+/** The picture's separately moving parts, in paint order (bottom first). Each is its own element in the output,
+ *  carrying class `vig__<name>`. Land parts are full plate size; sun, halo, glints and birds are cropped to their
+ *  own boxes so their compositor layers stay small. */
+export type Part =
+  | 'halo' | 'sun'                       // glow ring and halftone sun, both clipped to the sky
+  | 'far' | 'mid' | 'near' | 'water'     // land, by draw order (sky rules go with far, pines with near)
+  | 'ridges'                             // ridge lines and horizon: the pen that leads the draw-in
+  | 'glints'                             // three bands: .vig__glints[data-band="0|1|2"]
+  | 'bird';                              // three: div.vig__bird > svg, each with --i for its own timing
+// The ridges sit under the near banks: in this order the split paints the same pixels as the single land svg did.
+export const PARTS: readonly Part[] = ['halo', 'sun', 'far', 'mid', 'ridges', 'near', 'water', 'glints', 'bird'];
 
 type Ridge = (x: number) => number;
 
@@ -145,33 +157,49 @@ export function vignette(width: number, height: number): string {
     y += 1.4 + 3.2 * t ** 1.3;
   }
 
-  // Sun glints on the water, the only other blue.
-  let glint = '';
+  // Sun glints on the water, the only other blue, in three bands of rows so each can shimmer on its own.
+  const glints = ['', '', ''];
   for (let y = hz + 2, k = 0; y < y1 - 2; y += 3.2, k++) for (let x = sunX - sunR * 1.2; x < sunX + sunR * 1.2; x += ds) {
     const fall = 1 - Math.abs(x - sunX) / (sunR * (0.55 + k * 0.07));
     const r = 0.25 + 1.1 * fall * (1 - k / 16);
     if (r < 0.45 || ((x / ds + k * 2) | 0) % 3 === 0) continue;
-    glint += `<circle cx="${f1(x)}" cy="${f1(y)}" r="${r.toFixed(2)}"/>`;
+    glints[k % 3] += `<circle cx="${f1(x)}" cy="${f1(y)}" r="${r.toFixed(2)}"/>`;
   }
 
-  const box = `viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true" focusable="false"`;
+  const hide = 'aria-hidden="true" focusable="false"';
+  const full = (part: Part, body: string) => `<svg class="vig__${part}" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" ${hide}>${body}</svg>`;
+  // A box on whole pixels, kept inside the plate. The viewBox offset keeps every shape at its plate coordinates.
+  const crop = (ax: number, ay: number, bx: number, by: number) => {
+    const l = Math.max(0, Math.floor(ax)), t = Math.max(0, Math.floor(ay)), cw = Math.min(W, Math.ceil(bx)) - l, ch = Math.min(H, Math.ceil(by)) - t;
+    return { at: `left:${l}px;top:${t}px`, box: `viewBox="${l} ${t} ${cw} ${ch}" width="${cw}" height="${ch}" ${hide}` };
+  };
+  const ink = (sw: string, body: string) => `<g fill="none" stroke="currentColor" stroke-width="${sw}">${body}</g>`;
   const tone = (ts: string[], op: number[]) => ts.map((d, i) => d && `<path d="${d}" stroke-opacity="${op[i]}"/>`).join('');
+
+  const glowR = sunR * 1.3, glow = crop(sunX - glowR, sunY - glowR, sunX + glowR, sunY + glowR);
+  const halo =
+    `<svg class="vig__halo" style="${glow.at}" ${glow.box}><defs><radialGradient id="vig-glow" gradientUnits="userSpaceOnUse" cx="${f1(sunX)}" cy="${f1(sunY)}" r="${f1(glowR)}">` +
+    `<stop offset=".6" stop-opacity="0"/><stop offset=".84" stop-opacity=".22"/><stop offset="1" stop-opacity="0"/></radialGradient></defs>` +
+    `<rect x="${f1(sunX - glowR)}" y="${f1(sunY - glowR)}" width="${f1(glowR * 2)}" height="${f1(glowR * 2)}" fill="url(#vig-glow)" clip-path="url(#vig-sky)"/></svg>`;
+  const disc = crop(sunX - sunR - 2, sunY - sunR - 2, sunX + sunR + 2, sunY + sunR + 2);
   const sun =
-    `<svg class="vig__sun" ${box}><defs><clipPath id="vig-sky"><path d="${skyClip}"/></clipPath></defs>` +
+    `<svg class="vig__sun" style="${disc.at}" ${disc.box}><defs><clipPath id="vig-sky"><path d="${skyClip}"/></clipPath></defs>` +
     `<g clip-path="url(#vig-sky)"><g class="vig__rise" style="--rise:${(sunR * 0.55).toFixed(0)}px">${dots}</g></g></svg>`;
   const land =
-    `<svg class="vig__land" ${box}><g fill="none" stroke="currentColor" stroke-width=".5">` +
-    `<path d="${skyBands[0]}" stroke-opacity=".08"/><path d="${skyBands[1]}" stroke-opacity=".12"/><path d="${skyBands[2]}" stroke-opacity=".17"/></g>` +
-    `<g fill="none" stroke="currentColor" stroke-width=".55">` +
-    tone(farT, [0.12, 0.2, 0.28, 0.34]) + tone(midT, [0.18, 0.3, 0.42, 0.52]) + tone(nearT, [0.26, 0.42, 0.56, 0.68]) +
-    `<path d="${ridges2}" stroke-opacity=".28"/>` +
-    `<path d="${ridges}" stroke-width=".8" stroke-opacity=".75"/>` +
-    `<path d="${pines}" stroke-width=".6" stroke-opacity=".78" stroke-linecap="round"/>` +
-    `<path d="M${x0},${f1(hz)}H${x1}" stroke-width=".6" stroke-opacity=".45"/>` +
-    `<path d="${deep}" stroke-opacity=".4"/><path d="${water}" stroke-opacity=".26"/><path d="${reflect}" stroke-opacity=".3"/></g>` +
-    `<g fill="none" stroke="currentColor" stroke-width=".9" stroke-linecap="round" stroke-opacity=".75">` +
-    `<path d="M${f1(x0 + w * 0.47)},${f1(y0 + h * 0.24)} q4,-4 8,0 q4,-4 8,0"/><path d="M${f1(x0 + w * 0.51)},${f1(y0 + h * 0.30)} q3,-3 6,0 q3,-3 6,0"/>` +
-    `<path d="M${f1(x0 + w * 0.42)},${f1(y0 + h * 0.19)} q3,-3 6,0 q3,-3 6,0"/></g></svg>`;
-  const glints = `<svg class="vig__glints" ${box}>${glint}</svg>`;
-  return sun + land + glints;
+    full('far', ink('.5', `<path d="${skyBands[0]}" stroke-opacity=".08"/><path d="${skyBands[1]}" stroke-opacity=".12"/><path d="${skyBands[2]}" stroke-opacity=".17"/>`) +
+      ink('.55', tone(farT, [0.12, 0.2, 0.28, 0.34]))) +
+    full('mid', ink('.55', tone(midT, [0.18, 0.3, 0.42, 0.52]))) +
+    full('ridges', ink('.55', `<path d="${ridges2}" stroke-opacity=".28"/><path d="${ridges}" stroke-width=".8" stroke-opacity=".75"/>` +
+      `<path d="M${x0},${f1(hz)}H${x1}" stroke-width=".6" stroke-opacity=".45"/>`)) +
+    full('near', ink('.55', tone(nearT, [0.26, 0.42, 0.56, 0.68]) + `<path d="${pines}" stroke-width=".6" stroke-opacity=".78" stroke-linecap="round"/>`)) +
+    full('water', ink('.55', `<path d="${deep}" stroke-opacity=".4"/><path d="${water}" stroke-opacity=".26"/><path d="${reflect}" stroke-opacity=".3"/>`));
+  const pool = crop(sunX - sunR * 1.2 - 2, hz, sunX + sunR * 1.2 + 2, y1);
+  const shimmer = glints.map((g, i) => `<svg class="vig__glints" data-band="${i}" style="${pool.at}" ${pool.box}>${g}</svg>`).join('');
+  // Each bird is its own box so it can flap and drift without repainting the land under it.
+  const birds = ([[0.47, 0.24, 4], [0.51, 0.30, 3], [0.42, 0.19, 3]] as const).map(([u, v, q], i) => {
+    const bx = +f1(x0 + w * u), by = +f1(y0 + h * v), b = crop(bx - 1, by - q - 1, bx + q * 4 + 1, by + 1);
+    return `<div class="vig__bird" style="${b.at};--i:${i}"><svg ${b.box}><path d="M${f1(bx)},${f1(by)} q${q},-${q} ${q * 2},0 q${q},-${q} ${q * 2},0" fill="none" stroke="currentColor" ` +
+      `stroke-width=".9" stroke-linecap="round" stroke-opacity=".75"/></svg></div>`;
+  }).join('');
+  return halo + sun + land + shimmer + birds;
 }
