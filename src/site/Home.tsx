@@ -93,7 +93,7 @@ export default function Home() {
             : <a key={l.href} href={l.href}>{l.label}</a>)}
         </div>
       </section>
-      <Vignette label={HERO.art} mode="still" />
+      <Vignette label={HERO.art} />
 
       <section id="work" className="s-sec" aria-label="work">
         <h2 className="s-label">work</h2>

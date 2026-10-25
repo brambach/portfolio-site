@@ -1,11 +1,26 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useMotionMode } from '../motion-mode';
 import { vignette } from './vignette';
 import './vignette.css';
 
-/* The hero's engraving. Its box keeps its size from CSS (an aspect ratio per width), so the page doesn't shift when
-   the drawing lands. It's drawn after the first paint, at the box's own size, and again if the box changes width.
-   The sun rises only the first time. The water's glints breathe while the picture is on screen. Still mode draws it
-   finished: the sun already up, the glints out, nothing moving. */
+/* The hero's engraving. Its box keeps its size from CSS, so the page doesn't shift when the drawing lands. It's drawn
+   after the first paint, at the box's own size, and again if the box changes width. */
+
+/** What the picture is doing. The only thing CSS reads.
+ *  still: reduced motion, painted finished, nothing runs.
+ *  off: off screen (or never seen yet), every animation paused.
+ *  on: on screen, running.
+ *  paused: the visitor pressed pause; stays paused on or off screen. */
+export type Motion = 'still' | 'off' | 'on' | 'paused';
+
+/* data-drawn: absent until first seen; "" runs the draw-in; "done" paints it finished (reduced motion, or it already
+   drew in once this visit). */
+type Drawn = '' | 'done' | undefined;
+
+const DRAWN_KEY = 'vig-drawn';
+
+// Blocked storage just means the picture draws in again.
+const drewThisVisit = () => { try { return sessionStorage.getItem(DRAWN_KEY) === '1'; } catch { return false; } };
 
 const afterPaint = (fn: () => void) => {
   let t = 0;
@@ -13,32 +28,41 @@ const afterPaint = (fn: () => void) => {
   return () => { cancelAnimationFrame(raf); window.clearTimeout(t); };
 };
 
-export default function Vignette({ label, mode }: { label: string; mode?: 'still' }) {
-  const still = mode === 'still';
+export default function Vignette({ label }: { label: string }) {
+  const still = useMotionMode() === 'still';
   const plate = useRef<HTMLDivElement>(null);
+  const [onScreen, setOnScreen] = useState(false);
+  const [drawn, setDrawn] = useState<Drawn>(() => (still || drewThisVisit() ? 'done' : undefined));
 
   useEffect(() => {
     const el = plate.current;
     if (!el) return;
-    if (still) { el.dataset.risen = ''; el.dataset.glint = ''; }
-    let drawn = 0, timer = 0;
+    let width = 0, timer = 0;
     const draw = () => {
       const w = el.clientWidth, h = el.clientHeight;
-      if (!w || !h || Math.abs(w - drawn) < 2) return;
-      if (drawn) el.dataset.risen = '';
+      if (!w || !h || Math.abs(w - width) < 2) return;
       el.innerHTML = vignette(w, h);
-      drawn = w;
+      width = w;
     };
     const cancel = afterPaint(draw);
     const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(() => { window.clearTimeout(timer); timer = window.setTimeout(draw, 150); }) : null;
     ro?.observe(el);
-    // No ambient motion off screen, and none at all when still.
-    const io = !still && typeof IntersectionObserver === 'function' ? new IntersectionObserver(([e]) => el.toggleAttribute('data-off', !e.isIntersecting)) : null;
+    const io = !still && typeof IntersectionObserver === 'function'
+      ? new IntersectionObserver(([e]) => {
+        setOnScreen(e.isIntersecting);
+        if (e.isIntersecting) setDrawn(d => d ?? '');
+      }, { threshold: 0.25 })
+      : null;
     io?.observe(el);
     return () => { cancel(); window.clearTimeout(timer); ro?.disconnect(); io?.disconnect(); };
   }, [still]);
 
-  return <figure className="vig hero__in" role="img" aria-label={label}>
-    <div ref={plate} className="vig__plate" />
+  useEffect(() => {
+    if (drawn === '') try { sessionStorage.setItem(DRAWN_KEY, '1'); } catch { /* the next load draws in again */ }
+  }, [drawn]);
+
+  const motion: Motion = still ? 'still' : onScreen ? 'on' : 'off';
+  return <figure className="vig hero__in">
+    <div ref={plate} className="vig__plate" role="img" aria-label={label} data-motion={motion} data-drawn={still ? 'done' : drawn} />
   </figure>;
 }
