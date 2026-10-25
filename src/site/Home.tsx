@@ -1,55 +1,124 @@
 import { useEffect } from 'react';
-import Ornament from './home/art/Ornament';
-import LazyScene from './home/LazyScene';
-import DervoStill from './home/scenes/DervoStill';
-import PortalStill from './home/scenes/PortalStill';
-import Hero from './home/scenes/Hero';
-import BotTeam from './home/scenes/BotTeam';
-import Footer from './home/scenes/Footer';
-import MoreWork from './home/scenes/MoreWork';
-import './home/look-d.css';
+import Vignette from './home/art/Vignette';
+import { EMAIL, HERO } from './home/copy';
+import './simple.css';
 
-/* The home page, in look D: an engraved edition on cream paper. The order here is the page's order. Scenes with
-   heavy motion load their own code later (home/LazyScene.tsx), so the first load is the words and one drawing. */
+/* The home page, simple: who he is, the work right under it, a short about, and how to reach him. One page, no pins,
+   no scrubbing. The engraving is drawn once, finished, as a quiet ornament. Facts come from the repo's existing copy. */
 
 const PAPER = '#f3eee3';
-const loadDervo = () => import('./home/scenes/Dervo');
-const loadPortal = () => import('./home/scenes/Portal');
+const NEW_TAB = { target: '_blank', rel: 'noopener noreferrer' } as const;
+
+const LINKS = [
+  { label: EMAIL, href: `mailto:${EMAIL}` },
+  { label: 'github', href: 'https://github.com/brambach', away: true },
+  { label: 'x @brycerambach', href: 'https://x.com/brycerambach', away: true },
+  { label: 'linkedin', href: 'https://www.linkedin.com/in/bryce-rambach/', away: true },
+];
+
+type Card = {
+  id: string; name: string; kind: string; what: string; facts: string[];
+  shots: { src: string; alt: string }[]; phones?: boolean;
+  source?: string;
+};
+
+const WORK: Card[] = [
+  {
+    id: 'dervo', name: 'dervo', kind: 'mac app, 2026',
+    what: 'a mac app for running claude code and codex side by side, on your machine, under your own logins.',
+    facts: [
+      '18 beta testers signed on, and it ran 1,500+ agent tasks.',
+      'i shipped nested sub-threads first, before claude code had them. then claude shipped something similar, so i stopped building it.',
+    ],
+    shots: [{ src: '/projects/dervo/catch-up.jpg', alt: 'dervo’s catch up screen: what finished, what’s stuck and what needs you' }],
+    source: 'https://github.com/brambach/dervo',
+  },
+  {
+    id: 'integration-portal', name: 'integration portal', kind: 'contract, jul to oct 2026',
+    what: 'hr and payroll integrations for an hr and payroll consultancy.',
+    facts: [
+      'it pre-fills the field mappings and says why. nothing reaches payroll until a person confirms it.',
+      'employer owned work, so the screens use a made-up cast.',
+    ],
+    shots: [{ src: '/projects/portal/hub.png', alt: 'the integration portal’s home screen, with one mapping waiting for review' }],
+  },
+  {
+    id: 'arro', name: 'arro', kind: 'iphone app',
+    what: 'a daily movement streak for families who live apart.',
+    facts: [
+      'a missed day is never public. it says “maya still has today”.',
+      'expo, react native and supabase, with 192 pgtap tests. on testflight.',
+    ],
+    shots: [
+      { src: '/projects/arro/today.jpg', alt: 'arro’s today screen with the family streak' },
+      { src: '/projects/arro/feed.jpg', alt: 'arro’s feed of today’s and yesterday’s workouts' },
+    ],
+    phones: true,
+    source: 'https://github.com/brambach/arro',
+  },
+  {
+    id: 'lucid', name: 'lucid', kind: 'in development',
+    what: 'an integration workspace that follows a request into scope, specs and delivery.',
+    facts: ['every mapped value carries its source.'],
+    shots: [{ src: '/projects/lucid/spec.png', alt: 'a lucid specification for a nightly employee sync' }],
+  },
+];
 
 export default function Home() {
   useEffect(() => {
-    // The browser's bar matches the paper.
     const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     const before = meta?.content;
     if (meta) meta.content = PAPER;
-
-    // A link to a part (/#work, where /projects and a project's way back go) opens on it, and stays on it when the
-    // serif arrives and the words above it change height, unless the visitor has already moved.
-    let unhook = () => {};
-    if (location.hash.length > 1) {
-      const part = document.getElementById(decodeURIComponent(location.hash.slice(1)));
-      part?.scrollIntoView();
-      let moved = false;
-      const move = () => { moved = true; };
-      const types = ['wheel', 'touchstart', 'keydown', 'pointerdown'];
-      types.forEach(type => addEventListener(type, move, { once: true, passive: true }));
-      unhook = () => { moved = true; types.forEach(type => removeEventListener(type, move)); };
-      void document.fonts?.ready.then(() => { if (!moved) part?.scrollIntoView(); });
-    }
-    return () => { unhook(); if (meta && before) meta.content = before; };
+    if (location.hash.length > 1) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
+    return () => { if (meta && before) meta.content = before; };
   }, []);
 
+  const lead = HERO.line.slice(0, -HERO.italic.length);
   return <main className="home">
-    <Hero />
-    <Ornament />
-    <LazyScene className="dv-host" load={loadDervo} still={<DervoStill />} />
-    <Ornament />
-    <LazyScene className="pt-host" load={loadPortal} still={<PortalStill />} />
-    <Ornament />
-    <BotTeam />
-    <Ornament />
-    <MoreWork />
-    <Ornament />
-    <Footer />
+    <header className="s-top s-label">
+      <a href="/">bryce rambach</a>
+      <nav aria-label="site"><a href="#work">work</a><a href="#about">about</a><a href={`mailto:${EMAIL}`}>email</a></nav>
+    </header>
+
+    <section className="s-hero s-fade" aria-labelledby="hero-line">
+      <h1 id="hero-line">{lead}<em>{HERO.italic}</em></h1>
+      <p>{HERO.sub}</p>
+      <div className="s-links">
+        {LINKS.map(l => <a key={l.href} href={l.href} {...(l.away ? NEW_TAB : {})}>{l.label}</a>)}
+      </div>
+    </section>
+    <Vignette label={HERO.art} mode="still" />
+
+    <section id="work" className="s-sec" aria-label="work">
+      <span className="s-label">work</span>
+      <div className="s-grid">
+        {WORK.map(w => <article key={w.id} className="s-card">
+          <a className={`s-shot${w.phones ? ' is-phones' : ''}`} href={`/projects/${w.id}`} aria-label={`${w.name}, the full story`}>
+            {w.shots.map(s => <img key={s.src} src={s.src} alt={s.alt} loading="lazy" decoding="async" />)}
+          </a>
+          <div className="s-head"><h3>{w.name}</h3><span className="s-label">{w.kind}</span></div>
+          <p className="s-what">{w.what}</p>
+          <ul className="s-facts">{w.facts.map(f => <li key={f}>{f}</li>)}</ul>
+          <div className="s-more">
+            <a href={`/projects/${w.id}`}>the full story</a>
+            {w.source && <a href={w.source} {...NEW_TAB}>source</a>}
+          </div>
+        </article>)}
+      </div>
+      <p className="s-also">smaller things: <a href="/projects/port">port</a>, a swiftui prototype where you hold for a second and the screen folds into a line.</p>
+    </section>
+
+    <section id="about" className="s-sec s-about" aria-label="about">
+      <span className="s-label">about</span>
+      <p>i’m 22 and i finished a cs degree in may 2026. from july to october i built hr and payroll integrations on contract, and before that i founded dervo.</p>
+      <p>i do my best work on a small team where one person owns a product from the api at the bottom to the words on the buttons. i’m looking for a founding or product engineer role at an early stage ai startup. open to moving.</p>
+    </section>
+
+    <footer className="s-foot">
+      <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
+      <nav aria-label="elsewhere">
+        {LINKS.slice(1).map(l => <a key={l.href} href={l.href} {...NEW_TAB}>{l.label}</a>)}
+      </nav>
+    </footer>
   </main>;
 }
