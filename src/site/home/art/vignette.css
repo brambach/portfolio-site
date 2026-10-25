@@ -19,14 +19,6 @@
 .vig__halo { opacity: 0; }
 .vig__glints { opacity: .72; }
 
-/* The pause and play word, in the quiet bottom right corner the mask fades out. Lowercase and fainter than other
-   labels, so it outranks .s-label, which loads after this sheet. */
-.vig .vig__pause {
-  position: absolute; right: var(--gutter); bottom: 0; min-width: 24px; padding: 6px 4px;
-  background: none; border: 0; color: var(--faint); text-transform: none; cursor: pointer;
-}
-.vig .vig__pause:hover { color: var(--ink-2); }
-
 /* The draw-in, once a visit. Until the first view every part waits hidden. Then the land inks in left to right, back
    to front, with the ridge lines leading like a pen; the sun fades up and settles 6px into place; the glow, the glints
    and the birds fade in. All of it ends by 4.2s. The loops keep running underneath on the same parts, so nothing
@@ -63,9 +55,9 @@
 .vig__glints[data-band="1"] { --shimmer: 6.7s -2.2s; }
 .vig__glints[data-band="2"] { --shimmer: 8.1s -5.1s; }
 .vig__plate:not([data-motion="still"]) .vig__glints { animation: vig-shimmer var(--shimmer, 5.3s) ease-in-out infinite; }
-/* Off screen or paused, every animation holds its frame and picks up from there. Important, because the shorthands
-   above reset the play state with a more specific selector. */
-.vig__plate[data-motion="off"] *, .vig__plate[data-motion="paused"] * { animation-play-state: paused !important; }
+/* Off screen, every animation holds its frame and picks up from there. Important, because the shorthands above reset
+   the play state with a more specific selector. */
+.vig__plate[data-motion="off"] * { animation-play-state: paused !important; }
 @keyframes vig-flap {
   0%, 34.2%, 100% { transform: scaleY(1); }
   5.7%, 17.1%, 28.5% { transform: scaleY(-.55); }

@@ -4,9 +4,9 @@
 //   --diff <dir>      the same shots compared to a baseline, failing past 0.5% of pixels changed
 //   --trace           the frame budget: the draw-in paints under 2ms a frame (median) with no frame over 50ms, then
 //                     no Paint or Layout at all in 4s of looping, phone and desktop
-//   --states          animations run in view, pause off screen and on the pause button; the draw-in is gone by 5s,
-//                     a resize doesn't replay it and a reload in the same visit skips it; reduced motion runs nothing,
-//                     shows no button and holds still, painted finished
+//   --states          animations run in view, pause off screen and run again back in view; the draw-in is gone by
+//                     5s, a resize doesn't replay it and a reload in the same visit skips it; reduced motion runs
+//                     nothing and holds still, painted finished
 //   --stills <dir>    the page top through the picture once it has drawn in, desktop and phone, saved as
 //                     <name>-desktop.png and <name>-mobile.png (--name, default after)
 //   --record <dir>    the stills plus reduced-motion-desktop.png, and clips from the start of the draw-in with every
@@ -261,20 +261,6 @@ async function runStates() {
     await intoView(page);
     await page.waitForTimeout(600);
     await states('running', 'back in view');
-    const button = page.locator('.vig__pause');
-    await button.click();
-    await page.waitForTimeout(300);
-    (await button.textContent()) === 'play' ? pass(`${profile.name}: button reads play once pressed`) : fail(`${profile.name}: button reads ${await button.textContent()} once pressed`);
-    await states('paused', 'after pause');
-    await page.evaluate(() => scrollBy(0, innerHeight * 2));
-    await page.waitForTimeout(600);
-    await intoView(page);
-    await page.waitForTimeout(600);
-    await states('paused', 'paused, away and back');
-    await button.click();
-    await page.waitForTimeout(300);
-    await states('running', 'after play');
-    const height = await page.evaluate(() => document.documentElement.scrollHeight);
     await ctx.close();
 
     await checkDrawIn(profile);
@@ -284,9 +270,6 @@ async function runStates() {
     await still.page.waitForTimeout(400);
     const running = await still.page.evaluate(() => document.querySelector('.vig').getAnimations({ subtree: true }).length);
     running ? fail(`${profile.name} reduced motion: ${running} animations on the picture`) : pass(`${profile.name} reduced motion: no animations`);
-    (await still.page.locator('.vig__pause').count()) ? fail(`${profile.name} reduced motion: a pause button`) : pass(`${profile.name} reduced motion: no pause button`);
-    const stillHeight = await still.page.evaluate(() => document.documentElement.scrollHeight);
-    stillHeight === height ? pass(`${profile.name}: page ${height}px tall with or without the button`) : fail(`${profile.name}: page ${height}px with the button, ${stillHeight}px without`);
     await finished(still.page, `${profile.name} reduced motion`);
     const plate = still.page.locator('.vig__plate');
     const first = await plate.screenshot();

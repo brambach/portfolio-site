@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-/* WCAG 2.2.2 for the hero picture: its loops run past 5s, so each one must run only while motion is allowed and must
-   stop when the picture is off screen or the visitor presses pause. Anything that plays once ends by 5s. */
+/* The hero picture's loops run past 5s, so each one must run only while motion is allowed and must stop when the
+   picture is off screen. Anything that plays once ends by 5s. */
 const css = readFileSync(`${process.cwd()}/src/site/home/art/vignette.css`, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 
 type Rule = { sel: string; decls: Map<string, string>; reduce: boolean };
@@ -66,10 +66,9 @@ describe('The hero picture’s loops', () => {
     expect(all.filter(r => [...r.decls].some(([k, v]) => k.startsWith('animation') && /\binfinite\b/.test(v)) && !motionOn(r.sel))).toEqual([]);
   });
 
-  it('pause off screen and when the visitor presses pause', () => {
-    const pausing = all.filter(r => /^paused\b/.test(r.decls.get('animation-play-state') ?? '')).map(r => r.sel).join(',');
+  it('pause off screen', () => {
+    const pausing = all.filter(r => /^paused\b/.test(r.decls.get('animation-play-state') ?? '')).map(r => r.sel);
     expect(pausing).toContain('.vig__plate[data-motion="off"] *');
-    expect(pausing).toContain('.vig__plate[data-motion="paused"] *');
   });
 
   it('end by 5s when they play once, delays included', () => {
