@@ -115,7 +115,7 @@ export default function Home() {
 
       <section id="about" className="s-sec s-about" aria-label="about">
         <h2 className="s-label">about</h2>
-        <p>i'm a remote employee at an hr and payroll consultancy, its only integrations developer. alongside that, i founded dervo.</p>
+        <p>i'm a remote employee at an hr and payroll consultancy. alongside that, i founded dervo.</p>
         <p>i do my best work on a small team where one person owns a product from the api at the bottom to the words on the buttons.</p>
       </section>
     </main>
