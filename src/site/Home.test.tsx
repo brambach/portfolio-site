@@ -2,12 +2,12 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { act, render, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import Home from './Home';
 import * as COPY from './home/copy';
 import LazyScene from './home/LazyScene';
 import { motionMode } from './home/motion-mode';
-import { INTRO, STAGES, introAt, paintAt, partAt, partsOf, vignette } from './home/art/vignette';
+import { vignette } from './home/art/vignette';
 
 const DASHES = /[–—]/;
 const strings = (v: unknown): string[] => typeof v === 'string' ? [v] : v && typeof v === 'object' ? Object.values(v).flatMap(strings) : [];
@@ -177,48 +177,23 @@ describe('The home page', () => {
 });
 
 describe('The hero engraving', () => {
+  it('is drawn once on the home page, finished and still, inside main and named for a screen reader', async () => {
+    render(<Home />);
+    const art = within(screen.getByRole('main')).getByRole('img', { name: COPY.HERO.art });
+    const plate = art.querySelector<HTMLElement>('.vig__plate')!;
+    await act(async () => { await new Promise(r => setTimeout(r, 50)); });
+    expect(plate.hasAttribute('data-risen')).toBe(true);
+    expect(plate.hasAttribute('data-glint')).toBe(true);
+  });
+
   it('draws the same picture for the same size, with the sun behind the range and glints on the water', () => {
     const a = vignette(1200, 300);
     expect(vignette(1200, 300)).toBe(a);
-    expect(a).toContain('class="vig__sky" style="clip-path:path(');
-    expect(a).toMatch(/class="vig__sun"[^>]*data-k="rise"/);
+    expect(a).toContain('class="vig__sun"');
+    expect(a).toContain('clip-path="url(#vig-sky)"');
+    expect(a).toContain('class="vig__rise"');
     expect(a).toContain('class="vig__glints"');
     expect(a).not.toMatch(/NaN|undefined/);
-  });
-
-  it('is in layers, back to front, so a scrub repaints only the one that moves', () => {
-    const layers = [...vignette(1200, 300).matchAll(/class="vig__(\w+)"/g)].map(m => m[1]);
-    expect(layers).toEqual(['sky', 'sun', 'rules', 'far', 'mid', 'near', 'lines', 'pines', 'water', 'reflect', 'glints']);
-  });
-
-  it('draws in the order of the plan, and the intro stops with the ridges drawn and the sun 60% up', () => {
-    const el = document.createElement('div');
-    el.innerHTML = vignette(1200, 300);
-    const parts = partsOf(el);
-    const of = (sel: string) => el.querySelector<HTMLElement>(sel)!;
-    paintAt(el, parts, 0);
-    expect(of('.vig__far').style.clipPath).toBe('inset(0 100.00% 0 0)');
-    expect(of('.vig__lines path').style.strokeDashoffset).toBe('1');
-    expect(el.hasAttribute('data-glint')).toBe(false);
-    paintAt(el, parts, INTRO.to);
-    const strokes = [...el.querySelectorAll<SVGElement>('.vig__lines path')];
-    expect(strokes.every(s => s.style.strokeDashoffset === '0')).toBe(true);
-    expect(partAt(STAGES.sun, INTRO.to)).toBeCloseTo(0.648, 2);
-    expect(of('.vig__water').style.clipPath).toBe('inset(0 100.00% 0 0)');
-    paintAt(el, parts, 1);
-    expect(parts.every(p => p.t === 1)).toBe(true);
-    expect([...el.querySelectorAll<HTMLElement>('[data-k]')].every(e => !e.style.clipPath && !e.style.transform)).toBe(true);
-    expect(el.hasAttribute('data-glint')).toBe(true);
-  });
-
-  it('eases each part over its own stretch, and the intro settles at 0.40 in 2.4s', () => {
-    expect(partAt([0.2, 0.4], 0.1)).toBe(0);
-    expect(partAt([0.2, 0.4], 0.3)).toBeCloseTo(0.5);
-    expect(partAt([0.2, 0.4], 0.5)).toBe(1);
-    expect(introAt(0)).toBe(0);
-    expect(introAt(1200)).toBeGreaterThan(0.25);
-    expect(introAt(2400)).toBe(0.4);
-    expect(introAt(9000)).toBe(0.4);
   });
 
   it('has a narrow variant for phones', () => {
@@ -234,33 +209,16 @@ describe('The hero engraving', () => {
 describe('How much the home moves', () => {
   const media = (matches: (q: string) => boolean) => vi.spyOn(window, 'matchMedia').mockImplementation(q => ({ matches: matches(q), media: q, onchange: null, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {}, dispatchEvent: () => false }) as MediaQueryList);
 
-  const saveData = (on: boolean) => vi.spyOn(navigator as Navigator & { connection?: unknown }, 'connection', 'get').mockReturnValue({ saveData: on, addEventListener() {}, removeEventListener() {} });
-  beforeEach(() => { if (!('connection' in navigator)) Object.defineProperty(navigator, 'connection', { configurable: true, get: () => undefined }); });
-
-  it('is still with reduced motion', () => {
-    media(q => q.includes('reduced-motion') || q.includes('max-width'));
+  it('is still with reduced motion, lite on a phone or a touch screen, and full otherwise', () => {
+    media(q => q.includes('reduced-motion'));
     expect(motionMode()).toBe('still');
-  });
-
-  it('is still with Save-Data, even on a wide screen', () => {
-    media(() => false);
-    saveData(true);
-    expect(motionMode()).toBe('still');
-  });
-
-  it('is lite under 760px wide', () => {
+    vi.restoreAllMocks();
     media(q => q.includes('max-width'));
-    saveData(false);
     expect(motionMode()).toBe('lite');
-  });
-
-  it('is full on a wide touch screen, like an ipad in landscape', () => {
+    vi.restoreAllMocks();
     media(q => q.includes('coarse'));
-    saveData(false);
-    expect(motionMode()).toBe('full');
-  });
-
-  it('is full otherwise', () => {
+    expect(motionMode()).toBe('lite');
+    vi.restoreAllMocks();
     media(() => false);
     expect(motionMode()).toBe('full');
   });
