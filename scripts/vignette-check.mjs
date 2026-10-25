@@ -7,18 +7,26 @@
 //   --states          animations run in view, pause off screen and on the pause button; the draw-in is gone by 5s,
 //                     a resize doesn't replay it and a reload in the same visit skips it; reduced motion runs nothing,
 //                     shows no button and holds still, painted finished
+//   --stills <dir>    the page top through the picture once it has drawn in, desktop and phone, saved as
+//                     <name>-desktop.png and <name>-mobile.png (--name, default after)
+//   --record <dir>    the stills plus reduced-motion-desktop.png, and clips from the start of the draw-in with every
+//                     animation's time stepped by hand, so frames are sharp and even whatever the machine's load:
+//                     vignette-desktop.webm, vignette-desktop.gif and vignette-mobile-390.webm (needs ffmpeg)
 // Usage: node scripts/vignette-check.mjs [--url http://localhost:4180/] --baseline dir | --diff dir | --trace | --states
+//        | --stills dir [--name before] | --record dir
 import { chromium } from 'playwright';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(name);
 const value = (name) => { const i = args.indexOf(name); return i < 0 ? null : args[i + 1]; };
 const URL = value('--url') ?? 'http://localhost:4180/';
-const baseline = value('--baseline'), diff = value('--diff');
-if (!baseline && !diff && !flag('--trace') && !flag('--states')) {
-  console.log('usage: node scripts/vignette-check.mjs [--url u] --baseline dir | --diff dir | --trace | --states');
+const baseline = value('--baseline'), diff = value('--diff'), stills = value('--stills'), record = value('--record');
+if (!baseline && !diff && !flag('--trace') && !flag('--states') && !stills && !record) {
+  console.log('usage: node scripts/vignette-check.mjs [--url u] --baseline dir | --diff dir | --trace | --states | --stills dir [--name n] | --record dir');
   process.exit(2);
 }
 
@@ -38,6 +46,20 @@ const MAX_DIFF = 0.005;
 const DRAW_IN = ['vig-sweep', 'vig-settle', 'vig-in'];
 const DRAW_IN_PAINT_MS = 2;
 const DRAW_IN_FRAME_MS = 50;
+const STILLS = [
+  { name: 'desktop', width: 1440, height: 900, dpr: 1 },
+  { name: 'mobile', width: 390, height: 844, dpr: 2 },
+];
+// context: CSS px of page kept above and below the picture.
+const CLIPS = [
+  { name: 'vignette-desktop', width: 1440, height: 900, dpr: 2, seconds: 8, context: 0, gif: { seconds: 6, width: 960 } },
+  { name: 'vignette-mobile-390', width: 390, height: 844, dpr: 2, seconds: 8, context: 48 },
+];
+const FPS = 30;
+const WEBM_MAX = 300 * 1024;
+const GIF_MAX = 2 * 1024 * 1024;
+const WEBM_CRF = [34, 40, 46];
+const GIF_TRIES = [{ fps: 15, colors: 48 }, { fps: 15, colors: 32 }, { fps: 12, colors: 32 }];
 
 const browser = await chromium.launch();
 let failures = 0;
@@ -318,10 +340,84 @@ async function checkDrawIn(profile) {
   await ctx.close();
 }
 
+async function still(size, file, reducedMotion) {
+  const { ctx, page } = await open(size, reducedMotion);
+  await page.waitForTimeout(DRAW_IN_MS);
+  const bottom = await page.evaluate(() => Math.ceil(document.querySelector('.vig').getBoundingClientRect().bottom + scrollY) + 24);
+  writeFileSync(file, await page.screenshot({ clip: { x: 0, y: 0, width: size.width, height: bottom } }));
+  await ctx.close();
+  pass(`saved ${file}`);
+}
+
+async function runStills(dir, name) {
+  console.log(`stills into ${dir}`);
+  mkdirSync(dir, { recursive: true });
+  for (const size of STILLS) await still(size, join(dir, `${name}-${size.name}.png`));
+}
+
+// Tries each setting in turn until the file fits, keeping the last one if none does.
+function encode(out, max, tries, argsFor) {
+  for (const t of tries) {
+    execFileSync('ffmpeg', ['-y', '-loglevel', 'error', ...argsFor(t), out]);
+    const size = statSync(out).size;
+    const line = `${out} ${(size / 1024).toFixed(0)} KB (${JSON.stringify(t)})`;
+    if (size <= max) return pass(line);
+    if (t === tries.at(-1)) return fail(`${line}, over ${(max / 1024).toFixed(0)} KB`);
+  }
+}
+
+// Every animation is paused the moment the plate starts drawing in, then all of them are set to the same time past
+// that moment for each frame, so the clip shows the timeline exactly as a visitor sees it from first view.
+async function recordClip(clip, dir) {
+  const ctx = await browser.newContext({ viewport: { width: clip.width, height: clip.height }, deviceScaleFactor: clip.dpr });
+  const page = await ctx.newPage();
+  page.on('pageerror', (e) => fail(`page error: ${e.message}`));
+  await page.addInitScript(() => {
+    new MutationObserver((_, observer) => {
+      const plate = document.querySelector('.vig__plate');
+      if (plate?.dataset.drawn !== '' || !plate.querySelector('svg')) return;
+      observer.disconnect();
+      window.__clock = document.getAnimations().map((a) => { a.pause(); return [a, a.currentTime ?? 0]; });
+    }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ['data-drawn'] });
+  });
+  await page.goto(URL, { waitUntil: 'load' });
+  await page.waitForFunction(() => window.__clock, null, { timeout: 15000 });
+  await page.evaluate(() => document.fonts.ready);
+  const box = await page.evaluate((context) => {
+    const r = document.querySelector('.vig').getBoundingClientRect();
+    return { x: 0, y: Math.round(r.top + scrollY - context), width: innerWidth, height: Math.round(r.height + 2 * context) };
+  }, clip.context);
+  const frames = mkdtempSync(join(tmpdir(), `${clip.name}-`));
+  for (let i = 0; i < clip.seconds * FPS; i++) {
+    await page.evaluate((ms) => {
+      for (const [a, t0] of window.__clock) { a.pause(); a.currentTime = t0 + ms; }
+      return new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    }, (i * 1000) / FPS);
+    await page.screenshot({ path: join(frames, `f${String(i).padStart(4, '0')}.png`), clip: box });
+  }
+  await ctx.close();
+  console.log(`  ${clip.name}: ${clip.seconds * FPS} frames of ${box.width * clip.dpr}x${box.height * clip.dpr}px`);
+  const input = ['-framerate', String(FPS), '-i', join(frames, 'f%04d.png')];
+  encode(join(dir, `${clip.name}.webm`), WEBM_MAX, WEBM_CRF,
+    (crf) => [...input, '-c:v', 'libvpx-vp9', '-crf', String(crf), '-b:v', '0', '-pix_fmt', 'yuv420p', '-row-mt', '1', '-an']);
+  if (clip.gif) encode(join(dir, `${clip.name}.gif`), GIF_MAX, GIF_TRIES, ({ fps, colors }) => [...input, '-t', String(clip.gif.seconds), '-vf',
+    `fps=${fps},scale=${clip.gif.width}:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=${colors}:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle`]);
+  rmSync(frames, { recursive: true });
+}
+
+async function runRecord(dir) {
+  await runStills(dir, 'after');
+  await still(STILLS[0], join(dir, 'reduced-motion-desktop.png'), 'reduce');
+  console.log(`record into ${dir}`);
+  for (const clip of CLIPS) await recordClip(clip, dir);
+}
+
 if (baseline) await runBaseline(baseline);
 if (diff) await runDiff(diff);
 if (flag('--trace')) await runTrace();
 if (flag('--states')) await runStates();
+if (stills) await runStills(stills, value('--name') ?? 'after');
+if (record) await runRecord(record);
 await browser.close();
 console.log(failures ? `${failures} failed` : 'all passed');
 process.exit(failures ? 1 : 0);
