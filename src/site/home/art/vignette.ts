@@ -17,7 +17,7 @@ export type Part =
   | 'far' | 'mid' | 'near' | 'water'     // land, by draw order (sky rules go with far, pines with near)
   | 'ridges'                             // ridge lines and horizon: the pen that leads the draw-in
   | 'glints'                             // three bands: .vig__glints[data-band="0|1|2"]
-  | 'bird';                              // three: div.vig__bird > svg, each with --i for its own timing
+  | 'bird';                              // three: div.vig__bird > div > two svg.vig__wing, each bird with --i for its timing
 // The ridges sit under the near banks: in this order the split paints the same pixels as the single land svg did.
 export const PARTS: readonly Part[] = ['halo', 'sun', 'far', 'mid', 'ridges', 'near', 'water', 'glints', 'bird'];
 
@@ -195,11 +195,14 @@ export function vignette(width: number, height: number): string {
     full('water', ink('.55', `<path d="${deep}" stroke-opacity=".4"/><path d="${water}" stroke-opacity=".26"/><path d="${reflect}" stroke-opacity=".3"/>`));
   const pool = crop(sunX - sunR * 1.2 - 2, hz, sunX + sunR * 1.2 + 2, y1);
   const shimmer = glints.map((g, i) => `<svg class="vig__glints" data-band="${i}" style="${pool.at}" ${pool.box}>${g}</svg>`).join('');
-  // Each bird is its own box so it can flap and drift without repainting the land under it.
-  const birds = ([[0.47, 0.24, 4], [0.51, 0.30, 3], [0.42, 0.19, 3]] as const).map(([u, v, q], i) => {
-    const bx = +f1(x0 + w * u), by = +f1(y0 + h * v), b = crop(bx - 1, by - q - 1, bx + q * 4 + 1, by + 1);
-    return `<div class="vig__bird" style="${b.at};--i:${i}"><svg ${b.box}><path d="M${f1(bx)},${f1(by)} q${q},-${q} ${q * 2},0 q${q},-${q} ${q * 2},0" fill="none" stroke="currentColor" ` +
-      `stroke-width=".9" stroke-linecap="round" stroke-opacity=".75"/></svg></div>`;
+  // Each bird is its own box so it can drift without repainting the land under it. Its wings are one left wing drawn
+  // twice, with the shoulder 1px in from the svg's right edge, halfway down, where CSS turns and mirrors it. The wing
+  // is drawn as in the glide, raised a little, so a bird at rest is a soft V.
+  const birds = ([[0.47, 0.24, 6], [0.51, 0.30, 4.6], [0.42, 0.19, 5.2]] as const).map(([u, v, L], i) => {
+    const l = L * (narrow ? 0.8 : 1), n = Math.ceil(l), t = Math.ceil(l * 0.45) + 1;
+    const wing = `<svg class="vig__wing" viewBox="${-n - 1} ${-t} ${n + 2} ${t * 2}" width="${n + 2}" height="${t * 2}" ${hide}>` +
+      `<path d="M0,0Q${f1(-l * 0.42)},${f1(-l * 0.32)} ${f1(-l)},${f1(-l * 0.24)}" fill="none" stroke="currentColor" stroke-width=".8" stroke-linecap="round" stroke-opacity=".5"/></svg>`;
+    return `<div class="vig__bird" style="left:${Math.round(x0 + w * u) - n - 1}px;top:${Math.round(y0 + h * v) - t}px;--i:${i}"><div>${wing + wing}</div></div>`;
   }).join('');
   return halo + sun + land + shimmer + birds;
 }

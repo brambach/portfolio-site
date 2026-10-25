@@ -12,8 +12,11 @@
 //   --record <dir>    the stills plus reduced-motion-desktop.png, and clips from the start of the draw-in with every
 //                     animation's time stepped by hand, so frames are sharp and even whatever the machine's load:
 //                     vignette-desktop.webm, vignette-desktop.gif and vignette-mobile-390.webm (needs ffmpeg)
+//   --birds <dir>     tight crops round the birds every 100ms for 3s, starting --from ms (default 0) after the draw-in
+//                     ends, time stepped by hand as in --record, at 1440 and 390 (DPR 2), plus the reduced-motion rest:
+//                     birds-<width>-<ms>.png and birds-<width>-reduced.png
 // Usage: node scripts/vignette-check.mjs [--url http://localhost:4180/] --baseline dir | --diff dir | --trace | --states
-//        | --stills dir [--name before] | --record dir
+//        | --stills dir [--name before] | --record dir | --birds dir [--from ms]
 import { chromium } from 'playwright';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -24,9 +27,9 @@ const args = process.argv.slice(2);
 const flag = (name) => args.includes(name);
 const value = (name) => { const i = args.indexOf(name); return i < 0 ? null : args[i + 1]; };
 const URL = value('--url') ?? 'http://localhost:4180/';
-const baseline = value('--baseline'), diff = value('--diff'), stills = value('--stills'), record = value('--record');
-if (!baseline && !diff && !flag('--trace') && !flag('--states') && !stills && !record) {
-  console.log('usage: node scripts/vignette-check.mjs [--url u] --baseline dir | --diff dir | --trace | --states | --stills dir [--name n] | --record dir');
+const baseline = value('--baseline'), diff = value('--diff'), stills = value('--stills'), record = value('--record'), birds = value('--birds');
+if (!baseline && !diff && !flag('--trace') && !flag('--states') && !stills && !record && !birds) {
+  console.log('usage: node scripts/vignette-check.mjs [--url u] --baseline dir | --diff dir | --trace | --states | --stills dir [--name n] | --record dir | --birds dir [--from ms]');
   process.exit(2);
 }
 
@@ -55,6 +58,14 @@ const CLIPS = [
   { name: 'vignette-desktop', width: 1440, height: 900, dpr: 2, seconds: 8, context: 0, gif: { seconds: 6, width: 960 } },
   { name: 'vignette-mobile-390', width: 390, height: 844, dpr: 2, seconds: 8, context: 48 },
 ];
+const BIRDS = [
+  { width: 1440, height: 900, dpr: 2 },
+  { width: 390, height: 844, dpr: 2 },
+];
+const BIRD_STEP_MS = 100;
+const BIRD_MS = 3000;
+// CSS px kept round the wings.
+const BIRD_PAD = 6;
 const FPS = 30;
 const WEBM_MAX = 300 * 1024;
 const GIF_MAX = 2 * 1024 * 1024;
@@ -395,12 +406,52 @@ async function runRecord(dir) {
   for (const clip of CLIPS) await recordClip(clip, dir);
 }
 
+// The box round every wing at each of the given times (or now), in viewport pixels as screenshot clips take them.
+const birdBox = (page, times = [null]) => page.evaluate(([pad, times]) => {
+  const rs = times.flatMap((ms) => {
+    if (ms !== null) for (const [a, t0] of window.__clock) a.currentTime = t0 + ms;
+    return [...document.querySelectorAll('.vig__wing')].map((w) => w.getBoundingClientRect());
+  });
+  const x = Math.min(...rs.map((r) => r.left)) - pad, y = Math.min(...rs.map((r) => r.top)) - pad;
+  return { x: Math.floor(x), y: Math.floor(y), width: Math.ceil(Math.max(...rs.map((r) => r.right)) + pad - x), height: Math.ceil(Math.max(...rs.map((r) => r.bottom)) + pad - y) };
+}, [BIRD_PAD, times]);
+
+async function runBirds(dir, from) {
+  console.log(`birds into ${dir}`);
+  mkdirSync(dir, { recursive: true });
+  for (const size of BIRDS) {
+    const still = await open(size, 'reduce');
+    await intoView(still.page);
+    await still.page.waitForTimeout(400);
+    const box = await birdBox(still.page);
+    await still.page.screenshot({ path: join(dir, `birds-${size.width}-reduced.png`), clip: box });
+    await still.ctx.close();
+
+    const { ctx, page } = await open(size);
+    await intoView(page);
+    await page.waitForFunction(() => document.querySelector('.vig__plate').dataset.drawn === 'done', null, { timeout: 10000 });
+    await page.evaluate(() => { window.__clock = document.getAnimations().map((a) => { a.pause(); return [a, a.currentTime ?? 0]; }); });
+    const times = Array.from({ length: BIRD_MS / BIRD_STEP_MS + 1 }, (_, k) => from + k * BIRD_STEP_MS);
+    const moving = await birdBox(page, times);
+    for (const ms of times) {
+      await page.evaluate((ms) => {
+        for (const [a, t0] of window.__clock) a.currentTime = t0 + ms;
+        return new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      }, ms);
+      await page.screenshot({ path: join(dir, `birds-${size.width}-${String(ms).padStart(5, '0')}.png`), clip: moving });
+    }
+    await ctx.close();
+    pass(`${size.width}: ${times.length} frames (${moving.width}x${moving.height} CSS px) and the rest pose (${box.width}x${box.height})`);
+  }
+}
+
 if (baseline) await runBaseline(baseline);
 if (diff) await runDiff(diff);
 if (flag('--trace')) await runTrace();
 if (flag('--states')) await runStates();
 if (stills) await runStills(stills, value('--name') ?? 'after');
 if (record) await runRecord(record);
+if (birds) await runBirds(birds, Number(value('--from') ?? 0));
 await browser.close();
 console.log(failures ? `${failures} failed` : 'all passed');
 process.exit(failures ? 1 : 0);

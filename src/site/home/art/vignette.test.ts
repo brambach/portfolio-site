@@ -22,15 +22,21 @@ describe.each([
     expect([...new Set(order)]).toEqual([...PARTS]);
   });
 
-  it('keeps the birds out of the land, each in its own small svg', () => {
+  it('keeps the birds out of the land, each a pair of small wings of its own size', () => {
     const el = plate(w, h);
-    // A bird is the only curve in the picture; everything else is straight rules.
-    for (const path of el.querySelectorAll(LAND.map(p => `.vig__${p} path`).join())) expect(path.getAttribute('d')).not.toMatch(/q/);
-    for (const bird of el.querySelectorAll('.vig__bird')) {
+    // A wing is the only curve in the picture; everything else is straight rules.
+    for (const path of el.querySelectorAll(LAND.map(p => `.vig__${p} path`).join())) expect(path.getAttribute('d')).not.toMatch(/q/i);
+    const birds = [...el.querySelectorAll('.vig__bird')];
+    for (const bird of birds) {
       expect(bird.parentElement).toBe(el);
-      const svg = bird.querySelector(':scope > svg')!;
-      expect(Number(svg.getAttribute('width'))).toBeLessThan(24);
+      const wings = bird.querySelectorAll(':scope > div > svg.vig__wing');
+      expect(wings).toHaveLength(2);
+      // One wing drawn twice: CSS mirrors the second, so the two can't come apart.
+      expect(wings[0].outerHTML).toBe(wings[1].outerHTML);
+      expect(Number(wings[0].getAttribute('width'))).toBeLessThan(12);
+      expect(wings[0].querySelector('path')!.getAttribute('d')).toMatch(/^M0,0Q/);
     }
+    expect(new Set(birds.map(b => b.querySelector('path')!.getAttribute('d'))).size).toBe(3);
   });
 
   it('draws the same markup every time, with every sun dot and glint it had before', () => {
