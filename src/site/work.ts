@@ -32,7 +32,7 @@ const extra: Record<WorkId, Pick<PageWork, 'hero' | 'shots' | 'link'>> = {
     hero: { src: '/projects/lucid/spec.png' },
     shots: [
       { src: '/projects/lucid/spec.png', alt: 'A Lucid specification for a nightly employee sync' },
-      { src: '/projects/lucid/mapping.png', alt: 'Original Lucid preview showing five mappings with their evidence categories', title: 'Every value carries its source.', text: 'The specification brings fields, transformations and risk into one readable document.' },
+      { src: '/projects/lucid/mapping.png', alt: 'Lucid preview showing five mappings with their evidence categories', title: 'Every value carries its source.', text: 'The specification brings fields, transformations and risk into one readable document.' },
     ],
   },
   // The cover the project collection uses. The portal's study redraws everything else.
