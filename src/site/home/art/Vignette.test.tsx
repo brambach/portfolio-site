@@ -142,6 +142,35 @@ describe('The hero picture', () => {
     expect(plate()).toHaveAttribute('data-motion', 'on');
   });
 
+  it('shows the picture finished and running when the browser has no IntersectionObserver', () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('IntersectionObserver', undefined);
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(390);
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(96);
+    render(<Vignette label={HERO.art} />);
+    act(() => { vi.runAllTimers(); });
+    expect(plate()).toHaveAttribute('data-drawn', 'done');
+    expect(plate()).toHaveAttribute('data-motion', 'on');
+    expect(plate().querySelector('.vig__ridges')).not.toBeNull();
+  });
+
+  it('stops watching and drawing once it is gone', () => {
+    vi.useFakeTimers();
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(390);
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(96);
+    const views = vi.spyOn(Observer.prototype, 'disconnect');
+    const sizes = vi.spyOn(Resizes.prototype, 'disconnect');
+    const draws = vi.spyOn(Element.prototype, 'innerHTML', 'set');
+    const { unmount } = render(<Vignette label={HERO.art} />);
+    act(() => { for (const r of Resizes.all) r.cb([], r as unknown as ResizeObserver); });
+    unmount();
+    act(() => { vi.runAllTimers(); });
+    expect(views).toHaveBeenCalledOnce();
+    expect(sizes).toHaveBeenCalledOnce();
+    expect(draws).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it('names the picture on the image itself, not on the figure around it', () => {
     render(<Home />);
     const img = plate();

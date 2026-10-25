@@ -52,7 +52,8 @@ export default function Vignette({ label }: { label: string }) {
         if (e.isIntersecting) setDrawn(d => d ?? '');
       }, { threshold: 0.25 })
       : null;
-    io?.observe(el);
+    // Without IntersectionObserver there is no way to tell, so it counts as on screen and shows finished.
+    if (io) io.observe(el); else if (!still) { setOnScreen(true); setDrawn('done'); }
     return () => { cancel(); window.clearTimeout(timer); ro?.disconnect(); io?.disconnect(); };
   }, [still]);
 
