@@ -1,21 +1,13 @@
-import { SKILLS } from './data/skills';
 import { WORK } from './data/work';
 
-/* What the site says. The words come from the home page before this one (skills.ts and work.ts in data/), and the
+/* What the site says. The words come from the home page before this one (work.ts in data/), and the
    hero line is the tagline. */
 
 export const NAME = 'Bryce Rambach';
 export const TAGLINE = 'I design it, make it move, and build it.';
 export const SUB = 'I’m looking for a founding engineer role at an early AI startup. Open to moving.';
 
-export const INTRO = {
-  before: 'I’m 22. I finished a computer science degree in May 2026. I was a remote employee at an HR and payroll consultancy, its only integrations developer. Alongside that, I founded ',
-  link: { label: 'Dervo', to: '/projects/dervo' },
-  after: '.',
-  second: 'I do my best work on a small team where one person can own a product from the API at the bottom to the words on the buttons. Here’s what that looks like, one part at a time.',
-};
-
-export { SKILLS, WORK };
+export { WORK };
 
 export const SIDE_QUESTS = [
   { name: 'The drive', href: '/drive', note: 'A 3D Porsche on a mountain lake. Sound on.' },
