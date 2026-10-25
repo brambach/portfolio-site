@@ -218,8 +218,8 @@ function Drive() {
             <br/>
             <em><Words text="I design and build software you can feel." distance={distance} speed={speed} first={3} /></em>
           </motion.h1>
-          <p className="sp-sub" aria-label="Five projects down the road. Coffee first, then the one I’m building now.">
-            <Words text="Five projects down the road." distance={distance} speed={speed} first={9} />
+          <p className="sp-sub" aria-label="Four projects down the road. Coffee first, then the one I’m building now.">
+            <Words text="Four projects down the road." distance={distance} speed={speed} first={9} />
             <span className="sp-sub__aside" aria-hidden="true">coffee first, then the one I’m building now.</span>
           </p>
           <motion.div className="sp-cue" style={{ opacity: note }} aria-hidden="true">
