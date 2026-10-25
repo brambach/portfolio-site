@@ -3,11 +3,15 @@ import path from 'node:path';
 import { act, render, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { projects } from '../projects/catalog';
 import Home from './Home';
 import * as COPY from './home/copy';
 import LazyScene from './home/LazyScene';
 import { motionMode } from './home/motion-mode';
 import { vignette } from './home/art/vignette';
+import { PROJECT_META } from './meta';
+import { WORK_IDS } from './routes';
+import WorkPage from './WorkPage';
 
 const DASHES = /[–—]/;
 const strings = (v: unknown): string[] => typeof v === 'string' ? [v] : v && typeof v === 'object' ? Object.values(v).flatMap(strings) : [];
@@ -82,7 +86,7 @@ describe('The home page', () => {
     const { container } = render(<Home />);
     const about = screen.getByRole('region', { name: 'about' });
     const [first, second] = about.querySelectorAll('p');
-    expect(first.textContent).toMatch(/^i was a remote employee at an hr and payroll consultancy, its only integrations developer\. alongside that, i founded dervo\.$/);
+    expect(first.textContent).toMatch(/^i'm a remote employee at an hr and payroll consultancy, its only integrations developer\. alongside that, i founded dervo\.$/);
     expect(first).toHaveTextContent('remote employee');
     expect(first).toHaveTextContent('alongside that, i founded dervo');
     expect(second.textContent).toMatch(/to the words on the buttons\.$/);
@@ -169,7 +173,7 @@ describe('The home page', () => {
     const { container } = render(<Home />);
     const portal = within(screen.getByRole('region', { name: 'work' })).getAllByRole('article')[1];
     expect(within(portal).getByRole('heading', { level: 3 })).toHaveTextContent('integration portal');
-    expect(portal.querySelector('.s-label')).toHaveTextContent(/^employee, 2026$/);
+    expect(portal.querySelector('.s-label')).toHaveTextContent(/^employee, now$/);
     const old = /contract|jul to oct|july to october|parked/i;
     expect(container.textContent).not.toMatch(old);
     for (const s of strings(COPY)) expect(s, s).not.toMatch(old);
@@ -180,6 +184,15 @@ describe('The home page', () => {
     const all = strings(COPY).join(' ');
     expect(all).not.toMatch(/\bsf\b|\bnyc\b|san francisco|new york/i);
     expect(COPY.PORTAL.body).toContain('an hr and payroll consultancy');
+    // The job is employee work at an unnamed consultancy: never the company, its vendors, or a contract or freelance gig.
+    const employer = [/digital directions/i, /\bdd\b/i, /swyftx/i, /hibob/i, /netsuite/i, /\bcontract/i, /\bfreelanc/i];
+    const { container, unmount } = render(<Home />);
+    const home = container.textContent!;
+    unmount();
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    const pages = WORK_IDS.map(id => { const { container, unmount } = render(<WorkPage id={id} />); const t = container.textContent!; unmount(); return t; });
+    const texts = [home, ...strings(COPY), ...pages, ...strings(projects), ...PROJECT_META.map(m => m.description)];
+    for (const t of texts) for (const re of employer) expect(t, t).not.toMatch(re);
   });
 
   it('keeps the old dot art, its motion and GSAP out of the home page', () => {
