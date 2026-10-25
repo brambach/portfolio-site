@@ -100,7 +100,7 @@ describe('The home’s loops', () => {
     expect(mock).not.toMatch(/\binfinite\b/);
   });
   it('rest on their last frame', () => {
-    expect(look).toMatch(/\.vig__glints \{ animation: vig-breathe [^;]* 1 forwards; \}/);
+    expect(look).toMatch(/\.vig__glints \{ animation: vigd-breathe [^;]* 1 forwards; \}/);
     expect(look).toMatch(/\.bt__slip \{ animation: bt-hand [^;]* 1 forwards; \}/);
     expect(look).toMatch(/\.bt__mark \{ visibility: hidden; animation: bt-ink [^;]* 1 forwards; \}/);
     expect(mock).toMatch(/animation: dm-breathe 1\.2s ease-in-out 4 alternate forwards;/);
