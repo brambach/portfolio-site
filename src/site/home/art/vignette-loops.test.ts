@@ -48,10 +48,12 @@ const animated = all.filter(r => !r.reduce && r.decls.has('animation'));
 const motionOn = (sel: string) => split(sel, ',').every(s => s.includes(':not([data-motion="still"])'));
 
 describe('The hero picture’s loops', () => {
-  it('finds the bird loops it checks', () => {
+  it('finds the loops it checks', () => {
     expect(animated.map(r => r.sel)).toEqual(expect.arrayContaining([
       '.vig__plate:not([data-motion="still"]) .vig__bird',
       '.vig__plate:not([data-motion="still"]) .vig__bird > svg',
+      '.vig__plate:not([data-motion="still"]) .vig__sun',
+      '.vig__plate:not([data-motion="still"]) .vig__halo',
     ]));
   });
 

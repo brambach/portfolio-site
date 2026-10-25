@@ -15,7 +15,7 @@
 .vig__bird > svg { display: block; }
 .vig__sun, .vig__glints { fill: var(--primary); }
 .vig__halo stop { stop-color: var(--primary); }
-/* The glow is drawn but not shown yet. */
+/* The glow shows only while motion runs, so the still picture stays as it was drawn. */
 .vig__halo { opacity: 0; }
 .vig__glints { opacity: .72; }
 
@@ -32,6 +32,10 @@
    never beat together, and each wrapper drifts about 2% of the plate (the plate is the screen's width) and back. */
 .vig__plate:not([data-motion="still"]) .vig__bird { animation: vig-drift calc(44s + var(--i) * 7s) calc(var(--i) * -13s) ease-in-out infinite alternate; }
 .vig__plate:not([data-motion="still"]) .vig__bird > svg { transform-origin: 50% 100%; animation: vig-flap calc(7s + var(--i) * .9s) calc(var(--i) * -2.3s) ease-in-out infinite; }
+/* The sun breathes 2px from its settled place and back, and its glow swells on a shorter breath so the two drift
+   in and out of step. */
+.vig__plate:not([data-motion="still"]) .vig__sun { animation: vig-breathe 14s ease-in-out infinite; }
+.vig__plate:not([data-motion="still"]) .vig__halo { animation: vig-glow 9s ease-in-out infinite; }
 /* Off screen or paused, every animation holds its frame and picks up from there. Important, because the shorthands
    above reset the play state with a more specific selector. */
 .vig__plate[data-motion="off"] *, .vig__plate[data-motion="paused"] * { animation-play-state: paused !important; }
@@ -47,6 +51,14 @@
   50% { transform: translate(1vw, 0); }
   75% { transform: translate(1.5vw, -2px); }
   100% { transform: translate(2vw, 0); }
+}
+@keyframes vig-breathe {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(2px); }
+}
+@keyframes vig-glow {
+  0%, 100% { opacity: .55; }
+  50% { opacity: .9; }
 }
 @media (prefers-reduced-motion: reduce) {
   .vig__plate * { animation: none !important; }
