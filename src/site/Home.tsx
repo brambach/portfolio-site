@@ -37,7 +37,7 @@ const WORK: Card[] = [
     source: 'https://github.com/brambach/dervo',
   },
   {
-    id: 'integration-portal', name: 'integration portal', kind: 'employee, 2026',
+    id: 'integration-portal', name: 'integration portal', kind: 'employee, now',
     what: 'hr and payroll integrations for an hr and payroll consultancy.',
     facts: [
       'it pre-fills the field mappings and says why. nothing reaches payroll until a person confirms it.',
@@ -115,7 +115,7 @@ export default function Home() {
 
       <section id="about" className="s-sec s-about" aria-label="about">
         <h2 className="s-label">about</h2>
-        <p>i was a remote employee at an hr and payroll consultancy, its integrations developer. alongside that, i founded dervo.</p>
+        <p>i'm a remote employee at an hr and payroll consultancy, its integrations developer. alongside that, i founded dervo.</p>
         <p>i do my best work on a small team where one person owns a product from the api at the bottom to the words on the buttons.</p>
       </section>
     </main>
