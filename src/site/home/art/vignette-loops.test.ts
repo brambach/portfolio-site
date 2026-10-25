@@ -54,6 +54,7 @@ describe('The hero picture’s loops', () => {
       '.vig__plate:not([data-motion="still"]) .vig__bird > svg',
       '.vig__plate:not([data-motion="still"]) .vig__sun',
       '.vig__plate:not([data-motion="still"]) .vig__halo',
+      '.vig__plate:not([data-motion="still"]) .vig__glints',
     ]));
   });
 

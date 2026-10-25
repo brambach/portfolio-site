@@ -36,6 +36,11 @@
    in and out of step. */
 .vig__plate:not([data-motion="still"]) .vig__sun { animation: vig-breathe 14s ease-in-out infinite; }
 .vig__plate:not([data-motion="still"]) .vig__halo { animation: vig-glow 9s ease-in-out infinite; }
+/* The three glint bands interleave rows, so each sliding and fading on its own period, started out of step, keeps
+   the reflection shimmering without a pattern. */
+.vig__plate:not([data-motion="still"]) .vig__glints { animation: vig-shimmer 5.3s ease-in-out infinite; }
+.vig__plate:not([data-motion="still"]) .vig__glints[data-band="1"] { animation-duration: 6.7s; animation-delay: -2.2s; }
+.vig__plate:not([data-motion="still"]) .vig__glints[data-band="2"] { animation-duration: 8.1s; animation-delay: -5.1s; }
 /* Off screen or paused, every animation holds its frame and picks up from there. Important, because the shorthands
    above reset the play state with a more specific selector. */
 .vig__plate[data-motion="off"] *, .vig__plate[data-motion="paused"] * { animation-play-state: paused !important; }
@@ -59,6 +64,10 @@
 @keyframes vig-glow {
   0%, 100% { opacity: .55; }
   50% { opacity: .9; }
+}
+@keyframes vig-shimmer {
+  0%, 100% { transform: translateX(-1.5px); opacity: .75; }
+  50% { transform: translateX(1.5px); opacity: .45; }
 }
 @media (prefers-reduced-motion: reduce) {
   .vig__plate * { animation: none !important; }
