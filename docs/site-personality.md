@@ -2,7 +2,7 @@
 
 Read from Bryce's own notes, not guessed: `claude-hub/personal-projects/design/TASTE.md` (28 saved references),
 `design/motion/default/README.md` (the motion rules), `claude-hub/voice.md` (house style), this repo's `/previous`
-site data (`src/lib/site.ts`) and its git history, and the DD portal case study. Employer-owned material
+site data (`src/lib/site.ts`) and its git history, and the integration portal case study. Employer-owned material
 stays anonymised.
 
 ## Look

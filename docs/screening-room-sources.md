@@ -28,7 +28,7 @@ The portfolio milestone is a new typographic interpretation of the source's 30-d
 
 Source: `../lucid/app/preview/spec/page.tsx`, `components/spec/SpecViewer.tsx`, and the preview layout. Captured `/preview/spec` on a local preview-only server, with browser API requests blocked. The initial Turbopack server entered an HMR error loop; a webpack preview server rendered the same fixture successfully. No app source was changed.
 
-`public/projects/lucid/spec.png` shows the specification opening. `mapping.png` shows the five field mappings and risk flag. The sample maps NetSuite to HiBob. The portfolio's brief and field-review sequence uses this same direction, mappings and confidence categories. Holding the inferred field is a new illustrative portfolio interaction. Fixture confidence labels aren't independent verification of vendor APIs. No credential, database or integration action was performed.
+`public/projects/lucid/spec.png` shows the specification opening. `mapping.png` shows the five field mappings and risk flag. The sample maps a finance system to an HR system. The portfolio's brief and field-review sequence uses this same direction, mappings and confidence categories. Holding the inferred field is a new illustrative portfolio interaction. Fixture confidence labels aren't independent verification of vendor APIs. No credential, database or integration action was performed.
 
 ## Integration portal
 
