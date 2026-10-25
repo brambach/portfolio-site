@@ -186,8 +186,8 @@ describe('The home page', () => {
     expect(COPY.PORTAL.body).toContain('an hr and payroll consultancy');
     // The job is employee work at an unnamed consultancy: never the company, its clients or vendors, a contract or
     // freelance gig, or a claim to be its only, sole or solo technical person.
-    const employer = [/digital\s*directions/i, /\bdd\b/i, /swyft/i, /hi\s?bob/i, /net\s?suite/i, /workato/i, /key\s?pay/i,
-      /\bmyob\b/i, /employment\s+hero/i, /freshdesk/i, /\bdeputy\b/i, /\bcontract/i, /\bfreelanc/i,
+    const employer = [/digital\s*directions/i, /\bdd\b/i, /swy\s?ft/i, /hi\s?bob/i, /net\s?suite/i, /work\s?ato/i, /key\s?pay/i,
+      /\bmyob\b/i, /employment\s+hero/i, /fresh\s?desk/i, /\bdeputy\b/i, /\bcontract/i, /\bfreelanc/i,
       /\bonly integrations\b/i, /\bsole (integrations|developer|technical)/i, /\bsolo integrator\b/i, /\bone[- ]person (team|integrations)\b/i];
     const { container, unmount } = render(<Home />);
     const home = container.textContent!;
