@@ -149,7 +149,6 @@
   overflow: hidden;
 }
 .sp-card__art img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
-.sp-card__art--port { background: #111; }
 .sp-card__line { width: 48%; height: 3px; border-radius: 3px; background: #f4efe4; transition: width 400ms ease; }
 .sp-card:hover .sp-card__line, .sp-board:hover .sp-card__line { width: 8%; }
 
