@@ -25,7 +25,7 @@
           ? !['mile', 'from', 'town', 'city', 'journey', 'forest'].some(function (k) { return q.has(k); })
           : older.indexOf(path) < 0);
         // Sentient, the display face of a project's page and the not-found page (src/site/e.css), comes from
-        // Fontshare (its licence doesn't allow the files in a public repo). The home is look D, set in its own
+        // Fontshare (its licence doesn't allow the files in a public repo). The home is set in its own
         // self-hosted faces, and the older pages bring their own (/next asks for Sentient itself, in QuietIndex.tsx),
         // so only these pages ask for it. Added from here it doesn't block the page; the stylesheets fall back to
         // Georgia until it arrives.
@@ -42,9 +42,8 @@
         if (!site) return;
         var root = document.documentElement;
         var meta = document.querySelector('meta[name="theme-color"]');
-        // The home page is look D: one cream paper at every hour (src/site/home/look-d.css).
         if (path === '' && !window.__notFound) {
-          // Its faces for the first screen, preloaded here and nowhere else: its CSS arrives with its chunk, after
+          // The home's faces for the first screen, preloaded here and nowhere else: its CSS arrives with its chunk, after
           // the JS, so without this the headline would wait on a round trip it doesn't need. The build fills the
           // list (vite.config.ts).
           [/* home-fonts */].forEach(function (href) {

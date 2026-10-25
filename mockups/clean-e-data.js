@@ -24,7 +24,7 @@ window.WORK = [
     decision: "Organise the interface around the work someone needs to complete. The product story follows an integration through decisions and review rather than presenting disconnected administration screens.",
     engineering: "The source spans two portal generations. This case study uses fictional, redrawn examples to explain interface decisions without exposing company or customer records.",
     boundary: "Employer-owned work. Company, vendors and people are unnamed. Screens are redrawn with fictional data. Current production behavior isn’t demonstrated here.",
-    hero: { src: "/projects/portal/hub.png", title: "Whose move is it?", text: "The hub says whose turn it is, what’s left and what happens next, in one place." },
+    hero: { src: "/projects/portal/hub.webp", title: "Whose move is it?", text: "The hub says whose turn it is, what’s left and what happens next, in one place." },
     gallery: [
       { src: "/projects/portal/today.png", title: "What needs a person?", text: "A ranked list turns operational state into a sentence and an action. Everything else stays quiet." },
       { src: "/projects/portal/monitoring.png", title: "What happened, and what’s next?", text: "When a sync fails, it says what broke, what’s safe and what a person can do about it." },

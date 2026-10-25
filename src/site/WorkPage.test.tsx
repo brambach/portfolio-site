@@ -60,7 +60,7 @@ describe('The site’s links', () => {
     const work = within(screen.getByRole('region', { name: 'work' }));
     for (const id of ['dervo', 'integration-portal', 'arro', 'lucid', 'port']) expect(work.getAllByRole('link').some(a => a.getAttribute('href') === `/projects/${id}`), id).toBe(true);
     for (const name of ['linkedin', 'x @brycerambach', 'github']) {
-      for (const link of screen.getAllByRole('link', { name })) {
+      for (const link of screen.getAllByRole('link', { name: `${name} (opens in a new tab)` })) {
         expect(link).toHaveAttribute('target', '_blank');
         expect(link).toHaveAttribute('rel', 'noopener noreferrer');
       }

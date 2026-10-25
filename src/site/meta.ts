@@ -9,7 +9,7 @@ import { WORK_IDS } from './routes';
 
 export const ORIGIN = 'https://brycerambach.com';
 /** Bumped when the pictures change, so link previews fetch the new ones. */
-const V = 'e1';
+const V = 'e2';
 
 export type PageMeta = {
   /** Where the page's HTML goes in the build. */

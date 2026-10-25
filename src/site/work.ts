@@ -34,7 +34,7 @@ const extra: Record<WorkId, Pick<PageWork, 'hero' | 'shots' | 'link'>> = {
     shots: [{ src: '/projects/lucid/mapping.png', alt: 'Original Lucid preview showing five mappings with their evidence categories', title: 'Every value carries its source.', text: 'The specification brings fields, transformations and risk into one readable document.' }],
   },
   // The cover the project collection uses. The portal's study redraws everything else.
-  'integration-portal': { hero: { src: '/projects/portal/hub.png' }, shots: [] },
+  'integration-portal': { hero: { src: '/projects/portal/hub.webp' }, shots: [] },
   // From the AgentSky study's three artifacts (project-lab/ProjectLab.tsx).
   agentsky: {
     hero: { src: '/project-lab/sky.png' },
@@ -62,7 +62,7 @@ export const SHOT_SIZE: Record<string, [number, number]> = {
   '/projects/dervo/thread.jpg': [1512, 840],
   '/projects/lucid/mapping.png': [1440, 1000],
   '/projects/lucid/spec.png': [1440, 1000],
-  '/projects/portal/hub.png': [1650, 962],
+  '/projects/portal/hub.webp': [1650, 962],
 };
 
 export const WORK_PAGES: PageWork[] = WORK_IDS.map(id => ({ ...projects.find(p => p.id === id)!, ...extra[id], id }));
