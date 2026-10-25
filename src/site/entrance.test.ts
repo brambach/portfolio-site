@@ -6,7 +6,7 @@ import { afterFirstPaint } from './chrome';
    for the first paint and nothing shows, hides and fades back in. */
 
 const read = (f: string) => readFileSync(new URL(f, import.meta.url), 'utf8');
-const css = read('./e.css'), home = read('./motion.ts'), work = read('./work-motion.ts');
+const css = read('./e.css'), home = read('./motion.ts');
 
 describe('The entrance', () => {
   const start = /@media \(prefers-reduced-motion: no-preference\) \{([\s\S]*?)\n\}/.exec(css)?.[1] ?? '';
@@ -22,10 +22,7 @@ describe('The entrance', () => {
   it('takes each of those to a stated end, since a from() would read the hidden start as where to end', () => {
     expect(home).toMatch(/\.fromTo\(sub, \{ opacity: 0/);
     expect(home).toMatch(/\.fromTo\(head, \{ opacity: 0/);
-    expect(work).toMatch(/\.fromTo\('\[data-lead\]', \{ y: 18, opacity: 0 \}, \{ y: 0, opacity: 1/);
-    expect(work).toMatch(/\.fromTo\('\[data-top-label\]'/);
-    expect(work).toMatch(/\.fromTo\(head, \{ opacity: 0/);
-    for (const src of [home, work]) {
+    for (const src of [home]) {
       expect(src).toMatch(/q\('\[data-quiet\]'\)\.forEach\(el => gsap\.fromTo\(el, \{ y: 22, opacity: 0 \}, \{ y: 0, opacity: 1/);
       expect(src).not.toMatch(/\.from\(\s*(head|sub|'\[data-lead\]'|'\[data-top-label\]')/);
       expect(src).not.toMatch(/q\('\[data-quiet\]'\)\.forEach\(el => gsap\.from\(/);

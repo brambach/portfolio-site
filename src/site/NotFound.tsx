@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, type CSSProperties } from 'react';
 import { startCursor } from './chrome';
 import { finePointer, NAME, reducedMotion } from './content';
 import { ECursor, ELink } from './links';
-import { paletteFor } from './palette';
+import { PALETTES } from './palette';
 import { homeHref } from './routes';
 import './e.css';
 import './not-found.css';
@@ -24,7 +24,8 @@ function DotNumber() {
 
 export default function NotFound() {
   const root = useRef<HTMLDivElement>(null);
-  const palette = useMemo(() => paletteFor(location.search), []);
+  // The day paper at every hour: the home is cream paper all day, so nothing it links to turns dark at night.
+  const palette = PALETTES.day;
   const search = location.search;
 
   useEffect(() => {
@@ -35,7 +36,7 @@ export default function NotFound() {
     html.dataset.e = palette.name;
     html.style.setProperty('--e-paper', palette.paper);
     if (meta) meta.content = palette.paper;
-    document.title = `Not found · ${NAME}`;
+    document.title = `not found, ${NAME.toLowerCase()}`;
     el.classList.add('is-ready');
     const off: (() => void)[] = [];
     if (finePointer() && !reducedMotion()) startCursor(el, (t, type, fn, opts) => {

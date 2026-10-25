@@ -390,7 +390,6 @@ html[data-arc="dark"] .day-clock {
   .ps-lucid__mapping aside > button,
   .ps-portal__task > button,
   .ps-arro__milestone button,
-  .ps-port__controls button,
   .ps-next,
   .ps-viewer .pl-cinema__actions button,
   /* the road: Dervo's board is a stage for its own buttons, so it stays put */

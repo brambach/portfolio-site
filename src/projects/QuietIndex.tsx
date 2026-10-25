@@ -410,11 +410,11 @@ export default function QuietIndex() {
           </p>
           <p className="qi-in" style={at(1)}>
             <W>Most recently that was </W><a className="ink-link" href={`/projects/dervo${lookQuery(look)}`}><W>Dervo</W></a><W>, a Mac app for running Claude Code and
-            Codex side by side. It tells you what finished, what's stuck and what needs you. I parked it in October 2026.</W>
+            Codex side by side. It tells you what finished, what's stuck and what needs you. I stopped building it in October 2026.</W>
           </p>
           <p className="qi-in" style={at(1.12)}>
-            <W>As an employee I designed and built an integration portal for HR and payroll teams. There's also Lucid, Arro,
-            Port and AgentSky. They're all on the </W><a className="ink-link" href="#work"><W>work</W></a><W> list below.</W>
+            <W>As an employee I designed and built an integration portal for HR and payroll teams. There's also Lucid, Arro
+            and AgentSky. They're all on the </W><a className="ink-link" href="#work"><W>work</W></a><W> list below.</W>
           </p>
           <p className="qi-hint qi-in" style={at(1.24)}>the 3D version of that car lives at <a href="/drive">/drive</a>.</p>
           <p className="qi-in" style={at(1.36)}>Write to me at <a className="ink-link" href={`mailto:${email}`}>{email}</a>.</p>
@@ -434,7 +434,7 @@ export default function QuietIndex() {
           <ul>
             <motion.li {...rise(0.05)}>open to founding engineer roles at early ai startups.</motion.li>
             <motion.li {...rise(0.12)}>day <StreakNumber value={streakDay} /> of the running streak.</motion.li>
-            <motion.li {...rise(0.19)}>next: sf or nyc, soon.</motion.li>
+            <motion.li {...rise(0.19)}>next: open to moving, wherever the team is.</motion.li>
           </ul>
         </section>
       </main>

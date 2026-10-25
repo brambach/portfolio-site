@@ -57,25 +57,3 @@ export function peekPainter(canvas: HTMLCanvasElement) {
     stop() { cancelAnimationFrame(raf); raf = 0; },
   };
 }
-
-/** Port has no screenshots, so its picture is the ring you hold, drawn once in dots. */
-export function portPicture(ink: string) {
-  const c = document.createElement('canvas');
-  c.width = 840; c.height = 560;
-  const ctx = c.getContext('2d');
-  if (!ctx) return c;
-  const g = ctx.createRadialGradient(420, 250, 20, 420, 250, 520);
-  g.addColorStop(0, '#2a3346'); g.addColorStop(1, '#151a26');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, 840, 560);
-  // The ring is dots, like everything else in E.
-  ctx.fillStyle = ink;
-  for (let k = 0; k < 26; k++) {
-    const a = (k / 26) * Math.PI * 2;
-    ctx.beginPath(); ctx.arc(420 + Math.cos(a) * 64, 250 + Math.sin(a) * 64, 4.5, 0, Math.PI * 2); ctx.fill();
-  }
-  ctx.fillStyle = 'rgb(236 235 230 / 0.7)';
-  ctx.font = '400 22px "IBM Plex Mono", monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('HOLD TO CLOSE', 420, 380);
-  return c;
-}

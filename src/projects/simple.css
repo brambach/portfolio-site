@@ -149,7 +149,6 @@
   overflow: hidden;
 }
 .sp-card__art img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
-.sp-card__art--port { background: #111; }
 .sp-card__line { width: 48%; height: 3px; border-radius: 3px; background: #f4efe4; transition: width 400ms ease; }
 .sp-card:hover .sp-card__line, .sp-board:hover .sp-card__line { width: 8%; }
 
@@ -303,7 +302,6 @@
   border-radius: max(4px, calc(var(--sp-radius) - var(--sp-board-pad)));
   overflow: hidden;
 }
-.sp-board__art.sp-card__art--port { background: #111; }
 .sp-board__art img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
 .sp-board__text { padding: 14px 12px 10px; display: grid; gap: 3px; justify-items: start; }
 .sp-board__text h2 { margin: 2px 0 0; font-size: clamp(20px, 2.2vw, 26px); font-weight: var(--sp-h-weight); letter-spacing: -0.025em; }

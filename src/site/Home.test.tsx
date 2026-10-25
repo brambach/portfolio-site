@@ -1,227 +1,269 @@
-import { readFileSync } from 'node:fs';
-import { render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import path from 'node:path';
+import { act, render, screen, within } from '@testing-library/react';
+import type { ReactElement } from 'react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import Home from './Home';
-import { bayer, introPlan, keyArt, makeGrid, objectFormation, objectTonesOf, pair, photoFormation, sampleType, staticFormation, withType } from './field';
-import { hex, hourFor, PALETTES, timeOf } from './palette';
-import { ART, LIFE, layoutFor, SCENE_ORDER } from './scenes';
+import * as COPY from './home/copy';
+import LazyScene from './home/LazyScene';
+import { motionMode } from './home/motion-mode';
+import { vignette } from './home/art/vignette';
 
-// jsdom has no canvas, WebGL or font loading, so the dots don't start and the page is just its words.
-beforeEach(() => {
-  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
-  window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
-  window.matchMedia ??= ((query: string) => ({ matches: false, media: query, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, onchange: null, dispatchEvent: () => false })) as unknown as typeof window.matchMedia;
-  window.ResizeObserver ??= class { observe() {} unobserve() {} disconnect() {} } as unknown as typeof ResizeObserver;
-});
+const DASHES = /[–—]/;
+const strings = (v: unknown): string[] => typeof v === 'string' ? [v] : v && typeof v === 'object' ? Object.values(v).flatMap(strings) : [];
+
 afterEach(() => vi.restoreAllMocks());
 
 describe('The home page', () => {
-  it('leads with the tagline, has a part for every scene and ends with a way to say hello', () => {
-    const { container, unmount } = render(<Home />);
-    expect(screen.getByRole('heading', { level: 1, name: 'I design it, make it move, and build it.' })).toBeInTheDocument();
-    expect([...container.querySelectorAll<HTMLElement>('[data-scene]')].map(el => el.dataset.scene)).toEqual(SCENE_ORDER);
-    expect(screen.getByRole('img', { name: /portrait of Bryce Rambach/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /bryce\.rambach@gmail\.com/ })).toHaveAttribute('href', 'mailto:bryce.rambach@gmail.com');
-    expect(screen.getByRole('heading', { level: 2, name: 'Say hello' })).toBeInTheDocument();
-    unmount();
-    expect(document.documentElement.dataset.e).toBeUndefined();
-  });
-});
-
-describe('The site’s time of day', () => {
-  it('picks the palette from the hour', () => {
-    expect(timeOf(6)).toBe('dawn');
-    expect(timeOf(9.9)).toBe('dawn');
-    expect(timeOf(12)).toBe('day');
-    expect(timeOf(17)).toBe('golden');
-    expect(timeOf(19.6)).toBe('night');
-    expect(timeOf(2)).toBe('night');
+  it('leads with the line and who is saying it', () => {
+    render(<Home />);
+    expect(screen.getByRole('heading', { level: 1, name: 'i build tools for ai agents.' })).toBeInTheDocument();
+    expect(screen.getByText(/^i'm bryce\. i'm 22, i finished a cs degree in may/)).toHaveTextContent(/open to moving\.$/);
   });
 
-  it('takes ?hour= as a preview, and otherwise reads the clock', () => {
-    const noon = new Date(2026, 9, 20, 12, 30);
-    expect(hourFor('?hour=7', noon)).toBe(7);
-    expect(hourFor('?hour=17:30', noon)).toBe(17.5);
-    expect(hourFor('?hour=6.25', noon)).toBe(6.25);
-    expect(hourFor('?hour=banana', noon)).toBe(12.5);
-    expect(hourFor('?hour=31', noon)).toBe(12.5);
-    expect(hourFor('', noon)).toBe(12.5);
+  it('shows the work as cards, each named, saying what it is, and linking to its own page', () => {
+    render(<Home />);
+    const work = within(screen.getByRole('region', { name: 'work' }));
+    const cards = work.getAllByRole('article');
+    expect(cards.map(c => within(c).getByRole('heading', { level: 3 }).textContent)).toEqual(['dervo', 'integration portal', 'arro', 'lucid']);
+    const ids = ['dervo', 'integration-portal', 'arro', 'lucid'];
+    const names = ['dervo', 'integration portal', 'arro', 'lucid'];
+    cards.forEach((card, i) => {
+      // Each repeated link says which project it's about, for a screen reader; the visible words stay the same.
+      const story = within(card).getByRole('link', { name: `the full story about ${names[i]}` });
+      expect(story).toHaveAttribute('href', `/projects/${ids[i]}`);
+      expect(story.querySelector('.s-vh')?.textContent).toBe(`about ${names[i]}`);
+      expect(card.querySelector('.s-what')?.textContent).toBeTruthy();
+    });
+    // Each shows its screenshots, and the picture is a link to the same page.
+    cards.forEach((card, i) => {
+      expect(within(card).getAllByRole('img').length).toBeGreaterThan(0);
+      expect(card.querySelector(`a[href="/projects/${ids[i]}"] img`)).not.toBeNull();
+    });
   });
 
-  it('keeps the type readable on its paper at every hour', () => {
-    const lin = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
-    const L = (h: string) => { const [r, g, b] = hex(h); return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b); };
-    for (const p of Object.values(PALETTES)) {
-      const [a, b] = [L(p.ink), L(p.paper)].sort((x, y) => y - x);
-      expect((a + 0.05) / (b + 0.05)).toBeGreaterThan(7);
-    }
+  it('gives each card the source link only where the source is public', () => {
+    render(<Home />);
+    const cards = within(screen.getByRole('region', { name: 'work' })).getAllByRole('article');
+    const sources = cards.map(c => within(c).queryByRole('link', { name: /source/ }));
+    expect(sources.map(a => a?.getAttribute('href') ?? null)).toEqual(['https://github.com/brambach/dervo', null, 'https://github.com/brambach/arro', null]);
+    expect(sources[0]).toHaveAccessibleName('dervo source (opens in a new tab)');
+    expect(sources[2]).toHaveAccessibleName('arro source (opens in a new tab)');
   });
 
-  it('paints the same paper before the page loads as the page does', () => {
-    const html = readFileSync('index.html', 'utf8');
-    for (const p of Object.values(PALETTES)) expect(html).toContain(`'${p.paper}'`);
-  });
-});
-
-describe('The site’s dots', () => {
-  const palette = PALETTES.dawn;
-
-  it('keeps the dot count down on big screens and phones', () => {
-    expect(makeGrid(1440, 900, false).cells).toBeLessThan(31000);
-    expect(makeGrid(2560, 1440, false).cells).toBeLessThan(31500);
-    expect(makeGrid(390, 844, true).cells).toBeLessThan(9500);
+  it('presents lucid as finished work, never as in development', () => {
+    render(<Home />);
+    const lucid = within(screen.getByRole('region', { name: 'work' })).getAllByRole('article')[3];
+    expect(lucid).toHaveTextContent('an integration workspace that follows a request into scope, specs and delivery.');
+    expect(screen.getByRole('main').textContent).not.toMatch(/in development|in progress|\bwip\b|coming soon/i);
   });
 
-  it('pairs every dot with exactly one slot', () => {
-    const g = makeGrid(300, 200, false);
-    const from = staticFormation(g, palette, 1), to = staticFormation(g, palette, 2);
-    const slots = pair(from.key, to);
-    expect(new Set(slots).size).toBe(g.n);
+  it('has no port row, and no word or link about port anywhere', () => {
+    const { container } = render(<Home />);
+    const work = screen.getByRole('region', { name: 'work' });
+    expect(within(work).getAllByRole('article')).toHaveLength(4);
+    expect(within(work).queryByRole('heading', { name: 'port' })).toBeNull();
+    expect(container.querySelector('.s-small')).toBeNull();
+    expect(container.textContent).not.toMatch(/\bport\b|hold for a second/i);
+    for (const a of screen.getAllByRole('link')) expect(a.getAttribute('href'), a.getAttribute('href')!).not.toMatch(/\/projects\/port$|brambach\/port$/);
+    for (const s of strings(COPY)) expect(s, s).not.toMatch(/\bport\b/i);
+    expect(COPY.CONTENTS.rows.map(r => r.numeral)).toEqual(['i', 'ii', 'iii', 'iv']);
+    expect(COPY.MORE.rows.map(r => r.id)).toEqual(['arro']);
   });
 
-  it('turns the portrait into dots in the four object tones, dissolved where it washes out', () => {
-    const g = makeGrid(280, 140, false);
-    const w = 40, h = 20, data = new Uint8ClampedArray(w * h * 4);
-    for (let i = 0; i < w * h; i++) { const x = i % w; data.set([x * 6, 120, 255 - x * 6, 255], i * 4); }
-    const layout = { rect: [0, 0, 1, 1] as [number, number, number, number], align: [0.5, 0.5] as [number, number], wash: (x: number) => (x > 0.5 ? 1 : 0) };
-    const f = photoFormation(g, layout, ART.intro, { width: w, height: h, data }, palette);
-    const tones = objectTonesOf(palette).rgb.slice(0, 4);
-    let left = 0, right = 0;
-    for (let i = 0; i < g.cells; i++) {
-      if (!f.size[i]) continue;
-      if (f.pos[i * 2] / g.w > 0.5) right++; else left++;
-      const c = [f.col[i * 3], f.col[i * 3 + 1], f.col[i * 3 + 2]];
-      expect(tones.some(t => t.every((v, k) => Math.abs(v - c[k]) < 1e-6))).toBe(true);
-    }
-    expect(left).toBeGreaterThan(100);
-    expect(right).toBe(0);
+  it('says dervo stopped building, with its real numbers', () => {
+    render(<Home />);
+    const dervo = within(screen.getByRole('region', { name: 'work' })).getAllByRole('article')[0];
+    expect(dervo).toHaveTextContent('18 beta testers signed on, and it ran 1,500+ agent tasks.');
+    expect(dervo).toHaveTextContent('so i stopped building it.');
   });
 
-  it('leaves the portrait’s keyed-out wall as bare paper', () => {
-    const g = makeGrid(280, 140, false);
-    const w = 40, h = 20, data = new Uint8ClampedArray(w * h * 4);
-    // A grey ramp, with the right half keyed out (no alpha).
-    for (let i = 0; i < w * h; i++) { const x = i % w; data.set([x * 6, x * 6, x * 6, x < w / 2 ? 255 : 0], i * 4); }
-    const layout = { rect: [0, 0, 1, 1] as [number, number, number, number], align: [0.5, 0.5] as [number, number], wash: () => 0 };
-    const f = photoFormation(g, layout, ART.intro, { width: w, height: h, data }, palette);
-    let left = 0, right = 0;
-    for (let i = 0; i < g.cells; i++) if (f.size[i]) { if (f.pos[i * 2] / g.w > 0.52) right++; else left++; }
-    expect(left).toBeGreaterThan(50);
-    expect(right).toBe(0);
+  it('has a short about, and the header jumps to the work, the about and email', () => {
+    const { container } = render(<Home />);
+    const about = screen.getByRole('region', { name: 'about' });
+    const [first, second] = about.querySelectorAll('p');
+    expect(first.textContent).toMatch(/^i was a remote employee at an hr and payroll consultancy, its only integrations developer\. alongside that, i founded dervo\.$/);
+    expect(first).toHaveTextContent('remote employee');
+    expect(first).toHaveTextContent('alongside that, i founded dervo');
+    expect(second.textContent).toMatch(/to the words on the buttons\.$/);
+    // The hero already says the age, the degree and what he's looking for; the about doesn't repeat it.
+    expect(about).not.toHaveTextContent(/22|degree|product engineer|open to moving/);
+    const nav = within(screen.getByRole('navigation', { name: 'site' }));
+    const hrefs = nav.getAllByRole('link').map(a => a.getAttribute('href'));
+    expect(hrefs).toEqual(['#work', '#about', 'mailto:bryce.rambach@gmail.com']);
+    for (const h of hrefs.slice(0, 2)) expect(container.querySelector(h!)).not.toBeNull();
   });
 
-  it('opens on a field with one dot in every cell, and assembles the first picture out of it', () => {
-    const g = makeGrid(540, 360, false), f = objectFormation(g, whole, ART.hero, art(), palette, { drips: true });
-    const plan = introPlan(g, f);
-    // At the start every cell shows exactly one dot, whoever it belongs to.
-    const at = new Map<string, number>();
-    for (let i = 0; i < g.n; i++) if (plan.shown[i]) { const k = `${plan.from[i * 2]},${plan.from[i * 2 + 1]}`; at.set(k, (at.get(k) ?? 0) + 1); }
-    expect(at.size).toBe(g.cells);
-    expect([...at.values()].every(v => v === 1)).toBe(true);
-    // Every dot the picture shows comes in from somewhere in the field, and the drips wait hidden.
-    for (let i = 0; i < g.n; i++) {
-      if (f.size[i] > 0 && f.life[i] !== LIFE.drip) expect(plan.shown[i]).toBe(1);
-      if (f.life[i] === LIFE.drip) expect(plan.shown[i]).toBe(0);
-      expect(plan.delay[i]).toBeGreaterThanOrEqual(0);
-      expect(plan.delay[i]).toBeLessThanOrEqual(plan.last + 1);
-    }
-    // The darkest tone goes first.
-    const wave = (t: number) => { const d: number[] = []; for (let i = 0; i < g.n; i++) if (f.size[i] > 0 && f.life[i] !== LIFE.drip && Math.floor(f.key[i]) === t) d.push(plan.delay[i]); return d.reduce((a, b) => a + b, 0) / d.length; };
-    expect(wave(0)).toBeLessThan(wave(1));
+  it('ends with the email and the places to find him, each opening a new tab safely', () => {
+    render(<Home />);
+    const footer = screen.getByRole('contentinfo');
+    expect(within(footer).getByRole('link', { name: 'bryce.rambach@gmail.com' })).toHaveAttribute('href', 'mailto:bryce.rambach@gmail.com');
+    const away = within(within(footer).getByRole('navigation', { name: 'elsewhere' })).getAllByRole('link');
+    expect(away.map(a => a.getAttribute('href'))).toEqual(['https://github.com/brambach', 'https://x.com/brycerambach', 'https://www.linkedin.com/in/bryce-rambach/']);
+    expect(footer).not.toHaveTextContent(/let's connect|open to chat/i);
   });
 
-  it('samples words into evenly spaced points, thinned to fit the pool', () => {
-    const inside = (x: number, y: number) => (x > 10 && x < 90 && y > 10 && y < 40 ? 1 : 0);
-    const all = sampleType(inside, () => [0, 0, 0], 100, 50, 0, 0, 4, 10000);
-    expect(all.length).toBeGreaterThan(100);
-    expect(sampleType(inside, () => [0, 0, 0], 100, 50, 0, 0, 4, 50)).toHaveLength(50);
-    const g = makeGrid(100, 50, false), f = withType(g, staticFormation(g, palette), all, palette);
-    expect(f.size[g.cells]).toBeGreaterThan(0);
-  });
-
-  it('dithers with every level of a 4x4 matrix', () => {
-    const seen = new Set<number>();
-    for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) seen.add(bayer(x, y));
-    expect(seen.size).toBe(16);
-  });
-
-  it('gives every part a layout inside the screen, on both widths', () => {
-    for (const id of SCENE_ORDER) for (const phone of [false, true]) {
-      const [x0, y0, x1, y1] = layoutFor(id, phone).rect;
-      expect(x0).toBeGreaterThanOrEqual(0); expect(y0).toBeGreaterThanOrEqual(0);
-      expect(x1).toBeLessThanOrEqual(1); expect(y1).toBeLessThanOrEqual(1);
-      expect(x1 > x0 && y1 > y0).toBe(true);
-    }
-  });
-
-  it('names no places in what it says about the pictures', () => {
-    for (const p of Object.values(ART)) expect(p.caption).toMatch(/^(A|An|Two) [a-z ]+$/);
-  });
-
-  // A pink picture with a navy square in the middle and a thin teal line under it, like the art in photos2.
-  const art = (w = 60, h = 40) => {
-    const data = new Uint8ClampedArray(w * h * 4);
-    for (let i = 0; i < w * h; i++) {
-      const x = i % w, y = Math.floor(i / w);
-      const square = x >= 20 && x < 40 && y >= 10 && y < 26, line = y === 30 && x >= 10 && x < 50;
-      data.set(square ? [22, 46, 92, 255] : line ? [44, 140, 150, 255] : [252, 214, 216, 255], i * 4);
-    }
-    return { width: w, height: h, data };
-  };
-  const whole = { rect: [0, 0, 1, 1] as [number, number, number, number], align: [0.5, 0.5] as [number, number], wash: () => 0 };
-
-  it('keys the pink out of the art and reads its four tones', () => {
-    const k = keyArt(art());
-    expect(k[0]).toBe(4);
-    expect(k[15 * 60 + 30]).toBe(0);
-    expect(k[30 * 60 + 30]).toBe(1);
-  });
-
-  it('draws an object as a silhouette on bare paper, thin lines and all, in the palette’s object tones', () => {
-    for (const p of Object.values(PALETTES)) {
-      const g = makeGrid(540, 360, false), f = objectFormation(g, whole, ART.design, art(), p);
-      const tones = objectTonesOf(p).rgb;
-      let navy = 0, teal = 0, outside = 0;
-      for (let i = 0; i < g.cells; i++) {
-        if (!f.size[i]) continue;
-        const x = f.pos[i * 2] / g.w, y = f.pos[i * 2 + 1] / g.h, c = [f.col[i * 3], f.col[i * 3 + 1], f.col[i * 3 + 2]];
-        if (c.every((v, k) => Math.abs(v - tones[0][k]) < 1e-6)) navy++;
-        if (c.every((v, k) => Math.abs(v - tones[1][k]) < 1e-6)) teal++;
-        if (y < 0.2 || y > 0.8 || x < 0.12 || x > 0.88) outside++;
+  it('opens every link off the site in a new tab with rel noopener, and keeps its own links in the tab', () => {
+    render(<Home />);
+    for (const a of screen.getAllByRole('link')) {
+      const href = a.getAttribute('href')!;
+      if (href.startsWith('http')) {
+        expect(a, href).toHaveAttribute('target', '_blank');
+        expect(a.getAttribute('rel'), href).toMatch(/\bnoopener\b/);
+        expect(a.querySelector('.s-vh'), href).not.toBeNull();
+      } else {
+        expect(a, href).not.toHaveAttribute('target');
       }
-      expect(navy).toBeGreaterThan(60);
-      expect(teal).toBeGreaterThan(10);
-      expect(outside).toBe(0);
     }
   });
 
-  it('puts a few drips on the plane’s lower edge, or a still heap at the bottom with reduced motion', () => {
-    const g = makeGrid(540, 360, false), drips = Array.from({ length: g.drips }, (_, k) => g.n - g.drips + k);
-    const moving = objectFormation(g, whole, ART.hero, art(), palette, { drips: true });
-    for (const s of drips) {
-      expect(moving.life[s]).toBe(LIFE.drip);
-      expect(moving.pos[s * 2 + 1] / g.h).toBeGreaterThan(0.6);
+  it('tells a screen reader every link that opens a new tab', () => {
+    const { container } = render(<Home />);
+    const away = [...container.querySelectorAll<HTMLAnchorElement>('a[target="_blank"]')];
+    expect(away.length).toBe(8);
+    for (const a of away) {
+      expect(a, a.href).toHaveAccessibleName(expect.stringContaining('(opens in a new tab)'));
+      expect(a.getAttribute('rel'), a.href).toMatch(/\bnoopener\b/);
     }
-    const still = objectFormation(g, whole, ART.hero, art(), palette, { drips: true, still: true });
-    const shown = drips.filter(s => still.size[s] > 0);
-    expect(shown.length).toBe(16);
-    for (const s of shown) { expect(still.life[s]).toBe(LIFE.still); expect(still.pos[s * 2 + 1]).toBeGreaterThan(g.h - g.cell * 4); }
   });
 
-  it('keeps every object tone clear of its paper, so no picture sinks into the page at any hour', () => {
-    const lab = (h: string) => {
-      const [r, g, b] = hex(h).map(v => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
-      const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
-      const X = f((0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047), Y = f(0.2126 * r + 0.7152 * g + 0.0722 * b), Z = f((0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883);
-      return [116 * Y - 16, 500 * (X - Y), 200 * (Y - Z)];
-    };
-    const dE = (a: string, b: string) => Math.hypot(...lab(a).map((v, k) => v - lab(b)[k]));
-    for (const p of Object.values(PALETTES)) {
-      p.object.forEach((t, k) => expect(dE(t, p.paper)).toBeGreaterThan(k === 3 ? 14 : 40));
-      for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) expect(dE(p.object[i], p.object[j])).toBeGreaterThan(28);
-      // The cup's steam stands out from the paper wherever it has its own tone.
-      if (p.steam) expect(dE(p.steam, p.paper)).toBeGreaterThan(30);
+  it('keeps the header and footer outside main, and its headings in order', () => {
+    const { container } = render(<Home />);
+    const main = screen.getByRole('main');
+    const header = screen.getByRole('banner');
+    const footer = screen.getByRole('contentinfo');
+    expect(main.contains(header)).toBe(false);
+    expect(main.contains(footer)).toBe(false);
+    expect(header.parentElement).toBe(main.parentElement);
+    expect(footer.parentElement).toBe(main.parentElement);
+    expect(main.parentElement).toHaveClass('home');
+    const levels = [...container.querySelectorAll('h1, h2, h3, h4, h5, h6')].map(h => Number(h.tagName[1]));
+    expect(levels[0]).toBe(1);
+    expect(levels.filter(l => l === 1)).toHaveLength(1);
+    expect(levels.slice(1, 3)).toEqual([2, 3]);
+    // Never a skipped level: each heading is at most one deeper than the one before it.
+    levels.forEach((l, i) => { if (i) expect(l - levels[i - 1], String(levels)).toBeLessThanOrEqual(1); });
+    expect(screen.getAllByRole('heading', { level: 2 }).map(h => h.textContent)).toEqual(['work', 'about']);
+  });
+
+  it('says maya is a sample name', () => {
+    render(<Home />);
+    const arro = within(screen.getByRole('region', { name: 'work' })).getAllByRole('article')[2];
+    expect(arro).toHaveTextContent('a missed day is never public. it says “maya still has today”. maya is a sample name.');
+  });
+
+  it('says dervo stopped, never that it was parked, and uses no em or en dashes', () => {
+    const { container } = render(<Home />);
+    const text = container.textContent!;
+    expect(text).not.toMatch(/parked/i);
+    expect(text).not.toMatch(DASHES);
+    for (const s of strings(COPY)) {
+      expect(s, s).not.toMatch(/parked/i);
+      expect(s, s).not.toMatch(DASHES);
     }
-    expect(PALETTES.dawn.steam && PALETTES.day.steam).toBeTruthy();
+    expect(COPY.DERVO.beats.at(-1)).toContain('stopped building');
+    expect(text).not.toMatch(/[↗→←↑↓]/);
+  });
+
+  it('calls the integration portal employee work, with no contract and no july to october', () => {
+    const { container } = render(<Home />);
+    const portal = within(screen.getByRole('region', { name: 'work' })).getAllByRole('article')[1];
+    expect(within(portal).getByRole('heading', { level: 3 })).toHaveTextContent('integration portal');
+    expect(portal.querySelector('.s-label')).toHaveTextContent(/^employee, 2026$/);
+    const old = /contract|jul to oct|july to october|parked/i;
+    expect(container.textContent).not.toMatch(old);
+    for (const s of strings(COPY)) expect(s, s).not.toMatch(old);
+    expect(COPY.PORTAL.body).toMatch(/^as a remote employee /);
+  });
+
+  it('names no city and no employer', () => {
+    const all = strings(COPY).join(' ');
+    expect(all).not.toMatch(/\bsf\b|\bnyc\b|san francisco|new york/i);
+    expect(COPY.PORTAL.body).toContain('an hr and payroll consultancy');
+  });
+
+  it('keeps the old dot art, its motion and GSAP out of the home page', () => {
+    const files = ['Home.tsx', ...walk(path.join(__dirname, 'home'))].map(f => readFileSync(path.resolve(__dirname, f), 'utf8'));
+    for (const src of files) {
+      expect(src).not.toMatch(/from '\.\.?\/(?:\.\.\/)*(dots|field|build|motion|pixels|scenes|chrome|links)'/);
+      expect(src).not.toMatch(/['/]e\.css/);
+      expect(src).not.toMatch(/from 'gsap|from 'lenis/);
+    }
   });
 });
+
+describe('The hero engraving', () => {
+  it('is drawn once on the home page, finished and still, inside main and named for a screen reader', async () => {
+    render(<Home />);
+    const art = within(screen.getByRole('main')).getByRole('img', { name: COPY.HERO.art });
+    const plate = art.querySelector<HTMLElement>('.vig__plate')!;
+    await act(async () => { await new Promise(r => setTimeout(r, 50)); });
+    expect(plate.hasAttribute('data-risen')).toBe(true);
+    expect(plate.hasAttribute('data-glint')).toBe(true);
+  });
+
+  it('draws the same picture for the same size, with the sun behind the range and glints on the water', () => {
+    const a = vignette(1200, 300);
+    expect(vignette(1200, 300)).toBe(a);
+    expect(a).toContain('class="vig__sun"');
+    expect(a).toContain('clip-path="url(#vig-sky)"');
+    expect(a).toContain('class="vig__rise"');
+    expect(a).toContain('class="vig__glints"');
+    expect(a).not.toMatch(/NaN|undefined/);
+  });
+
+  it('has a narrow variant for phones', () => {
+    const phone = vignette(390, 223);
+    expect(phone).not.toMatch(/NaN|undefined/);
+    // The narrow variant sets the sun's dots closer together, so they aren't just scaled down.
+    const step = (svg: string) => { const [a, b] = [...svg.matchAll(/<circle cx="([\d.]+)" cy="([\d.]+)"/g)].slice(0, 2).map(m => Number(m[1])); return +(b - a).toFixed(1); };
+    expect(step(phone)).toBe(3.8);
+    expect(step(vignette(1200, 300))).toBe(4.2);
+  });
+});
+
+describe('How much the home moves', () => {
+  const media = (matches: (q: string) => boolean) => vi.spyOn(window, 'matchMedia').mockImplementation(q => ({ matches: matches(q), media: q, onchange: null, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {}, dispatchEvent: () => false }) as MediaQueryList);
+
+  it('is still with reduced motion, lite on a phone or a touch screen, and full otherwise', () => {
+    media(q => q.includes('reduced-motion'));
+    expect(motionMode()).toBe('still');
+    vi.restoreAllMocks();
+    media(q => q.includes('max-width'));
+    expect(motionMode()).toBe('lite');
+    vi.restoreAllMocks();
+    media(q => q.includes('coarse'));
+    expect(motionMode()).toBe('lite');
+    vi.restoreAllMocks();
+    media(() => false);
+    expect(motionMode()).toBe('full');
+  });
+});
+
+describe('A scene that loads later', () => {
+  it('shows its still at once, then the scene when it comes near', async () => {
+    let resolve!: (m: { default: () => ReactElement }) => void;
+    const load = () => new Promise<{ default: () => ReactElement }>(r => { resolve = r; });
+    render(<LazyScene load={load} still={<p>still</p>} />);
+    expect(screen.getByText('still')).toBeInTheDocument();
+    await act(async () => resolve({ default: () => <p>scene</p> }));
+    expect(await screen.findByText('scene')).toBeInTheDocument();
+    expect(screen.queryByText('still')).toBeNull();
+  });
+
+  it('keeps its still if the scene\'s code fails to load', async () => {
+    let reject!: (e: Error) => void;
+    const load = () => new Promise<{ default: () => ReactElement }>((_, r) => { reject = r; });
+    render(<LazyScene load={load} still={<p>still</p>} />);
+    await act(async () => reject(new Error('offline')));
+    expect(await screen.findByText('still')).toBeInTheDocument();
+  });
+});
+
+function walk(dir: string): string[] {
+  return readdirSync(dir).flatMap(name => {
+    const full = path.join(dir, name);
+    if (statSync(full).isDirectory()) return walk(full);
+    return /\.(ts|tsx)$/.test(name) && !/\.test\./.test(name) ? [path.relative(__dirname, full)] : [];
+  });
+}

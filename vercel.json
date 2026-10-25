@@ -33,7 +33,7 @@
   ],
   "redirects": [
     {
-      "source": "/lab/e/projects/:id(dervo|arro|port|lucid|integration-portal|agentsky)",
+      "source": "/lab/e/projects/:id(dervo|arro|lucid|integration-portal|agentsky)",
       "destination": "/projects/:id",
       "permanent": false
     },
@@ -54,7 +54,7 @@
       "destination": "/index.html"
     },
     {
-      "source": "/projects/:id(dervo|arro|port|lucid|integration-portal|agentsky)",
+      "source": "/projects/:id(dervo|arro|lucid|integration-portal|agentsky)",
       "destination": "/projects/:id.html"
     },
     {

@@ -1,12 +1,12 @@
 import type { Picture } from './work';
 
-/* The five things the home page says Bryce does, each with the project that shows it. The first screen raises one
+/* The four things the home page says Bryce does, each with the project that shows it. The first screen raises one
    picture per skill out of the water; further down, each gets a few sentences and the links that back them up.
 
    Everything here comes from the projects' own READMEs on github.com/brambach and the project pages on this site.
-   Client work from the contract stays out, so the integrations picture is a drawing, labelled as one. */
+   Employer work stays out, so the integrations picture is a drawing, labelled as one. */
 
-export type SkillId = 'integrations' | 'agents' | 'harnesses' | 'design' | 'product';
+export type SkillId = 'integrations' | 'agents' | 'harnesses' | 'product';
 
 /** One piece of proof: a page on this site (`to`), an outside link (`href`), or neither for something private. */
 export type Evidence = { name: string; note: string; to?: string; href?: string };
@@ -18,12 +18,12 @@ export type Skill = {
   proof: string;
   /** A line under the index while it's up. */
   line: string;
-  /** The picture that rises for it. `map` is the drawn field mapping, `port` Port's ring. */
-  picture: Picture & { port?: boolean; map?: boolean };
+  /** The picture that rises for it. `map` is the drawn field mapping. */
+  picture: Picture & { map?: boolean };
   /** Where its picture opens: a project page, or its own section further down. */
   to: string;
   /** The project page this skill shares with others, so coming back from it lands on the right row. */
-  project?: 'dervo' | 'arro' | 'port';
+  project?: 'dervo' | 'arro';
   body: string[];
   evidence: Evidence[];
 };
@@ -37,7 +37,7 @@ export const SKILLS: Skill[] = [
     picture: { src: '', map: true },
     to: '#integrations',
     body: [
-      'My contract work, July to October 2026, is HR and payroll integrations. One wrong field mapping there means someone gets paid wrong. The client work stays private, so here’s what I can show.',
+      'My work as a remote employee was HR and payroll integrations. One wrong field mapping there means someone gets paid wrong. The client work stays private, so here’s what I can show.',
     ],
     evidence: [
       { name: 'Arro', to: '/projects/arro', note: 'Apple Health sync in the background, Supabase and six kinds of server push in one iPhone app. I left Strava out because its API terms only let an app show your activity back to you.' },
@@ -78,23 +78,6 @@ export const SKILLS: Skill[] = [
     ],
   },
   {
-    id: 'design',
-    name: 'Design',
-    proof: 'Port',
-    line: 'Hold for a second and the screen folds into a line.',
-    picture: { src: '', port: true },
-    to: '/projects/port',
-    project: 'port',
-    body: [
-      'I design what I build. Port is an iOS app for putting your phone down at night: hold for a second and the screen squeezes into a thin horizon line, with the haptic landing the moment the band becomes a line.',
-    ],
-    evidence: [
-      { name: 'Port', to: '/projects/port', note: 'Try the hold in your browser, with the app’s sound.' },
-      { name: 'This site', href: 'https://github.com/brambach/portfolio-site', note: 'Its colors follow your time of day.' },
-      { name: 'design-taste', note: 'My taste written down with evidence, so coding agents build to it. Private, since it holds other people’s screenshots.' },
-    ],
-  },
-  {
     id: 'product',
     name: 'Product taste',
     proof: 'Arro',
@@ -104,7 +87,7 @@ export const SKILLS: Skill[] = [
     project: 'arro',
     body: [
       'Arro is a daily movement streak for families who live apart, and most of its calls are about what it won’t show. A missed day is never public: it says “Maya still has today”, never “Maya broke the streak”. No rankings, no red badges, and one nudge a day at most.',
-      'Knowing when to stop counts too. Dervo’s beta opened to a waitlist in September 2026. In October Claude shipped the same things, so I parked it. The source is on GitHub.',
+      'Knowing when to stop counts too. Dervo’s beta opened to a waitlist in September 2026. In October Claude shipped the same things, so I stopped building it. The source is on GitHub.',
     ],
     evidence: [
       { name: 'Arro', to: '/projects/arro', note: 'It’s on TestFlight.' },

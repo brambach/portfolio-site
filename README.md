@@ -12,8 +12,8 @@ The older ideas are still around as side quests: a road where a flat green 911 d
 
 | Where | What it is |
 | --- | --- |
-| `/` | The home page. The tagline, an about with a portrait in dots, the five skills with their proof, the work, side quests and contact. `?hour=7` (or any hour) shows another time of day. |
-| `/projects/<name>` | A page each for Dervo, Arro, Port, Lucid, the integration portal and AgentSky, with one of the project's screens drawn in dots (Port's is a ring you can hold to close). Opening one from the home page hands the dots across. |
+| `/` | The home page. The hero line, contact links, an engraved horizon, four work cards (Dervo, the integration portal, Arro and Lucid), a short about and a footer. |
+| `/projects/<name>` | A page each for Dervo, Arro, Lucid, the integration portal and AgentSky, in the same paper and type as the home: one column with the project's real screenshots. |
 | `/work` | The road. Scrolling drives the car past a billboard per project, with a night stop at the end where the archive is a pile of cards. |
 | `/drive` | The 3D Porsche. Open the door, turn the key, drive from town to a lakeside overlook. `/drive?from=work` skips the walk-up. |
 | `/previous` | The earlier version of the site, kept around. |
@@ -53,7 +53,7 @@ Touch controls work too. The scene credits (models, sounds, textures) are in the
 
 ## Built with
 
-React 19, TypeScript, Vite 6 and Tailwind 4 for the pages, plus plain CSS where a component owns its look. [Motion](https://motion.dev) and Lenis for the movement, Three.js r185 for the drive, Vitest for tests. It deploys on Vercel, and the functions in `api/` back the race times and a private admin page.
+React 19, TypeScript, Vite 6 and Tailwind 4 for the pages, plus plain CSS where a component owns its look. [Motion](https://motion.dev) and [GSAP](https://gsap.com) for the movement, Three.js r185 for the drive, Vitest for tests. It deploys on Vercel, and the functions in `api/` back the race times and a private admin page.
 
 ## Run it
 
@@ -81,7 +81,7 @@ The race times and admin functions need Upstash/KV environment variables that ar
 | Path | What's there |
 | --- | --- |
 | `src/main.tsx` | Routing. It's path-based, with no router library. A new route also needs a rewrite in `vercel.json`, or it gets the not-found page. |
-| `src/site/` | The site. `Home.tsx` and `motion.ts` are the home page, `WorkPage.tsx` and `work-motion.ts` the project pages, `dots.ts` and `field.ts` the dots, `palette.ts` the colors by time of day, `meta.ts` each page's title, description and preview picture. `data/skills.ts` holds the five skills and their proof. |
+| `src/site/` | The site. `Home.tsx` and `simple.css` are the home page, `WorkPage.tsx` and `project.css` the project pages, `dots.ts` and `field.ts` the dots, `palette.ts` the colors by time of day, `meta.ts` each page's title, description and preview picture. `data/skills.ts` holds the four skills and their proof. |
 | `src/projects/SimplePortfolio.tsx` | The road: the scroll-driven scene, billboards and stops. |
 | `src/projects/Glovebox.tsx` | The night stop at the end. |
 | `src/projects/catalog.ts` and `road-lineup.ts` | Project data, and the order and covers shared by the road and the 3D billboards. |

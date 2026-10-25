@@ -1,0 +1,737 @@
+/* The home page in look D: engraved editorial, violet on cream, one blue.
+   Order: the vendored tokens, the fonts, the D overrides (copied from design-system/components/looks.css, the
+   :root[data-look="d"] block, scoped here to .home so the project pages keep their own look), then the page. */
+@import "../../styles/tokens/tokens.css";
+@import "@fontsource/instrument-serif/latin-400.css";
+@import "@fontsource/instrument-serif/latin-400-italic.css";
+
+/* Stand-ins while the web fonts load, stretched to the same widths and heights so the swap doesn't move a line.
+   Liberation Serif and Arimo match Times New Roman and Arial, so the overrides hold on every system. */
+@font-face {
+  font-family: "Instrument Serif Fallback";
+  src: local("Times New Roman"), local("TimesNewRomanPSMT"), local("Liberation Serif");
+  size-adjust: 84.3%;       /* measured: Instrument Serif sets 84.3% as wide as Times/Liberation Serif */
+  ascent-override: 117.4%;  /* its hhea ascent .99 and descent .31, over the size adjust */
+  descent-override: 36.8%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Hanken Grotesk Fallback";
+  src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Arimo");
+  size-adjust: 100%;        /* measured: Hanken sets within 0.1% of Arial's width */
+}
+
+/* ---------- D, from design-system/components/looks.css ---------- */
+.home {
+  --font-display: "Instrument Serif", "Instrument Serif Fallback", Georgia, serif;
+  --font-text: "Hanken Grotesk Variable", "Hanken Grotesk Fallback", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: "Hanken Grotesk Variable", "Hanken Grotesk Fallback", -apple-system, system-ui, sans-serif;
+
+  --paper: #f3eee3; --canvas: #f6f2e9; --raised: #ffffff; --sunk: #ebe5d8;
+  --ink: #2e1a3d; --ink-2: #452a59; --muted: #5f4872; --faint: #6a5579;
+  --line: #e4dbcc; --line-strong: #d3c7b4;
+  --primary: #2343c2; --on-primary: #ffffff;
+  --done: #6b4a80; --done-wash: #eee6f0;
+  --running: #5e2a7e; --running-wash: #ece3f1;
+  --accent: #873a9e; --accent-wash: #f3e6f3; --on-accent: #ffffff;
+  --focus: #2343c2;
+  --display-ink: #5e2a7e;
+  --accent-ink: #5e2a7e;
+  --action-ink: #5e2a7e;
+  --label-track: 0.08em;
+
+  --lift:
+    0 0 0 1px rgb(74 37 96 / .06),
+    0 1px 2px rgb(74 37 96 / .05),
+    0 22px 48px -26px rgb(74 37 96 / .30);
+  --float:
+    0 0 0 1px rgb(74 37 96 / .08),
+    0 26px 60px -24px rgb(74 37 96 / .34);
+  --card-edge: 0 0 0 1px rgb(74 37 96 / .035);
+  --btn-lit: inset 0 1px 0 rgb(255 255 255 / .18), inset 0 -1px 0 rgb(10 20 80 / .22), 0 1px 2px rgb(35 67 194 / .28);
+  --glass: rgb(246 242 233 / .74);
+
+  /* The page's own: the statement curve, the column and its gutter, the reading size. */
+  --ease-statement: cubic-bezier(.16, 1, .3, 1);
+  --col: 1200px;
+  --gutter: var(--s7);
+  --fs-lead: 1.0625rem;   /* 17 */
+  --fs-label: 0.75rem;    /* 12, 13 on a phone */
+}
+
+/* ---------- the page ---------- */
+.home {
+  min-height: 100svh;
+  color: var(--ink);
+  font: 400 var(--fs-lead)/var(--lh-read) var(--font-text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-kerning: normal;
+  overflow-x: clip;
+  /* Paper: fine grain, short fibers, soft mottling and faint engraved guilloche waves, a few percent over the
+     cream, from components.html. Small SVG tiles, no images. */
+  background-color: var(--paper);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .22 0 0 0 0 .12 0 0 0 0 .28 2.2 0 0 0 -1.02'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)' opacity='.22'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.045 .6' numOctaves='2' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .3 0 0 0 0 .38 9 0 0 0 -6.1'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23f)' opacity='.16'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='480'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008' numOctaves='3' seed='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55 0 0 0 0 .45 0 0 0 0 .3 1.6 0 0 0 -.62'/%3E%3C/filter%3E%3Crect width='480' height='480' filter='url(%23m)' opacity='.1'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='36'%3E%3Cg fill='none' stroke='%235e2a7e' stroke-opacity='.06' stroke-width='.6'%3E%3Cpath d='M0 9 C90 3 90 3 180 9 S270 15 360 9'/%3E%3Cpath d='M0 9 C90 15 90 15 180 9 S270 3 360 9'/%3E%3Cpath d='M0 27 C90 21 90 21 180 27 S270 33 360 27'/%3E%3Cpath d='M0 27 C90 33 90 33 180 27 S270 21 360 27'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 200px 200px, 300px 300px, 480px 480px, 360px 36px;
+}
+.home > * { width: min(100% - 2 * var(--gutter), var(--col)); margin-inline: auto; }
+:where(.home) a { color: inherit; text-decoration: none; }
+.home :focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; border-radius: 2px; }
+.home .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.home ::selection { background: var(--running-wash); color: var(--ink); }
+
+.home .label {
+  font: 500 var(--fs-label)/1 var(--font-mono);
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---------- i. hero ---------- */
+.hero { padding-top: var(--s5); }
+.hero__top { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s5); }
+.hero__name, .hero__links a {
+  position: relative;
+  font: 500 var(--fs-label)/1 var(--font-text);
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+}
+.hero__name { color: var(--ink-2); }
+.hero__links { display: flex; gap: var(--s5); }
+.hero__links a { color: var(--muted); transition: color var(--dur-calm) var(--ease-out); }
+.hero__links a:hover { color: var(--action-ink); }
+/* A 44px band to tap, without moving anything. */
+.hero__name::after, .hero__links a::after { content: ""; position: absolute; inset: -16px -8px; }
+
+.hero__line {
+  margin-top: var(--s9);
+  font: 400 clamp(3.5rem, 7.4vw, 6.5rem)/1.02 var(--font-display);
+  letter-spacing: -0.022em;
+  color: var(--display-ink);
+  text-wrap: balance;
+}
+.hero__line em { font-style: italic; }
+.hero__sub {
+  margin-top: var(--s5);
+  max-width: 560px;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* The engraving: no frame, its rules fade into the paper on three sides. The box keeps its shape before the
+   drawing lands. It reaches a gutter past the words, since its edges are mostly fade. */
+.vig { position: relative; margin: var(--s4) calc(var(--gutter) * -1) 0; aspect-ratio: 4.4 / 1; color: var(--display-ink); }
+.vig__plate {
+  position: absolute; inset: 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, rgb(0 0 0 / .55) 8%, #000 16%, #000 84%, rgb(0 0 0 / .55) 92%, transparent), linear-gradient(transparent, #000 18%, #000 82%, rgb(0 0 0 / .4) 93%, transparent);
+  mask-image: linear-gradient(90deg, transparent, rgb(0 0 0 / .55) 8%, #000 16%, #000 84%, rgb(0 0 0 / .55) 92%, transparent), linear-gradient(transparent, #000 18%, #000 82%, rgb(0 0 0 / .4) 93%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+.vig__plate svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.vig__sun, .vig__glints { fill: var(--primary); }
+.vig__glints { opacity: .72; }
+/* The sun rises once from behind the far range. */
+.vig__rise { animation: vig-rise 2.8s var(--ease-statement) 160ms both; }
+.vig__plate[data-risen] .vig__rise { animation: none; }
+/* The water breathes out and back once, slowly, while it's on screen, then holds still. */
+.vig__glints { animation: vig-breathe 5s ease-in-out 1 forwards; }
+.vig__plate[data-off] .vig__glints { animation-play-state: paused; }
+@keyframes vig-rise { from { transform: translateY(var(--rise, 24px)); } to { transform: none; } }
+@keyframes vig-breathe { 0%, 100% { opacity: .72; transform: none; } 50% { opacity: .46; transform: translateX(-6px); } }
+
+/* The words arrive once: an 8px rise and a fade, 40ms apart. */
+.hero__in { animation: home-arrive 640ms var(--ease-statement) both; }
+.hero__line.hero__in { animation-delay: 40ms; }
+.hero__sub.hero__in { animation-delay: 80ms; }
+.vig.hero__in { animation-delay: 120ms; }
+.toc.hero__in { animation-delay: 160ms; }
+@keyframes home-arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ---------- contents ---------- */
+.toc { margin-top: var(--s6); padding-bottom: var(--s9); max-width: 820px; scroll-margin-top: var(--s6); }
+.toc .label { margin-bottom: var(--s3); }
+.toc__rows { list-style: none; margin: 0; padding: 0; }
+.toc__row { transition: opacity var(--dur-calm) var(--ease-out); }
+.toc__link {
+  display: grid;
+  grid-template-columns: var(--s6) auto minmax(var(--s6), 1fr) auto;
+  align-items: baseline;
+  column-gap: var(--s3);
+  padding: 10px 0;
+}
+.toc__num {
+  font: 500 var(--fs-label)/1 var(--font-text);
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.toc__name { font-weight: 500; letter-spacing: -0.006em; color: var(--ink); }
+.toc__line { color: var(--muted); font-size: var(--fs-read); text-align: right; }
+/* The leader: a row of fine dots that sits on the baseline. */
+.toc__dots {
+  align-self: end;
+  height: 2px;
+  margin-bottom: 0.42em;
+  background: radial-gradient(circle, var(--faint) 0.7px, transparent 1px) 0 0 / 6px 2px repeat-x;
+  opacity: .7;
+}
+/* Pointing at a row dims the others. */
+.toc__rows:has(.toc__link:hover, .toc__link:focus-visible) .toc__row:not(:has(.toc__link:hover, .toc__link:focus-visible)) { opacity: .45; }
+
+/* ---------- the engraved rule ---------- */
+.orn { display: flex; align-items: center; height: 22px; color: var(--display-ink); }
+.orn svg { display: block; }
+.orn__rules { flex: 1; height: 22px; fill: none; stroke: currentColor; stroke-width: .6px; stroke-opacity: .38; }
+.orn__lens { flex: none; }
+
+/* ---------- i. dervo (the frame; the app inside it is home/scenes/dervo-mock.css) ---------- */
+.dv { scroll-margin-top: 0; }
+.dv__label span { color: var(--faint); }
+.dv__count {
+  font: 500 var(--fs-label)/1 var(--font-text);
+  letter-spacing: .06em;
+  font-variant-numeric: tabular-nums;
+  color: var(--faint);
+}
+.dv__n { color: var(--ink-2); }
+.dv__line {
+  font: 400 clamp(1.875rem, 2.75vw, 2.625rem)/1.12 var(--font-display);
+  letter-spacing: -0.014em;
+  color: var(--display-ink);
+  text-wrap: pretty;
+}
+.dv__links { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--s5); row-gap: var(--s2); margin-top: var(--s6); }
+.dv__src, .dv__story, .pt__story {
+  position: relative;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color var(--dur-calm) var(--ease-out), color var(--dur-calm) var(--ease-out);
+}
+.dv__src { color: var(--primary); font-weight: 500; }
+.dv__story, .pt__story { color: var(--muted); font-size: var(--fs-read); }
+.dv__src:hover, .dv__story:hover, .pt__story:hover { text-decoration-color: currentColor; }
+.dv__story:hover, .pt__story:hover { color: var(--action-ink); }
+.dv__src::after, .dv__story::after, .pt__story::after { content: ""; position: absolute; inset: -12px -6px; }
+/* Beat 4's real numbers: page copy under the line, in the serif, each with its label under it. */
+.dv__tally { display: flex; flex-wrap: wrap; column-gap: var(--s7); row-gap: var(--s4); margin-top: var(--s5); }
+.dv__stat { display: grid; justify-items: start; row-gap: var(--s2); }
+.dv__stat b {
+  font: 400 clamp(2.75rem, 4vw, 4rem)/1 var(--font-display);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--display-ink);
+}
+.dv__stat b > span + span { opacity: 0; }
+.dv__stat b > span[data-plus] { opacity: 1; }
+.dv__stat .label { color: var(--muted); }
+.dv__fig { margin: 0; }
+/* The window: white, raised, cut to its design shape so the scaled app fills it exactly. */
+.dv__screen {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--w) / var(--h);
+  overflow: hidden;
+  border-radius: var(--r3);
+  background: var(--raised);
+  box-shadow: var(--float);
+}
+.dv__cap { margin-top: var(--s3); color: var(--faint); }
+
+/* full: the stage sticks while the section scrolls by under it. */
+/* The section is wider than the page's column: the window wants the room. */
+.home > .dv-host { width: min(100% - 2 * var(--gutter), 1520px); }
+.dv--full { height: 300vh; }
+/* The window takes about two thirds of the width and four fifths of the height; the words stretch to its height,
+   the label on its top edge and the beat line a third of the way down. */
+.dv__stage {
+  position: sticky; top: 0;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) min(70%, 82vh * var(--ar));
+  column-gap: var(--s7);
+  align-content: center;
+}
+.dv--full .dv__text { display: grid; grid-template-rows: auto 1fr auto auto 1.7fr; padding-bottom: var(--s6); }
+.dv--full .dv__count { grid-row: 3; margin-bottom: var(--s4); }
+.dv--full .dv__lines { grid-row: 4; }
+.dv--full .dv__line { font-size: clamp(1.75rem, 2.3vw, 2.5rem); line-height: 1.14; }
+.dv__lines { display: grid; }
+.dv__beat { grid-area: 1 / 1; position: relative; }
+/* The numbers hang under beat 4's line, in the space below the words, so the lines keep their places. */
+.dv--full .dv__tally { position: absolute; left: 0; right: 0; top: 100%; margin-top: var(--s6); }
+.dv__beat:not(:first-child) { opacity: 0; pointer-events: none; }
+/* Tabbing to the links mid-scroll brings their beat forward and clears the others (and the count, which would
+   name the wrong beat) so the words never sit on top of each other. */
+.dv__beat:focus-within { opacity: 1 !important; transform: none !important; pointer-events: auto !important; }
+.dv__lines:has(.dv__beat:focus-within) .dv__beat:not(:focus-within) { opacity: 0 !important; pointer-events: none !important; }
+.dv__text:has(.dv__beat:focus-within) .dv__count { visibility: hidden; }
+
+/* lite: six frames, one beat each. */
+.dv--lite, .dv--still { padding-block: var(--s9); }
+.dv--lite .dv__label { margin-bottom: var(--s7); }
+.dv__frames { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s8); }
+.dv__frame { max-width: 480px; }
+.dv--lite .dv__count { margin-bottom: var(--s3); }
+.dv--lite .dv__line { font-size: 1.625rem; line-height: 1.16; }
+.dv--lite .dv__fig { margin-top: var(--s5); }
+/* A lite window is as tall as its crop of the app, zoomed (--z). */
+.dv--lite .dv__screen { aspect-ratio: auto; height: calc(var(--hp) * var(--z) * 1px); }
+/* A tablet: the frame takes the column's width and shows both halves of the app. */
+@media (min-width: 600px) {
+  .dv__frame { max-width: 880px; }
+  .dv--lite .dv__line { max-width: 22em; }
+  .dv--lite .dv__screen { height: calc(var(--ht) * var(--z) * 1px); }
+}
+
+/* still: the beats as a list beside the finished app. */
+.dv--still { display: grid; grid-template-columns: minmax(0, 34fr) minmax(0, 62fr); column-gap: 4%; align-items: center; }
+.dv--still .dv__label { margin-bottom: var(--s5); }
+.dv__list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s4); }
+.dv__list li {
+  display: grid; grid-template-columns: var(--s5) 1fr; align-items: baseline;
+  font: 400 1.375rem/1.2 var(--font-display);
+  color: var(--display-ink);
+  text-wrap: pretty;
+}
+.dv--still .dv__stat b { font-size: 2.5rem; }
+.dv--lite .dv__stat b { font-size: 3rem; }
+.dv__num { font: 500 var(--fs-label)/1 var(--font-text); font-variant-numeric: tabular-nums; color: var(--faint); }
+.dv__narrow { display: none; }
+
+/* ---------- ii. the portal (the frame and its cells; home/scenes/Portal.tsx moves them) ---------- */
+.pt { --xh: 24px; --slot: 28px; --x-cols: .8fr 1fr 1.15fr 1.2fr 1fr .55fr; --t-cols: .9fr 1fr 1.15fr 1.3fr 1.2fr .6fr; }
+.pt__body { margin-top: var(--s5); max-width: 560px; color: var(--ink-2); text-wrap: pretty; }
+.pt__more { margin-top: var(--s4); }
+.pt__stage { margin: var(--s8) 0 0; display: grid; grid-template-columns: minmax(0, 1fr); row-gap: var(--s7); }
+.pt__in { max-width: 560px; }
+.pt__table { max-width: 820px; }
+.pt__cap { margin-bottom: var(--s3); color: var(--faint); }
+.pt__narrow, .pt__tiny { display: none; }
+
+/* The export: a sunk tray of pasted cells, each a little crooked. It sits above the table so its cells fly over it. */
+.pt__in { position: relative; z-index: 2; }
+.pt__tray {
+  padding: var(--s4);
+  border-radius: var(--r3);
+  background: var(--sunk);
+  box-shadow: inset 0 1px 3px rgb(74 37 96 / .1), inset 0 0 0 1px rgb(74 37 96 / .04);
+}
+.pt__xr { display: grid; grid-template-columns: var(--x-cols); }
+.pt__xh, .pt__raw {
+  padding: 0 6px;
+  font: 400 12.5px/var(--xh) var(--font-text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 .5px rgb(74 37 96 / .16);
+}
+.pt__xh { height: var(--xh); font-weight: 600; color: var(--ink-2); background: #e2dacb; }
+.pt__src { position: relative; height: var(--xh); }
+.pt__chip {
+  position: absolute; inset: 0;
+  transform: translate3d(var(--jx), var(--jy), 0) rotate(var(--r));
+  transform-origin: 0 0;
+}
+.pt--on .pt__go { will-change: transform; }
+/* The empty spot a cell leaves in the tray: an outline with no value in it, which fades as the cell goes. */
+.pt__ghost { box-shadow: inset 0 0 0 .5px rgb(74 37 96 / .16); }
+.pt__raw { position: absolute; inset: 0; color: var(--ink-2); background: #fcfaf5; }
+.pt__chip[data-end] .pt__raw { text-align: right; }
+.pt__ws { color: var(--faint); opacity: .6; }
+/* Lifts off the paper while it travels. */
+.pt__fly { position: absolute; inset: 0; border-radius: 2px; box-shadow: var(--float); opacity: 0; }
+.pt__clean, .pt__slot {
+  font: 400 var(--fs-body)/var(--slot) var(--font-text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.pt__clean { position: absolute; left: 0; top: 0; transform-origin: 0 0; opacity: 0; }
+
+/* The mapped table: white, raised, clean columns. */
+.pt__table {
+  position: relative; z-index: 1;
+  padding: var(--s5) var(--s5) var(--s3);
+  border-radius: var(--r3);
+  background: var(--raised);
+  box-shadow: var(--lift);
+}
+.pt__tr { display: grid; grid-template-columns: var(--t-cols); column-gap: var(--s4); padding-block: 6px; box-shadow: inset 0 -1px 0 var(--line); }
+.pt__tr--head { padding-block: 0 var(--s2); }
+.pt__th { font: 500 var(--fs-label)/1.4 var(--font-text); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.pt__th[data-col="dept"], .pt__td[data-col="dept"] { padding-left: var(--s3); }
+.pt__th[data-col="pay"], .pt__td[data-col="pay"], .pt__src[data-col="pay"] .pt__clean { text-align: right; }
+.pt__slot { position: relative; display: block; height: var(--slot); }
+/* An empty slot, waiting. */
+.pt__well { position: absolute; inset: 7px 18% 7px 0; border-radius: var(--r1); background: var(--canvas); box-shadow: inset 0 0 0 1px var(--line); }
+.pt__td[data-col="pay"] .pt__well { inset: 7px 0 7px 18%; }
+
+/* The one value that doesn't map: it stays crooked, and its row asks for a person (the view's one orchid). */
+.pt__flag { position: relative; }
+.pt__flag .pt__tr { box-shadow: none; }
+.pt__rule {
+  position: absolute; left: -13px; top: 6px; bottom: 10px;
+  width: 2px; border-radius: 1px;
+  background: var(--accent);
+  transform-origin: 50% 0;
+}
+.pt__note {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s4);
+  padding: var(--s1) 0 var(--s2);
+  font-size: var(--fs-read);
+  color: var(--ink-2);
+}
+.pt__review {
+  flex: none;
+  height: 28px; padding: 0 var(--s3);
+  border-radius: var(--r-pill);
+  font: 500 var(--fs-small)/28px var(--font-text);
+  color: var(--action-ink);
+  background: var(--raised);
+  box-shadow: var(--lift);
+}
+.pt--full .pt__rule, .pt--lite .pt__rule { transform: scaleY(0); }
+.pt--full .pt__note, .pt--lite .pt__note { opacity: 0; }
+.pt__stuck {
+  position: absolute; left: 0; top: 0;
+  height: var(--xh); padding: 0 6px;
+  font: 400 12.5px/var(--xh) var(--font-text);
+  color: var(--ink-2);
+  background: #fcfaf5;
+  box-shadow: inset 0 0 0 .5px rgb(74 37 96 / .16), 0 10px 22px -10px rgb(74 37 96 / .34);
+  transform: translate(10px, 5px) rotate(2.4deg);
+  transform-origin: 0 0;
+}
+
+/* Wide: the words and the export side by side, the export tilted on the right at full size, and the table under
+   both, set in from the left so the cells fall across the gap on a diagonal. The figure spans the section on a
+   subgrid (its parts land in the section's own columns and rows) and lets clicks through to the words. Portal.tsx
+   reads --tilt to carry the cells out of the tilted tray. */
+@media (min-width: 1100px) {
+  .pt { --xh: 30px; --tilt: -2deg; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); column-gap: var(--s8); row-gap: var(--s9); }
+  .pt__text { grid-area: 1 / 1; align-self: center; }
+  .pt__stage { grid-area: 1 / 1 / 3 / -1; margin: 0; grid-template-columns: subgrid; grid-template-rows: subgrid; pointer-events: none; }
+  .pt__in { grid-area: 1 / 2; align-self: center; max-width: none; margin-left: var(--s4); pointer-events: auto; }
+  .pt__tray { padding: var(--s5); transform: rotate(var(--tilt)); box-shadow: inset 0 1px 3px rgb(74 37 96 / .1), inset 0 0 0 1px rgb(74 37 96 / .04), 0 18px 40px -28px rgb(74 37 96 / .35); }
+  .pt__in .pt__cap { margin-left: var(--s2); }
+  .pt__xh, .pt__raw, .pt__stuck { font-size: 14px; padding-inline: 8px; }
+  .pt__table { grid-area: 2 / 1 / 3 / -1; width: min(100%, 940px); max-width: none; margin-left: var(--s9); pointer-events: auto; }
+}
+
+/* still, narrower: the export small above, as the before; the finished table under it. */
+@media (max-width: 1099.98px) {
+  .pt--still .pt__stage { row-gap: var(--s6); }
+  .pt--still .pt__in { max-width: 460px; }
+  .pt--still { --xh: 22px; }
+  .pt--still .pt__xh, .pt--still .pt__raw { font-size: 12px; }
+}
+
+/* ---------- sections ---------- */
+.sec { padding-block: var(--s9); scroll-margin-top: var(--s5); }
+/* arro's row is a contents target too, and lands like a section does. */
+.mw__item { scroll-margin-top: var(--s5); }
+.sec__label { margin-bottom: var(--s5); }
+.sec__label span { margin-right: var(--s2); color: var(--faint); }
+.sec__head {
+  max-width: 16ch;
+  font: 400 clamp(2.25rem, 6vw, 5.5rem)/1.08 var(--font-display);
+  letter-spacing: -0.02em;
+  color: var(--display-ink);
+  text-wrap: balance;
+}
+
+/* ---------- iii. the bot team (home/scenes/BotTeam.tsx) ---------- */
+/* A work order off a pad: a torn top, a printed frame, a routing list of desks, a stub below a perforation. The job
+   goes down the list a desk every --step: the row it's at takes a pale wash and an orchid lozenge, and the bot
+   marks it in its own hand, pressed in once (visibility and transform, so a note is either away or at full ink).
+   The slip gives a small nudge at each handoff. It runs once, then rests fully marked. */
+.bt { --step: .9s; --t0: .4s; --n: 1.25rem; --desk: 12.5rem; --pad: var(--s7); }
+.bt__body { margin-top: var(--s5); max-width: 560px; color: var(--ink-2); text-wrap: pretty; }
+.bt__cap { margin-top: var(--s6); color: var(--faint); line-height: 1.5; }
+.bt__fig { margin: var(--s8) 0 0; }
+
+.bt__slip {
+  position: relative;
+  max-width: 660px;
+  rotate: -.8deg;
+  filter: drop-shadow(0 0 .5px rgb(74 37 96 / .22)) drop-shadow(0 22px 26px rgb(74 37 96 / .16));
+}
+/* The paper: a torn top edge, cut with a mask of small teeth, and a printed frame inside it. */
+.bt__paper {
+  position: relative;
+  padding: calc(var(--pad) + 6px) var(--pad) var(--s6);
+  background: var(--raised);
+  color: var(--ink);
+  -webkit-mask: conic-gradient(from -45deg at 50% 100%, #000 90deg, #0000 0) 0 0 / 10px 6px repeat-x, linear-gradient(#000 0 0) 0 6px / 100% calc(100% - 6px) no-repeat;
+  mask: conic-gradient(from -45deg at 50% 100%, #000 90deg, #0000 0) 0 0 / 10px 6px repeat-x, linear-gradient(#000 0 0) 0 6px / 100% calc(100% - 6px) no-repeat;
+}
+.bt__paper::before {
+  content: ""; position: absolute; inset: calc(var(--s4) + 6px) var(--s4) var(--s4);
+  border: 1px solid var(--line); pointer-events: none;
+}
+.bt__head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s4); padding-bottom: var(--s3); border-bottom: 3px double var(--line-strong); }
+.bt__title { font: 400 2.25rem/1.05 var(--font-display); letter-spacing: -0.015em; color: var(--display-ink); }
+.bt__no, .bt__k {
+  font: 500 0.8125rem/1.3 var(--font-text);
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.bt__job { display: flex; align-items: baseline; gap: var(--s4); margin-top: var(--s5); padding-bottom: var(--s2); border-bottom: 1px solid var(--line-strong); }
+.bt__job-t { font: 500 1.25rem/1.3 var(--font-text); letter-spacing: -0.01em; color: var(--ink); }
+
+/* The routing list. Every row, the column heads and the stub share one grid: number, desk, note. */
+.bt__cols, .bt__row, .bt__stub {
+  display: grid; grid-template-columns: var(--n) minmax(0, var(--desk)) minmax(0, 1fr); column-gap: var(--s4);
+}
+.bt__cols { margin-top: var(--s6); padding-bottom: var(--s2); }
+.bt__cols::before { content: ""; }
+.bt__route { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-strong); }
+.bt__row { position: relative; align-items: center; min-height: 4.25rem; padding-block: var(--s3); border-bottom: 1px solid var(--line); }
+/* Where the job is now: a wash under the row, and an orchid lozenge in the margin. Decoration only. */
+.bt__row::before {
+  content: ""; position: absolute; inset: 0 calc(var(--s3) * -1); z-index: -1;
+  background: var(--running-wash); opacity: 0;
+}
+.bt__row::after {
+  content: ""; position: absolute; left: calc(var(--s4) * -1 - 2px); top: 50%; width: 7px; height: 7px; margin-top: -3.5px;
+  background: var(--accent); transform: rotate(45deg); opacity: 0;
+}
+.bt__route { isolation: isolate; }
+.bt__n { align-self: center; font: 500 var(--fs-small)/1 var(--font-text); color: var(--muted); font-variant-numeric: tabular-nums; }
+.bt__desk { display: flex; flex-direction: column; gap: 2px; }
+.bt__name { font: 500 0.8125rem/1.4 var(--font-text); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--ink); }
+.bt__role { font-size: var(--fs-small); line-height: 1.45; color: var(--muted); text-wrap: pretty; }
+
+/* The hands. */
+.bt__mark { display: flex; align-items: center; gap: var(--s3); min-width: 0; transform-origin: 0 50%; }
+.bt__typed { font: 500 var(--fs-read)/1.4 var(--font-text); color: var(--ink-2); }
+/* luna: a typed line, signed on a rule. */
+.bt__mark--sign { flex-wrap: wrap; column-gap: var(--s4); row-gap: 0; }
+.bt__sig {
+  min-width: 4.5rem; padding: 0 var(--s3) 1px;
+  border-bottom: 1px solid var(--muted);
+  font: 400 1.625rem/1 var(--font-display); color: var(--display-ink); text-align: center;
+}
+/* code boss: a rubber stamp in the blue, a double box, a little rough where the ink missed. */
+.bt__mark--stamp { rotate: -5deg; }
+.bt__stamp {
+  padding: 5px 10px 4px;
+  border: 1.5px solid currentColor; border-radius: 3px;
+  box-shadow: inset 0 0 0 2px var(--raised), inset 0 0 0 2.75px currentColor;
+  font: 700 0.875rem/1.2 var(--font-text); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--primary);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='40'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -14 9.6'/%3E%3C/filter%3E%3Crect width='90' height='40' filter='url(%23r)'/%3E%3C/svg%3E") 0 0 / 90px 40px;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='40'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -14 9.6'/%3E%3C/filter%3E%3Crect width='90' height='40' filter='url(%23r)'/%3E%3C/svg%3E") 0 0 / 90px 40px;
+}
+/* architect: a note in the margin, by hand, the view's one italic. */
+.bt__mark--script { rotate: -1.5deg; font: italic 400 1.4375rem/1.15 var(--font-display); color: var(--display-ink); text-wrap: balance; }
+/* reviewer: a tick, then the word. */
+.bt__mark--check svg { flex: none; width: 28px; height: 24px; fill: none; stroke: var(--display-ink); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* The stub, past the perforation: x boss, on the same grid, off this job's route. */
+.bt__stub {
+  position: relative; align-items: center;
+  margin: var(--s6) calc(var(--pad) * -1) 0; padding: var(--s5) var(--pad) 0;
+  background: radial-gradient(circle, var(--line-strong) .9px, transparent 1.3px) 0 0 / 6px 3px repeat-x;
+}
+.bt__stub::before { content: ""; }
+.bt__stub .bt__desk { grid-column: 2 / -1; flex-direction: row; flex-wrap: wrap; align-items: baseline; column-gap: var(--s4); }
+
+/* Wide: the words on the left, the slip big on the right. */
+@media (min-width: 1100px) {
+  .bt { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: var(--s8); align-items: start; }
+  .bt__intro { padding-top: var(--s2); }
+  .bt__fig { margin: var(--s4) 0 0; justify-self: end; width: 100%; max-width: 660px; }
+}
+@media (max-width: 759.98px) {
+  .bt { --pad: var(--s5); --n: .75rem; }
+  .bt__fig { margin-top: var(--s7); margin-inline: calc(var(--s2) * -1); }
+  .bt__slip { rotate: -.6deg; }
+  .bt__paper::before { inset: calc(var(--s3) + 6px) var(--s2) var(--s2); }
+  .bt__title { font-size: 1.875rem; }
+  .bt__job { flex-direction: column; gap: 2px; }
+  .bt__job-t { font-size: 1.125rem; }
+  .bt__cols { display: none; }
+  .bt__route { margin-top: var(--s5); }
+  .bt__row { grid-template-columns: var(--n) minmax(0, 1fr); row-gap: var(--s2); padding-block: var(--s4); align-items: start; }
+  .bt__n { align-self: start; padding-top: 2px; }
+  .bt__row .bt__mark { grid-column: 2; }
+  .bt__row::after { left: calc(var(--s3) * -1 - 2px); top: calc(var(--s4) + 6px); margin-top: 0; }
+  .bt__stub { grid-template-columns: var(--n) minmax(0, 1fr); }
+  .bt__mark--script { font-size: 1.3125rem; }
+}
+
+/* Once, a desk at a time, from the first time most of the slip is in view. */
+.bt__row::before, .bt__row::after { animation: bt-now var(--step) linear calc(var(--t0) + var(--i) * var(--step)) 1 both; }
+.bt__row::after { animation-name: bt-here; }
+.bt__mark { visibility: hidden; animation: bt-ink 520ms var(--ease-statement) calc(var(--t0) + (var(--i) + .25) * var(--step)) 1 forwards; }
+.bt__slip { animation: bt-hand calc(var(--step) * 5) var(--ease-move) var(--t0) 1 forwards; }
+@keyframes bt-now { 0% { opacity: 0; } 8%, 84% { opacity: .6; } 100% { opacity: 0; } }
+@keyframes bt-here { 0% { opacity: 0; } 8%, 84% { opacity: 1; } 100% { opacity: 0; } }
+/* Pressed onto the paper: in at full ink, a touch large, settling flat. */
+@keyframes bt-ink { from { visibility: visible; transform: scale(1.16); } to { visibility: visible; transform: none; } }
+/* Lifted and set back down as each desk passes it on. */
+@keyframes bt-hand {
+  0%, 17%, 23%, 37%, 43%, 57%, 63%, 77%, 83%, 100% { transform: none; }
+  20%, 40%, 60%, 80% { transform: translate(3px, -5px) rotate(.35deg); }
+}
+/* Before it's first seen, and off screen, it waits. */
+.bt__slip:is(:not([data-run]), [data-off]),
+.bt__slip:is(:not([data-run]), [data-off]) .bt__mark,
+.bt__slip:is(:not([data-run]), [data-off]) .bt__row::before,
+.bt__slip:is(:not([data-run]), [data-off]) .bt__row::after { animation-play-state: paused; }
+
+/* ---------- iv. more work ---------- */
+.mw__rows { list-style: none; margin: 0; padding: 0; max-width: 1000px; }
+.mw__row {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(120px, 200px) minmax(0, 1fr) auto;
+  column-gap: var(--s6);
+  align-items: baseline;
+  margin-inline: calc(var(--s5) * -1);
+  padding: var(--s5);
+}
+/* The card it lifts onto: drawn behind and faded in, so only opacity and transform move. */
+.mw__row::before {
+  content: "";
+  position: absolute; inset: 0; z-index: -1;
+  border-radius: var(--r3);
+  background: var(--raised);
+  box-shadow: var(--lift);
+  opacity: 0;
+  transform: scale(.985);
+  transition: opacity var(--dur-calm) var(--ease-out), transform var(--dur-calm) var(--ease-out);
+}
+.mw__row:hover::before, .mw__row:focus-visible::before { opacity: 1; transform: none; }
+.mw__name { font: 500 clamp(1.5rem, 1.75vw, 1.625rem)/1.2 var(--font-text); letter-spacing: -0.018em; color: var(--display-ink); }
+.mw__line { color: var(--ink-2); text-wrap: pretty; }
+.mw__read {
+  display: inline-flex; align-items: center; gap: var(--s2);
+  font: 500 var(--fs-label)/1 var(--font-text);
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+  color: var(--action-ink);
+}
+.mw__arrow { width: 16px; height: 10px; fill: none; stroke: currentColor; stroke-width: 1.2px; transition: transform var(--dur-calm) var(--ease-out); }
+.mw__row:hover .mw__arrow, .mw__row:focus-visible .mw__arrow { transform: translateX(3px); }
+.mw__row--quiet { grid-template-columns: auto auto; justify-content: start; column-gap: var(--s3); margin-top: var(--s4); padding-block: var(--s4); }
+.mw__story { font-size: var(--fs-read); color: var(--muted); }
+.mw__row--quiet .mw__read { color: var(--muted); }
+
+/* ---------- footer ---------- */
+.foot { padding: var(--s9) 0 var(--s8); }
+.foot__about { max-width: 640px; font-size: 1.375rem; line-height: 1.5; letter-spacing: -0.006em; color: var(--ink-2); text-wrap: pretty; }
+.foot__email {
+  display: inline-block;
+  max-width: 100%;
+  margin-top: var(--s8);
+  font: 400 clamp(3rem, 5.6vw, 4.5rem)/1.05 var(--font-display);
+  letter-spacing: -0.02em;
+  color: var(--primary);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.14em;
+  transition: text-decoration-color var(--dur-calm) var(--ease-out);
+  overflow-wrap: anywhere;
+}
+.foot__email:hover { text-decoration-color: currentColor; }
+.foot__links { display: flex; gap: var(--s5); list-style: none; margin: var(--s6) 0 0; padding: 0; }
+.foot__links a {
+  position: relative;
+  font: 500 var(--fs-label)/1 var(--font-text);
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color var(--dur-calm) var(--ease-out);
+}
+.foot__links a:hover { color: var(--action-ink); }
+/* A 44px tall tap target that moves nothing: an inline box's padding doesn't touch the line, and the side padding
+   is given back in margin. Neighbours meet in the gap without overlapping. The focus ring stays close to the word. */
+.foot__links a { padding: 14px 12px; margin-inline: -12px; }
+.foot__links a:focus-visible { outline-offset: -8px; }
+.foot .orn { margin-top: var(--s8); }
+.foot__sign { margin-top: var(--s5); color: var(--ink-2); font-size: var(--fs-read); }
+.home .foot__colophon { margin-top: var(--s2); line-height: 1.6; color: var(--faint); }
+
+/* ---------- more work, narrower ---------- */
+@media (max-width: 899.98px) {
+  .mw__row { grid-template-columns: minmax(0, 1fr) auto; row-gap: var(--s2); }
+  .mw__line { grid-column: 1 / -1; grid-row: 2; max-width: 52ch; }
+  .mw__row--quiet { grid-template-columns: auto auto; }
+}
+
+/* ---------- narrower ---------- */
+@media (max-width: 1099.98px) {
+  .hero__line { margin-top: var(--s8); }
+}
+@media (max-width: 759.98px) {
+  .home { --gutter: var(--s5); --fs-label: 0.8125rem; font-size: 1rem; }
+  .hero__line { margin-top: var(--s7); }
+  .vig { aspect-ratio: 7 / 4; margin-top: var(--s6); }
+  .toc { margin-top: var(--s5); padding-bottom: var(--s8); }
+  .toc__link { grid-template-columns: var(--s6) auto minmax(var(--s5), 1fr); row-gap: 2px; padding: var(--s3) 0; }
+  .toc__line { grid-column: 2 / -1; text-align: left; }
+  .sec { padding-block: var(--s8); }
+  .dv--lite { padding-block: var(--s8); }
+  .dv--lite .dv__label { margin-bottom: var(--s6); }
+  .dv--still { grid-template-columns: 1fr; row-gap: var(--s7); padding-block: var(--s8); }
+  .dv__list li { font-size: 1.25rem; }
+  .dv__wide { display: none; }
+  .dv__narrow { display: grid; gap: var(--s5); max-width: 480px; }
+  .mw__row { margin-inline: calc(var(--s4) * -1); padding: var(--s4); }
+  .mw__name { font-size: 1.25rem; }
+  .foot__about { font-size: 1.1875rem; }
+  /* A phone keeps four columns: who, what they're paid, where, which state. */
+  .pt { --xh: 26px; --slot: 28px; --x-cols: 1fr 1.25fr 1fr .5fr; --t-cols: 1fr 1.4fr 1.3fr .45fr; }
+  .pt [data-col="id"], .pt [data-col="hire"] { display: none; }
+  .pt__wide { display: none; }
+  .pt__narrow { display: inline; }
+  .pt__stage { margin-top: var(--s7); row-gap: var(--s6); }
+  .pt__tray { padding: var(--s3); }
+  .pt__xh, .pt__raw, .pt__stuck { font-size: 13px; }
+  .pt__clean, .pt__slot { font-size: 13.5px; }
+  .pt__table { padding: var(--s4) var(--s4) var(--s2); }
+  .pt__tr { column-gap: var(--s3); }
+  .pt__rule { left: -9px; }
+  .pt__th[data-col="dept"], .pt__td[data-col="dept"] { padding-left: var(--s1); }
+  .pt__stuck { transform: translate(2px, 5px) rotate(2.4deg); }
+  .pt__note { font-size: var(--fs-small); }
+  .pt--still { --xh: 26px; }
+  .pt--still .pt__xh, .pt--still .pt__raw { font-size: 13px; }
+  .foot { padding-top: var(--s8); }
+}
+/* A narrow phone keeps three: who, what they're paid, where. The text stays 13px; the state goes instead. */
+@media (max-width: 419.98px) {
+  .pt { --x-cols: 1fr 1.25fr 1.1fr; --t-cols: minmax(0, .85fr) minmax(0, 1.6fr) minmax(0, 1.55fr); }
+  .pt [data-col="state"] { display: none; }
+  .pt__th .pt__narrow:not(:last-child) { display: none; }
+  .pt__tiny { display: inline; }
+  .pt__table { padding-inline: var(--s3); }
+  .pt__tr { column-gap: var(--s4); }
+}
+
+/* Reduced motion: the page paints finished, the sun already up, nothing loops. */
+.hero[data-motion="still"] .hero__in,
+.hero[data-motion="still"] .vig__rise,
+.hero[data-motion="still"] .vig__glints { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .hero__in, .vig__rise, .vig__glints { animation: none; }
+}
+/* The bot team: the slip paints fully marked. */
+.bt[data-motion="still"] :is(.bt__slip, .bt__mark), .bt[data-motion="still"] .bt__row::before, .bt[data-motion="still"] .bt__row::after { animation: none; }
+.bt[data-motion="still"] .bt__mark { visibility: visible; }
+@media (prefers-reduced-motion: reduce) {
+  .bt :is(.bt__slip, .bt__mark), .bt .bt__row::before, .bt .bt__row::after { animation: none; }
+  .bt .bt__mark { visibility: visible; }
+}

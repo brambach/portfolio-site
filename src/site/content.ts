@@ -6,10 +6,10 @@ import { WORK } from './data/work';
 
 export const NAME = 'Bryce Rambach';
 export const TAGLINE = 'I design it, make it move, and build it.';
-export const SUB = 'I’m looking for a founding engineer role at an early AI startup in SF or New York.';
+export const SUB = 'I’m looking for a founding engineer role at an early AI startup. Open to moving.';
 
 export const INTRO = {
-  before: 'I’m 22. I finished a computer science degree in May 2026. Since July I’ve been on a three-month contract building HR and payroll integrations, and before that I founded ',
+  before: 'I’m 22. I finished a computer science degree in May 2026. I was a remote employee at an HR and payroll consultancy, its only integrations developer. Alongside that, I founded ',
   link: { label: 'Dervo', to: '/projects/dervo' },
   after: '.',
   second: 'I do my best work on a small team where one person can own a product from the API at the bottom to the words on the buttons. Here’s what that looks like, one part at a time.',

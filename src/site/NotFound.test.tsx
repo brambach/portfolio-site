@@ -9,7 +9,7 @@ describe('the not-found page', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Nothing here.');
     expect(screen.getByRole('link', { name: /Back to the home page/ })).toHaveAttribute('href', '/');
     expect(screen.getByRole('link', { name: /See the work/ })).toHaveAttribute('href', '/#work');
-    expect(document.title).toBe('Not found · Bryce Rambach');
+    expect(document.title).toBe('not found, bryce rambach');
   });
 
   it('is what the site shows for an address it doesn’t know', async () => {
