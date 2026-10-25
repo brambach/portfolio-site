@@ -13,8 +13,8 @@ import './vignette.css';
  *  paused: the visitor pressed pause; stays paused on or off screen. */
 export type Motion = 'still' | 'off' | 'on' | 'paused';
 
-/* data-drawn: absent until first seen; "" runs the draw-in; "done" paints it finished (reduced motion, or it already
-   drew in once this visit). */
+/* data-drawn: absent until first seen; "" runs the draw-in; "done" paints it finished (reduced motion, the draw-in
+   has ended, or it already drew in once this visit). */
 type Drawn = '' | 'done' | undefined;
 
 const DRAWN_KEY = 'vig-drawn';
@@ -65,7 +65,9 @@ export default function Vignette({ label }: { label: string }) {
   const motion: Motion = still ? 'still' : paused ? 'paused' : onScreen ? 'on' : 'off';
   // The button sits outside the image: a role="img" hides its children from screen readers.
   return <figure className="vig hero__in">
-    <div ref={plate} className="vig__plate" role="img" aria-label={label} data-motion={motion} data-drawn={still ? 'done' : drawn} />
+    {/* The glow fades in last, so its end is the end of the draw-in. */}
+    <div ref={plate} className="vig__plate" role="img" aria-label={label} data-motion={motion} data-drawn={still ? 'done' : drawn}
+      onAnimationEnd={e => { if ((e.target as Element).classList.contains('vig__halo')) setDrawn('done'); }} />
     {!still && <button type="button" className="vig__pause s-label" onClick={() => setPaused(p => !p)}>{paused ? 'play' : 'pause'}</button>}
   </figure>;
 }

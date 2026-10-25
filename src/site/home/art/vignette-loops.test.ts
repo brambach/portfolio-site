@@ -46,6 +46,9 @@ const isTime = (t: string) => /^(calc\(.*m?s\b.*\)|-?\d*\.?\d+m?s)$/.test(t);
 const all = rules(css);
 const animated = all.filter(r => !r.reduce && r.decls.has('animation'));
 const motionOn = (sel: string) => split(sel, ',').every(s => s.includes(':not([data-motion="still"])'));
+/** [duration, delay] in seconds of each animation in a declaration that plays once. */
+const once = (animation: string) => split(animation, ',').map(a => split(a, ' '))
+  .filter(t => !t.includes('infinite') && !t.includes('none')).map(t => t.filter(isTime).map(seconds));
 
 describe('The hero picture’s loops', () => {
   it('finds the loops it checks', () => {
@@ -70,9 +73,20 @@ describe('The hero picture’s loops', () => {
   });
 
   it('end by 5s when they play once, delays included', () => {
-    const once = animated.flatMap(r => split(r.decls.get('animation')!, ',').map(a => split(a, ' ')))
-      .filter(t => !t.includes('infinite') && !t.includes('none'));
-    expect(once.map(t => t.filter(isTime).map(seconds)).filter(([dur = 0, delay = 0]) => delay + dur > 5)).toEqual([]);
+    expect(animated.flatMap(r => once(r.decls.get('animation')!)).filter(([dur = 0, delay = 0]) => delay + dur > 5)).toEqual([]);
+    // Timing set apart from the shorthand would slip past the check above.
+    expect(all.filter(r => r.decls.has('animation-duration') || r.decls.has('animation-delay')).map(r => r.sel)).toEqual([]);
+  });
+
+  it('draw in every part once, by 4.5s, with the glow ending last', () => {
+    const drawIn = new Map(animated.filter(r => r.sel.includes('[data-drawn=""]'))
+      .map(r => [r.sel.match(/vig__(\w+)$/)![1], once(r.decls.get('animation')!).map(([dur = 0, delay = 0]) => dur + delay)]));
+    expect([...drawIn.keys()].sort()).toEqual(['bird', 'far', 'glints', 'halo', 'mid', 'near', 'ridges', 'sun', 'water']);
+    const ends = [...drawIn.values()].flat();
+    expect(ends).toHaveLength(9);
+    expect(Math.max(...ends)).toBeLessThanOrEqual(4.5);
+    // Vignette marks the plate done when the glow's fade ends, so nothing may still be drawing in after it.
+    expect(drawIn.get('halo')).toEqual([Math.max(...ends)]);
   });
 
   it('do nothing with reduced motion', () => {

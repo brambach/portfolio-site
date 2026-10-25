@@ -2,9 +2,11 @@
 // Not part of npm test. Modes, run in this order when several are given:
 //   --baseline <dir>  the picture painted finished (reduced motion) at three sizes, saved as PNGs
 //   --diff <dir>      the same shots compared to a baseline, failing past 0.5% of pixels changed
-//   --trace           the frame budget: no Paint or Layout at all in 4s of looping, phone and desktop
-//   --states          animations run in view, pause off screen and on the pause button; reduced motion runs nothing,
-//                     shows no button and holds still
+//   --trace           the frame budget: the draw-in paints under 2ms a frame (median) with no frame over 50ms, then
+//                     no Paint or Layout at all in 4s of looping, phone and desktop
+//   --states          animations run in view, pause off screen and on the pause button; the draw-in is gone by 5s,
+//                     a resize doesn't replay it and a reload in the same visit skips it; reduced motion runs nothing,
+//                     shows no button and holds still, painted finished
 // Usage: node scripts/vignette-check.mjs [--url http://localhost:4180/] --baseline dir | --diff dir | --trace | --states
 import { chromium } from 'playwright';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -33,6 +35,9 @@ const PROFILES = [
 const DRAW_IN_MS = 5500;
 const TRACE_MS = 4000;
 const MAX_DIFF = 0.005;
+const DRAW_IN = ['vig-sweep', 'vig-settle', 'vig-in'];
+const DRAW_IN_PAINT_MS = 2;
+const DRAW_IN_FRAME_MS = 50;
 
 const browser = await chromium.launch();
 let failures = 0;
@@ -109,7 +114,73 @@ async function runDiff(dir) {
   }
 }
 
+const median = (xs) => { const s = [...xs].sort((a, b) => a - b); return s.length ? s[Math.floor(s.length / 2)] : 0; };
+
+// The draw-in starts on the first screen at load, so tracing starts before the page does. The page marks the window
+// itself, from the frame the plate is drawn and drawing in to the frame it's marked done, with console.timeStamp,
+// which lands in the trace on the same clock as the paints.
+async function traceDrawIn(profile) {
+  const ctx = await browser.newContext({ viewport: { width: profile.width, height: profile.height }, deviceScaleFactor: profile.dpr });
+  const page = await ctx.newPage();
+  page.on('pageerror', (e) => fail(`page error: ${e.message}`));
+  await page.addInitScript(() => {
+    let start = 0, last = 0;
+    const gaps = [];
+    const tick = (now) => {
+      const plate = document.querySelector('.vig__plate');
+      const drawn = plate?.dataset.drawn;
+      if (!start && drawn === '' && plate.querySelector('svg')) { start = now; console.timeStamp('vig-draw-in'); }
+      else if (start) gaps.push(now - last);
+      last = now;
+      if (start && (drawn === 'done' || now - start > 6000)) {
+        console.timeStamp('vig-drawn');
+        window.__drawIn = { gaps, ms: now - start, drawn };
+      } else requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+  const cdp = await ctx.newCDPSession(page);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: profile.cpu });
+  const events = [];
+  cdp.on('Tracing.dataCollected', (d) => events.push(...d.value));
+  await cdp.send('Tracing.start', { categories: 'devtools.timeline,disabled-by-default-devtools.timeline,disabled-by-default-devtools.timeline.frame', transferMode: 'ReportEvents' });
+  await page.goto(URL, { waitUntil: 'load' });
+  const run = await page.waitForFunction(() => window.__drawIn, null, { timeout: 15000 }).then((h) => h.jsonValue());
+  const complete = new Promise((r) => cdp.once('Tracing.tracingComplete', r));
+  await cdp.send('Tracing.end');
+  await complete;
+  await ctx.close();
+  const mark = (m) => events.find((e) => e.name === 'TimeStamp' && e.args?.data?.message === m)?.ts;
+  const [from, to] = [mark('vig-draw-in'), mark('vig-drawn')];
+  const main = events.find((e) => e.name === 'TimeStamp' && e.args?.data?.message === 'vig-draw-in');
+  const onMain = (e) => e.pid === main.pid && e.tid === main.tid;
+  const frames = events.filter((e) => e.name === 'BeginMainThreadFrame' && onMain(e) && e.ts >= from && e.ts <= to).map((e) => e.ts);
+  // Each paint counts toward the main-thread frame it falls in.
+  const perFrame = new Map();
+  for (const e of events.filter((e) => e.name === 'Paint' && onMain(e) && e.ts >= from && e.ts <= to)) {
+    const f = frames.findLast((t) => t <= e.ts) ?? from;
+    perFrame.set(f, (perFrame.get(f) ?? 0) + (e.dur ?? 0) / 1000);
+  }
+  const painted = [...perFrame.values()];
+  const longest = Math.max(...run.gaps);
+  const result = {
+    windowMs: +run.ms.toFixed(0), endedAs: run.drawn, frames: run.gaps.length, mainFrames: frames.length,
+    paintedFrames: painted.length, paintMs: +painted.reduce((a, b) => a + b, 0).toFixed(1),
+    medianPaintMs: +median(painted).toFixed(2), maxPaintMs: +Math.max(0, ...painted).toFixed(2),
+    p95: +[...run.gaps].sort((a, b) => a - b)[Math.floor(run.gaps.length * 0.95)].toFixed(1), longestFrame: +longest.toFixed(1),
+    longestAtMs: +run.gaps.slice(0, run.gaps.indexOf(longest) + 1).reduce((x, y) => x + y, 0).toFixed(0),
+  };
+  console.log(`  ${profile.name} draw-in ${JSON.stringify(result)}`);
+  run.drawn === 'done' ? pass(`${profile.name}: draw-in marked done after ${result.windowMs}ms`) : fail(`${profile.name}: draw-in not done after ${result.windowMs}ms`);
+  result.medianPaintMs < DRAW_IN_PAINT_MS ? pass(`${profile.name}: draw-in median paint ${result.medianPaintMs}ms a frame`)
+    : fail(`${profile.name}: draw-in median paint ${result.medianPaintMs}ms a frame, over ${DRAW_IN_PAINT_MS}ms`);
+  longest <= DRAW_IN_FRAME_MS ? pass(`${profile.name}: draw-in longest frame ${result.longestFrame}ms`)
+    : fail(`${profile.name}: draw-in frame of ${result.longestFrame}ms, over ${DRAW_IN_FRAME_MS}ms`);
+}
+
 async function runTrace() {
+  console.log('trace: the draw-in from first view');
+  for (const profile of PROFILES) await traceDrawIn(profile);
   console.log(`trace: ${TRACE_MS / 1000}s after ${DRAW_IN_MS / 1000}s in view`);
   for (const profile of PROFILES) {
     const { ctx, page } = await open(profile);
@@ -153,7 +224,8 @@ async function runStates() {
     const states = async (expect, where) => {
       const anims = await vigAnimations(page);
       if (!anims.length) return console.log(`  skip ${profile.name} ${where}: no .vig animations to check`);
-      const off = anims.filter((a) => a.state !== expect);
+      // A layer that has already drawn in holds its last frame as finished until the plate is marked done.
+      const off = anims.filter((a) => a.state !== expect && !(a.state === 'finished' && DRAW_IN.includes(a.name)));
       off.length ? fail(`${profile.name} ${where}: ${off.length}/${anims.length} not ${expect} ${JSON.stringify(off)}`)
         : pass(`${profile.name} ${where}: all ${anims.length} ${expect}`);
     };
@@ -183,6 +255,8 @@ async function runStates() {
     const height = await page.evaluate(() => document.documentElement.scrollHeight);
     await ctx.close();
 
+    await checkDrawIn(profile);
+
     const still = await open(profile, 'reduce');
     await intoView(still.page);
     await still.page.waitForTimeout(400);
@@ -191,6 +265,7 @@ async function runStates() {
     (await still.page.locator('.vig__pause').count()) ? fail(`${profile.name} reduced motion: a pause button`) : pass(`${profile.name} reduced motion: no pause button`);
     const stillHeight = await still.page.evaluate(() => document.documentElement.scrollHeight);
     stillHeight === height ? pass(`${profile.name}: page ${height}px tall with or without the button`) : fail(`${profile.name}: page ${height}px with the button, ${stillHeight}px without`);
+    await finished(still.page, `${profile.name} reduced motion`);
     const plate = still.page.locator('.vig__plate');
     const first = await plate.screenshot();
     await still.page.waitForTimeout(2000);
@@ -198,6 +273,49 @@ async function runStates() {
     share ? fail(`${profile.name} reduced motion: ${(share * 100).toFixed(3)}% changed over 2s`) : pass(`${profile.name} reduced motion: identical 2s apart`);
     await still.ctx.close();
   }
+}
+
+const drawInLeft = async (page) => (await vigAnimations(page)).filter((a) => DRAW_IN.includes(a.name));
+
+// Painted finished: marked done, every part shown whole, nothing left of the draw-in.
+async function finished(page, where) {
+  const state = await page.evaluate(() => {
+    const plate = document.querySelector('.vig__plate');
+    const parts = [...plate.children].map((el) => getComputedStyle(el));
+    return {
+      drawn: plate.dataset.drawn, parts: parts.length,
+      hidden: parts.filter((s) => s.visibility !== 'visible' || s.clipPath !== 'none' || s.translate !== 'none' || s.filter !== 'none').length,
+    };
+  });
+  const left = await drawInLeft(page);
+  state.drawn === 'done' && state.parts && !state.hidden && !left.length
+    ? pass(`${where}: painted finished (${state.parts} parts, none clipped, hidden, faded or offset)`)
+    : fail(`${where}: not painted finished ${JSON.stringify({ ...state, drawInLeft: left })}`);
+}
+
+async function checkDrawIn(profile) {
+  const { ctx, page } = await open(profile);
+  const firstView = Date.now();
+  const drawing = await drawInLeft(page);
+  const drawn = await page.evaluate(() => document.querySelector('.vig__plate').dataset.drawn);
+  drawn === '' && drawing.length ? pass(`${profile.name}: draws in on first view (${drawing.length} draw-in animations, ${[...new Set(drawing.map((a) => a.name))]})`)
+    : fail(`${profile.name}: no draw-in on first view ${JSON.stringify({ drawn, drawing })}`);
+  await page.waitForTimeout(Math.max(0, 5000 - (Date.now() - firstView)));
+  await finished(page, `${profile.name} 5s after first view`);
+  const loops = (await vigAnimations(page)).filter((a) => a.state === 'running').length;
+  loops ? pass(`${profile.name}: ${loops} loops still running after the draw-in`) : fail(`${profile.name}: no loops running after the draw-in`);
+
+  const before = await page.evaluate(() => document.querySelector('.vig__far').getAttribute('width'));
+  await page.setViewportSize({ width: profile.width - 60, height: profile.height });
+  await page.waitForFunction((w) => document.querySelector('.vig__far')?.getAttribute('width') !== w, before);
+  await page.waitForTimeout(100);
+  const after = await page.evaluate(() => document.querySelector('.vig__far').getAttribute('width'));
+  await finished(page, `${profile.name} after a resize redraw (${before} to ${after}px wide)`);
+
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForSelector('.vig__plate > svg');
+  await finished(page, `${profile.name} reloaded in the same visit`);
+  await ctx.close();
 }
 
 if (baseline) await runBaseline(baseline);

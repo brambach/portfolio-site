@@ -31,6 +31,8 @@ const reduceMotion = (on: boolean) => vi.spyOn(window, 'matchMedia').mockImpleme
 }) as MediaQueryList);
 
 const plate = () => screen.getByRole('img', { name: HERO.art });
+// React picks the event name from what the browser's styles support; under jsdom that's the prefixed one.
+const animationEnd = (el: Element) => { for (const type of ['animationend', 'webkitAnimationEnd']) fireEvent(el, new Event(type, { bubbles: true })); };
 const toggle = () => screen.queryByRole('button', { name: /^(pause|play)$/ });
 
 beforeEach(() => {
@@ -115,6 +117,28 @@ describe('The hero picture', () => {
     view(false);
     view(true);
     expect(plate()).toHaveAttribute('data-drawn', '');
+  });
+
+  it('is marked drawn once its glow has faded in, and stays so through a redraw', () => {
+    vi.useFakeTimers();
+    let width = 390;
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(() => width);
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(96);
+    render(<Vignette label={HERO.art} />);
+    act(() => { vi.runAllTimers(); });
+    view(true);
+    animationEnd(plate().querySelector('.vig__ridges')!);
+    animationEnd(plate().querySelector('.vig__sun')!);
+    expect(plate()).toHaveAttribute('data-drawn', '');
+    animationEnd(plate().querySelector('.vig__halo')!);
+    expect(plate()).toHaveAttribute('data-drawn', 'done');
+    width = 768;
+    act(() => {
+      for (const r of Resizes.all) r.cb([], r as unknown as ResizeObserver);
+      vi.advanceTimersByTime(150);
+    });
+    expect(plate().querySelector('.vig__far')).toHaveAttribute('width', '768');
+    expect(plate()).toHaveAttribute('data-drawn', 'done');
   });
 
   it('shows the picture finished on a later load in the same visit, and still runs its loops', () => {

@@ -27,6 +27,28 @@
 }
 .vig .vig__pause:hover { color: var(--ink-2); }
 
+/* The draw-in, once a visit. Until the first view every part waits hidden. Then the land inks in left to right, back
+   to front, with the ridge lines leading like a pen; the sun fades up and settles 6px into place; the glow, the glints
+   and the birds fade in. All of it ends by 4.2s. The loops keep running underneath on the same parts, so nothing
+   fights: the sun settles by translate while it breathes by transform, and the fades use a filter while the loops own
+   opacity. Once the glow is in, Vignette marks the plate done and these rules let go. */
+.vig__plate:not([data-drawn]) > * { visibility: hidden; }
+.vig__plate[data-drawn=""] > .vig__ridges { animation: vig-sweep 1.4s ease-in-out both; }
+.vig__plate[data-drawn=""] > .vig__far { animation: vig-sweep 1.65s .25s ease-in-out both; }
+.vig__plate[data-drawn=""] > .vig__mid { animation: vig-sweep 1.8s .5s ease-in-out both; }
+.vig__plate[data-drawn=""] > .vig__near { animation: vig-sweep 1.8s .8s ease-in-out both; }
+.vig__plate[data-drawn=""] > .vig__water { animation: vig-sweep 1.8s 1.2s ease-in-out both; }
+.vig__plate[data-drawn=""]:not([data-motion="still"]) .vig__sun { animation: vig-breathe 14s ease-in-out infinite, vig-settle 2.4s 1.6s cubic-bezier(.3, .6, .3, 1) both; }
+.vig__plate[data-drawn=""]:not([data-motion="still"]) .vig__halo { animation: vig-glow 9s ease-in-out infinite, vig-in 2s 2.2s both; }
+.vig__plate[data-drawn=""]:not([data-motion="still"]) .vig__glints { animation: vig-shimmer var(--shimmer, 5.3s) ease-in-out infinite, vig-in 2s 2.2s both; }
+.vig__plate[data-drawn=""]:not([data-motion="still"]) .vig__bird { animation: vig-drift calc(44s + var(--i) * 7s) calc(var(--i) * -13s) ease-in-out infinite alternate, vig-in .8s 2.8s both; }
+@keyframes vig-sweep {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0); }
+}
+@keyframes vig-settle { from { translate: 0 -6px; opacity: 0; } }
+@keyframes vig-in { from { filter: opacity(0); } }
+
 /* Loops, only while motion is allowed. Each bird flips its own little svg on its baseline, so the "m" folds into a
    soft "w": three beats of about 0.8s, then a long glide. Cycle lengths and start points differ by --i so the birds
    never beat together, and each wrapper drifts about 2% of the plate (the plate is the screen's width) and back. */
@@ -38,9 +60,9 @@
 .vig__plate:not([data-motion="still"]) .vig__halo { animation: vig-glow 9s ease-in-out infinite; }
 /* The three glint bands interleave rows, so each sliding and fading on its own period, started out of step, keeps
    the reflection shimmering without a pattern. */
-.vig__plate:not([data-motion="still"]) .vig__glints { animation: vig-shimmer 5.3s ease-in-out infinite; }
-.vig__plate:not([data-motion="still"]) .vig__glints[data-band="1"] { animation-duration: 6.7s; animation-delay: -2.2s; }
-.vig__plate:not([data-motion="still"]) .vig__glints[data-band="2"] { animation-duration: 8.1s; animation-delay: -5.1s; }
+.vig__glints[data-band="1"] { --shimmer: 6.7s -2.2s; }
+.vig__glints[data-band="2"] { --shimmer: 8.1s -5.1s; }
+.vig__plate:not([data-motion="still"]) .vig__glints { animation: vig-shimmer var(--shimmer, 5.3s) ease-in-out infinite; }
 /* Off screen or paused, every animation holds its frame and picks up from there. Important, because the shorthands
    above reset the play state with a more specific selector. */
 .vig__plate[data-motion="off"] *, .vig__plate[data-motion="paused"] * { animation-play-state: paused !important; }
