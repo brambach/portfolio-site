@@ -1,6 +1,6 @@
 /* A project's page in the home's simple look. The home's tokens and classes come in whole (inlined at build, so the
    home's own chunk doesn't change); below are only the few rules a project page adds: a narrower reading column,
-   the facts, the screenshots and port's hold. */
+   the facts and the screenshots. */
 @import "./simple.css";
 
 .s-wp > main > * { width: min(100% - 2 * var(--gutter), 760px); }
@@ -35,31 +35,3 @@
 }
 
 .s-wp-next { margin-top: clamp(48px, 8vw, 88px); padding-top: var(--s5); border-top: 1px solid var(--line); flex-wrap: wrap; justify-content: space-between; }
-
-/* port's hold: a small screen with a ring. Held for a second it folds into a line, the line draws in, and it's quiet. */
-.s-port { margin-top: var(--s6); max-width: 420px; }
-.s-port__screen { position: relative; isolation: isolate; aspect-ratio: 4 / 3; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; overflow: hidden; box-shadow: var(--card-edge); }
-.s-port__band { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: var(--accent-wash); }
-.s-port__line { position: absolute; left: 0; pointer-events: none; top: 50%; width: 100%; height: 2px; margin-top: -1px; background: var(--display-ink); opacity: 0; }
-.s-port__ring {
-  width: 112px; height: 112px; border-radius: 50%; border: 2px solid var(--display-ink); background: var(--paper);
-  color: var(--display-ink); font: 500 var(--fs-label)/1.2 var(--font-text); letter-spacing: var(--label-track); text-transform: uppercase;
-  cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none;
-  transition: transform 1s var(--ease-out), border-color var(--dur-calm) var(--ease-out), opacity 200ms var(--ease-out);
-}
-.s-port__ring:hover { border-color: var(--primary); }
-.s-port[data-phase="holding"] .s-port__ring { transform: scale(.9); border-color: var(--primary); color: var(--primary); }
-.s-port[data-phase="closing"] .s-port__ring { opacity: 0; }
-.s-port[data-phase="closing"] .s-port__band { animation: s-port-fold .83s cubic-bezier(.45, 0, .9, .6) both; }
-.s-port[data-phase="closing"] .s-port__line { animation: s-port-draw .42s .83s cubic-bezier(.7, 0, 1, .5) both; }
-.s-port[data-phase="closed"] .s-port__band { opacity: 0; }
-.s-port[data-phase="closed"] .s-port__ring { width: auto; height: auto; padding: 10px 16px; border-radius: 999px; border-width: 1px; background: none; }
-@keyframes s-port-fold { 0% { transform: scaleY(1); } 99% { transform: scaleY(.004); opacity: 1; } 100% { transform: scaleY(.004); opacity: 0; } }
-@keyframes s-port-draw { from { opacity: 1; transform: scaleX(1); } to { opacity: 0; transform: scaleX(0); } }
-.s-port .s-port__how { margin-top: var(--s3); display: flex; justify-content: space-between; align-items: baseline; gap: var(--s4); font-size: .9375rem; color: var(--muted); }
-.s-port__how b { font-weight: 500; color: var(--ink); }
-.s-port__sound { flex: none; min-height: 32px; border: 0; border-bottom: 1px solid var(--line-strong); background: none; padding: 2px 0; color: var(--primary); font: inherit; cursor: pointer; }
-@media (prefers-reduced-motion: reduce) {
-  .s-port__ring { transition: none; }
-  .s-port[data-phase="holding"] .s-port__ring { transform: none; }
-}

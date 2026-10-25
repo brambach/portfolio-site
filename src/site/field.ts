@@ -441,24 +441,3 @@ export function shotFormation(g: Grid, box: { x: number; y: number; w: number; h
   }
   return sortOrder(f);
 }
-
-/** Port has no screens, so its object is the ring you hold: navy outside, gold in. `closed` is the ring after the
- *  hold, compressed to a small still disc. */
-export function ringFormation(g: Grid, rect: [number, number, number, number], palette: Palette, closed = false, seed = 23): Formation {
-  const rand = seeded(seed), f = base(g, rand), tones = objectTonesOf(palette);
-  const [x0, y0, x1, y1] = rect, mx = ((x0 + x1) / 2) * g.w, my = ((y0 + y1) / 2) * g.h;
-  const R = Math.min((x1 - x0) * g.w, (y1 - y0) * g.h) * 0.36, width = Math.max(g.cell * 2.2, R * 0.2);
-  for (let i = 0; i < g.cells; i++) {
-    const x = f.pos[i * 2], y = f.pos[i * 2 + 1], d = Math.hypot(x - mx, y - my);
-    let t = -1;
-    if (closed) { if (d < R * 0.16) t = d < R * 0.08 ? ROLE.peach : 0; }
-    else if (Math.abs(d - R) < width / 2) t = d < R ? ROLE.peach : 0;
-    if (t < 0) continue;
-    const rgb = tones.rgb[t];
-    f.size[i] = 1;
-    f.col[i * 3] = rgb[0]; f.col[i * 3 + 1] = rgb[1]; f.col[i * 3 + 2] = rgb[2];
-    f.life[i] = LIFE.still;
-    f.key[i] = keyOf(tones.rank[t], x / g.w, y / g.h);
-  }
-  return sortOrder(f);
-}

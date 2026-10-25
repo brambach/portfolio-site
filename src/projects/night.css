@@ -16,7 +16,7 @@ html:has(.ps-page[data-look="bone"]) { background: #e8e6df; }
 /* ---------- Display type ---------- */
 /* Some headlines name Fraunces directly instead of the variable. Point them at the display font. */
 .ps-viewer[data-look] :is(
-  .ps-study__hero h1 em, .ps-study__notes h2, .ps-port__title h1 em, .ps-port__story h2, .ps-editorial h2,
+  .ps-study__hero h1 em, .ps-study__notes h2, .ps-editorial h2,
   .ps-dervo__hero h1 em, .ps-arro__title h1, .ps-arro__milestone > strong, .ps-arro__milestone > span:nth-of-type(2),
   .ps-arro__moment h2, .ps-lucid__hero h1 em, .ps-lucid__mapping h2, .ps-lucid__review h2 em, .ps-lucid__capture h2
 ),
@@ -25,11 +25,11 @@ html:has(.ps-page[data-look="bone"]) { background: #e8e6df; }
 }
 /* Sentient is set light and a touch looser than Fraunces was. */
 :is(.ps-viewer, .ps-page)[data-look] :is(
-  .ps-collection__intro h1, .ps-dervo__hero h1, .ps-lucid__hero h1, .ps-port__title h1, .ps-arro__title h1,
+  .ps-collection__intro h1, .ps-dervo__hero h1, .ps-lucid__hero h1, .ps-arro__title h1,
   .ps-study__hero h1, .pl-cinema__type h1, .pl-playable__intro h1, .pl-index__intro h1,
   .ps-editorial h2, .ps-dervo__caption h2, .ps-lucid__brief h2, .ps-lucid__review h2, .ps-lucid__mapping h2,
-  .ps-lucid__capture h2, .ps-arro__moment h2, .ps-port__story h2, .ps-study__notes h2, .pt-section__head h2,
-  .ps-cover:not(.ps-cover--port) > strong, .ps-next > strong
+  .ps-lucid__capture h2, .ps-arro__moment h2, .ps-study__notes h2, .pt-section__head h2,
+  .ps-cover > strong, .ps-next > strong
 ) {
   font-weight: 300;
   font-variation-settings: normal;

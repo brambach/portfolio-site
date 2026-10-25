@@ -3,31 +3,30 @@ import { workById } from './data/work';
 import { WORK_IDS, type WorkId } from './routes';
 
 /* What E's project pages show. The words about each project come from catalog.ts, like every other page of the
-   site, and the pictures and their captions from the pages that already show them: data/work.ts for Dervo, Arro
-   and Port, the Lucid study and the AgentSky study for theirs. Nothing here is new about a project. */
+   site, and the pictures and their captions from the pages that already show them: data/work.ts for Dervo and
+   Arro, the Lucid study and the AgentSky study for theirs. Nothing here is new about a project. */
 
 export type Shot = { src: string; alt: string; title?: string; text?: string; tall?: boolean };
 export type PageWork = Project & {
   id: WorkId;
-  /** What the dots draw at the top of the page: one of the project's own screens, or Port's ring to hold. */
-  hero: { src: string; tall?: boolean } | { ring: true };
+  /** What the dots draw at the top of the page: one of the project's own screens. */
+  hero: { src: string; tall?: boolean };
   /** The project's screens, shown as they are, with the captions they have elsewhere on the site. */
   shots: Shot[];
   link?: { href: string; label: string };
 };
 
-const fromSky = (id: 'dervo' | 'arro' | 'port') => {
+const fromSky = (id: 'dervo' | 'arro') => {
   const w = workById(id)!;
   const shots: Shot[] = [w.hero, ...w.gallery]
     .filter(p => p.src)
     .map(p => ({ src: p.src, alt: `${w.name}${p.title ? `: ${p.title}` : ''}`, title: p.title, text: p.text, tall: p.tall }));
-  return { hero: w.hero.port ? { ring: true as const } : { src: w.hero.src, tall: w.hero.tall }, shots, link: w.link };
+  return { hero: { src: w.hero.src, tall: w.hero.tall }, shots, link: w.link };
 };
 
 const extra: Record<WorkId, Pick<PageWork, 'hero' | 'shots' | 'link'>> = {
   dervo: fromSky('dervo'),
   arro: fromSky('arro'),
-  port: fromSky('port'),
   // From LucidStudy.tsx.
   lucid: {
     hero: { src: '/projects/lucid/spec.png' },
@@ -42,7 +41,7 @@ const extra: Record<WorkId, Pick<PageWork, 'hero' | 'shots' | 'link'>> = {
   agentsky: {
     hero: { src: '/project-lab/sky.png' },
     shots: [
-      { src: '/project-lab/hero.png', alt: 'The session', title: 'One place to follow the work.', text: 'Agent selection, the request and its files stay visible together. Changing the selected agent resets the sample run, so an old result never appears to belong to a new agent.' },
+      { src: '/project-lab/hero.webp', alt: 'The session', title: 'One place to follow the work.', text: 'Agent selection, the request and its files stay visible together. Changing the selected agent resets the sample run, so an old result never appears to belong to a new agent.' },
       { src: '/project-lab/cloud.png', alt: 'The workspace', title: 'Close the window. Keep the context.', text: 'The local and cloud windows share the same workspace identity. Movement explains the transfer, while the remaining window makes persistence visible.' },
       { src: '/project-lab/comparison.png', alt: 'The output', title: 'Give the result room.', text: 'A selector sits beside one large output preview. Each result has space to be read, and the viewer can open it for closer inspection.' },
     ],
@@ -53,7 +52,7 @@ const extra: Record<WorkId, Pick<PageWork, 'hero' | 'shots' | 'link'>> = {
 export const SHOT_SIZE: Record<string, [number, number]> = {
   '/project-lab/cloud.png': [658, 511],
   '/project-lab/comparison.png': [1440, 1296],
-  '/project-lab/hero.png': [1440, 1100],
+  '/project-lab/hero.webp': [1440, 1100],
   '/project-lab/sky.png': [1536, 1024],
   '/projects/arro/feed.jpg': [780, 1688],
   '/projects/arro/log-today.jpg': [780, 1688],

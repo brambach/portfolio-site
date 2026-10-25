@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { projects } from '../projects/catalog';
 import { WORK_IDS } from './routes';
@@ -6,20 +6,16 @@ import Home from './Home';
 import WorkPage from './WorkPage';
 import { WORK_PAGES, pageWorkById, nextWork, toWork } from './work';
 
-const reduced = (on: boolean) => vi.spyOn(window, 'matchMedia').mockImplementation(((query: string) => ({ matches: on && query.includes('reduce'), media: query, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, onchange: null, dispatchEvent: () => false })) as unknown as typeof window.matchMedia);
-
 beforeEach(() => {
   window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
   window.matchMedia ??= ((query: string) => ({ matches: false, media: query, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, onchange: null, dispatchEvent: () => false })) as unknown as typeof window.matchMedia;
-  vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
-  vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
 });
-afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); });
+afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 const lower = (text: string) => text.toLowerCase().replace(/\s+·\s+/g, ', ');
 
 describe('The site’s project pages: what they say', () => {
-  it('has a page for all six projects, each with its own words from the catalog', () => {
+  it('has a page for all five projects, each with its own words from the catalog', () => {
     expect(WORK_PAGES.map(w => w.id)).toEqual([...WORK_IDS]);
     for (const w of WORK_PAGES) {
       const p = projects.find(x => x.id === w.id)!;
@@ -28,10 +24,25 @@ describe('The site’s project pages: what they say', () => {
   });
   it('never falls back to another project', () => {
     expect(pageWorkById('nope')).toBeNull();
-    expect(pageWorkById('port')?.name).toBe('Port');
+    expect(pageWorkById('port')).toBeNull();
     expect(nextWork('agentsky').id).toBe('dervo');
     expect(toWork('/projects/arro')).toBe('arro');
     expect(toWork('#integrations')).toBeNull();
+  });
+
+  it('walks every page once with next, skipping port, and comes back to the start', () => {
+    const seen: string[] = [];
+    let id: (typeof WORK_IDS)[number] = WORK_IDS[0];
+    for (let k = 0; k < WORK_IDS.length; k++) { seen.push(id); id = nextWork(id).id; }
+    expect(id).toBe(WORK_IDS[0]);
+    expect(seen).toEqual(['dervo', 'arro', 'lucid', 'integration-portal', 'agentsky']);
+    for (const w of WORK_IDS) expect(nextWork(w).id).not.toBe('port');
+  });
+
+  it.each(WORK_IDS)('never links %s to port, before or after', id => {
+    const { container } = render(<WorkPage id={id} />);
+    expect(container.querySelector('a[href*="port"]:not([href*="portal"])')).toBeNull();
+    expect(container.textContent).not.toMatch(/\bport\b/i);
   });
 
   it.each(WORK_IDS)('opens %s on its own name and keeps every word the catalog has, in the home’s voice', id => {
@@ -45,6 +56,8 @@ describe('The site’s project pages: what they say', () => {
     expect(screen.getByRole('link', { name: 'back to the work' })).toHaveAttribute('href', '/#work');
     expect(screen.getByRole('link', { name: `next: ${next.name.toLowerCase()}` })).toHaveAttribute('href', `/projects/${next.id}`);
     expect(document.title).toBe(`${w.name.toLowerCase()}, bryce rambach`);
+    const before = text.slice(0, text.indexOf(w.name.toLowerCase()));
+    for (const other of WORK_PAGES.filter(o => o.id !== id && !w.name.includes(o.name))) expect(before).not.toContain(other.name.toLowerCase());
   });
 
   it.each(WORK_IDS)('shows %s’s screenshots with alt text, sized so nothing shifts, and its headings in order', id => {
@@ -119,49 +132,11 @@ describe('The project pages’ header and footer', () => {
   });
 });
 
-describe('Port’s hold', () => {
-  it('closes on Enter, says so, and opens again', () => {
-    reduced(true);
-    render(<WorkPage id="port" />);
-    const ring = screen.getByRole('button', { name: 'hold to close port' });
-    fireEvent.keyDown(ring, { key: 'Enter' });
-    expect(screen.getByRole('status')).toHaveTextContent('port closed');
-    expect(HTMLMediaElement.prototype.play).toHaveBeenCalled();
-    fireEvent.keyDown(screen.getByRole('button', { name: 'open port' }), { key: ' ' });
-    expect(screen.getByRole('status')).toHaveTextContent('port open');
-  });
-
-  it('folds after a one second hold, and does nothing if let go early', () => {
-    reduced(false);
-    vi.useFakeTimers();
-    render(<WorkPage id="port" />);
-    const ring = screen.getByRole('button', { name: 'hold to close port' });
-    fireEvent.pointerDown(ring, { button: 0 });
-    act(() => { vi.advanceTimersByTime(500); });
-    fireEvent.pointerUp(ring);
-    act(() => { vi.advanceTimersByTime(2000); });
-    expect(screen.getByRole('status')).toHaveTextContent('port open');
-    fireEvent.pointerDown(ring, { button: 0 });
-    act(() => { vi.advanceTimersByTime(1000); });
-    act(() => { vi.advanceTimersByTime(1500); });
-    expect(screen.getByRole('status')).toHaveTextContent('port closed');
-  });
-
-  it('can be quiet', () => {
-    reduced(true);
-    render(<WorkPage id="port" />);
-    fireEvent.click(screen.getByRole('button', { name: 'sound on' }));
-    expect(screen.getByRole('button', { name: 'sound off' })).toHaveAttribute('aria-pressed', 'false');
-    fireEvent.keyDown(screen.getByRole('button', { name: 'hold to close port' }), { key: 'Enter' });
-    expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
-  });
-});
-
 describe('The site’s links', () => {
   it('sends the home page to the project pages, opens the links off the site in a new tab, with no arrow glyphs', () => {
     render(<Home />);
     const work = within(screen.getByRole('region', { name: 'work' }));
-    for (const id of ['dervo', 'integration-portal', 'arro', 'lucid', 'port']) expect(work.getAllByRole('link').some(a => a.getAttribute('href') === `/projects/${id}`), id).toBe(true);
+    for (const id of ['dervo', 'integration-portal', 'arro', 'lucid']) expect(work.getAllByRole('link').some(a => a.getAttribute('href') === `/projects/${id}`), id).toBe(true);
     for (const name of ['linkedin', 'x @brycerambach', 'github']) {
       for (const link of screen.getAllByRole('link', { name: `${name} (opens in a new tab)` })) {
         expect(link).toHaveAttribute('target', '_blank');

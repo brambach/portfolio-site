@@ -142,18 +142,6 @@
 .s-more { margin-top: var(--s3); display: flex; gap: var(--s5); font-size: .9375rem; }
 .s-more a { color: var(--primary); border-bottom: 1px solid transparent; }
 .s-more a:hover { border-color: currentColor; }
-/* port: no picture, so a quieter row under the cards, between two hairlines. */
-.s-small { margin-top: var(--s7); padding: var(--s5) 0; border-block: 1px solid var(--line); display: grid; gap: var(--s2); }
-.s-small .s-head { margin-top: 0; justify-content: flex-start; }
-.s-small .s-head h3 { font-size: 1.5rem; }
-.s-small .s-what { margin-top: 0; }
-.s-small .s-more { margin-top: var(--s1); }
-@media (min-width: 760px) {
-  .s-small { grid-template-columns: 1fr 1fr; gap: var(--s2) var(--s6); align-items: baseline; }
-  .s-small .s-head { flex-direction: column; align-items: flex-start; gap: 6px; }
-  .s-small .s-more { grid-column: 2; }
-}
-
 .s-about p { max-width: 640px; font: 400 clamp(1.375rem, 2.6vw, 1.75rem)/1.4 var(--font-display); color: var(--ink-2); text-wrap: pretty; }
 .s-about p + p { margin-top: var(--s4); }
 

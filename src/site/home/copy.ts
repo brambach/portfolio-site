@@ -20,10 +20,10 @@ export const HERO = {
 };
 
 export type SectionId = 'dervo' | 'portal' | 'bots' | 'more';
-/** Where a contents row lands: a section, or arro's or port's own row in more work. */
-export type ContentsTarget = SectionId | 'more-arro' | 'more-port';
+/** Where a contents row lands: a section, or arro's own row in more work. */
+export type ContentsTarget = SectionId | 'more-arro';
 
-/** The contents page, in page order. arro and port share the more work section, so each lands on its own row there. */
+/** The contents page, in page order. arro sits in the more work section, so it lands on its own row there. */
 export const CONTENTS: { label: string; rows: { id: ContentsTarget; numeral: string; name: string; line: string }[] } = {
   label: 'contents',
   rows: [
@@ -31,7 +31,6 @@ export const CONTENTS: { label: string; rows: { id: ContentsTarget; numeral: str
     { id: 'portal', numeral: 'ii', name: 'integration portal', line: 'if a field maps wrong, someone gets paid wrong.' },
     { id: 'bots', numeral: 'iii', name: 'bot team', line: 'my bots hand work to each other.' },
     { id: 'more-arro', numeral: 'iv', name: 'arro', line: 'a missed day is never public.' },
-    { id: 'more-port', numeral: 'v', name: 'port', line: 'hold for a second and the screen folds into a line.' },
   ],
 };
 
@@ -117,7 +116,6 @@ export const MORE = {
   numeral: 'iv',
   rows: [
     { id: 'arro', name: 'arro', line: 'a daily movement streak for families who live apart. a missed day is never public.' },
-    { id: 'port', name: 'port', line: 'hold for a second and the screen folds into a line.' },
   ],
   read: 'read',
   story: { id: 'dervo', label: 'dervo, the full story' },

@@ -41,7 +41,7 @@ describe('SimplePortfolio', () => {
     expect(at('The long way')).toBeGreaterThan(-1);
     expect(at('The long way')).toBeLessThan(at('Tennis club'));
     expect(at('Young prodigy')).toBeLessThan(at('Dervo'));
-    expect(at('Port')).toBeLessThan(at('Yes, this counts as looking at my site'));
+    expect(at('Arro')).toBeLessThan(at('Yes, this counts as looking at my site'));
   });
 
   it('ends the drive with a way into the 3D Porsche', () => {

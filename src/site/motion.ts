@@ -9,7 +9,7 @@ import { buildScene, srcOf, type Built, type BuildJob } from './build';
 import { saveHandoff, saveReturn, snapshotOf, startCursor } from './chrome';
 import { FIELD_SIZE, fieldColor, makeGrid, sampleType, withType, type Formation, type Grid } from './field';
 import { hex, type Palette } from './palette';
-import { peekPainter, portPicture } from './pixels';
+import { peekPainter } from './pixels';
 import { ART, bandShown, layoutFor, SCENE_ORDER, sideways, type SceneId } from './scenes';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
@@ -363,8 +363,7 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
     const picFor = (id: string) => {
       if (!pics.has(id)) {
         const work = WORK.find(w => w.id === id)!;
-        if (work.hero.port) pics.set(id, portPicture(palette.accent));
-        else { const img = new Image(); img.src = work.hero.src; pics.set(id, img); }
+        const img = new Image(); img.src = work.hero.src; pics.set(id, img);
       }
       return pics.get(id)!;
     };
@@ -405,7 +404,7 @@ export function startHome(root: HTMLElement, palette: Palette): EMotion {
     canvas.style.transition = ''; canvas.style.opacity = '';
     gsap.to(peek, { autoAlpha: 0, duration: 0.3, ease: 'power2.in', overwrite: 'auto' });
     gsap.to([main, head], { autoAlpha: 0, duration: 0.45, ease: 'power2.out', overwrite: 'auto' });
-    const g = grid, built = build.build({ ...job('work'), ...('ring' in work.hero ? { id: 'ring' } : { id: 'shot', src: work.hero.src }) });
+    const g = grid, built = build.build({ ...job('work'), id: 'shot', src: work.hero.src });
     // If the picture is slow, don't keep the visitor waiting on it.
     const late = window.setTimeout(() => { location.href = href; }, 2200);
     void built.then(b => {

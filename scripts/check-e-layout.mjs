@@ -125,13 +125,11 @@ for (const size of SIZES) {
       const key = `${el.tagName.toLowerCase()}${el.className && typeof el.className === 'string' ? '.' + el.className.split(' ')[0] : ''} ${fs}px`;
       small.set(key, Math.min(small.get(key) ?? 99, fs));
     }
-    // Port's ring and its controls first, while the page is still at the top, where they're up.
-    const all = [...document.querySelectorAll('.e-site a, .e-site button')];
-    for (const a of [...all.filter(a => a.closest('.e-hold')), ...all.filter(a => !a.closest('.e-hold'))]) {
+    for (const a of document.querySelectorAll('.e-site a, .e-site button')) {
       if (!a.getClientRects().length || a.closest('.e-index__row:not(.is-open) .e-index__more') || a.closest('.e-index__more') && getComputedStyle(a.closest('.e-index__more')).display === 'none') continue;
       const ra = a.getBoundingClientRect();
       if (!ra.width) continue;
-      if (!a.closest('.e-head, .e-hold')) {
+      if (!a.closest('.e-head')) {
         // Centred on the screen. The smooth scroll can cut an instant jump short (WebKit), so try again if it did.
         for (let k = 0; k < 4; k++) {
           const now = a.getBoundingClientRect();
@@ -162,7 +160,7 @@ for (const size of SIZES) {
   console.log(`  home text under 12px: ${homeChecks.small.join('; ') || 'none'}`);
 
   // ---- a project page ----
-  for (const id of ['dervo', 'port']) {
+  for (const id of ['dervo']) {
     await page.goto(`${base}/projects/${id}`, { waitUntil: 'load' });
     await settle(page, 3000);
     const o = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);

@@ -170,9 +170,6 @@
 .e-tile { overflow: hidden; border-radius: 4px; aspect-ratio: 16 / 10; background: #151a26; }
 .e-tile.is-tall { aspect-ratio: 9 / 14; max-width: 240px; }
 .e-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.e-port { display: grid; place-items: center; align-content: center; gap: 14px; width: 100%; height: 100%; background: radial-gradient(70% 70% at 50% 45%, #2a3346, #151a26); }
-.e-dotring circle { fill: var(--e-accent); }
-.e-port span { font: 400 11px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: rgb(236 235 230 / 0.7); text-shadow: none; }
 @media (hover: hover) and (pointer: fine) { .e-index__more { display: none; } }
 
 /* The picture is square-cornered, like everything made of pixels here. */
@@ -222,7 +219,7 @@
   .e-head__name { font-size: 17px; }
   .e-caption { font-size: 11px; max-width: 52vw; text-align: right; line-height: 1.3; }
   /* The mono labels, a step bigger, so they read on a phone. */
-  .e-rule, .e-index__no, .e-index__kind, .e-work__hint, .e-kicker, .e-sign, .e-port span { font-size: 12px; }
+  .e-rule, .e-index__no, .e-index__kind, .e-work__hint, .e-kicker, .e-sign { font-size: 12px; }
   .e-proof__name.is-private small { font-size: 11.5px; }
   .e-hero { padding-top: 15svh; }
   .e-tag { font-size: clamp(44px, 13.4vw, 96px); line-height: 0.96; }

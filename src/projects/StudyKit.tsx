@@ -15,7 +15,7 @@ export function K({ children, at = 0 }: { children: string; at?: number }) {
 }
 
 // Screens that lean toward the pointer. Delegated, so studies only need the selector to match.
-const TILT = '.ps-dervo__screen, .ps-arro__phone, .ps-lucid__capture img, .ps-port__screen, [data-tilt]';
+const TILT = '.ps-dervo__screen, .ps-arro__phone, .ps-lucid__capture img, [data-tilt]';
 
 export function useStudyMotion(dialog: RefObject<HTMLDialogElement | null>, scroller: RefObject<HTMLElement | null>, identity: string) {
   // the road progress: --p runs 0 to 1 down the study

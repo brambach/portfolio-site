@@ -1,12 +1,12 @@
 import type { Picture } from './work';
 
-/* The five things the home page says Bryce does, each with the project that shows it. The first screen raises one
+/* The four things the home page says Bryce does, each with the project that shows it. The first screen raises one
    picture per skill out of the water; further down, each gets a few sentences and the links that back them up.
 
    Everything here comes from the projects' own READMEs on github.com/brambach and the project pages on this site.
    Client work from the contract stays out, so the integrations picture is a drawing, labelled as one. */
 
-export type SkillId = 'integrations' | 'agents' | 'harnesses' | 'design' | 'product';
+export type SkillId = 'integrations' | 'agents' | 'harnesses' | 'product';
 
 /** One piece of proof: a page on this site (`to`), an outside link (`href`), or neither for something private. */
 export type Evidence = { name: string; note: string; to?: string; href?: string };
@@ -18,12 +18,12 @@ export type Skill = {
   proof: string;
   /** A line under the index while it's up. */
   line: string;
-  /** The picture that rises for it. `map` is the drawn field mapping, `port` Port's ring. */
-  picture: Picture & { port?: boolean; map?: boolean };
+  /** The picture that rises for it. `map` is the drawn field mapping. */
+  picture: Picture & { map?: boolean };
   /** Where its picture opens: a project page, or its own section further down. */
   to: string;
   /** The project page this skill shares with others, so coming back from it lands on the right row. */
-  project?: 'dervo' | 'arro' | 'port';
+  project?: 'dervo' | 'arro';
   body: string[];
   evidence: Evidence[];
 };
@@ -75,23 +75,6 @@ export const SKILLS: Skill[] = [
     evidence: [
       { name: 'dervo_harness', href: 'https://github.com/brambach/dervo/tree/main/backend/dervo_harness', note: 'Drives Claude Code and Codex. The evals and load tests sit beside it in tools/.' },
       { name: 'Arro’s checks', href: 'https://github.com/brambach/arro', note: 'Jest, a typecheck and 192 pgTAP tests for row-level security, streaks, invites and pushes, on every pull request.' },
-    ],
-  },
-  {
-    id: 'design',
-    name: 'Design',
-    proof: 'Port',
-    line: 'Hold for a second and the screen folds into a line.',
-    picture: { src: '', port: true },
-    to: '/projects/port',
-    project: 'port',
-    body: [
-      'I design what I build. Port is an iOS app for putting your phone down at night: hold for a second and the screen squeezes into a thin horizon line, with the haptic landing the moment the band becomes a line.',
-    ],
-    evidence: [
-      { name: 'Port', to: '/projects/port', note: 'Try the hold in your browser, with the app’s sound.' },
-      { name: 'This site', href: 'https://github.com/brambach/portfolio-site', note: 'Its colors follow your time of day.' },
-      { name: 'design-taste', note: 'My taste written down with evidence, so coding agents build to it. Private, since it holds other people’s screenshots.' },
     ],
   },
   {

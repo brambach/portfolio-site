@@ -1,7 +1,7 @@
 import { MORE } from '../copy';
 import { workHref } from '../../routes';
 
-/* iv. more work: the other two projects as big rows, like the contents page set larger, each a link to its page.
+/* iv. more work: the other project as a big row, like the contents page set larger, a link to its page.
    Pointing at a row lifts it off the paper onto a white card. Last, quieter, the long version of dervo. Static. */
 
 const Arrow = () => <svg className="mw__arrow" viewBox="0 0 16 10" aria-hidden="true" focusable="false"><path d="M0,5H14.5M10.5,1L14.5,5L10.5,9" /></svg>;

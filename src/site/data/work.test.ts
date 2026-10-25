@@ -17,7 +17,7 @@ describe('the work on the home page’s index', () => {
   });
   it('only points at screenshots that exist', () => {
     for (const work of WORK) {
-      if (!work.hero.port) expect(existsSync(publicFile(work.hero.src)), work.hero.src).toBe(true);
+      expect(existsSync(publicFile(work.hero.src)), work.hero.src).toBe(true);
       for (const picture of work.gallery) {
         expect(existsSync(publicFile(picture.src)), picture.src).toBe(true);
         expect(picture.title && picture.text, picture.src).toBeTruthy();
@@ -25,7 +25,7 @@ describe('the work on the home page’s index', () => {
     }
   });
   it('has the files the pages link to', () => {
-    for (const file of ['/projects/port/close.wav', '/favicon.svg', '/favicon.ico', '/apple-touch-icon.png', '/og/home-look-d.jpg']) {
+    for (const file of ['/favicon.svg', '/favicon.ico', '/apple-touch-icon.png', '/og/home-look-d.jpg']) {
       expect(existsSync(publicFile(file)), file).toBe(true);
     }
   });

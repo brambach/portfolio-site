@@ -67,14 +67,6 @@ const WORK: Card[] = [
   },
 ];
 
-/* port has no screenshot to show, so it gets a quieter row under the cards: the words, and a way to try the hold. */
-const PORT = {
-  id: 'port', name: 'port', kind: 'swiftui prototype',
-  what: 'an iphone app for putting your phone down at night. hold for a second and the screen folds into a line.',
-  fact: 'its page lets you try the hold in your browser, with the app’s sound.',
-  source: 'https://github.com/brambach/port',
-};
-
 export default function Home() {
   useEffect(() => {
     const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
@@ -119,17 +111,6 @@ export default function Home() {
             </div>
           </article>)}
         </div>
-        <article className="s-small">
-          <div className="s-head"><h3>{PORT.name}</h3><span className="s-label">{PORT.kind}</span></div>
-          <div>
-            <p className="s-what">{PORT.what}</p>
-            <p className="s-facts">{PORT.fact}</p>
-          </div>
-          <div className="s-more">
-            <a href={`/projects/${PORT.id}`}>the full story{' '}<span className="s-vh">about {PORT.name}</span></a>
-            <a href={PORT.source} {...NEW_TAB}><span className="s-vh">{PORT.name}</span>{' '}source<NewTab /></a>
-          </div>
-        </article>
       </section>
 
       <section id="about" className="s-sec s-about" aria-label="about">

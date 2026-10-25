@@ -35,17 +35,6 @@ export function ELink({ away = false, back = false, children, className = '', cu
   </a>;
 }
 
-/** Port's ring to hold, drawn in dots, for the small tile on the index. */
-export function DotRing({ size = 72 }: { size?: number }) {
-  const r = size * 0.4, n = 22;
-  return <svg className="e-dotring" width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
-    {Array.from({ length: n }, (_, k) => {
-      const a = (k / n) * Math.PI * 2;
-      return <circle key={k} cx={size / 2 + Math.cos(a) * r} cy={size / 2 + Math.sin(a) * r} r={size * 0.045} />;
-    })}
-  </svg>;
-}
-
 /** The pointer's four dots and its word (chrome.ts moves them). */
 export function ECursor() {
   return <div className="e-cursor" aria-hidden="true" data-cursor-el>

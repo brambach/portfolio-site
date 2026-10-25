@@ -7,9 +7,9 @@ import { INDEX_IDS } from './work';
 
 const DASHES = /[\u2013\u2014]/;
 
-describe('the five skills', () => {
-  it('are the five the home page claims, each with proof', () => {
-    expect(SKILLS.map(s => s.name)).toEqual(['Integrations', 'Agents', 'Harnesses', 'Design', 'Product taste']);
+describe('the four skills', () => {
+  it('are the four the home page claims, each with proof', () => {
+    expect(SKILLS.map(s => s.name)).toEqual(['Integrations', 'Agents', 'Harnesses', 'Product taste']);
     expect(new Set(SKILLS.map(s => s.id)).size).toBe(SKILLS.length);
     for (const skill of SKILLS) {
       expect(skill.body.length, skill.id).toBeGreaterThan(0);
@@ -30,7 +30,7 @@ describe('the five skills', () => {
 
   it('raise pictures that exist', () => {
     for (const { picture } of SKILLS) {
-      if (picture.port || picture.map) continue;
+      if (picture.map) continue;
       expect(existsSync(path.join(process.cwd(), 'public', picture.src)), picture.src).toBe(true);
     }
   });
