@@ -1,0 +1,147 @@
+/* The simple home: look D's tokens, fonts and its engraving, held still. Copied from home/look-d.css.
+   Order: the vendored tokens, the fonts, the D overrides (copied from design-system/components/looks.css, the
+   :root[data-look="d"] block, scoped here to .home so the project pages keep their own look), then the page. */
+@import "../styles/tokens/tokens.css";
+@import "@fontsource/instrument-serif/latin-400.css";
+@import "@fontsource/instrument-serif/latin-400-italic.css";
+
+/* Stand-ins while the web fonts load, stretched to the same widths and heights so the swap doesn't move a line.
+   Liberation Serif and Arimo match Times New Roman and Arial, so the overrides hold on every system. */
+@font-face {
+  font-family: "Instrument Serif Fallback";
+  src: local("Times New Roman"), local("TimesNewRomanPSMT"), local("Liberation Serif");
+  size-adjust: 84.3%;       /* measured: Instrument Serif sets 84.3% as wide as Times/Liberation Serif */
+  ascent-override: 117.4%;  /* its hhea ascent .99 and descent .31, over the size adjust */
+  descent-override: 36.8%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Hanken Grotesk Fallback";
+  src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Arimo");
+  size-adjust: 100%;        /* measured: Hanken sets within 0.1% of Arial's width */
+}
+
+/* ---------- D, from design-system/components/looks.css ---------- */
+.home {
+  --font-display: "Instrument Serif", "Instrument Serif Fallback", Georgia, serif;
+  --font-text: "Hanken Grotesk Variable", "Hanken Grotesk Fallback", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: "Hanken Grotesk Variable", "Hanken Grotesk Fallback", -apple-system, system-ui, sans-serif;
+
+  --paper: #f3eee3; --canvas: #f6f2e9; --raised: #ffffff; --sunk: #ebe5d8;
+  --ink: #2e1a3d; --ink-2: #452a59; --muted: #5f4872; --faint: #6a5579;
+  --line: #e4dbcc; --line-strong: #d3c7b4;
+  --primary: #2343c2; --on-primary: #ffffff;
+  --done: #6b4a80; --done-wash: #eee6f0;
+  --running: #5e2a7e; --running-wash: #ece3f1;
+  --accent: #873a9e; --accent-wash: #f3e6f3; --on-accent: #ffffff;
+  --focus: #2343c2;
+  /* A printer's stamp red, muted. Only for the portal's wrong landing, while it's caught; never at rest. */
+  --stamp-red: #a3372b;
+  --display-ink: #5e2a7e;
+  --accent-ink: #5e2a7e;
+  --action-ink: #5e2a7e;
+  --label-track: 0.08em;
+
+  --lift:
+    0 0 0 1px rgb(74 37 96 / .06),
+    0 1px 2px rgb(74 37 96 / .05),
+    0 22px 48px -26px rgb(74 37 96 / .30);
+  --float:
+    0 0 0 1px rgb(74 37 96 / .08),
+    0 26px 60px -24px rgb(74 37 96 / .34);
+  --card-edge: 0 0 0 1px rgb(74 37 96 / .035);
+  --btn-lit: inset 0 1px 0 rgb(255 255 255 / .18), inset 0 -1px 0 rgb(10 20 80 / .22), 0 1px 2px rgb(35 67 194 / .28);
+  --glass: rgb(246 242 233 / .74);
+
+  /* The page's own: the statement curve, the column and its gutter, the reading size. */
+  --ease-statement: cubic-bezier(.16, 1, .3, 1);
+  --col: 1200px;
+  --gutter: var(--s7);
+  --fs-lead: 1.0625rem;   /* 17 */
+  --fs-label: 0.75rem;    /* 12, 13 on a phone */
+}
+.vig { position: relative; margin: var(--s4) calc(var(--gutter) * -1) 0; aspect-ratio: 4.4 / 1; color: var(--display-ink); }
+.vig__plate {
+  position: absolute; inset: 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, rgb(0 0 0 / .55) 8%, #000 16%, #000 84%, rgb(0 0 0 / .55) 92%, transparent), linear-gradient(transparent, #000 18%, #000 82%, rgb(0 0 0 / .4) 93%, transparent);
+  mask-image: linear-gradient(90deg, transparent, rgb(0 0 0 / .55) 8%, #000 16%, #000 84%, rgb(0 0 0 / .55) 92%, transparent), linear-gradient(transparent, #000 18%, #000 82%, rgb(0 0 0 / .4) 93%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+.vig__plate svg, .vig__sky { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.vig__sun, .vig__glints { fill: var(--primary); }
+/* The sun rises on its own layer, so moving it repaints nothing. */
+.vig__sun { will-change: transform; }
+/* Pines stand up from their base. */
+.vig__pines path { transform-box: fill-box; transform-origin: 50% 100%; }
+/* The glints come out on the water once the land is drawn, breathe out and back once, slowly, while it's on screen,
+   then hold still. Scrolled back above them, they go. */
+.vig__glints { opacity: .72; transition: opacity 140ms var(--ease-in); }
+.vig__plate:not([data-glint]) .vig__glints { opacity: 0; }
+.vig__plate[data-glint] .vig__glints { animation: vig-breathe 5s ease-in-out 1 forwards; }
+.vig__plate[data-off] .vig__glints { animation-play-state: paused; }
+.home .vig__glints { animation: none !important; opacity: .72; }
+
+/* ---------- the simple page ---------- */
+.home {
+  min-height: 100svh; color: var(--ink);
+  font: 400 var(--fs-lead)/var(--lh-read) var(--font-text);
+  -webkit-font-smoothing: antialiased; overflow-x: clip;
+  background: var(--paper);
+  --col: 1080px; --gutter: 24px;
+}
+@media (min-width: 760px) { .home { --gutter: 48px; } }
+.home > * { width: min(100% - 2 * var(--gutter), var(--col)); margin-inline: auto; }
+.home a { color: inherit; text-decoration: none; }
+.home :focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; border-radius: 2px; }
+.home ::selection { background: var(--running-wash); }
+.s-label { font: 500 var(--fs-label)/1 var(--font-text); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--muted); }
+.s-fade { animation: s-in 600ms var(--ease-statement) both; }
+@keyframes s-in { from { opacity: 0; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) { .s-fade { animation: none; } }
+
+.s-top { display: flex; justify-content: space-between; align-items: baseline; padding-top: var(--s5); }
+.s-top nav { display: flex; gap: var(--s5); }
+.s-top a { position: relative; }
+.s-top a::after { content: ""; position: absolute; inset: -14px -8px; }
+.s-top nav a:hover { color: var(--action-ink); }
+
+.s-hero { padding-top: clamp(48px, 10vw, 112px); }
+.s-hero h1 { font: 400 clamp(2.9rem, 7vw, 5.75rem)/1.02 var(--font-display); letter-spacing: -0.02em; color: var(--display-ink); text-wrap: balance; }
+.s-hero h1 em { font-style: italic; }
+.s-hero p { margin-top: var(--s5); max-width: 560px; color: var(--ink-2); text-wrap: pretty; }
+.s-links { display: flex; flex-wrap: wrap; gap: var(--s3) var(--s5); margin-top: var(--s5); }
+.s-links a { border-bottom: 1px solid var(--line-strong); padding-bottom: 2px; color: var(--ink-2); transition: color var(--dur-calm) var(--ease-out), border-color var(--dur-calm) var(--ease-out); }
+.s-links a:hover { color: var(--primary); border-color: var(--primary); }
+.home .vig { margin: var(--s5) calc(var(--gutter) * -1) 0; aspect-ratio: 4.4 / 1; opacity: .85; }
+@media (max-width: 759.98px) { .home .vig { aspect-ratio: 3 / 1; } }
+
+.s-sec { padding-top: clamp(48px, 8vw, 88px); }
+.s-sec > .s-label { display: block; margin-bottom: var(--s5); }
+.s-grid { display: grid; gap: var(--s7) var(--s6); }
+@media (min-width: 760px) { .s-grid { grid-template-columns: 1fr 1fr; } }
+.s-card { display: flex; flex-direction: column; }
+.s-shot { display: block; position: relative; aspect-ratio: 16 / 10; overflow: hidden; border-radius: 10px; background: var(--sunk); box-shadow: var(--card-edge), 0 1px 2px rgb(74 37 96 / .06); transition: box-shadow var(--dur-calm) var(--ease-out), transform var(--dur-calm) var(--ease-out); }
+.s-shot img { width: 100%; height: 100%; object-fit: cover; object-position: top left; display: block; }
+.s-shot.is-phones { display: flex; justify-content: center; align-items: flex-start; gap: 4%; padding: 6% 8% 0; background: var(--accent-wash); }
+.s-shot.is-phones img { width: 34%; height: auto; border-radius: 14px; box-shadow: var(--lift); }
+.s-card:hover .s-shot { transform: translateY(-3px); box-shadow: var(--lift); }
+.s-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s4); margin-top: var(--s4); }
+.s-head h3 { font: 400 1.875rem/1.1 var(--font-display); color: var(--display-ink); }
+.s-head .s-label { white-space: nowrap; }
+.s-what { margin-top: var(--s2); color: var(--ink); }
+.s-facts { margin-top: var(--s2); color: var(--muted); font-size: .9375rem; }
+.s-facts li + li { margin-top: 2px; }
+.s-more { margin-top: var(--s3); display: flex; gap: var(--s5); font-size: .9375rem; }
+.s-more a { color: var(--primary); border-bottom: 1px solid transparent; }
+.s-more a:hover { border-color: currentColor; }
+.s-also { margin-top: var(--s7); color: var(--muted); font-size: .9375rem; }
+.s-also a { color: var(--ink-2); border-bottom: 1px solid var(--line-strong); }
+
+.s-about p { max-width: 640px; font: 400 clamp(1.375rem, 2.6vw, 1.75rem)/1.4 var(--font-display); color: var(--ink-2); text-wrap: pretty; }
+.s-about p + p { margin-top: var(--s4); }
+
+.s-foot { margin-top: clamp(64px, 10vw, 112px); padding: var(--s6) 0 var(--s7); border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s4); color: var(--muted); font-size: .9375rem; }
+.s-foot nav { display: flex; flex-wrap: wrap; gap: var(--s5); }
+.s-foot a:hover { color: var(--primary); }
+@media (max-width: 759.98px) { .s-head { flex-direction: column; gap: 6px; } }
