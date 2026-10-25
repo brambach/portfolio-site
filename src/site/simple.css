@@ -68,19 +68,9 @@
   -webkit-mask-composite: source-in;
   mask-composite: intersect;
 }
-.vig__plate svg, .vig__sky { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.vig__plate svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .vig__sun, .vig__glints { fill: var(--primary); }
-/* The sun rises on its own layer, so moving it repaints nothing. */
-.vig__sun { will-change: transform; }
-/* Pines stand up from their base. */
-.vig__pines path { transform-box: fill-box; transform-origin: 50% 100%; }
-/* The glints come out on the water once the land is drawn, breathe out and back once, slowly, while it's on screen,
-   then hold still. Scrolled back above them, they go. */
-.vig__glints { opacity: .72; transition: opacity 140ms var(--ease-in); }
-.vig__plate:not([data-glint]) .vig__glints { opacity: 0; }
-.vig__plate[data-glint] .vig__glints { animation: vig-breathe 5s ease-in-out 1 forwards; }
-.vig__plate[data-off] .vig__glints { animation-play-state: paused; }
-.home .vig__glints { animation: none !important; opacity: .72; }
+.vig__glints { opacity: .72; }
 
 /* ---------- the simple page ---------- */
 .home {
