@@ -24,12 +24,14 @@
         var site = window.__notFound || moving || (path === ''
           ? !['mile', 'from', 'town', 'city', 'journey', 'forest'].some(function (k) { return q.has(k); })
           : older.indexOf(path) < 0);
-        // Sentient, the display face of a project's page and the not-found page (src/site/e.css), comes from
-        // Fontshare (its licence doesn't allow the files in a public repo). The home is set in its own
+        // A project's page wears the home's cream paper and faces (src/site/project.css).
+        var work = !window.__notFound && /^\/projects\/(dervo|arro|port|lucid|integration-portal|agentsky)$/.test(path);
+        // Sentient, the display face of the not-found page (src/site/e.css), comes from Fontshare (its licence
+        // doesn't allow the files in a public repo). The home and the project pages are set in their own
         // self-hosted faces, and the older pages bring their own (/next asks for Sentient itself, in QuietIndex.tsx),
-        // so only these pages ask for it. Added from here it doesn't block the page; the stylesheets fall back to
+        // so only this page asks for it. Added from here it doesn't block the page; the stylesheets fall back to
         // Georgia until it arrives.
-        if (site && (path !== '' || window.__notFound)) {
+        if (site && !work && (path !== '' || window.__notFound)) {
           [['preconnect', 'https://api.fontshare.com'], ['preconnect', 'https://cdn.fontshare.com'],
            ['stylesheet', 'https://api.fontshare.com/v2/css?f[]=sentient@400,400i&display=swap']].forEach(function (l) {
             var link = document.createElement('link');
@@ -42,8 +44,8 @@
         if (!site) return;
         var root = document.documentElement;
         var meta = document.querySelector('meta[name="theme-color"]');
-        if (path === '' && !window.__notFound) {
-          // The home's faces for the first screen, preloaded here and nowhere else: its CSS arrives with its chunk, after
+        if ((path === '' || work) && !window.__notFound) {
+          // The home's faces for the first screen (a project page's too), preloaded here and nowhere else: its CSS arrives with its chunk, after
           // the JS, so without this the headline would wait on a round trip it doesn't need. The build fills the
           // list (vite.config.ts).
           [/* home-fonts */].forEach(function (href) {
@@ -63,38 +65,18 @@
         var h = raw === null ? NaN : m ? Number(m[1]) + (m[2] ? Number(m[2]) / 60 : 0) : Number(raw);
         if (!(h >= 0 && h <= 24)) h = now.getHours() + now.getMinutes() / 60;
         var time = h >= 5 && h < 10 ? 'dawn' : h >= 10 && h < 16 ? 'day' : h >= 16 && h < 19.5 ? 'golden' : 'night';
-        // A project's page and the not-found page keep the day paper at every hour, like the home's one cream
-        // paper, so the home never links into the night look (WorkPage.tsx and NotFound.tsx do the same).
+        // The not-found page keeps the day paper at every hour, so nothing the home links to turns dark at night
+        // (NotFound.tsx does the same).
         if (!moving) time = 'day';
         var paper = { dawn: '#f4d5e0', day: '#eef2ee', golden: '#f6e0c6', night: '#0a0f26' }[time];
         root.setAttribute('data-e', time);
         root.style.background = paper;
         root.style.setProperty('--e-paper', paper);
         if (meta) meta.setAttribute('content', paper);
-        // Arriving on a project's page with the dots handed over (src/site/chrome.ts): hold the page before on
-        // screen until the dots are drawn here, then the page lets it go. Never longer than the hold below.
-        var work = /^\/projects\/[^/]+$/.test(path);
-        if (work && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          try {
-            var note = JSON.parse(sessionStorage.getItem('e:handoff') || 'null');
-            if (note && Date.now() - note.at < 5000 && path.split('/').pop() === note.id) {
-              root.setAttribute('data-e-arriving', '');
-              addEventListener('pagereveal', function (e) {
-                var t = e.viewTransition;
-                window.__eReveal = t;
-                if (t) [t.ready, t.finished, t.updateCallbackDone].forEach(function (p) { if (p) p.catch(function () {}); });
-              });
-            }
-          } catch (e) {}
-        }
       })();
     </script>
     <style>
       :root[data-e="night"] { color-scheme: dark; }
-      :root[data-e-arriving]::view-transition-old(root) { animation: e-vt-hold 2s linear both; }
-      :root[data-e-arriving]::view-transition-new(root) { animation: e-vt-wait 2s linear both; }
-      @keyframes e-vt-hold { from, to { opacity: 1; } }
-      @keyframes e-vt-wait { from, to { opacity: 0; } }
     </style>
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=e1" />

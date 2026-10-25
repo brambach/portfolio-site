@@ -17,14 +17,14 @@ beforeEach(() => {
 afterEach(() => { vi.restoreAllMocks(); sessionStorage.clear(); });
 
 const home = readFileSync(`${process.cwd()}/src/site/home/look-d.css`, 'utf8');
-const css = ['./e.css', './work.css', './not-found.css'].map(f => readFileSync(new URL(f, import.meta.url), 'utf8')).join('\n');
+const css = ['./e.css', './not-found.css'].map(f => readFileSync(new URL(f, import.meta.url), 'utf8')).join('\n');
 // The page's own index.html, read from the repo (vitest serves a URL for it, not a file).
 const index = readFileSync(`${process.cwd()}/index.html`, 'utf8');
 
 describe('A project’s way back', () => {
   it.each(WORK_IDS)('goes to the work on the home page from %s, however the page was reached', id => {
     render(<WorkPage id={id} />);
-    const back = screen.getByRole('link', { name: 'Back to the work' });
+    const back = screen.getByRole('link', { name: 'back to the work' });
     expect(back).toHaveAttribute('href', '/#work');
     // A plain link: nothing in the page decides to go somewhere else instead.
     expect(back.onclick).toBeNull();

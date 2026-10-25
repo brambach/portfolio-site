@@ -58,7 +58,7 @@
 .e-site:not(.is-ready) .e-tag { visibility: hidden; }
 .e-site:not(.is-ready) .e-head { opacity: 0; }
 /* Everything else the entrance moves starts where the motion starts it, from the first paint, so nothing shows, hides
-   and comes back (motion.ts and work-motion.ts take it from here, with fromTo, since a from() would read these as
+   and comes back (motion.ts takes it from here, with fromTo, since a from() would read these as
    where to end). With reduced motion nothing moves, so nothing waits. */
 @media (prefers-reduced-motion: no-preference) {
   .e-site:not(.is-ready) :is(.e-hero__sub, [data-lead], [data-quiet], [data-top-label]) { opacity: 0; }

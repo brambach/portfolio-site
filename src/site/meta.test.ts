@@ -19,6 +19,7 @@ describe('what each page tells search engines and link previews', () => {
   it('has a title, a description and a 1200 by 630 picture that exists for every page, with no dashes', () => {
     for (const page of PAGES) {
       for (const text of [page.title, page.description, page.imageAlt]) expect(DASHES.test(text), text).toBe(false);
+      for (const text of [page.title, page.imageAlt]) expect(text, page.file).not.toContain('·');
       expect(page.description.length, page.file).toBeGreaterThan(40);
       const file = path.join(root, 'public', page.image.split('?')[0]);
       expect(existsSync(file), file).toBe(true);
@@ -39,7 +40,7 @@ describe('what each page tells search engines and link previews', () => {
   it('fills index.html once per page, and marks the not-found page before anything runs', () => {
     const arro = withMeta(html, PROJECT_META[1]);
     expect(arro.match(/<title>/g)).toHaveLength(1);
-    expect(arro).toContain('<title>Arro · Bryce Rambach</title>');
+    expect(arro).toContain('<title>arro, bryce rambach</title>');
     expect(arro).toContain('content="https://brycerambach.com/og/arro.jpg?');
     expect(arro).not.toContain('__notFound = true');
     const missing = withMeta(html, NOT_FOUND_META);

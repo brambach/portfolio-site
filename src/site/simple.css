@@ -1,6 +1,6 @@
 /* The simple home: look D's tokens, fonts and its engraving, held still. Copied from home/look-d.css.
    Order: the vendored tokens, the fonts, the D overrides (copied from design-system/components/looks.css, the
-   :root[data-look="d"] block, scoped here to .home so the project pages keep their own look), then the page. */
+   :root[data-look="d"] block, scoped here to .home; the project pages wear .home too, through project.css), then the page. */
 @import "../styles/tokens/tokens.css";
 @import "@fontsource/instrument-serif/latin-400.css";
 @import "@fontsource/instrument-serif/latin-400-italic.css";
