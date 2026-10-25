@@ -59,7 +59,7 @@ export const DERVO = {
 export const PORTAL = {
   label: 'integration portal',
   headline: 'if a field maps wrong, someone gets paid wrong.',
-  body: 'from july to october 2026 i built hr and payroll integrations for an hr and payroll consultancy. this is a redrawn mock with made-up data.',
+  body: 'as a remote employee i built hr and payroll integrations for an hr and payroll consultancy. this is a redrawn mock with made-up data.',
   numeral: 'ii',
   failed: "doesn't map yet. needs you.",
   story: { label: 'the full story', href: '/projects/integration-portal' },

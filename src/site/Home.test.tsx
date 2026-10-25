@@ -82,7 +82,9 @@ describe('The home page', () => {
     const { container } = render(<Home />);
     const about = screen.getByRole('region', { name: 'about' });
     const [first, second] = about.querySelectorAll('p');
-    expect(first.textContent).toMatch(/^from july to october i built hr and payroll integrations on contract, and before that i founded dervo\.$/);
+    expect(first.textContent).toMatch(/^i was a remote employee at an hr and payroll consultancy, its integrations developer\. alongside that, i founded dervo\.$/);
+    expect(first).toHaveTextContent('remote employee');
+    expect(first).toHaveTextContent('alongside that, i founded dervo');
     expect(second.textContent).toMatch(/to the words on the buttons\.$/);
     // The hero already says the age, the degree and what he's looking for; the about doesn't repeat it.
     expect(about).not.toHaveTextContent(/22|degree|product engineer|open to moving/);
@@ -161,6 +163,17 @@ describe('The home page', () => {
     }
     expect(COPY.DERVO.beats.at(-1)).toContain('stopped building');
     expect(text).not.toMatch(/[↗→←↑↓]/);
+  });
+
+  it('calls the integration portal employee work, with no contract and no july to october', () => {
+    const { container } = render(<Home />);
+    const portal = within(screen.getByRole('region', { name: 'work' })).getAllByRole('article')[1];
+    expect(within(portal).getByRole('heading', { level: 3 })).toHaveTextContent('integration portal');
+    expect(portal.querySelector('.s-label')).toHaveTextContent(/^employee, 2026$/);
+    const old = /contract|jul to oct|july to october|parked/i;
+    expect(container.textContent).not.toMatch(old);
+    for (const s of strings(COPY)) expect(s, s).not.toMatch(old);
+    expect(COPY.PORTAL.body).toMatch(/^as a remote employee /);
   });
 
   it('names no city and no employer', () => {

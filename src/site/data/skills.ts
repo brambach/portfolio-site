@@ -4,7 +4,7 @@ import type { Picture } from './work';
    picture per skill out of the water; further down, each gets a few sentences and the links that back them up.
 
    Everything here comes from the projects' own READMEs on github.com/brambach and the project pages on this site.
-   Client work from the contract stays out, so the integrations picture is a drawing, labelled as one. */
+   Employer work stays out, so the integrations picture is a drawing, labelled as one. */
 
 export type SkillId = 'integrations' | 'agents' | 'harnesses' | 'product';
 
@@ -37,7 +37,7 @@ export const SKILLS: Skill[] = [
     picture: { src: '', map: true },
     to: '#integrations',
     body: [
-      'My contract work, July to October 2026, is HR and payroll integrations. One wrong field mapping there means someone gets paid wrong. The client work stays private, so here’s what I can show.',
+      'My work as a remote employee was HR and payroll integrations. One wrong field mapping there means someone gets paid wrong. The client work stays private, so here’s what I can show.',
     ],
     evidence: [
       { name: 'Arro', to: '/projects/arro', note: 'Apple Health sync in the background, Supabase and six kinds of server push in one iPhone app. I left Strava out because its API terms only let an app show your activity back to you.' },
