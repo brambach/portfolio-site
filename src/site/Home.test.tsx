@@ -3,6 +3,7 @@ import path from 'node:path';
 import { act, render, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { BANNED } from '../banned-names';
 import { projects } from '../projects/catalog';
 import Home from './Home';
 import * as COPY from './home/copy';
@@ -185,10 +186,8 @@ describe('The home page', () => {
     expect(all).not.toMatch(/\bsf\b|\bnyc\b|san francisco|new york/i);
     expect(COPY.PORTAL.body).toContain('an hr and payroll consultancy');
     // The job is employee work at an unnamed consultancy: never the company, its clients or vendors, a contract or
-    // freelance gig, or a claim to be its only, sole or solo technical person.
-    const employer = [/digital\s*directions/i, /\bdd\b/i, /swy[f]t/i, /hi\s?bob/i, /net\s?suite/i, /work[a]to/i, /key\s?pay/i,
-      /\bmyob\b/i, /employment\s+hero/i, /fresh[d]esk/i, /\bdeputy\b/i, /\bcontract/i, /\bfreelanc/i,
-      /\bonly integrations\b/i, /\bsole (integrations|developer|technical)/i, /\bsolo integrator\b/i, /\bone[- ]person (team|integrations)\b/i];
+    // freelance gig, or a claim to be its only, sole or solo technical person (src/banned-names.ts has the list).
+    const employer = [...BANNED, /\bdd\b/i, /\bcontract/i, /\bfreelanc/i];
     const { container, unmount } = render(<Home />);
     const home = container.textContent!;
     unmount();
