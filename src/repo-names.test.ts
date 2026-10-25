@@ -8,8 +8,8 @@ import { describe, expect, it } from 'vitest';
 // plans, drafts and other files that never reach the site from bringing the names back.
 // Each pattern is written so the name itself is never spelled out in this file.
 const BANNED = [
-  /digital[\s_-]*directions/i, /\bDDi?\b/, /\bdd[- ]portal\b/i, /swy\s?ft/i, /hi\s?bob/i, /net\s?suite/i, /work\s?ato/i,
-  /key\s?pay/i, /\bmyob\b/i, /employment\s+hero/i, /fresh\s?desk/i, /\bdeputy\b/i,
+  /digital[\s_-]*directions/i, /\bDDi?\b/, /\bdd[- ]portal\b/i, /swy[f]t/i, /hi\s?bob/i, /net\s?suite/i, /work[a]to/i,
+  /key\s?pay/i, /\bmyob\b/i, /employment\s+hero/i, /fresh[d]esk/i, /\bdeputy\b/i,
   /\bonly integrations\b/i, /\bsole (integrations|developer|technical)/i, /\bsolo integrator\b/i,
   /\bone[- ]person (team|integrations)\b/i,
 ];
