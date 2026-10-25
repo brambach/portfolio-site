@@ -18,3 +18,38 @@
 /* The glow is drawn but not shown yet. */
 .vig__halo { opacity: 0; }
 .vig__glints { opacity: .72; }
+
+/* The pause and play word, in the quiet bottom right corner the mask fades out. Lowercase and fainter than other
+   labels, so it outranks .s-label, which loads after this sheet. */
+.vig .vig__pause {
+  position: absolute; right: var(--gutter); bottom: 0; min-width: 24px; padding: 6px 4px;
+  background: none; border: 0; color: var(--faint); text-transform: none; cursor: pointer;
+}
+.vig .vig__pause:hover { color: var(--ink-2); }
+
+/* Loops, only while motion is allowed. Each bird flips its own little svg on its baseline, so the "m" folds into a
+   soft "w": three beats of about 0.8s, then a long glide. Cycle lengths and start points differ by --i so the birds
+   never beat together, and each wrapper drifts about 2% of the plate (the plate is the screen's width) and back. */
+.vig__plate:not([data-motion="still"]) .vig__bird { animation: vig-drift calc(44s + var(--i) * 7s) calc(var(--i) * -13s) ease-in-out infinite alternate; }
+.vig__plate:not([data-motion="still"]) .vig__bird > svg { transform-origin: 50% 100%; animation: vig-flap calc(7s + var(--i) * .9s) calc(var(--i) * -2.3s) ease-in-out infinite; }
+/* Off screen or paused, every animation holds its frame and picks up from there. Important, because the shorthands
+   above reset the play state with a more specific selector. */
+.vig__plate[data-motion="off"] *, .vig__plate[data-motion="paused"] * { animation-play-state: paused !important; }
+@keyframes vig-flap {
+  0%, 34.2%, 100% { transform: scaleY(1); }
+  5.7%, 17.1%, 28.5% { transform: scaleY(-.55); }
+  11.4%, 22.8% { transform: scaleY(1); }
+  44%, 90% { transform: scaleY(.7); }
+}
+@keyframes vig-drift {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(.5vw, -2px); }
+  50% { transform: translate(1vw, 0); }
+  75% { transform: translate(1.5vw, -2px); }
+  100% { transform: translate(2vw, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vig__plate * { animation: none !important; }
+  /* Only the parts' own boxes: the sun and its glow keep their clip to the sky. */
+  .vig__plate > * { clip-path: none !important; }
+}

@@ -1,4 +1,4 @@
-import { act, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Home from '../../Home';
 import { HERO } from '../copy';
@@ -31,6 +31,7 @@ const reduceMotion = (on: boolean) => vi.spyOn(window, 'matchMedia').mockImpleme
 }) as MediaQueryList);
 
 const plate = () => screen.getByRole('img', { name: HERO.art });
+const toggle = () => screen.queryByRole('button', { name: /^(pause|play)$/ });
 
 beforeEach(() => {
   Observer.all = [];
@@ -54,6 +55,12 @@ describe('The hero picture', () => {
     expect(plate()).toHaveAttribute('data-motion', 'still');
     expect(plate()).toHaveAttribute('data-drawn', 'done');
     expect(Observer.all).toHaveLength(0);
+    expect(toggle()).toBeNull();
+  });
+
+  it('offers a pause button when motion is allowed', () => {
+    render(<Home />);
+    expect(screen.getByRole('button', { name: 'pause' })).toBeInTheDocument();
   });
 
   it('watches for a quarter of it to come into view when motion is allowed', () => {
@@ -72,6 +79,20 @@ describe('The hero picture', () => {
     view(false);
     expect(plate()).toHaveAttribute('data-motion', 'off');
     view(true);
+    expect(plate()).toHaveAttribute('data-motion', 'on');
+  });
+
+  it('stays paused once paused, through leaving and coming back, until play', () => {
+    render(<Vignette label={HERO.art} />);
+    view(true);
+    fireEvent.click(screen.getByRole('button', { name: 'pause' }));
+    expect(toggle()).toHaveTextContent('play');
+    expect(plate()).toHaveAttribute('data-motion', 'paused');
+    view(false);
+    view(true);
+    expect(plate()).toHaveAttribute('data-motion', 'paused');
+    fireEvent.click(screen.getByRole('button', { name: 'play' }));
+    expect(toggle()).toHaveTextContent('pause');
     expect(plate()).toHaveAttribute('data-motion', 'on');
   });
 
@@ -125,5 +146,14 @@ describe('The hero picture', () => {
     expect(img.closest('figure')).not.toHaveAttribute('role');
     expect(img.closest('figure')).not.toHaveAttribute('aria-label');
     expect(within(img.closest('figure')!).getAllByRole('img')).toEqual([img]);
+  });
+
+  it('keeps the pause button beside the image, where a screen reader can reach it', () => {
+    render(<Home />);
+    const button = screen.getByRole('button', { name: 'pause' });
+    expect(plate().contains(button)).toBe(false);
+    expect(plate().closest('figure')).toContainElement(button);
+    expect(button).toHaveAttribute('type', 'button');
+    expect(button).not.toHaveAttribute('aria-pressed');
   });
 });

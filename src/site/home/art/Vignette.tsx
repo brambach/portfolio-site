@@ -32,6 +32,7 @@ export default function Vignette({ label }: { label: string }) {
   const still = useMotionMode() === 'still';
   const plate = useRef<HTMLDivElement>(null);
   const [onScreen, setOnScreen] = useState(false);
+  const [paused, setPaused] = useState(false);
   const [drawn, setDrawn] = useState<Drawn>(() => (still || drewThisVisit() ? 'done' : undefined));
 
   useEffect(() => {
@@ -61,8 +62,10 @@ export default function Vignette({ label }: { label: string }) {
     if (drawn === '') try { sessionStorage.setItem(DRAWN_KEY, '1'); } catch { /* the next load draws in again */ }
   }, [drawn]);
 
-  const motion: Motion = still ? 'still' : onScreen ? 'on' : 'off';
+  const motion: Motion = still ? 'still' : paused ? 'paused' : onScreen ? 'on' : 'off';
+  // The button sits outside the image: a role="img" hides its children from screen readers.
   return <figure className="vig hero__in">
     <div ref={plate} className="vig__plate" role="img" aria-label={label} data-motion={motion} data-drawn={still ? 'done' : drawn} />
+    {!still && <button type="button" className="vig__pause s-label" onClick={() => setPaused(p => !p)}>{paused ? 'play' : 'pause'}</button>}
   </figure>;
 }

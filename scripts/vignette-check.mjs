@@ -3,7 +3,8 @@
 //   --baseline <dir>  the picture painted finished (reduced motion) at three sizes, saved as PNGs
 //   --diff <dir>      the same shots compared to a baseline, failing past 0.5% of pixels changed
 //   --trace           the frame budget: no Paint or Layout at all in 4s of looping, phone and desktop
-//   --states          animations run in view and pause off screen; reduced motion runs nothing and holds still
+//   --states          animations run in view, pause off screen and on the pause button; reduced motion runs nothing,
+//                     shows no button and holds still
 // Usage: node scripts/vignette-check.mjs [--url http://localhost:4180/] --baseline dir | --diff dir | --trace | --states
 import { chromium } from 'playwright';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -166,6 +167,20 @@ async function runStates() {
     await intoView(page);
     await page.waitForTimeout(600);
     await states('running', 'back in view');
+    const button = page.locator('.vig__pause');
+    await button.click();
+    await page.waitForTimeout(300);
+    (await button.textContent()) === 'play' ? pass(`${profile.name}: button reads play once pressed`) : fail(`${profile.name}: button reads ${await button.textContent()} once pressed`);
+    await states('paused', 'after pause');
+    await page.evaluate(() => scrollBy(0, innerHeight * 2));
+    await page.waitForTimeout(600);
+    await intoView(page);
+    await page.waitForTimeout(600);
+    await states('paused', 'paused, away and back');
+    await button.click();
+    await page.waitForTimeout(300);
+    await states('running', 'after play');
+    const height = await page.evaluate(() => document.documentElement.scrollHeight);
     await ctx.close();
 
     const still = await open(profile, 'reduce');
@@ -173,6 +188,9 @@ async function runStates() {
     await still.page.waitForTimeout(400);
     const running = await still.page.evaluate(() => document.querySelector('.vig').getAnimations({ subtree: true }).length);
     running ? fail(`${profile.name} reduced motion: ${running} animations on the picture`) : pass(`${profile.name} reduced motion: no animations`);
+    (await still.page.locator('.vig__pause').count()) ? fail(`${profile.name} reduced motion: a pause button`) : pass(`${profile.name} reduced motion: no pause button`);
+    const stillHeight = await still.page.evaluate(() => document.documentElement.scrollHeight);
+    stillHeight === height ? pass(`${profile.name}: page ${height}px tall with or without the button`) : fail(`${profile.name}: page ${height}px with the button, ${stillHeight}px without`);
     const plate = still.page.locator('.vig__plate');
     const first = await plate.screenshot();
     await still.page.waitForTimeout(2000);
