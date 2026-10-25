@@ -3,16 +3,16 @@ import { projects as catalog, type Project } from '../../projects/catalog';
 /* The projects on the home page's index. The words that describe each one come from catalog.ts, so the road, the
    old studies and this site never disagree; this file only adds what the index and the project pages need on top:
    a short kind, the picture a project opens on, captions and the extra screens. Captions come from the study pages
-   (DervoStudy, ArroStudy, PortStudy) or describe what the screenshot itself shows. */
+   (DervoStudy, ArroStudy) or describe what the screenshot itself shows. */
 
 /** The projects on the home page's index, in its order. */
-export const INDEX_IDS = ['dervo', 'arro', 'port'] as const;
+export const INDEX_IDS = ['dervo', 'arro'] as const;
 
 export type Picture = { src: string; title?: string; text?: string; tall?: boolean; pos?: string };
 export type Work = Omit<Project, 'id'> & {
   id: IndexId;
   kind: string;
-  hero: Picture & { port?: boolean };
+  hero: Picture;
   gallery: Picture[];
   link?: { href: string; label: string };
 };
@@ -38,12 +38,6 @@ const extra: Record<IndexId, Omit<Work, keyof Project>> = {
       { src: '/projects/arro/nudge.jpg', tall: true, title: 'One nudge a day.', text: 'Tap someone who still has today and you can send them a cheer. Each person gets one nudge a day at most, and it only pushes between 7am and 9pm their time.' },
     ],
     link: { href: 'https://github.com/brambach/arro', label: 'Read the source on GitHub' },
-  },
-  port: {
-    kind: 'SwiftUI',
-    hero: { src: '', port: true, title: 'Hold to close.', text: 'Press and hold the circle, or focus it and press Enter, to try a browser version of the hold. It plays the sound from the project.' },
-    gallery: [],
-    link: { href: 'https://github.com/brambach/port', label: 'Read the source on GitHub' },
   },
 };
 

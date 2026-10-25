@@ -435,7 +435,7 @@
 
 /* ---------- sections ---------- */
 .sec { padding-block: var(--s9); scroll-margin-top: var(--s5); }
-/* arro's and port's rows are contents targets too, and land like a section does. */
+/* arro's row is a contents target too, and lands like a section does. */
 .mw__item { scroll-margin-top: var(--s5); }
 .sec__label { margin-bottom: var(--s5); }
 .sec__label span { margin-right: var(--s2); color: var(--faint); }

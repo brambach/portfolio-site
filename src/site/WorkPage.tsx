@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
-import { workById } from './data/work';
+import { useEffect } from 'react';
 import { PROJECT_META } from './meta';
 import { type WorkId } from './routes';
 import { nextWork, pageWorkById, SHOT_SIZE, type Shot } from './work';
@@ -7,7 +6,7 @@ import './project.css';
 
 /* A project's page, in the home page's simple look: the same paper, type, header and footer, and one calm column.
    The words are the catalog's, set the way the home sets its own: lowercase, plain commas for the middle dots.
-   Nothing moves on its own; port keeps its hold to try, folded in CSS. */
+   Nothing moves on its own. */
 
 const PAPER = '#f3eee3';
 const EMAIL = 'bryce.rambach@gmail.com';
@@ -32,72 +31,8 @@ function Figure({ shot, first }: { shot: Shot; first: boolean }) {
   </figure>;
 }
 
-type Phase = 'open' | 'holding' | 'closing' | 'closed';
-const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-/** Port's hold, in the browser: hold the ring for a second and the screen folds into a line, with the app's sound.
- *  Press again to open. Enter or Space closes it straight away. */
-function Hold() {
-  const [phase, setPhase] = useState<Phase>('open');
-  const [sound, setSound] = useState(true);
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const audio = useRef<HTMLAudioElement | null>(null);
-  const how = workById('port')!.hero;
-
-  const clear = () => { timers.current.forEach(clearTimeout); timers.current = []; };
-  const stopSound = () => { if (audio.current) { audio.current.pause(); audio.current.currentTime = 0; } };
-  useEffect(() => () => { clear(); stopSound(); }, []);
-
-  const close = () => {
-    clear();
-    const quick = still();
-    setPhase(quick ? 'closed' : 'closing');
-    if (sound) {
-      audio.current ??= new Audio('/projects/port/close.wav');
-      try { void audio.current.play()?.catch(() => {}); } catch { /* no sound here; the fold still shows */ }
-    }
-    if (!quick) timers.current.push(setTimeout(() => setPhase('closed'), 1250));
-  };
-  const open = () => { clear(); stopSound(); setPhase('open'); };
-  const toggle = () => { if (phase === 'closed') open(); else if (phase !== 'closing') close(); };
-
-  const press = (e: PointerEvent) => {
-    if (e.button !== 0) return;
-    if (phase === 'closed') { open(); return; }
-    if (phase !== 'open') return;
-    setPhase('holding');
-    timers.current.push(setTimeout(close, 1000));
-  };
-  const release = () => { if (phase === 'holding') { clear(); setPhase('open'); } };
-  const key = (e: KeyboardEvent) => {
-    if (e.key !== 'Enter' && e.key !== ' ') return;
-    e.preventDefault();
-    if (!e.repeat) toggle();
-  };
-
-  return <div className="s-port" data-phase={phase}>
-    <div className="s-port__screen">
-      <span className="s-port__band" aria-hidden="true" />
-      <span className="s-port__line" aria-hidden="true" />
-      <button className="s-port__ring" aria-label={phase === 'closed' ? 'open port' : 'hold to close port'} aria-describedby="s-port-how"
-        onPointerDown={press} onPointerUp={release} onPointerLeave={release} onPointerCancel={release}
-        onKeyDown={key} onKeyUp={e => { if (e.key === ' ') e.preventDefault(); }}
-        // Pointers go through the hold; a click with no pointer (a screen reader's) toggles it.
-        onClick={e => { if (e.detail === 0) toggle(); }}>
-        <span aria-hidden="true">{phase === 'closed' ? 'open' : phase === 'holding' ? 'keep holding' : 'hold'}</span>
-      </button>
-    </div>
-    <p className="s-port__how">
-      <span id="s-port-how"><b>{plain(how.title!)}</b> {plain(how.text!)}</span>
-      <button className="s-port__sound" aria-pressed={sound} onClick={() => { if (sound) stopSound(); setSound(!sound); }}>sound {sound ? 'on' : 'off'}</button>
-    </p>
-    <p className="s-vh" role="status">{phase === 'closed' ? 'port closed' : phase === 'closing' ? '' : 'port open'}</p>
-  </div>;
-}
-
 export default function WorkPage({ id }: { id: WorkId }) {
   const work = pageWorkById(id)!, next = nextWork(id);
-  const ring = 'ring' in work.hero;
 
   useEffect(() => {
     const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
@@ -130,7 +65,6 @@ export default function WorkPage({ id }: { id: WorkId }) {
       <section className="s-wp-sec" aria-labelledby="wp-what">
         <h2 id="wp-what" className="s-label">what it is</h2>
         <p>{plain(work.introduction)}</p>
-        {ring && <Hold />}
       </section>
 
       {wide.length > 0 && <div className="s-wp-shots">{wide.map((s, k) => <Figure key={s.src} shot={s} first={k === 0} />)}</div>}

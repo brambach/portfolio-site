@@ -51,6 +51,8 @@ describe('what each page tells search engines and link previews', () => {
     const map = sitemap();
     for (const page of [HOME_META, ...PROJECT_META]) expect(map).toContain(`<loc>https://brycerambach.com${page.path}</loc>`);
     expect(map).not.toContain('404');
+    expect(map).not.toContain('/projects/port<');
+    expect(PAGES.map(p => p.file)).not.toContain('projects/port.html');
     expect(readFileSync(path.join(root, 'public/robots.txt'), 'utf8')).toContain('Sitemap: https://brycerambach.com/sitemap.xml');
   });
 

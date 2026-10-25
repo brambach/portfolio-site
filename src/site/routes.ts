@@ -2,12 +2,12 @@
    mirrors this to paint the right paper before anything loads) can decide without loading them.
 
    - /                  the home page
-   - /projects/<id>     a project's page, for the six in WORK_IDS
+   - /projects/<id>     a project's page, for the five in WORK_IDS
    - anything else      not found, unless it's one of the older pages main.tsx still serves (OLDER_PATHS) */
 
-/** The projects with a page, in the order the pages walk through them: the three on the home page's index
+/** The projects with a page, in the order the pages walk through them: the two on the home page's index
  *  first, then the rest. */
-export const WORK_IDS = ['dervo', 'arro', 'port', 'lucid', 'integration-portal', 'agentsky'] as const;
+export const WORK_IDS = ['dervo', 'arro', 'lucid', 'integration-portal', 'agentsky'] as const;
 export type WorkId = (typeof WORK_IDS)[number];
 
 /** Pages from before this design that are still linked from it (the drive and the road, under "Side quests") or

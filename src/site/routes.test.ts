@@ -12,7 +12,15 @@ describe('the site’s addresses', () => {
     for (const id of WORK_IDS) expect(siteRoute(`/projects/${id}`)).toEqual({ name: 'project', id });
     expect(workId('/projects/integration-portal/')).toBe('integration-portal');
     expect(siteRoute('/projects/nope')).toEqual({ name: 'missing' });
-    expect(siteRoute('/projects/port/more')).toEqual({ name: 'missing' });
+    expect(siteRoute('/projects/arro/more')).toEqual({ name: 'missing' });
+  });
+
+  it('has no page for port: its old address is not found, never another project', () => {
+    expect(WORK_IDS).not.toContain('port');
+    expect(workId('/projects/port')).toBeNull();
+    expect(siteRoute('/projects/port')).toEqual({ name: 'missing' });
+    expect(siteRoute('/projects/port/')).toEqual({ name: 'missing' });
+    expect(fromLab('/lab/e/projects/port')).toBe('/');
   });
 
   it('gives anything it doesn’t know the not-found page', () => {

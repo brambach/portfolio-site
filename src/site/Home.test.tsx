@@ -25,9 +25,9 @@ describe('The home page', () => {
     render(<Home />);
     const work = within(screen.getByRole('region', { name: 'work' }));
     const cards = work.getAllByRole('article');
-    expect(cards.map(c => within(c).getByRole('heading', { level: 3 }).textContent)).toEqual(['dervo', 'integration portal', 'arro', 'lucid', 'port']);
-    const ids = ['dervo', 'integration-portal', 'arro', 'lucid', 'port'];
-    const names = ['dervo', 'integration portal', 'arro', 'lucid', 'port'];
+    expect(cards.map(c => within(c).getByRole('heading', { level: 3 }).textContent)).toEqual(['dervo', 'integration portal', 'arro', 'lucid']);
+    const ids = ['dervo', 'integration-portal', 'arro', 'lucid'];
+    const names = ['dervo', 'integration portal', 'arro', 'lucid'];
     cards.forEach((card, i) => {
       // Each repeated link says which project it's about, for a screen reader; the visible words stay the same.
       const story = within(card).getByRole('link', { name: `the full story about ${names[i]}` });
@@ -35,8 +35,8 @@ describe('The home page', () => {
       expect(story.querySelector('.s-vh')?.textContent).toBe(`about ${names[i]}`);
       expect(card.querySelector('.s-what')?.textContent).toBeTruthy();
     });
-    // The four with screenshots show them, and the picture is a link to the same page.
-    cards.slice(0, 4).forEach((card, i) => {
+    // Each shows its screenshots, and the picture is a link to the same page.
+    cards.forEach((card, i) => {
       expect(within(card).getAllByRole('img').length).toBeGreaterThan(0);
       expect(card.querySelector(`a[href="/projects/${ids[i]}"] img`)).not.toBeNull();
     });
@@ -46,9 +46,9 @@ describe('The home page', () => {
     render(<Home />);
     const cards = within(screen.getByRole('region', { name: 'work' })).getAllByRole('article');
     const sources = cards.map(c => within(c).queryByRole('link', { name: /source/ }));
-    expect(sources.map(a => a?.getAttribute('href') ?? null)).toEqual(['https://github.com/brambach/dervo', null, 'https://github.com/brambach/arro', null, 'https://github.com/brambach/port']);
+    expect(sources.map(a => a?.getAttribute('href') ?? null)).toEqual(['https://github.com/brambach/dervo', null, 'https://github.com/brambach/arro', null]);
     expect(sources[0]).toHaveAccessibleName('dervo source (opens in a new tab)');
-    expect(sources[4]).toHaveAccessibleName('port source (opens in a new tab)');
+    expect(sources[2]).toHaveAccessibleName('arro source (opens in a new tab)');
   });
 
   it('presents lucid as finished work, never as in development', () => {
@@ -58,14 +58,17 @@ describe('The home page', () => {
     expect(screen.getByRole('main').textContent).not.toMatch(/in development|in progress|\bwip\b|coming soon/i);
   });
 
-  it('shows port without a picture, saying what it is and where to try the hold', () => {
-    render(<Home />);
-    const port = within(screen.getByRole('region', { name: 'work' })).getAllByRole('article')[4];
-    expect(within(port).queryByRole('img')).toBeNull();
-    expect(port).toHaveTextContent('swiftui prototype');
-    expect(port).toHaveTextContent('hold for a second and the screen folds into a line.');
-    expect(port).toHaveTextContent('try the hold in your browser, with the app’s sound.');
-    expect(within(port).getByRole('link', { name: 'the full story about port' })).toHaveAttribute('href', '/projects/port');
+  it('has no port row, and no word or link about port anywhere', () => {
+    const { container } = render(<Home />);
+    const work = screen.getByRole('region', { name: 'work' });
+    expect(within(work).getAllByRole('article')).toHaveLength(4);
+    expect(within(work).queryByRole('heading', { name: 'port' })).toBeNull();
+    expect(container.querySelector('.s-small')).toBeNull();
+    expect(container.textContent).not.toMatch(/\bport\b|hold for a second/i);
+    for (const a of screen.getAllByRole('link')) expect(a.getAttribute('href'), a.getAttribute('href')!).not.toMatch(/\/projects\/port$|brambach\/port$/);
+    for (const s of strings(COPY)) expect(s, s).not.toMatch(/\bport\b/i);
+    expect(COPY.CONTENTS.rows.map(r => r.numeral)).toEqual(['i', 'ii', 'iii', 'iv']);
+    expect(COPY.MORE.rows.map(r => r.id)).toEqual(['arro']);
   });
 
   it('says dervo stopped building, with its real numbers', () => {
@@ -115,7 +118,7 @@ describe('The home page', () => {
   it('tells a screen reader every link that opens a new tab', () => {
     const { container } = render(<Home />);
     const away = [...container.querySelectorAll<HTMLAnchorElement>('a[target="_blank"]')];
-    expect(away.length).toBe(9);
+    expect(away.length).toBe(8);
     for (const a of away) {
       expect(a, a.href).toHaveAccessibleName(expect.stringContaining('(opens in a new tab)'));
       expect(a.getAttribute('rel'), a.href).toMatch(/\bnoopener\b/);
