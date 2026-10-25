@@ -8,6 +8,9 @@ import './simple.css';
 
 const PAPER = '#f3eee3';
 const NEW_TAB = { target: '_blank', rel: 'noopener noreferrer' } as const;
+/* Read out, not shown: a link that opens a new tab says so. */
+/* The space sits outside the hidden span, where a line's end drops it, so the name reads with it and the link looks the same. */
+const NewTab = () => <>{' '}<span className="s-vh">(opens in a new tab)</span></>;
 
 const LINKS = [
   { label: EMAIL, href: `mailto:${EMAIL}` },
@@ -40,13 +43,13 @@ const WORK: Card[] = [
       'it pre-fills the field mappings and says why. nothing reaches payroll until a person confirms it.',
       'employer owned work, so the screens use a made-up cast.',
     ],
-    shots: [{ src: '/projects/portal/hub.png', alt: 'the integration portal’s home screen, with one mapping waiting for review' }],
+    shots: [{ src: '/projects/portal/hub.webp', alt: 'the integration portal’s home screen, with one mapping waiting for review' }],
   },
   {
     id: 'arro', name: 'arro', kind: 'iphone app',
     what: 'a daily movement streak for families who live apart.',
     facts: [
-      'a missed day is never public. it says “maya still has today”.',
+      'a missed day is never public. it says “maya still has today”. maya is a sample name.',
       'expo, react native and supabase, with 192 pgtap tests. on testflight.',
     ],
     shots: [
@@ -82,61 +85,65 @@ export default function Home() {
   }, []);
 
   const lead = HERO.line.slice(0, -HERO.italic.length);
-  return <main className="home">
+  return <div className="home">
     <header className="s-top s-label">
       <a href="/">bryce rambach</a>
       <nav aria-label="site"><a href="#work">work</a><a href="#about">about</a><a href={`mailto:${EMAIL}`}>email</a></nav>
     </header>
 
-    <section className="s-hero s-fade" aria-labelledby="hero-line">
-      <h1 id="hero-line">{lead}<em>{HERO.italic}</em></h1>
-      <p>{HERO.sub}</p>
-      <div className="s-links">
-        {LINKS.map(l => <a key={l.href} href={l.href} {...(l.away ? NEW_TAB : {})}>{l.label}</a>)}
-      </div>
-    </section>
-    <Vignette label={HERO.art} mode="still" />
+    <main>
+      <section className="s-hero s-fade" aria-labelledby="hero-line">
+        <h1 id="hero-line">{lead}<em>{HERO.italic}</em></h1>
+        <p>{HERO.sub}</p>
+        <div className="s-links">
+          {LINKS.map(l => l.away
+            ? <a key={l.href} href={l.href} {...NEW_TAB}>{l.label}<NewTab /></a>
+            : <a key={l.href} href={l.href}>{l.label}</a>)}
+        </div>
+      </section>
+      <Vignette label={HERO.art} mode="still" />
 
-    <section id="work" className="s-sec" aria-label="work">
-      <span className="s-label">work</span>
-      <div className="s-grid">
-        {WORK.map(w => <article key={w.id} className="s-card">
-          <a className={`s-shot${w.phones ? ' is-phones' : ''}`} href={`/projects/${w.id}`} aria-label={`${w.name}, the full story`}>
-            {w.shots.map(s => <img key={s.src} src={s.src} alt={s.alt} loading="lazy" decoding="async" />)}
-          </a>
-          <div className="s-head"><h3>{w.name}</h3><span className="s-label">{w.kind}</span></div>
-          <p className="s-what">{w.what}</p>
-          <ul className="s-facts">{w.facts.map(f => <li key={f}>{f}</li>)}</ul>
-          <div className="s-more">
-            <a href={`/projects/${w.id}`}>the full story</a>
-            {w.source && <a href={w.source} {...NEW_TAB}>source</a>}
+      <section id="work" className="s-sec" aria-label="work">
+        <h2 className="s-label">work</h2>
+        <div className="s-grid">
+          {WORK.map(w => <article key={w.id} className="s-card">
+            <a className={`s-shot${w.phones ? ' is-phones' : ''}`} href={`/projects/${w.id}`} aria-label={`${w.name}, the full story`}>
+              {w.shots.map(s => <img key={s.src} src={s.src} alt={s.alt} loading="lazy" decoding="async" />)}
+            </a>
+            <div className="s-head"><h3>{w.name}</h3><span className="s-label">{w.kind}</span></div>
+            <p className="s-what">{w.what}</p>
+            <ul className="s-facts">{w.facts.map(f => <li key={f}>{f}</li>)}</ul>
+            <div className="s-more">
+              <a href={`/projects/${w.id}`}>the full story{' '}<span className="s-vh">about {w.name}</span></a>
+              {w.source && <a href={w.source} {...NEW_TAB}><span className="s-vh">{w.name}</span>{' '}source<NewTab /></a>}
+            </div>
+          </article>)}
+        </div>
+        <article className="s-small">
+          <div className="s-head"><h3>{PORT.name}</h3><span className="s-label">{PORT.kind}</span></div>
+          <div>
+            <p className="s-what">{PORT.what}</p>
+            <p className="s-facts">{PORT.fact}</p>
           </div>
-        </article>)}
-      </div>
-      <article className="s-small">
-        <div className="s-head"><h3>{PORT.name}</h3><span className="s-label">{PORT.kind}</span></div>
-        <div>
-          <p className="s-what">{PORT.what}</p>
-          <p className="s-facts">{PORT.fact}</p>
-        </div>
-        <div className="s-more">
-          <a href={`/projects/${PORT.id}`}>the full story</a>
-          <a href={PORT.source} {...NEW_TAB}>source</a>
-        </div>
-      </article>
-    </section>
+          <div className="s-more">
+            <a href={`/projects/${PORT.id}`}>the full story{' '}<span className="s-vh">about {PORT.name}</span></a>
+            <a href={PORT.source} {...NEW_TAB}><span className="s-vh">{PORT.name}</span>{' '}source<NewTab /></a>
+          </div>
+        </article>
+      </section>
 
-    <section id="about" className="s-sec s-about" aria-label="about">
-      <span className="s-label">about</span>
-      <p>i’m 22 and i finished a cs degree in may 2026. from july to october i built hr and payroll integrations on contract, and before that i founded dervo.</p>
-      <p>i do my best work on a small team where one person owns a product from the api at the bottom to the words on the buttons. i’m looking for a founding or product engineer role at an early stage ai startup. open to moving.</p>
-    </section>
+      <section id="about" className="s-sec s-about" aria-label="about">
+        <h2 className="s-label">about</h2>
+        <p>from july to october i built hr and payroll integrations on contract, and before that i founded dervo.</p>
+        <p>i do my best work on a small team where one person owns a product from the api at the bottom to the words on the buttons.</p>
+      </section>
+    </main>
 
     <footer className="s-foot">
       <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
       <nav aria-label="elsewhere">
-        {LINKS.slice(1).map(l => <a key={l.href} href={l.href} {...NEW_TAB}>{l.label}</a>)}
+        {LINKS.slice(1).map(l => <a key={l.href} href={l.href} {...NEW_TAB}>{l.label}<NewTab /></a>)}
       </nav>
     </footer>
-  </main>;
+  </div>;
 }

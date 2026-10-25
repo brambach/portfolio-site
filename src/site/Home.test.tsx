@@ -27,8 +27,12 @@ describe('The home page', () => {
     const cards = work.getAllByRole('article');
     expect(cards.map(c => within(c).getByRole('heading', { level: 3 }).textContent)).toEqual(['dervo', 'integration portal', 'arro', 'lucid', 'port']);
     const ids = ['dervo', 'integration-portal', 'arro', 'lucid', 'port'];
+    const names = ['dervo', 'integration portal', 'arro', 'lucid', 'port'];
     cards.forEach((card, i) => {
-      expect(within(card).getByRole('link', { name: 'the full story' })).toHaveAttribute('href', `/projects/${ids[i]}`);
+      // Each repeated link says which project it's about, for a screen reader; the visible words stay the same.
+      const story = within(card).getByRole('link', { name: `the full story about ${names[i]}` });
+      expect(story).toHaveAttribute('href', `/projects/${ids[i]}`);
+      expect(story.querySelector('.s-vh')?.textContent).toBe(`about ${names[i]}`);
       expect(card.querySelector('.s-what')?.textContent).toBeTruthy();
     });
     // The four with screenshots show them, and the picture is a link to the same page.
@@ -41,8 +45,10 @@ describe('The home page', () => {
   it('gives each card the source link only where the source is public', () => {
     render(<Home />);
     const cards = within(screen.getByRole('region', { name: 'work' })).getAllByRole('article');
-    const sources = cards.map(c => within(c).queryByRole('link', { name: 'source' })?.getAttribute('href') ?? null);
-    expect(sources).toEqual(['https://github.com/brambach/dervo', null, 'https://github.com/brambach/arro', null, 'https://github.com/brambach/port']);
+    const sources = cards.map(c => within(c).queryByRole('link', { name: /source/ }));
+    expect(sources.map(a => a?.getAttribute('href') ?? null)).toEqual(['https://github.com/brambach/dervo', null, 'https://github.com/brambach/arro', null, 'https://github.com/brambach/port']);
+    expect(sources[0]).toHaveAccessibleName('dervo source (opens in a new tab)');
+    expect(sources[4]).toHaveAccessibleName('port source (opens in a new tab)');
   });
 
   it('presents lucid as finished work, never as in development', () => {
@@ -59,7 +65,7 @@ describe('The home page', () => {
     expect(port).toHaveTextContent('swiftui prototype');
     expect(port).toHaveTextContent('hold for a second and the screen folds into a line.');
     expect(port).toHaveTextContent('try the hold in your browser, with the app’s sound.');
-    expect(within(port).getByRole('link', { name: 'the full story' })).toHaveAttribute('href', '/projects/port');
+    expect(within(port).getByRole('link', { name: 'the full story about port' })).toHaveAttribute('href', '/projects/port');
   });
 
   it('says dervo stopped building, with its real numbers', () => {
@@ -72,8 +78,11 @@ describe('The home page', () => {
   it('has a short about, and the header jumps to the work, the about and email', () => {
     const { container } = render(<Home />);
     const about = screen.getByRole('region', { name: 'about' });
-    expect(about).toHaveTextContent('i’m 22 and i finished a cs degree in may 2026.');
-    expect(about).toHaveTextContent('i’m looking for a founding or product engineer role at an early stage ai startup. open to moving.');
+    const [first, second] = about.querySelectorAll('p');
+    expect(first.textContent).toMatch(/^from july to october i built hr and payroll integrations on contract, and before that i founded dervo\.$/);
+    expect(second.textContent).toMatch(/to the words on the buttons\.$/);
+    // The hero already says the age, the degree and what he's looking for; the about doesn't repeat it.
+    expect(about).not.toHaveTextContent(/22|degree|product engineer|open to moving/);
     const nav = within(screen.getByRole('navigation', { name: 'site' }));
     const hrefs = nav.getAllByRole('link').map(a => a.getAttribute('href'));
     expect(hrefs).toEqual(['#work', '#about', 'mailto:bryce.rambach@gmail.com']);
@@ -96,10 +105,46 @@ describe('The home page', () => {
       if (href.startsWith('http')) {
         expect(a, href).toHaveAttribute('target', '_blank');
         expect(a.getAttribute('rel'), href).toMatch(/\bnoopener\b/);
+        expect(a.querySelector('.s-vh'), href).not.toBeNull();
       } else {
         expect(a, href).not.toHaveAttribute('target');
       }
     }
+  });
+
+  it('tells a screen reader every link that opens a new tab', () => {
+    const { container } = render(<Home />);
+    const away = [...container.querySelectorAll<HTMLAnchorElement>('a[target="_blank"]')];
+    expect(away.length).toBe(9);
+    for (const a of away) {
+      expect(a, a.href).toHaveAccessibleName(expect.stringContaining('(opens in a new tab)'));
+      expect(a.getAttribute('rel'), a.href).toMatch(/\bnoopener\b/);
+    }
+  });
+
+  it('keeps the header and footer outside main, and its headings in order', () => {
+    const { container } = render(<Home />);
+    const main = screen.getByRole('main');
+    const header = screen.getByRole('banner');
+    const footer = screen.getByRole('contentinfo');
+    expect(main.contains(header)).toBe(false);
+    expect(main.contains(footer)).toBe(false);
+    expect(header.parentElement).toBe(main.parentElement);
+    expect(footer.parentElement).toBe(main.parentElement);
+    expect(main.parentElement).toHaveClass('home');
+    const levels = [...container.querySelectorAll('h1, h2, h3, h4, h5, h6')].map(h => Number(h.tagName[1]));
+    expect(levels[0]).toBe(1);
+    expect(levels.filter(l => l === 1)).toHaveLength(1);
+    expect(levels.slice(1, 3)).toEqual([2, 3]);
+    // Never a skipped level: each heading is at most one deeper than the one before it.
+    levels.forEach((l, i) => { if (i) expect(l - levels[i - 1], String(levels)).toBeLessThanOrEqual(1); });
+    expect(screen.getAllByRole('heading', { level: 2 }).map(h => h.textContent)).toEqual(['work', 'about']);
+  });
+
+  it('says maya is a sample name', () => {
+    render(<Home />);
+    const arro = within(screen.getByRole('region', { name: 'work' })).getAllByRole('article')[2];
+    expect(arro).toHaveTextContent('a missed day is never public. it says “maya still has today”. maya is a sample name.');
   });
 
   it('says dervo stopped, never that it was parked, and uses no em or en dashes', () => {
