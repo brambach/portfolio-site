@@ -9,9 +9,9 @@ beforeAll(()=>{
 });
 beforeEach(()=>history.replaceState(null,'','/projects'));
 
-it('offers six projects, the archive and contact without loading a scene',()=>{
+it('offers five projects, the archive and contact without loading a scene',()=>{
   render(<ProjectReader/>);
-  expect(document.querySelectorAll('.ps-project')).toHaveLength(6);
+  expect(document.querySelectorAll('.ps-project')).toHaveLength(5);
   expect(screen.getByText(/10 more projects/)).toBeInTheDocument();
   expect(screen.getAllByRole('link',{name:/Say hello/})[0]).toHaveAttribute('href','mailto:bryce.rambach@gmail.com');
   expect(document.querySelector('canvas')).toBeNull();
@@ -52,7 +52,7 @@ it('keeps the focus ring quiet on the close button until a key is pressed',async
 it('counts the projects in the viewer nav and ends on a next-project arrow',async()=>{
   history.replaceState(null,'','/projects/dervo');
   render(<ProjectReader/>);
-  expect(screen.getByRole('navigation',{name:'Project navigation'})).toHaveTextContent('01 / 06');
+  expect(screen.getByRole('navigation',{name:'Project navigation'})).toHaveTextContent('01 / 05');
   expect(document.querySelector('.ps-next')).toHaveTextContent('→');
 });
 

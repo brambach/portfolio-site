@@ -14,7 +14,7 @@ describe('project laptop', () => {
     const user = userEvent.setup();
     const location = window.location.href;
     render(<CabinObjects object="laptop" close={vi.fn()} />);
-    for (const name of ['AgentSky', 'Dervo', 'Lucid', 'Arro', 'Port', 'Integration portal']) {
+    for (const name of ['AgentSky', 'Dervo', 'Lucid', 'Arro', 'Integration portal']) {
       await user.click(screen.getByRole('link', { name: `View ${name}` }));
       const viewer = screen.getByRole('dialog', { name: `${name} project` });
       await within(viewer).findByRole('heading', { level: 1 });

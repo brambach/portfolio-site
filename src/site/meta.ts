@@ -9,7 +9,7 @@ import { WORK_IDS } from './routes';
 
 export const ORIGIN = 'https://brycerambach.com';
 /** Bumped when the pictures change, so link previews fetch the new ones. */
-const V = 'e1';
+const V = 'e3';
 
 export type PageMeta = {
   /** Where the page's HTML goes in the build. */
@@ -24,7 +24,7 @@ export type PageMeta = {
   noindex?: boolean;
 };
 
-export const HOME_DESCRIPTION = "Bryce Rambach builds the whole thing: integrations, agents, the harnesses that check them, the design and the product calls. He's looking for a founding engineer role at an AI startup in a new city.";
+export const HOME_DESCRIPTION = "Bryce Rambach builds tools for AI agents. He's 22, finished a CS degree in May, and is looking for a founding engineer role at an early AI startup. Open to moving.";
 
 const firstSentence = (text: string) => /^.*?[.!?](?=\s|$)/.exec(text)?.[0] ?? text;
 
@@ -33,8 +33,8 @@ export const HOME_META: PageMeta = {
   path: '/',
   title: NAME,
   description: HOME_DESCRIPTION,
-  image: `/og/home.jpg?v=${V}`,
-  imageAlt: 'Bryce Rambach’s home page: “I design it, make it move, and build it.” beside a paper airplane drawn in dots',
+  image: `/og/home-look-d.jpg?v=${V}`,
+  imageAlt: 'Bryce Rambach’s home page: “i build tools for ai agents.” above an engraving of hills and pines over still water, with a blue sun rising behind the far ridge',
 };
 
 export const PROJECT_META: PageMeta[] = WORK_IDS.map(id => {
@@ -42,17 +42,17 @@ export const PROJECT_META: PageMeta[] = WORK_IDS.map(id => {
   return {
     file: `projects/${id}.html`,
     path: `/projects/${id}`,
-    title: `${p.name} · ${NAME}`,
+    title: `${p.name.toLowerCase()}, ${NAME.toLowerCase()}`,
     description: `${p.line} ${firstSentence(p.introduction)}`,
     image: `/og/${id}.jpg?v=${V}`,
-    imageAlt: `${p.name}, on Bryce Rambach’s site, with ${id === 'port' ? 'its ring' : 'one of its screens'} drawn in dots`,
+    imageAlt: `${p.name.toLowerCase()} project page on bryce rambach’s site, with its name, line and role`,
   };
 });
 
 export const NOT_FOUND_META: PageMeta = {
   file: '404.html',
   path: null,
-  title: `Not found · ${NAME}`,
+  title: `not found, ${NAME.toLowerCase()}`,
   description: HOME_DESCRIPTION,
   image: HOME_META.image,
   imageAlt: HOME_META.imageAlt,

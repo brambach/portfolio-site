@@ -1,192 +1,130 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from 'react';
-import { CONTACT, finePointer, INTRO, NAME, SIDE_QUESTS, SIGN, SKILLS, SUB, TAGLINE, WORK } from './content';
-import { workHref, type WorkId } from './routes';
-import { afterFirstPaint, takeReturn } from './chrome';
-import { DotRing, ECursor, ELink } from './links';
-import { startHome, type EMotion } from './motion';
-import { paletteFor } from './palette';
-import { ART, SCENE_ORDER, type SceneId } from './scenes';
-import { toWork } from './work';
-import './e.css';
+import { useEffect } from 'react';
+import Vignette from './home/art/Vignette';
+import { EMAIL, HERO } from './home/copy';
+import './simple.css';
 
-/* The home page is made of dots. Every part is one bold object drawn in dots on the paper (a paper
-   airplane, two plugs, a cursor, a climbing harness, a pen, a cup, a waving hand), and the portrait is built of
-   the same dots. They fly in out of static when the page opens, travel from one object into the next when you
-   reach a new part, arrive loose and snap sharp, move a little the way each object would, and get out of the way of
-   the pointer. Grains drip off the plane until you scroll. The tagline breaks into the same dots when you leave
-   it and comes back together when you return.
+/* The home page, simple: who he is, the work right under it, a short about, and how to reach him. One page, no pins,
+   no scrubbing. The engraving is drawn once, finished, as a quiet ornament. Facts come from the repo's existing copy. */
 
-   The palette comes from the visitor's clock when the page loads (dawn, day, late afternoon or night) and stays.
-   All of the motion is in motion.ts, the dots in dots.ts and field.ts. */
+const PAPER = '#f3eee3';
+const NEW_TAB = { target: '_blank', rel: 'noopener noreferrer' } as const;
+/* Read out, not shown: a link that opens a new tab says so. */
+/* The space sits outside the hidden span, where a line's end drops it, so the name reads with it and the link looks the same. */
+const NewTab = () => <>{' '}<span className="s-vh">(opens in a new tab)</span></>;
 
-const pad = (n: number) => String(n).padStart(2, '0');
-const LABELS: Record<SceneId, string> = {
-  hero: 'Hello', intro: 'About', integrations: 'Integrations', agents: 'Agents', harnesses: 'Harnesses',
-  design: 'Design', product: 'Product taste', work: 'The work', contact: 'Say hello',
+const LINKS = [
+  { label: EMAIL, href: `mailto:${EMAIL}` },
+  { label: 'github', href: 'https://github.com/brambach', away: true },
+  { label: 'x @brycerambach', href: 'https://x.com/brycerambach', away: true },
+  { label: 'linkedin', href: 'https://www.linkedin.com/in/bryce-rambach/', away: true },
+];
+
+type Card = {
+  id: string; name: string; kind: string; what: string; facts: string[];
+  shots: { src: string; alt: string }[]; phones?: boolean;
+  source?: string;
 };
 
-/** A part's opening: its number, a rule and its name. */
-function Rule({ id }: { id: SceneId }) {
-  return <div className="e-rule" aria-hidden="true"><span>{pad(SCENE_ORDER.indexOf(id))} / {pad(SCENE_ORDER.length - 1)}</span><i data-rule /><span>{LABELS[id]}</span></div>;
-}
-
-/** A project's name, set twice so the letters can roll from upright to italic. */
-function Roll({ text }: { text: string }) {
-  return <span className="e-roll" aria-label={text}>{[...text].map((c, k) => <span key={k} className="e-roll__c" style={{ '--i': k } as CSSProperties} aria-hidden="true"><span>{c}</span><span>{c}</span></span>)}</span>;
-}
+const WORK: Card[] = [
+  {
+    id: 'dervo', name: 'dervo', kind: 'mac app, 2026',
+    what: 'a mac app for running claude code and codex side by side, on your machine, under your own logins.',
+    facts: [
+      '18 beta testers signed on, and it ran 1,500+ agent tasks.',
+      'i shipped nested sub-threads first, before claude code had them. then claude shipped something similar, so i stopped building it.',
+    ],
+    shots: [{ src: '/projects/dervo/catch-up.jpg', alt: 'dervo’s catch up screen: what finished, what’s stuck and what needs you' }],
+    source: 'https://github.com/brambach/dervo',
+  },
+  {
+    id: 'integration-portal', name: 'integration portal', kind: 'employee, 2026',
+    what: 'hr and payroll integrations for an hr and payroll consultancy.',
+    facts: [
+      'it pre-fills the field mappings and says why. nothing reaches payroll until a person confirms it.',
+      'employer owned work, so the screens use a made-up cast.',
+    ],
+    shots: [{ src: '/projects/portal/hub.webp', alt: 'the integration portal’s home screen, with one mapping waiting for review' }],
+  },
+  {
+    id: 'arro', name: 'arro', kind: 'iphone app',
+    what: 'a daily movement streak for families who live apart.',
+    facts: [
+      'a missed day is never public. it says “maya still has today”. maya is a sample name.',
+      'expo, react native and supabase, with 192 pgtap tests. on testflight.',
+    ],
+    shots: [
+      { src: '/projects/arro/today.jpg', alt: 'arro’s today screen with the family streak' },
+      { src: '/projects/arro/feed.jpg', alt: 'arro’s feed of today’s and yesterday’s workouts' },
+    ],
+    phones: true,
+    source: 'https://github.com/brambach/arro',
+  },
+  {
+    id: 'lucid', name: 'lucid', kind: 'web app',
+    what: 'an integration workspace that follows a request into scope, specs and delivery.',
+    facts: ['every mapped value carries its source.'],
+    shots: [{ src: '/projects/lucid/spec.png', alt: 'a lucid specification for a nightly employee sync' }],
+  },
+];
 
 export default function Home() {
-  const root = useRef<HTMLDivElement>(null);
-  const motion = useRef<EMotion | null>(null);
-  const [open, setOpen] = useState<string | null>(null);
-  const palette = useMemo(() => paletteFor(typeof location === 'undefined' ? '' : location.search), []);
-
   useEffect(() => {
-    if (!root.current) return;
-    // The page behind everything is the palette's paper, and the browser's bar matches it.
-    const html = document.documentElement, meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     const before = meta?.content;
-    html.dataset.e = palette.name;
-    html.style.setProperty('--e-paper', palette.paper);
-    if (meta) meta.content = palette.paper;
-    // The motion starts once the words have painted, so the line under the tagline never waits on the dots, their
-    // pictures or their worker.
-    const el = root.current;
-    // Back from a project: open where the visitor left off.
-    const y = takeReturn();
-    let unhook = () => {};
-    if (y !== null) window.scrollTo(0, y);
-    // A link to a part (/#work, where /projects and a project's way back go) opens on it, and stays on it when the
-    // display face arrives and the words above it change height, unless the visitor has already moved.
-    else if (location.hash.length > 1) {
-      const part = document.getElementById(decodeURIComponent(location.hash.slice(1)));
-      part?.scrollIntoView();
-      let moved = false;
-      const move = () => { moved = true; };
-      const types = ['wheel', 'touchstart', 'keydown', 'pointerdown'];
-      types.forEach(type => addEventListener(type, move, { once: true, passive: true }));
-      unhook = () => { moved = true; types.forEach(type => removeEventListener(type, move)); };
-      void document.fonts?.ready.then(() => { if (!moved) part?.scrollIntoView(); });
-    }
-    const cancel = afterFirstPaint(() => { motion.current = startHome(el, palette); });
-    return () => {
-      cancel();
-      unhook();
-      motion.current?.stop(); motion.current = null;
-      delete html.dataset.e;
-      html.style.removeProperty('--e-paper');
-      html.style.removeProperty('background');
-      if (meta && before) meta.content = before;
-    };
-  }, [palette]);
+    if (meta) meta.content = PAPER;
+    if (location.hash.length > 1) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
+    return () => { if (meta && before) meta.content = before; };
+  }, []);
 
-  const plain = (e: MouseEvent) => e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey;
-  const search = typeof location === 'undefined' ? '' : location.search;
-  /** Leaving for a project: the words step back and the dots gather into the project's object, and its page picks
-   *  them up. On a phone the first tap opens the row instead, and the link inside it leaves. */
-  const leave = (id: WorkId, href: string, row: boolean) => (e: MouseEvent<HTMLAnchorElement>) => {
-    if (plain(e)) return;
-    e.preventDefault();
-    if (row && !finePointer() && open !== id) { setOpen(id); return; }
-    if (motion.current) motion.current.leave(id, href); else location.href = href;
-  };
-  /** A link to a project's page leaves the same way the index does. */
-  const page = (to: string) => { const id = toWork(to); return id ? { href: workHref(id, search), onClick: leave(id, workHref(id, search), false) } : { href: to }; };
-
-  const vars = { '--e-paper': palette.paper, '--e-ink': palette.ink, '--e-accent': palette.accent } as CSSProperties;
-  return <div ref={root} className={`e-site is-${palette.name}${palette.dark ? ' is-dark' : ''}`} style={vars}>
-    <canvas className="e-dots" data-dots aria-hidden="true" />
-
-    <header className="e-head">
-      <a className="e-head__name" href="/" data-cursor="Home">{NAME}</a>
-      <p className="e-caption" aria-hidden="true"><span className="e-swap" data-caption><span>{ART.hero.caption}</span></span></p>
+  const lead = HERO.line.slice(0, -HERO.italic.length);
+  return <div className="home">
+    <header className="s-top s-label">
+      <a href="/">bryce rambach</a>
+      <nav aria-label="site"><a href="#work">work</a><a href="#about">about</a><a href={`mailto:${EMAIL}`}>email</a></nav>
     </header>
 
     <main>
-      <section className="e-hero e-part" data-scene="hero" aria-label="Introduction">
-        <h1 className="e-tag" aria-label={TAGLINE} data-tag>
-          <span className="e-tag__l e-tag__l--1" data-line="design" aria-hidden="true">
-            I <span className="e-tag__design">design<svg viewBox="0 0 300 24" preserveAspectRatio="none" aria-hidden="true"><path d="M3 15 C 60 5, 130 21, 190 12 S 280 6, 297 13" pathLength={1} /></svg></span> it,
-          </span>
-          <span className="e-tag__l e-tag__l--2" data-line="move" aria-hidden="true">make it <span className="e-tag__move">move,</span></span>
-          <span className="e-tag__l e-tag__l--3" data-line="build" aria-hidden="true">and build it.<i className="e-tag__beam" /></span>
-        </h1>
-        <div className="e-hero__foot" data-hero-foot>
-          <p className="e-hero__sub">{SUB}</p>
+      <section className="s-hero s-fade" aria-labelledby="hero-line">
+        <h1 id="hero-line">{lead}<em>{HERO.italic}</em></h1>
+        <p>{HERO.sub}</p>
+        <div className="s-links">
+          {LINKS.map(l => l.away
+            ? <a key={l.href} href={l.href} {...NEW_TAB}>{l.label}<NewTab /></a>
+            : <a key={l.href} href={l.href}>{l.label}</a>)}
         </div>
       </section>
+      <Vignette label={HERO.art} mode="still" />
 
-      <section className="e-part e-intro" data-scene="intro" aria-label="About">
-        <Rule id="intro" />
-        <p className="e-intro__big" data-read>{INTRO.before}<a className="e-link" {...page(INTRO.link.to)} data-cursor="Open">{INTRO.link.label}</a>{INTRO.after}</p>
-        <p className="e-intro__small" data-quiet>{INTRO.second}</p>
-        <span className="e-sr" role="img" aria-label={`A portrait of ${NAME}, drawn in dots`} />
-      </section>
-
-      {SKILLS.map((skill, n) => <section key={skill.id} id={skill.id} className="e-part e-skill" data-scene={skill.id} aria-labelledby={`e-${skill.id}`}>
-        <Rule id={skill.id as SceneId} />
-        <div data-quiet>
-          <h2 id={`e-${skill.id}`} className="e-skill__name"><span className="e-sr">{pad(n + 1)} </span>{skill.name}</h2>
-          <p className="e-skill__line">{skill.line}</p>
-        </div>
-        <div className="e-skill__body" data-quiet>
-          {skill.body.map((text, k) => <p key={k}>{text}</p>)}
-          <ul className="e-proof">
-            {skill.evidence.map(item => <li key={item.name}>
-              {item.to ? <ELink className="e-proof__name" {...page(item.to)}>{item.name}</ELink>
-                : item.href ? <ELink className="e-proof__name" href={item.href} away cursor="Read">{item.name}</ELink>
-                  : <span className="e-proof__name is-private"><span>{item.name}</span><small>Private</small></span>}
-              <span className="e-proof__note">{item.note}</span>
-            </li>)}
-          </ul>
-        </div>
-      </section>)}
-
-      <section id="work" className="e-part e-work" data-scene="work" aria-labelledby="e-work">
-        <Rule id="work" />
-        <h2 id="e-work" className="e-work__title" data-quiet>The work</h2>
-        <ol className="e-index" data-index>
-          {WORK.map((work, i) => <li key={work.id} className={`e-index__row${open === work.id ? ' is-open' : ''}`} data-work={work.id} data-quiet>
-            <a className="e-index__link" href={workHref(work.id, search)} onClick={leave(work.id, workHref(work.id, search), true)} data-cursor="Open" aria-expanded={finePointer() ? undefined : open === work.id}>
-              <span className="e-index__no">{pad(i + 1)}</span>
-              <span className="e-index__name"><Roll text={work.name} /></span>
-              <span className="e-index__kind">{work.kind}</span>
-              <span className="e-index__title">{work.hero.title}</span>
+      <section id="work" className="s-sec" aria-label="work">
+        <h2 className="s-label">work</h2>
+        <div className="s-grid">
+          {WORK.map(w => <article key={w.id} className="s-card">
+            <a className={`s-shot${w.phones ? ' is-phones' : ''}`} href={`/projects/${w.id}`} aria-label={`${w.name}, the full story`}>
+              {w.shots.map(s => <img key={s.src} src={s.src} alt={s.alt} loading="lazy" decoding="async" />)}
             </a>
-            <div className="e-index__more">
-              <div>
-                <div className={`e-tile${work.hero.tall ? ' is-tall' : ''}`}>
-                  {work.hero.port ? <div className="e-port"><DotRing /><span>Hold to close</span></div> : <img src={work.hero.src} alt="" loading="lazy" decoding="async" />}
-                </div>
-                <p>{work.hero.text}</p>
-                <ELink className="e-open" href={workHref(work.id, search)} onClick={leave(work.id, workHref(work.id, search), false)}>Open {work.name}</ELink>
-              </div>
+            <div className="s-head"><h3>{w.name}</h3><span className="s-label">{w.kind}</span></div>
+            <p className="s-what">{w.what}</p>
+            <ul className="s-facts">{w.facts.map(f => <li key={f}>{f}</li>)}</ul>
+            <div className="s-more">
+              <a href={`/projects/${w.id}`}>the full story{' '}<span className="s-vh">about {w.name}</span></a>
+              {w.source && <a href={w.source} {...NEW_TAB}><span className="s-vh">{w.name}</span>{' '}source<NewTab /></a>}
             </div>
-          </li>)}
-        </ol>
-        <p className="e-work__hint" aria-hidden="true">{finePointer() ? 'Point at one to see it. Click to open it.' : 'Tap one to see it, then open it.'}</p>
+          </article>)}
+        </div>
       </section>
 
-      <footer className="e-part e-close" data-scene="contact" aria-labelledby="e-hello">
-        <Rule id="contact" />
-        <h2 id="e-hello" className="e-hello" data-hello>Say hello</h2>
-        <a className="e-mail" href={CONTACT[0].href} data-cursor="Email" data-magnetic><span>{CONTACT[0].name}</span></a>
-        <div className="e-close__cols" data-quiet>
-          <div>
-            <h3 className="e-kicker">Elsewhere</h3>
-            <ul className="e-list">{CONTACT.slice(1).map(c => <li key={c.name}><ELink href={c.href} away>{c.name}</ELink><span className="e-list__handle">{c.note}</span></li>)}</ul>
-          </div>
-          <div>
-            <h3 className="e-kicker">Side quests</h3>
-            <ul className="e-list">{SIDE_QUESTS.map(q => <li key={q.name}><ELink href={q.href} away={!!q.external}>{q.name}</ELink><span>{q.note}</span></li>)}</ul>
-          </div>
-        </div>
-        <p className="e-sign"><span>{SIGN}</span></p>
-      </footer>
+      <section id="about" className="s-sec s-about" aria-label="about">
+        <h2 className="s-label">about</h2>
+        <p>i was a remote employee at an hr and payroll consultancy, its integrations developer. alongside that, i founded dervo.</p>
+        <p>i do my best work on a small team where one person owns a product from the api at the bottom to the words on the buttons.</p>
+      </section>
     </main>
 
-    {/* The picture that follows the pointer over the index, on screens with one. */}
-    <div className="e-peek" aria-hidden="true" data-peek><canvas data-peek-canvas /></div>
-    <ECursor />
+    <footer className="s-foot">
+      <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
+      <nav aria-label="elsewhere">
+        {LINKS.slice(1).map(l => <a key={l.href} href={l.href} {...NEW_TAB}>{l.label}<NewTab /></a>)}
+      </nav>
+    </footer>
   </div>;
 }

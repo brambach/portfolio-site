@@ -12,7 +12,6 @@ const LucidStudy = lazy(() => import('./LucidStudy'));
 const PortalStudy = lazy(() => import('./PortalStudy'));
 const DervoStudy = lazy(() => import('./DervoStudy'));
 const ArroStudy = lazy(() => import('./ArroStudy'));
-const PortStudy = lazy(() => import('./PortStudy'));
 const AgentSky = lazy(() => import('../project-lab/ProjectLab').then(module => ({default:module.Screening})));
 
 export function ProjectViewer({project,close,choose,look=null,search=''}:{project:Project;close:()=>void;choose:(id:ProjectId)=>void;look?:Look|null;search?:string}) {
@@ -48,7 +47,7 @@ export function ProjectViewer({project,close,choose,look=null,search=''}:{projec
     <nav className="ps-viewer__nav" aria-label="Project navigation"><ScrollRoad/><button ref={closeButton} onClick={close}>← All projects</button><span>{String(projects.indexOf(project)+1).padStart(2,'0')} / {String(projects.length).padStart(2,'0')} <b>{project.name}</b></span><a className="ink-link" href={`/projects/${project.id}${search}`} aria-label={`Direct link to ${project.name}`}>Direct link</a></nav>
     <div ref={content} className="ps-viewer__scroll" key={project.id}>
       <Suspense fallback={<div className="ps-opening" role="status">Opening {project.name}…</div>}>
-        {project.id==='agentsky'?<AgentSky/>:project.id==='port'?<PortStudy/>:project.id==='dervo'?<DervoStudy/>:project.id==='arro'?<ArroStudy/>:project.id==='lucid'?<LucidStudy/>:<PortalStudy/>}
+        {project.id==='agentsky'?<AgentSky/>:project.id==='dervo'?<DervoStudy/>:project.id==='arro'?<ArroStudy/>:project.id==='lucid'?<LucidStudy/>:<PortalStudy/>}
       </Suspense>
       <button className="ps-next" onClick={()=>choose(next.id)}><span className="ps-eyebrow">Next project</span><strong>{next.name}</strong><span aria-hidden="true">→</span></button>
     </div>

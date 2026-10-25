@@ -42,6 +42,12 @@ describe('QuietIndex', () => {
     expect(container.querySelector('[class*="tape"]')).toBeNull();
   });
 
+  it('is open to moving and names no city', () => {
+    const { container } = render(<QuietIndex />);
+    expect(screen.getByText('next: open to moving, wherever the team is.')).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/\bs[f]\b|\bn[y]c\b|san fr[a]ncisco|new y[o]rk/i);
+  });
+
   it('opens in the green look and switches with ?look=', () => {
     const { container, unmount } = render(<QuietIndex />);
     expect(container.querySelector('.qi')).toHaveAttribute('data-look', 'green');

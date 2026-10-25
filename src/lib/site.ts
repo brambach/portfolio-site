@@ -90,7 +90,7 @@ export const vibeCards: VibeCard[] = [
   {
     kind: 'note',
     title: 'next: a founding role.',
-    sub: 'a new city · soon',
+    sub: 'open to moving · soon',
     rotate: 1.8,
   },
 ];

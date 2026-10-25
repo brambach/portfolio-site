@@ -1,4 +1,4 @@
-import { dustFormation, introPlan, makeGrid, objectFormation, photoFormation, ringFormation, shotFormation, type Formation, type IntroPlan } from './field';
+import { dustFormation, introPlan, makeGrid, objectFormation, photoFormation, shotFormation, type Formation, type IntroPlan } from './field';
 import { PALETTES, type TimeName } from './palette';
 import { ART, containBox, coverCrop, layoutFor, SCENE_ORDER, sideways, workRect, type SceneId } from './scenes';
 
@@ -6,12 +6,11 @@ import { ART, containBox, coverCrop, layoutFor, SCENE_ORDER, sideways, workRect,
    lands on the main thread while the dots are moving, and on the main thread where it doesn't. Either way it's the
    same code. */
 
-/** A part of E's page, or for E's project pages: one of a project's screens (`shot`, from `src`) or Port's ring
- *  (`ring`, compressed if `closed`). */
-export type BuildJob = { id: SceneId | 'shot' | 'ring'; w: number; h: number; phone: boolean; still: boolean; palette: TimeName; plan: boolean; src?: string; closed?: boolean };
+/** A part of E's page, or for E's project pages: one of a project's screens (`shot`, from `src`). */
+export type BuildJob = { id: SceneId | 'shot'; w: number; h: number; phone: boolean; still: boolean; palette: TimeName; plan: boolean; src?: string };
 
 /** The file a job draws from, if it has one. */
-export const srcOf = (job: BuildJob) => (job.id === 'shot' ? job.src ?? null : job.id === 'ring' || job.id === 'work' ? null : ART[job.id].src);
+export const srcOf = (job: BuildJob) => (job.id === 'shot' ? job.src ?? null : job.id === 'work' ? null : ART[job.id].src);
 export type Built = { f: Formation; plan?: IntroPlan };
 
 type Ctx = { drawImage: CanvasRenderingContext2D['drawImage']; getImageData: CanvasRenderingContext2D['getImageData']; imageSmoothingQuality: ImageSmoothingQuality };
@@ -23,7 +22,6 @@ export function buildScene(job: BuildJob, img: CanvasImageSource & { width: numb
   const { id, phone, still } = job, grid = makeGrid(job.w, job.h, phone), palette = PALETTES[job.palette];
   let f: Formation | null = null;
   if (id === 'work') f = dustFormation(grid, palette);
-  else if (id === 'ring') f = ringFormation(grid, workRect(phone).rect, palette, !!job.closed);
   else if (id === 'shot') {
     if (!img) return null;
     // Fitted whole into the object's place, at one pixel per cell.

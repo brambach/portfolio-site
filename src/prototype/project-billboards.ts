@@ -43,7 +43,7 @@ function coverImage(ink:CanvasRenderingContext2D,image:HTMLImageElement,x:number
   const scale=Math.max(w/image.naturalWidth,h/image.naturalHeight),sw=w/scale,sh=h/scale;
   ink.drawImage(image,(image.naturalWidth-sw)/2,0,sw,sh,x,y,w,h);
 }
-// Port has no screenshot: a dusk sky with the moon, for "a moment to close".
+// A board whose cover doesn't load: a dusk sky with the moon.
 function quietArt(ink:CanvasRenderingContext2D,x:number,y:number,w:number,h:number){
   const sky=ink.createLinearGradient(0,y,0,y+h);sky.addColorStop(0,'#34445a');sky.addColorStop(1,'#e59a6e');
   ink.fillStyle=sky;ink.fillRect(x,y,w,h);
