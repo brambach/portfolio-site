@@ -132,17 +132,17 @@
   -webkit-mask-composite: source-in;
   mask-composite: intersect;
 }
-.vig__plate svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.vig__plate > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .vig__sun, .vig__glints { fill: var(--primary); }
 .vig__glints { opacity: .72; }
 /* The sun rises once from behind the far range. */
 .vig__rise { animation: vig-rise 2.8s var(--ease-statement) 160ms both; }
-.vig__plate[data-risen] .vig__rise { animation: none; }
+.vig__plate[data-drawn="done"] .vig__rise { animation: none; }
 /* The water breathes out and back once, slowly, while it's on screen, then holds still. */
-.vig__glints { animation: vig-breathe 5s ease-in-out 1 forwards; }
-.vig__plate[data-off] .vig__glints { animation-play-state: paused; }
+.vig__glints { animation: vigd-breathe 5s ease-in-out 1 forwards; }
+.vig__plate[data-motion="off"] .vig__glints { animation-play-state: paused; }
 @keyframes vig-rise { from { transform: translateY(var(--rise, 24px)); } to { transform: none; } }
-@keyframes vig-breathe { 0%, 100% { opacity: .72; transform: none; } 50% { opacity: .46; transform: translateX(-6px); } }
+@keyframes vigd-breathe { 0%, 100% { opacity: .72; transform: none; } 50% { opacity: .46; transform: translateX(-6px); } }
 
 /* The words arrive once: an 8px rise and a fade, 40ms apart. */
 .hero__in { animation: home-arrive 640ms var(--ease-statement) both; }

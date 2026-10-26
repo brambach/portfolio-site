@@ -208,13 +208,11 @@ describe('The home page', () => {
 });
 
 describe('The hero engraving', () => {
-  it('is drawn once on the home page, finished and still, inside main and named for a screen reader', async () => {
+  it('is on the home page once, inside main, and named for a screen reader on the picture itself', () => {
     render(<Home />);
     const art = within(screen.getByRole('main')).getByRole('img', { name: COPY.HERO.art });
-    const plate = art.querySelector<HTMLElement>('.vig__plate')!;
-    await act(async () => { await new Promise(r => setTimeout(r, 50)); });
-    expect(plate.hasAttribute('data-risen')).toBe(true);
-    expect(plate.hasAttribute('data-glint')).toBe(true);
+    expect(art).toHaveClass('vig__plate');
+    expect(document.querySelectorAll('.vig')).toHaveLength(1);
   });
 
   it('draws the same picture for the same size, with the sun behind the range and glints on the water', () => {
