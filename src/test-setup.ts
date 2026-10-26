@@ -65,6 +65,11 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
   (globalThis as any).ResizeObserver = MockResizeObserver;
 }
 
+// jsdom has no HTMLImageElement.decode; it loads no images, so there is nothing to wait for.
+if (typeof HTMLImageElement.prototype.decode !== 'function') {
+  HTMLImageElement.prototype.decode = () => Promise.resolve();
+}
+
 afterEach(() => {
   cleanup();
 });

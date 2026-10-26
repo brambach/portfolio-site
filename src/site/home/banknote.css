@@ -38,8 +38,10 @@
   font: 400 17px/1.62 var(--sans); -webkit-font-smoothing: antialiased;
 }
 .bn > *, .bn main > * { max-width: var(--col); margin-inline: auto; }
-/* A block below the first screen sits out the page's first frame as an empty box about a row tall (later.ts). */
-.bn [data-later] { content-visibility: hidden; contain-intrinsic-block-size: 500px; }
+/* A block below the first screen sits out the page's first frame as an empty box about a row tall (later.ts). It
+   draws nothing while it waits: Chromium counts a waiting box that paints its own background (the back of the note)
+   as a layout shift when it comes in. */
+.bn [data-later] { content-visibility: hidden; contain-intrinsic-block-size: 500px; visibility: hidden; }
 /* index.css fades every link's color; this page moves only transform, opacity and dashoffset. */
 .bn a { color: inherit; transition: none; }
 /* Every text link rests on a faint hairline. Pointing at it or focusing it prints a solid line over that one. */

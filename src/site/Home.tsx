@@ -20,17 +20,27 @@ const GUILLOCHE = {
   '--wave': waveField('#5e2a7e'),
   '--band': bandRule('#5e2a7e'),
 } as CSSProperties;
-// Each of these images is a whole svg document for the browser to build, about 5ms on a slow phone, and the first
-// frame would build all four at once. Asked for here, one a task, they are built before it and kept.
-// Plex Mono sets the microprint, which is on the first screen. Left to the first frame, the font is asked for while
-// that frame is laid out and every line of it is set again when it arrives. Asked for now, it is usually here first.
-document.fonts?.load('400 1em "IBM Plex Mono"');
-const built: HTMLImageElement[] = [];
-for (const value of Object.values(GUILLOCHE) as string[]) setTimeout(() => {
-  const img = new Image();
-  img.src = /^url\("(.*)"\)$/.exec(value)![1];
-  built.push(img);
-});
+let warm = false;
+/** asks for the first frame's guilloche images and faces ahead of it, once a load: a second call does nothing. */
+export function warmFirstFrame() {
+  if (warm) return;
+  warm = true;
+  // each of these images is a whole svg document for the browser to build, about 5ms on a slow phone, and the first
+  // frame's layout would build them too. asked for here, in a task of their own, they are built before it. the page's
+  // image cache keeps a built image under its url whether or not anything still holds the Image, so the first frame's
+  // css is handed these. decode() asks for any work left before one can be drawn, which for an svg is none past the
+  // build; a failed one is dropped.
+  setTimeout(() => {
+    for (const value of Object.values(GUILLOCHE) as string[]) {
+      Object.assign(new Image(), { src: value.slice('url("'.length, -'")'.length) }).decode().catch(() => {});
+    }
+  });
+  // the first screen's faces: the serif and its italic, the sans, and plex mono for the microprint. a face starts
+  // loading only when a frame first lays it out, so the first frame would be laid out in the fallbacks and again as
+  // each face arrives (index.html preloads the first three, which saves the trip, not the wait). asked for here, they
+  // are usually in before the first frame.
+  for (const face of ['1em "Instrument Serif"', 'italic 1em "Instrument Serif"', '1em "Hanken Grotesk Variable"', '1em "IBM Plex Mono"']) document.fonts?.load(face);
+}
 
 const AWAY = [
   { label: 'github', href: 'https://github.com/brambach' },
@@ -81,6 +91,10 @@ const WORK: Card[] = [
 ];
 
 export default function Home() {
+  // asked for while rendering, not in a layout effect: react renders this as soon as the chunk arrives and can hold
+  // the commit up to 300ms behind the fallback, so the work gets that wait, where a layout effect runs just before
+  // the first frame's layout.
+  warmFirstFrame();
   const page = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => (page.current ? later(page.current, location.hash.length > 1) : undefined), []);
   useEffect(() => {

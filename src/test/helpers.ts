@@ -30,11 +30,10 @@ export interface FakeObserver extends Pick<IntersectionObserver, 'observe' | 'un
   readonly targets: ReadonlySet<Element>;
 }
 
-/** tells a fake observer that target came into view (or left it), when it watches target. its callback gets the
-    entry and an IntersectionObserver that forwards to the fake, as the browser would call it. */
-export function report(o: FakeObserver, target: Element, isIntersecting = true): void {
-  if (!o.targets.has(target)) return;
-  const observer: IntersectionObserver = {
+/** the IntersectionObserver a fake observer's callback is handed, as the browser would hand it: it forwards to the
+    fake. */
+export function observerOf(o: FakeObserver): IntersectionObserver {
+  return {
     root: o.options?.root ?? null,
     rootMargin: o.options?.rootMargin ?? '0px',
     thresholds: [o.options?.threshold ?? 0].flat(),
@@ -43,5 +42,26 @@ export function report(o: FakeObserver, target: Element, isIntersecting = true):
     disconnect: () => o.disconnect(),
     takeRecords: () => [],
   };
-  o.cb([entry(target, isIntersecting)], observer);
+}
+
+/** tells a fake observer that target came into view (or left it), when it watches target. its callback gets the
+    entry and an IntersectionObserver that forwards to the fake, as the browser would call it. */
+export function report(o: FakeObserver, target: Element, isIntersecting = true): void {
+  if (o.targets.has(target)) o.cb([entry(target, isIntersecting)], observerOf(o));
+}
+
+/** what the tests' fake ResizeObservers keep: the callback each was made with. */
+export interface FakeResizeObserver extends Pick<ResizeObserver, 'observe' | 'unobserve' | 'disconnect'> {
+  readonly cb: ResizeObserverCallback;
+}
+
+/** tells a fake resize observer that what it watches changed size. its callback gets no entries and a ResizeObserver
+    that forwards to the fake, as the browser would call it. */
+export function resized(o: FakeResizeObserver): void {
+  const observer: ResizeObserver = {
+    observe: (target, options) => o.observe(target, options),
+    unobserve: target => o.unobserve(target),
+    disconnect: () => o.disconnect(),
+  };
+  o.cb([], observer);
 }

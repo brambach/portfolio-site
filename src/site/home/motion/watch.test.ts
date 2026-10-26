@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { entry, observerOf, report } from '../../../test/helpers';
 import type { MotionMode } from '../motion-mode';
 import { watch, type WatchOptions } from './watch';
 
@@ -14,9 +15,9 @@ class Observer {
 
 const isNear = (o: Observer) => o.options.rootMargin !== undefined;
 const watching = (el: Element, near = false) => Observer.all.filter(o => o.targets.has(el) && isNear(o) === near);
-const send = (o: Observer, el: Element, isIntersecting: boolean) =>
-  o.cb([{ isIntersecting, target: el } as unknown as IntersectionObserverEntry], o as unknown as IntersectionObserver);
-const deliver = (el: Element, isIntersecting: boolean, near = false) => { for (const o of watching(el, near)) send(o, el, isIntersecting); };
+// hands o an entry for el whether or not o still watches it, as the browser can with entries already queued.
+const send = (o: Observer, el: Element, isIntersecting: boolean) => o.cb([entry(el, isIntersecting)], observerOf(o));
+const deliver = (el: Element, isIntersecting: boolean, near = false) => { for (const o of watching(el, near)) report(o, el, isIntersecting); };
 
 let hidden = false;
 const tab = (h: boolean) => { hidden = h; document.dispatchEvent(new Event('visibilitychange')); };

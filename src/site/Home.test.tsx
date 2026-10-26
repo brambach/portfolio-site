@@ -1,8 +1,9 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
+import { StrictMode } from 'react';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BANNED } from '../banned-names';
 import { projects } from '../projects/catalog';
 import { el, report } from '../test/helpers';
@@ -534,9 +535,58 @@ describe('The medallion on the back of the note', () => {
     expect(rings()).toHaveLength(0);
     const back = screen.getByRole('contentinfo');
     act(() => {
-      for (const o of Observer.all) if (o.targets.has(back)) o.cb([{ isIntersecting: true, target: back } as unknown as IntersectionObserverEntry], o as unknown as IntersectionObserver);
+      for (const o of Observer.all) report(o, back);
     });
     expect(rings()).toHaveLength(3);
+  });
+});
+
+describe('The first frame\'s images and faces', () => {
+  const FACES = ['1em "Instrument Serif"', 'italic 1em "Instrument Serif"', '1em "Hanken Grotesk Variable"', '1em "IBM Plex Mono"'];
+  const load = vi.fn((_font: string) => Promise.resolve<FontFace[]>([]));
+  // a fresh copy of the page's module: it asks once a load, and the tests above have rendered it.
+  const fresh = async () => {
+    vi.resetModules();
+    return (await import('./Home')).default;
+  };
+
+  beforeEach(() => {
+    load.mockClear();
+    // jsdom has no document.fonts.
+    Object.defineProperty(document, 'fonts', { configurable: true, value: { load } });
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+  });
+
+  afterEach(() => {
+    Reflect.deleteProperty(document, 'fonts');
+    vi.useRealTimers();
+  });
+
+  it('are not asked for by importing the page', async () => {
+    const images = vi.spyOn(window, 'Image');
+    const decode = vi.spyOn(HTMLImageElement.prototype, 'decode');
+    await fresh();
+    vi.runAllTimers();
+    expect(images).not.toHaveBeenCalled();
+    expect(decode).not.toHaveBeenCalled();
+    expect(load).not.toHaveBeenCalled();
+  });
+
+  it('are asked for by its first render, the faces at once and the images in a task of their own, and only once', async () => {
+    const decode = vi.spyOn(HTMLImageElement.prototype, 'decode');
+    const Page = await fresh();
+    render(<StrictMode><Page /></StrictMode>);
+    expect(load.mock.calls.map(([face]) => face)).toEqual(FACES);
+    expect(decode).not.toHaveBeenCalled();
+    act(() => { vi.runAllTimers(); });
+    const srcs = decode.mock.contexts.flatMap(img => img instanceof HTMLImageElement ? [img.src] : []);
+    expect(srcs).toHaveLength(4);
+    expect(srcs.filter(src => src.startsWith('data:image/svg+xml,'))).toEqual(srcs);
+
+    render(<Page />);
+    act(() => { vi.runAllTimers(); });
+    expect(load).toHaveBeenCalledTimes(4);
+    expect(decode).toHaveBeenCalledTimes(4);
   });
 });
 

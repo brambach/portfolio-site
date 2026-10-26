@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PARTS, vignette } from './vignette';
+import { drawing, PARTS, vignette } from './vignette';
 
 const plate = (w: number, h: number) => {
   const el = document.createElement('div');
@@ -37,6 +37,14 @@ describe.each([
       expect(wings[0].querySelector('path')!.getAttribute('d')).toMatch(/^M0,0Q/);
     }
     expect(new Set(birds.map(b => b.querySelector('path')!.getAttribute('d'))).size).toBe(3);
+  });
+
+  it('works out the same picture in steps as in one go, pausing at least once on the way', () => {
+    const steps = drawing(w, h);
+    let pauses = 0, step = steps.next();
+    for (; !step.done && pauses < 10; step = steps.next()) pauses++;
+    expect(pauses).toBeGreaterThan(0);
+    expect(step.value).toBe(vignette(w, h));
   });
 
   it('draws the same markup every time, with every sun dot and glint it had before', () => {

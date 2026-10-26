@@ -13,10 +13,15 @@
 //   --trace           at 390 (phone, 4x CPU): once the face's one-shots end, 4s on the face with no Paint and no
 //                     Layout on the main thread; also prints the longest main-thread task during load and the paints
 //                     during the roll
-//   --load            at 390 (phone, 4x CPU), five cold loads traced until the face settles: the longest main-thread
+//   --load            at 390 (phone, 4x CPU), cold loads traced until the face settles, five of the candidate at
+//                     --url and five of main at --main-url (needed with --load), taking turns: the longest main-thread
 //                     task, and the longest from the moment the Home chunk has arrived (before it the main entry runs,
-//                     the same on every page), each with what it spent its time on; fails when the median of the
-//                     second is over 50ms
+//                     the same on every page), each with what it spent its time on, and both medians for each build;
+//                     fails when the candidate's median from the Home chunk on is over main's plus 10ms (the whole
+//                     page's longest tasks are compared when main's traces have no Home chunk). before anything runs
+//                     it reads both pages' html and exits 2 when either has no /assets/index-*.js entry script or
+//                     both name the same one, as then main and the candidate are one build; then, with a 1 minute
+//                     load average above 2, it prints "skipped: load average X above 2" and exits 3, so a skip fails
 //   --lite            at 390: Save-Data goes lite, the medallion rests drawn with only bn-turn running from the start
 //                     (a crop goes to --out <dir> when given), and a row's number still clicks while its rule is
 //                     printed rather than inked in; prefers-reduced-data goes lite; a slow roll goes lite mid-roll, is
@@ -33,21 +38,45 @@
 //                     settles, time stepped by hand as in --record, at 1440 and 390 (DPR 2), plus the reduced-motion
 //                     rest: birds-<width>-<ms>.png and birds-<width>-reduced.png
 // Usage: node scripts/home-check.mjs [--url http://localhost:4180/] --baseline dir | --diff dir | --states | --trace
-//        | --load | --lite [--out dir] | --hover | --stills dir [--name before] | --record dir | --birds dir [--from ms]
+//        | --load --main-url http://localhost:4181/ | --lite [--out dir] | --hover | --stills dir [--name before]
+//        | --record dir | --birds dir [--from ms]
 import { chromium } from 'playwright';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { loadavg, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(name);
 const value = (name) => { const i = args.indexOf(name); return i < 0 ? null : args[i + 1]; };
 const URL = value('--url') ?? 'http://localhost:4180/';
+const MAIN_URL = value('--main-url');
 const baseline = value('--baseline'), diff = value('--diff'), stills = value('--stills'), record = value('--record'), birds = value('--birds');
 if (!baseline && !diff && !flag('--states') && !flag('--trace') && !flag('--load') && !flag('--lite') && !flag('--hover') && !stills && !record && !birds) {
-  console.log('usage: node scripts/home-check.mjs [--url u] --baseline dir | --diff dir | --states | --trace | --load | --lite [--out dir] | --hover | --stills dir [--name n] | --record dir | --birds dir [--from ms]');
+  console.log('usage: node scripts/home-check.mjs [--url u] --baseline dir | --diff dir | --states | --trace | --load --main-url u | --lite [--out dir] | --hover | --stills dir [--name n] | --record dir | --birds dir [--from ms]');
   process.exit(2);
+}
+if (flag('--load') && !MAIN_URL) {
+  console.log('usage: --load needs --main-url <url>, a build of main served beside the one at --url, e.g. --main-url http://localhost:4181/');
+  process.exit(2);
+}
+// main and the candidate as one build would compare nothing. the entry script's name hashes it and every chunk it
+// reaches, so two pages naming the same one serve the same code.
+const refuse = (why) => { console.log(`refused: ${why}`); process.exit(2); };
+const entryHash = async (url) => {
+  const html = await fetch(url, { signal: AbortSignal.timeout(10000) }).then((r) => r.text()).catch((e) => refuse(`cannot read ${url}: ${e.message}`));
+  return html.match(/<script\b[^>]*\ssrc="[^"]*\/assets\/index-([\w-]+)\.js"/)?.[1] ?? refuse(`no /assets/index-*.js entry script in the html at ${url}`);
+};
+if (flag('--load')) {
+  const ours = await entryHash(URL), theirs = await entryHash(MAIN_URL);
+  if (ours === theirs) refuse(`${URL} and ${MAIN_URL} serve the same build, entry script index-${ours}.js`);
+}
+// a busy machine stretches every task, so --load measures nothing on one, and a skip fails rather than passing.
+const LOAD_AVERAGE_MAX = 2;
+const loadAverage = loadavg()[0];
+if (flag('--load') && loadAverage > LOAD_AVERAGE_MAX) {
+  console.log(`skipped: load average ${loadAverage.toFixed(2)} above ${LOAD_AVERAGE_MAX}`);
+  process.exit(3);
 }
 
 const SHOTS = [
@@ -65,7 +94,8 @@ const ROLL = ['vig-roll', 'vig-unroll', 'vig-rise'];
 const MARGIN_MS = 300;
 const TRACE_MS = 4000;
 const LOAD_RUNS = 5;
-const LOAD_BUDGET_MS = 50;
+// how much longer than main's the median longest task may be.
+const LOAD_SLACK_MS = 10;
 const CATS = 'devtools.timeline,disabled-by-default-devtools.timeline,toplevel';
 const STILLS = [
   { name: 'desktop', width: 1440, height: 900, dpr: 1 },
@@ -96,7 +126,7 @@ const fail = (msg) => { failures++; console.log(`  FAIL ${msg}`); };
 const pass = (msg) => console.log(`  ok   ${msg}`);
 const check = (cond, msg, detail) => (cond ? pass(msg) : fail(detail === undefined ? msg : `${msg} ${JSON.stringify(detail)}`));
 
-async function open(size, { reducedMotion = 'no-preference', init = [], before, on = browser } = {}) {
+async function open(size, { reducedMotion = 'no-preference', init = [], before, on = browser, url = URL } = {}) {
   const ctx = await on.newContext({
     viewport: { width: size.width, height: size.height }, deviceScaleFactor: size.dpr,
     isMobile: !!size.mobile, hasTouch: !!size.mobile, reducedMotion,
@@ -105,7 +135,7 @@ async function open(size, { reducedMotion = 'no-preference', init = [], before, 
   const page = await ctx.newPage();
   page.on('pageerror', (e) => fail(`page error: ${e.message}`));
   await before?.(page);
-  await page.goto(URL, { waitUntil: 'load' });
+  await page.goto(url, { waitUntil: 'load' });
   // The picture lands a frame and a task after first paint; until then the plate is an empty box.
   await page.waitForSelector('.vig__plate > svg', { state: 'attached' });
   await page.evaluate(() => document.fonts.ready);
@@ -428,48 +458,69 @@ function spentOn(task, events) {
   return Object.entries(by).filter(([, us]) => us >= 1000).sort((a, b) => b[1] - a[1]).map(([k, us]) => `${k} ${Math.round(us / 1000)}`).join(', ');
 }
 
-// Each load in a new context, so nothing is cached, traced from before navigation until the face has settled.
-async function runLoad() {
-  console.log(`load: longest main-thread task, ${LOAD_RUNS} cold loads, 390 phone at 4x CPU`);
-  const runs = [];
-  for (let i = 0; i < LOAD_RUNS; i++) {
-    let cdp;
-    const events = [];
-    const { ctx, page } = await open(TOUCH, {
-      before: async (page) => {
-        cdp = await page.context().newCDPSession(page);
-        await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
-        cdp.on('Tracing.dataCollected', (d) => events.push(...d.value));
-        await cdp.send('Tracing.start', { categories: `${CATS},v8.execute`, transferMode: 'ReportEvents' });
-      },
-    });
-    await page.waitForFunction(faceSettled, null, { timeout: 20000, polling: 100 });
-    await page.evaluate(() => console.timeStamp('bn-load-end'));
-    const complete = new Promise((r) => cdp.once('Tracing.tracingComplete', r));
-    await cdp.send('Tracing.end');
-    await complete;
-    await ctx.close();
+// main's simple home has no banknote face: there the face has settled once its picture has drawn in.
+const drawnIn = () => !!document.querySelector('.vig__plate[data-drawn="done"] > svg');
 
-    const end = events.find((e) => e.name === 'TimeStamp' && e.args?.data?.message === 'bn-load-end');
-    const main = events.filter((e) => e.pid === end.pid && e.tid === end.tid && e.ph === 'X' && e.dur !== undefined && e.ts <= end.ts);
-    const start = Math.min(...main.map((e) => e.ts));
-    const tasks = [];
-    for (const e of main.filter((e) => e.name === 'RunTask' || e.name === 'ThreadControllerImpl::RunTask').sort((a, b) => a.ts - b.ts)) {
-      if (!tasks.length || e.ts >= tasks.at(-1).ts + tasks.at(-1).dur) tasks.push(e);
-    }
-    const home = events.find((e) => e.name === 'ResourceSendRequest' && /\/assets\/Home-[^/]+\.js$/.test(e.args?.data?.url ?? ''));
-    const arrived = events.find((e) => e.name === 'ResourceFinish' && e.args?.data?.requestId === home?.args.data.requestId);
-    if (!arrived) { fail(`run ${i + 1}: no Home chunk in the trace`); continue; }
-    const longest = (ts) => ts.reduce((a, t) => (t.dur > a.dur ? t : a));
-    const all = longest(tasks), own = longest(tasks.filter((t) => t.ts >= arrived.ts));
-    const line = (t) => `${(t.dur / 1000).toFixed(1)}ms at ${Math.round((t.ts - start) / 1000)}ms (${spentOn(t, main)})`;
-    console.log(`  run ${i + 1}: longest ${line(all)}; from the Home chunk on ${line(own)}`);
-    runs.push({ all: all.dur / 1000, own: own.dur / 1000 });
+// one cold load of url in a new context, so nothing is cached, traced from before navigation until the face has
+// settled: its longest main-thread task, and its longest from the Home chunk's arrival on (null without one).
+async function tracedLoad(url, name) {
+  let cdp;
+  const events = [];
+  const { ctx, page } = await open(TOUCH, {
+    url,
+    before: async (page) => {
+      cdp = await page.context().newCDPSession(page);
+      await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+      cdp.on('Tracing.dataCollected', (d) => events.push(...d.value));
+      await cdp.send('Tracing.start', { categories: `${CATS},v8.execute`, transferMode: 'ReportEvents' });
+    },
+  });
+  const banknote = await page.evaluate(() => !!document.querySelector('.note--face'));
+  await page.waitForFunction(banknote ? faceSettled : drawnIn, null, { timeout: 20000, polling: 100 });
+  await page.evaluate(() => console.timeStamp('bn-load-end'));
+  const complete = new Promise((r) => cdp.once('Tracing.tracingComplete', r));
+  await cdp.send('Tracing.end');
+  await complete;
+  await ctx.close();
+
+  const end = events.find((e) => e.name === 'TimeStamp' && e.args?.data?.message === 'bn-load-end');
+  const main = events.filter((e) => e.pid === end.pid && e.tid === end.tid && e.ph === 'X' && e.dur !== undefined && e.ts <= end.ts);
+  const start = Math.min(...main.map((e) => e.ts));
+  const tasks = [];
+  for (const e of main.filter((e) => e.name === 'RunTask' || e.name === 'ThreadControllerImpl::RunTask').sort((a, b) => a.ts - b.ts)) {
+    if (!tasks.length || e.ts >= tasks.at(-1).ts + tasks.at(-1).dur) tasks.push(e);
+  }
+  const home = events.find((e) => e.name === 'ResourceSendRequest' && /\/assets\/Home-[^/]+\.js$/.test(e.args?.data?.url ?? ''));
+  const arrived = events.find((e) => e.name === 'ResourceFinish' && e.args?.data?.requestId === home?.args.data.requestId);
+  const longest = (ts) => ts.reduce((a, t) => (t.dur > a.dur ? t : a));
+  const all = longest(tasks), own = arrived ? longest(tasks.filter((t) => t.ts >= arrived.ts)) : null;
+  const line = (t) => `${(t.dur / 1000).toFixed(1)}ms at ${Math.round((t.ts - start) / 1000)}ms (${spentOn(t, main)})`;
+  console.log(`  ${name}: longest ${line(all)}; ${own ? `from the Home chunk on ${line(own)}` : 'no Home chunk in the trace'}`);
+  return { all: all.dur / 1000, own: own && own.dur / 1000 };
+}
+
+// the candidate (--url) and main load in turns, so a machine that slows down partway slows both. one untraced load
+// goes first: the first page a fresh browser opens pays for the browser's own start (its layout ran about 20ms longer
+// at 4x on every build tried), which is not the page's work.
+async function runLoad() {
+  console.log(`load: longest main-thread task, ${LOAD_RUNS} cold loads each of the candidate at ${URL} and main at ${MAIN_URL} in turns, 390 phone at 4x CPU`);
+  const first = await open(TOUCH);
+  await first.ctx.close();
+  const ours = [], theirs = [];
+  for (let i = 0; i < LOAD_RUNS; i++) {
+    ours.push(await tracedLoad(URL, `candidate ${i + 1}`));
+    theirs.push(await tracedLoad(MAIN_URL, `main ${i + 1}`));
   }
   const spread = (xs) => `median ${median(xs).toFixed(1)}ms, ${Math.min(...xs).toFixed(1)} to ${Math.max(...xs).toFixed(1)}`;
-  console.log(`  longest task: ${spread(runs.map((r) => r.all))}`);
-  const own = runs.map((r) => r.own);
-  check(runs.length === LOAD_RUNS && median(own) <= LOAD_BUDGET_MS, `longest task from the Home chunk on: ${spread(own)} (budget ${LOAD_BUDGET_MS}ms)`);
+  const both = (k) => `candidate ${spread(ours.map((r) => r[k]))}; main ${spread(theirs.map((r) => r[k]))}`;
+  console.log(`  longest task: ${both('all')}`);
+  if (ours.some((r) => r.own === null)) return fail('a trace of the candidate has no Home chunk');
+  const home = theirs.every((r) => r.own !== null);
+  if (home) console.log(`  longest task from the Home chunk on: ${both('own')}`);
+  else console.log('  main\'s traces have no Home chunk, so the whole page\'s longest tasks are compared instead');
+  const k = home ? 'own' : 'all', what = home ? 'longest task from the Home chunk on' : 'longest task';
+  const [a, b] = [median(ours.map((r) => r[k])), median(theirs.map((r) => r[k]))];
+  check(a <= b + LOAD_SLACK_MS, `${what}: candidate median ${a.toFixed(1)}ms, main ${b.toFixed(1)}ms (at most main's plus ${LOAD_SLACK_MS}ms)`);
 }
 
 function saveData() {

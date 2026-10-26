@@ -80,8 +80,8 @@ function contour(R: Ridge, front: Ridge[], x0: number, x1: number, dy = 0) {
   return p;
 }
 
-/** The picture, worked out in two steps so the page can paint between them: it yields once the far and mid hills are
- *  engraved, about half the work, and returns the picture. */
+/** The picture, worked out in two steps so the page can paint between them: it yields once the sky, the sun and the
+ *  far hills are drawn, about half the work, and returns the picture. */
 export function* drawing(width: number, height: number): Generator<undefined, string> {
   const W = Math.round(width), H = Math.round(height), narrow = W < 760;
   const rnd = seeded(7);
@@ -123,8 +123,8 @@ export function* drawing(width: number, height: number): Generator<undefined, st
   // Land, back to front.
   const hor: Ridge = () => hz - 0.6;
   const farT = engraveLayer(far, [mid, near, hor], x0, x1, sp * 1.3, h * 0.22, 0.8);
-  const midT = engraveLayer(mid, [near, hor], x0, x1, sp * 1.05, h * 0.26);
   yield;
+  const midT = engraveLayer(mid, [near, hor], x0, x1, sp * 1.05, h * 0.26);
   const nearT = engraveLayer(near, [hor], x0, x1, sp * 0.9, h * 0.14);
   const ridges = contour(far, [mid, near], x0, x1) + contour(mid, [near], x0, x1) + contour(near, [], x0, x1);
   const ridges2 = contour(far, [mid, near], x0, x1, 2.2) + contour(mid, [near], x0, x1, 2.4);

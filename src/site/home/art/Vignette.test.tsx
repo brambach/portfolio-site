@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { report, resized } from '../../../test/helpers';
 import Home from '../../Home';
 import { HERO } from '../copy';
 import Vignette from './Vignette';
@@ -35,11 +36,14 @@ const sized = () => {
 
 // Runs the next frame and anything waiting on it.
 const frame = () => act(() => { vi.runAllTimers(); });
-const resize = (w: number) => act(() => {
-  width = w;
-  for (const r of Resizes.all) r.cb([], r as unknown as ResizeObserver);
-  vi.advanceTimersByTime(150);
-});
+const resize = (w: number) => {
+  act(() => {
+    width = w;
+    for (const r of Resizes.all) resized(r);
+    vi.advanceTimersByTime(150);
+  });
+  frame();
+};
 
 const plate = () => screen.getByRole('img', { name: HERO.art });
 // The block the picture moves with: CSS reads its data-motion and data-seen.
@@ -49,7 +53,7 @@ const page = () => plate().closest<HTMLElement>('.home')!;
 // Async, so React has caught up with anything the change set off.
 const view = (isIntersecting: boolean) => act(async () => {
   const el = block();
-  for (const o of Observer.all) if (o.targets.has(el)) o.cb([{ isIntersecting, target: el } as unknown as IntersectionObserverEntry], o as unknown as IntersectionObserver);
+  for (const o of Observer.all) report(o, el, isIntersecting);
 });
 
 const rollStarts = () => fireEvent(plate().closest('.roll')!, new Event('animationstart', { bubbles: true }));
@@ -188,7 +192,7 @@ describe('The hero picture', () => {
     // The async act leaves a zero-delay timer of its own.
     act(() => { vi.advanceTimersByTime(0); });
     rollStarts();
-    act(() => { for (const r of Resizes.all) r.cb([], r as unknown as ResizeObserver); });
+    act(() => { for (const r of Resizes.all) resized(r); });
     expect(vi.getTimerCount()).toBeGreaterThan(0);
     const sizes = vi.spyOn(Resizes.prototype, 'disconnect');
     unmount();
