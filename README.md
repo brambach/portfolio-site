@@ -1,8 +1,8 @@
 # brycerambach.com
 
-<a href="https://brycerambach.com"><img src="public/og/home-look-d.jpg" alt="The home page: my name with work and email links, then i build tools for ai agents. i'm bryce. i'm 22, i finished a cs degree in may, and i'm looking for a founding engineer role at an early ai startup. open to moving. Below it, an engraved horizon of hills and pines with a dotted sun low behind them, mirrored in the water" width="100%"></a>
+<a href="https://brycerambach.com"><img src="public/og/home-banknote.jpg" alt="the home page as the face of an engraved banknote: the headline “i build tools for ai agents.” beside my portrait in an oval frame, then the intro, the email and links, and below them an engraved landscape of hills, pines and a dotted sun" width="100%"></a>
 
-My portfolio. The whole page is made of dots. Each part is one object drawn in them (a paper airplane, two plugs, a cursor, a harness, a pen, a cup, a hand), and as you scroll the dots fly from one object into the next. It covers what I do: integrations, agents, the harnesses that check them, design and product taste, each with its proof. The colors follow your clock, from a pink dawn to a dark night.
+my portfolio. the home page is an engraved banknote, with guilloche borders, microprint and the portrait's oval frame drawn in the browser. the face has the headline and intro, the work is a set of numbered print rows, and the back of the note has the about text. the motion is small, and it stops off screen, in a hidden tab and with reduced motion.
 
 The older ideas are still around as side quests: a road where a flat green 911 drives past a billboard for each project, and a 3D Porsche you can drive out of town toward a mountain lake.
 
@@ -12,7 +12,7 @@ The older ideas are still around as side quests: a road where a flat green 911 d
 
 | Where | What it is |
 | --- | --- |
-| `/` | The home page. The hero line, contact links, an engraved horizon, four work cards (Dervo, the integration portal, Arro and Lucid), a short about and a footer. |
+| `/` | The home page, an engraved banknote. The face of the note has the headline, the intro, the email with a copy button, links and the portrait. Then four prints, one per project (Dervo, the integration portal, Arro and Lucid), each a numbered row, and the back of the note with the about text. |
 | `/projects/<name>` | A page each for Dervo, Arro, Lucid, the integration portal and AgentSky, in the same paper and type as the home: one column with the project's real screenshots. |
 | `/work` | The road. Scrolling drives the car past a billboard per project, with a night stop at the end where the archive is a pile of cards. |
 | `/drive` | The 3D Porsche. Open the door, turn the key, drive from town to a lakeside overlook. `/drive?from=work` skips the walk-up. |

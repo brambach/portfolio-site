@@ -33,8 +33,8 @@ export const HOME_META: PageMeta = {
   path: '/',
   title: NAME,
   description: HOME_DESCRIPTION,
-  image: `/og/home-look-d.jpg?v=${V}`,
-  imageAlt: 'Bryce Rambach’s home page: “i build tools for ai agents.” above an engraving of hills and pines over still water, with a blue sun rising behind the far ridge',
+  image: `/og/home-banknote.jpg?v=${V}`,
+  imageAlt: 'Bryce Rambach’s home page: an engraved note in a guilloche border, “i build tools for ai agents.”, the intro, the email, a copy button and links beside an oval portrait, above hills, pines, water and a dotted sun',
 };
 
 export const PROJECT_META: PageMeta[] = WORK_IDS.map(id => {
