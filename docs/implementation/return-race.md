@@ -2,7 +2,7 @@
 
 Bryce requested an autopilot outward journey and an optional manual race from the lake to the opening. The local implementation uses the remaining forward stretch of the existing loop. It doesn't reverse traffic or rebuild the road.
 
-Implemented: mandatory town autopilot, optional stops and honking, the lake race invitation, three-second countdown, manual controls during racing, elapsed timer, distance remaining, chequered finish marking, result screen and name entry. The original prototypes retain manual controls. The radio and phone mix were raised following Bryce's feedback.
+Implemented: mandatory town autopilot, optional stops and honking, lake race invitation, three-second countdown, manual controls during racing, elapsed timer, distance remaining, chequered finish marking, result screen and name entry. The original prototypes retain manual controls. The radio and phone mix were raised following Bryce's feedback.
 
 The shared board uses Upstash Redis through a server-only REST adapter. Vercel serves `api/race.ts`; Vite also routes local requests through that handler. Configure `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` in the server environment. Neither variable is exposed to the client. REST reference: https://upstash.com/docs/redis/features/restapi
 

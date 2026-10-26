@@ -12,7 +12,7 @@ Started 7 September 2026. This plan supersedes older scope and release restricti
 | 4. Project story | Source verified, revised copy in review | At least one verified problem/contribution/evidence presentation, checked against source material |
 | 5. Race finish | Deployed, full-route acceptance pending | Personal best, next-place gap, immediate retry, downloadable timing slip, real-target challenge link; AI label retained; score-validation assessment |
 | 6. Personal reactions | Implemented locally, review pending | A small set of persistent consequences using confirmed personal facts; no invented memories; quiet scenic moments preserved |
-| 7. Garage and acceptance | Signals deployed, owner acceptance pending | Loading, intro, project/contact, the lake, race and retry signals explained correctly; auth and resource checks; Bryce's completed-journey review |
+| 7. Garage and acceptance | Signals deployed, owner acceptance pending | Loading, intro, project/contact, lake, race and retry signals explained correctly; auth and resource checks; Bryce's completed-journey review |
 
 ## Current risks and quality queue
 
@@ -49,7 +49,7 @@ Validation: 33 targeted tests pass, TypeScript passes, production build passes. 
 
 Implemented one mandatory contact card before the keys. Racket and field notes remain in the menu, and the café/tennis parked controls offer projects/the racket at the relevant stop. The introductory copy previews that the remaining objects travel with the visitor.
 
-Saved onboarding now produces a welcome-back choice after entry. Completed the lake arrivals unlock an explicit race shortcut; the shortcut moves a stationary seated visitor to the lake, resets inputs, collision state and drivetrain, then uses the existing race countdown and traffic reset. It doesn't change acceleration, steering or gear ratios. Discoveries and visited stops persist; the menu can reset introduction/discovery progress without deleting saved race results or sound preferences. Personal-best presentation and immediate post-finish retry are still pending.
+Saved onboarding now produces a welcome-back choice after entry. Completed lake arrivals unlock an explicit race shortcut; the shortcut moves a stationary seated visitor to the lake, resets inputs, collision state and drivetrain, then uses the existing race countdown and traffic reset. It doesn't change acceleration, steering or gear ratios. Discoveries and visited stops persist; the menu can reset introduction/discovery progress without deleting saved race results or sound preferences. Personal-best presentation and immediate post-finish retry are still pending.
 
 Verified in the real local browser: reduced-motion entry, single card, keys, reload, welcome-back state; a development-only staged lake arrival then unlocked and successfully started the real countdown and manual controls. The staged test isn't evidence of a complete outward trip. The test run was cancelled without publishing a leaderboard result. Motion preference was restored afterward.
 
@@ -57,7 +57,7 @@ Verified in the real local browser: reduced-motion entry, single card, keys, rel
 
 ## Race finish work in progress
 
-Added device-local personal best with migration from the previous saved finish. A slower run preserves the best; invalid or blocked storage doesn't interrupt the finish. The finish compares against the nearest faster entry returned by the board, with a displayed-standings qualifier at the board boundary. It offers race retry after the saved the lake milestone. Retrying explicitly resets React's countdown state and remounts the race panel so the server starts a new run instead of reusing the finished request.
+Added device-local personal best with migration from the previous saved finish. A slower run preserves the best; invalid or blocked storage doesn't interrupt the finish. The finish compares against the nearest faster entry returned by the board, with a displayed-standings qualifier at the board boundary. It offers race retry after the saved lake milestone. Retrying explicitly resets React's countdown state and remounts the race panel so the server starts a new run instead of reusing the finished request.
 
 28 focused tests pass and TypeScript passes. These changes still need browser verification before deployment. Timing-slip download, server-resolved challenge targets and a complete next-place lookup beyond the top 20 remain pending.
 
@@ -79,7 +79,7 @@ Added once-per-session events for opening projects (quiet page or cabin laptop),
 
 ## Returning-stop details in progress
 
-Coffee orders now persist separately from cafe arrivals. On a subsequent visit, collecting another coffee gets one short line about the fictional cafe's questionable business model. A returning the lake visitor gets a view-versus-leaderboard line in place of the first-trip race invitation. These replace existing text rather than adding popups, and depend on recorded visitor actions rather than invented personal history. Introduction reset clears these discoveries. 27 focused tests and TypeScript pass. Visual review and deployment of these small reactions remain pending.
+Coffee orders now persist separately from cafe arrivals. On a subsequent visit, collecting another coffee gets one short line about the fictional cafe's questionable business model. A returning lake visitor gets a view-versus-leaderboard line in place of the first-trip race invitation. These replace existing text rather than adding popups, and depend on recorded visitor actions rather than invented personal history. Introduction reset clears these discoveries. 27 focused tests and TypeScript pass. Visual review and deployment of these small reactions remain pending.
 
 
 ## Competition assessment
@@ -92,7 +92,7 @@ Current acceptance gaps: physical-phone loading and touch performance; cold prod
 
 ## Full outward journey review, 7 September 2026
 
-Commit 0644287 deployment completed successfully. Tested the current local development site in the visible Codex in-app browser on this Mac at `localhost:3001/?profile=journey`, default desktop viewport. Started at the normal road origin, entered through the door, completed the one-card introduction, handed over the keys and used ignition. Autopilot completed the outward route, slowed into the mandatory the lake turnout and presented the family paragraph and race offer. Open my projects then opened the physical laptop with all five projects. No development stop shortcut was used. Existing muted preference was retained, so this run didn't audition audio.
+Commit 0644287 deployment completed successfully. Tested the current local development site in the visible Codex in-app browser on this Mac at `localhost:3001/?profile=journey`, default desktop viewport. Started at the normal road origin, entered through the door, completed the one-card introduction, handed over the keys and used ignition. Autopilot completed the outward route, slowed into the mandatory lake turnout and presented the family paragraph and race offer. Open my projects then opened the physical laptop with all five projects. No development stop shortcut was used. Existing muted preference was retained, so this run didn't audition audio.
 
 DOM profiler readings: scene ready at 3,204 ms from profiler initialization, 343 geometries, 74 textures and 85 programs. Final driving totals were 9,255 frames across 152,582.7 ms, averaging 60.66 FPS with four frames above 50 ms and an 83.4 ms maximum. Render ratio ranged from 1.2 to 1.35. Average CPU submission was 3.74 ms. This is local development on a desktop GPU with unspecified cache state, not cold production transfer or phone evidence. The recording includes the lake approach and pull-in, but excludes time parked and hidden-tab frames by profiler design.
 

@@ -10,8 +10,8 @@ Updated 6 September 2026. The goal remains active. Preview: http://localhost:300
 | Cleaner controls, type and overlays | Paper materials, dashboard controls, larger advance signs; 390/320-pixel screenshots and keyboard checks. | Implemented and checked in representative views; subjective acceptance pending. |
 | Noticeable optional café and tennis | Initial café invitation, speed-aware tennis invitation, advance signs and successful pull-ins. `tennis-pull-in-production.jpg`. | Functional checks pass. Tiny sign subtitles aren't established as readable at speed. |
 | Personal discoveries without repeated interruption | Two sign jokes, optional call, independent radio switch; hidden-panel ringing and lost focus fixed. | Implemented; audio balance and humour need Bryce's review. |
-| Concise first trip and mandatory the lake finish | Current direct trip measured; simulated duration about 157 seconds; assistance retains braking. Lake finish gives the view space and links projects/contact. | Verified on available browser; final presentation review pending. |
-| Explicit ending and continued exploration | the lake card, project laptop, full portfolio, contact and Stay a little longer. No automatic departure from arrival. | Browser and component evidence present. |
+| Concise first trip and mandatory lake finish | Current direct trip measured; simulated duration about 157 seconds; assistance retains braking. Lake finish gives the view space and links projects/contact. | Verified on available browser; final presentation review pending. |
+| Explicit ending and continued exploration | Lake card, project laptop, full portfolio, contact and Stay a little longer. No automatic departure from arrival. | Browser and component evidence present. |
 | Real portfolio and quiet fallback | Five project notes; AgentSky study and Trace source; `/projects` navigation and arro notes opened in browser. | Supporting source/screenshots for three entries remain requested. Don't invent them. |
 | Sustained performance | Recorded direct journey: 10,354 frames, 67.854 fps, max 33.8 ms, no intervals over 50 ms. First-card default: 282 ms preparation then max 17.5 ms motion interval. | Measured on M4 / 16 GiB. These aren't universal device guarantees or a final-production GPU benchmark. |
 | Desktop, keyboard, touch and reduced motion | Desktop journeys, keyboard focus/scrolling, reduced-motion arrival, pointer cancellation/hold tests and narrow viewports. | Physical-phone input remains unverified; viewport checks don't replace it. |
@@ -21,7 +21,7 @@ Updated 6 September 2026. The goal remains active. Preview: http://localhost:300
 
 ## Review still needed
 
-Use the plain homepage for the current journey. Check the paper objects and buttons, the short wait before the first card lift, radio/ring balance, optional-stop cues and the lake finish. The phone has a text reply, not a recorded voice.
+Use the plain homepage for the current journey. Check the paper objects and buttons, the short wait before the first card lift, radio/ring balance, optional-stop cues and lake finish. The phone has a text reply, not a recorded voice.
 
 A separate local phone preview is listening at http://172.20.10.2:3004/ on this Mac's current network address. HTTP 200 was verified from the Mac. Phone reachability and touch behavior still need Bryce's check; the link depends on the current network connection. The desktop preview at port 3003 remains unchanged.
 

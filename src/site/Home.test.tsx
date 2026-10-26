@@ -3,6 +3,7 @@ import path from 'node:path';
 import { act, render, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { BANNED } from '../banned-names';
 import { projects } from '../projects/catalog';
 import Home from './Home';
 import * as COPY from './home/copy';
@@ -184,8 +185,9 @@ describe('The home page', () => {
     const all = strings(COPY).join(' ');
     expect(all).not.toMatch(/\bs[f]\b|\bn[y]c\b|san fr[a]ncisco|new y[o]rk/i);
     expect(COPY.PORTAL.body).toContain('an hr and payroll consultancy');
-    // The job is employee work at an unnamed consultancy: never the company, its vendors, or a contract or freelance gig.
-    const employer = [/the consultancy/i, /\bdd\b/i, /a client/i, /the HR system/i, /the finance system/i, /\bcontract/i, /\bfreelanc/i];
+    // The job is employee work at an unnamed consultancy: never the company, its clients or vendors, a contract or
+    // freelance gig, or a claim to be its only, sole or solo technical person (src/banned-names.ts has the list).
+    const employer = [...BANNED, /\bdd\b/i, /\bcontract/i, /\bfreelanc/i];
     const { container, unmount } = render(<Home />);
     const home = container.textContent!;
     unmount();

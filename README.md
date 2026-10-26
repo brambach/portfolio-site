@@ -1,6 +1,6 @@
 # brycerambach.com
 
-<a href="https://brycerambach.com"><img src="docs/motion-lab/recordings/ship-home.jpg" alt="The home page at dawn: I design it, make it move, and build it, beside a paper airplane drawn in dots" width="100%"></a>
+<a href="https://brycerambach.com"><img src="public/og/home-look-d.jpg" alt="The home page: my name with work and email links, then i build tools for ai agents. i'm bryce. i'm 22, i finished a cs degree in may, and i'm looking for a founding engineer role at an early ai startup. open to moving. Below it, an engraved horizon of hills and pines with a dotted sun low behind them, mirrored in the water" width="100%"></a>
 
 My portfolio. The whole page is made of dots. Each part is one object drawn in them (a paper airplane, two plugs, a cursor, a harness, a pen, a cup, a hand), and as you scroll the dots fly from one object into the next. It covers what I do: integrations, agents, the harnesses that check them, design and product taste, each with its proof. The colors follow your clock, from a pink dawn to a dark night.
 

@@ -600,7 +600,7 @@
   color: var(--dv-ink);
   border-radius: 10px 10px 0 0;
   box-shadow: 0 -1px 0 rgb(0 0 0 / 0.04), 0 18px 40px -18px rgb(27 27 25 / 0.4);
-  font: 13px/1.4 -apple-system, BlinkMacSystemFont, 'System Text', 'Helvetica Neue', sans-serif;
+  font: 13px/1.4 -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
   text-align: left;
 }
 .sp-catchup__bar { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border-bottom: 1px solid rgb(27 27 25 / 0.06); color: var(--dv-soft); }

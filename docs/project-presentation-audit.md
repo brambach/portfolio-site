@@ -1,6 +1,6 @@
 # Project presentation audit
 
-Expanded by `project-discovery-deep.md`, which corrects the Throughline assessment and records additional projects.
+A later discovery pass corrected the Throughline assessment and recorded additional projects.
 
 Inspected 8 September 2026. The quiet idle loader is the accepted local direction. It hasn't been deployed.
 

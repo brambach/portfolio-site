@@ -48,9 +48,9 @@ Add a connected main road, destination parking and an in-car route map. The caf√
 
 Exit checks: visit, skip and revisit each stop; park, explore and resume without redirects or camera discontinuities; maintain correct car and object state; check keyboard, touch and reduced motion.
 
-### 4. Add tennis, store and the lake arrival
+### 4. Add tennis, store and lake arrival
 
-Add optional turnoffs that rejoin the same route. Use the supplied tennis facts only. the lake is inspired by his parents' place, with no claimed address or invented family detail. Include a coherent place for the requested late city drive and traffic without abandoning the forest journey.
+Add optional turnoffs that rejoin the same route. Use the supplied tennis facts only. The lake is inspired by his parents' place, with no claimed address or invented family detail. Include a coherent place for the requested late city drive and traffic without abandoning the forest journey.
 
 Exit checks: map navigation reaches every implemented destination and returns naturally; scenery and time progression stay continuous; each stop adds a personal purpose without giant placeholder interiors.
 
@@ -71,7 +71,6 @@ No purchases, commits, pushes or deployments without specific authorization. Con
 - `docs/implementation/porsche-quality-list.md`: unresolved bugs and quality requirements.
 - `src/prototype/VERIFICATION.md`: current evidence and testing boundaries.
 - `.codex/review/`: review screenshots and performance samples.
-- `docs/superpowers/specs/2026-09-03-fog-to-firelight-creative-direction.md`: preserved earlier direction.
 
 ## Connected route progress, 6 September
 
@@ -91,7 +90,7 @@ The service window now has an open, shallow interior with warm lighting, counter
 
 The journey now includes raised terrain around the forest road and a ground-following trail to a viewpoint. The trail visit reuses the engine-off door transition, supports returning midway, and preserves reduced-motion behaviour. Trees follow the terrain and their nearby selection follows the walking camera. The existing credited CC0 forest recording loads on demand for the trail and fades when returning to the cabin.
 
-Tests prove road clearance, rising trail elevation, walking eye clearance, return continuity, reduced-motion state and delayed audio cleanup. Browser arrival/walk evidence is in VERIFICATION.md. This doesn't accept the landscape as visually complete: forest density, the lake shoreline, road edges, distant scenery and physical turnoffs still need work. The viewpoint is a first implementation of the requested walking stop, not a finished the lake vista.
+Tests prove road clearance, rising trail elevation, walking eye clearance, return continuity, reduced-motion state and delayed audio cleanup. Browser arrival/walk evidence is in VERIFICATION.md. This doesn't accept the landscape as visually complete: forest density, the lake shoreline, road edges, distant scenery and physical turnoffs still need work. The viewpoint is a first implementation of the requested walking stop, not a finished lake vista.
 
 ## Lake basin progress, 6 September
 
