@@ -66,8 +66,9 @@ describe('The hero picture', () => {
 
   it('watches for a quarter of it to come into view when motion is allowed', () => {
     render(<Home />);
-    expect(Observer.all).toHaveLength(1);
-    expect(Observer.all[0].options?.threshold).toBe(0.25);
+    const own = Observer.all.filter(o => o.targets.has(plate()));
+    expect(own).toHaveLength(1);
+    expect(own[0].options?.threshold).toBe(0.25);
   });
 
   it('starts when it comes into view and stops when it leaves', async () => {

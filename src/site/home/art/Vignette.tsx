@@ -1,16 +1,11 @@
 import { useEffect } from 'react';
+import { afterPaint } from '../after-paint';
 import { useWatch } from '../motion/watch';
 import { vignette } from './vignette';
 import './vignette.css';
 
 /* The hero's engraving. Its box keeps its size from CSS, so the page doesn't shift when the drawing lands. It's drawn
    after the first paint, at the box's own size, and again if the box changes width. */
-
-const afterPaint = (fn: () => void) => {
-  let t = 0;
-  const raf = requestAnimationFrame(() => { t = window.setTimeout(fn); });
-  return () => { cancelAnimationFrame(raf); window.clearTimeout(t); };
-};
 
 export default function Vignette({ label }: { label: string }) {
   const plate = useWatch<HTMLDivElement>({ oncePerVisit: 'vig-drawn' });

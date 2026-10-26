@@ -35,8 +35,8 @@ describe('The home page', () => {
       // Each repeated link says which project it's about, for a screen reader; the visible words stay the same.
       const story = within(card).getByRole('link', { name: `the full story about ${names[i]}` });
       expect(story).toHaveAttribute('href', `/projects/${ids[i]}`);
-      expect(story.querySelector('.s-vh')?.textContent).toBe(`about ${names[i]}`);
-      expect(card.querySelector('.s-what')?.textContent).toBeTruthy();
+      expect(story.querySelector('.vh')?.textContent).toBe(`about ${names[i]}`);
+      expect(card.querySelector('.work__what')?.textContent).toBeTruthy();
     });
     // Each shows its screenshots, and the picture is a link to the same page.
     cards.forEach((card, i) => {
@@ -111,7 +111,7 @@ describe('The home page', () => {
       if (href.startsWith('http')) {
         expect(a, href).toHaveAttribute('target', '_blank');
         expect(a.getAttribute('rel'), href).toMatch(/\bnoopener\b/);
-        expect(a.querySelector('.s-vh'), href).not.toBeNull();
+        expect(a.querySelector('.vh'), href).not.toBeNull();
       } else {
         expect(a, href).not.toHaveAttribute('target');
       }
@@ -169,7 +169,7 @@ describe('The home page', () => {
     const { container } = render(<Home />);
     const portal = within(screen.getByRole('region', { name: 'work' })).getAllByRole('article')[1];
     expect(within(portal).getByRole('heading', { level: 3 })).toHaveTextContent('integration portal');
-    expect(portal.querySelector('.s-label')).toHaveTextContent(/^employee, now$/);
+    expect(portal.querySelector('.work__kind')).toHaveTextContent(/^employee, now$/);
     const old = /contract|jul to oct|july to october|parked/i;
     expect(container.textContent).not.toMatch(old);
     for (const s of strings(COPY)) expect(s, s).not.toMatch(old);
@@ -225,6 +225,63 @@ describe('The hero engraving', () => {
     const step = (svg: string) => { const [a, b] = [...svg.matchAll(/<circle cx="([\d.]+)" cy="([\d.]+)"/g)].slice(0, 2).map(m => Number(m[1])); return +(b - a).toFixed(1); };
     expect(step(phone)).toBe(3.8);
     expect(step(vignette(1200, 300))).toBe(4.2);
+  });
+});
+
+describe('The note', () => {
+  const rows = () => within(screen.getByRole('region', { name: 'work' })).getAllByRole('article');
+
+  it('numbers the work no. 001 to no. 004, in order', () => {
+    render(<Home />);
+    expect(rows().map(r => within(r).getByText(/^no\. \d+$/).textContent)).toEqual(['no. 001', 'no. 002', 'no. 003', 'no. 004']);
+  });
+
+  it('prints microprint only from lines on the page, repeated, and hidden from screen readers', () => {
+    const { container } = render(<Home />);
+    const face = screen.getByRole('heading', { level: 1 }).closest('section')!;
+    const back = screen.getByRole('contentinfo');
+    const about = screen.getByRole('region', { name: 'about' }).querySelectorAll('p')[1].textContent!;
+    const unit = (m: Element) => {
+      const row = m.closest('article');
+      if (row) return `${within(row).getByRole('heading', { level: 3 }).textContent}, ${row.querySelector('.work__kind')!.textContent}`;
+      if (face.contains(m)) return screen.getByRole('heading', { level: 1 }).textContent!;
+      if (back.contains(m)) return about;
+      throw new Error(`microprint outside a note or a row: ${m.textContent!.slice(0, 40)}`);
+    };
+    const micro = [...container.querySelectorAll('.micro')];
+    expect([face, back, ...rows()].map(n => micro.filter(m => n.contains(m) && (n.tagName === 'ARTICLE' || !m.closest('article'))).length)).toEqual([4, 4, 1, 1, 1, 1]);
+    for (const m of micro) {
+      expect(m.closest('[aria-hidden="true"]'), m.className).not.toBeNull();
+      const text = m.textContent!, u = unit(m), times = (text.length + 1) / (u.length + 1);
+      expect(Number.isInteger(times) && times > 1, `${m.className}: ${text.slice(0, 60)}`).toBe(true);
+      expect(text).toBe(Array(times).fill(u).join(' '));
+    }
+  });
+
+  it('carries its guilloche on the page root, with the border in two inks', () => {
+    render(<Home />);
+    const root = screen.getByRole('main').parentElement!;
+    const prop = (name: string) => root.style.getPropertyValue(name);
+    for (const name of ['--border-ink', '--border-cream', '--wave', '--band']) expect(prop(name), name).toMatch(/^url\("data:image\/svg\+xml,/);
+    expect(prop('--border-ink')).not.toBe(prop('--border-cream'));
+  });
+
+  it('shows the portrait at once as decoration, and the screenshots lazily at their own size', () => {
+    const { container } = render(<Home />);
+    const portrait = container.querySelector('img[src="/art/portrait.webp"]')!;
+    expect(portrait).toHaveAttribute('alt', '');
+    expect(portrait).toHaveAttribute('width', '150');
+    expect(portrait).toHaveAttribute('height', '192');
+    expect(portrait).toHaveAttribute('decoding', 'async');
+    expect(portrait).not.toHaveAttribute('loading');
+    expect(portrait.closest('[aria-hidden="true"]')).not.toBeNull();
+    const shots = rows().flatMap(r => [...r.querySelectorAll('img')]);
+    expect(shots).toHaveLength(5);
+    for (const img of shots) {
+      expect(Number(img.getAttribute('width')), img.src).toBeGreaterThan(0);
+      expect(Number(img.getAttribute('height')), img.src).toBeGreaterThan(0);
+      expect(img, img.src).toHaveAttribute('loading', 'lazy');
+    }
   });
 });
 

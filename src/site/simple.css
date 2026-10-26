@@ -1,4 +1,4 @@
-/* The home page's look, in look D. The project pages wear .home too and take all of this through project.css.
+/* The look the project pages wear, in look D. They take all of this through project.css, under .home.
    Order: the vendored tokens, the fonts, the D overrides (from design-system/components/looks.css, the
    :root[data-look="d"] block, scoped here to .home), then the page. */
 @import "../styles/tokens/tokens.css";
