@@ -36,14 +36,15 @@ export default function PrintRow({ card: { id, serial, name, kind, what, facts, 
   const row = useWatch<HTMLElement>({ threshold: .12 });
   const n = Number(serial[2]);
   return <article ref={row} className="work" id={id}>
-    <p className="work__line" aria-hidden="true">
-      <span className="serial">{`no. ${serial}`}<span className="wheel" style={{ '--n': n, '--clicks': clicks(n) } as CSSProperties}><span className="wheel__col" /></span></span>
+    <p className="work__line" aria-hidden="true" style={{ '--n': n, '--clicks': clicks(n) } as CSSProperties}>
+      <span className="serial">{`no. ${serial}`}<span className="wheel"><span className="wheel__col" /></span></span>
       <Micro className="micro--rule" text={`${name}, ${kind}`} />
     </p>
     <a className={`print${phones ? ' print--phones' : ''}`} href={page} tabIndex={-1} aria-hidden="true">
       <span className="print__frame">
         {shots.map(s => <img key={s.src} src={s.src} alt={s.alt} width={s.width} height={s.height} loading="lazy" decoding="async" />)}
       </span>
+      <svg className="print__rule"><rect width="100%" height="100%" pathLength="1" /></svg>
     </a>
     {shots.map(s => <span key={s.src} className="vh" role="img" aria-label={s.alt} />)}
     <div className="work__text">

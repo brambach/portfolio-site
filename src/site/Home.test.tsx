@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
-import { render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BANNED } from '../banned-names';
 import { projects } from '../projects/catalog';
@@ -23,6 +24,8 @@ class Observer {
   disconnect() { this.targets.clear(); }
   takeRecords() { return []; }
 }
+
+const media = (matches: (q: string) => boolean) => vi.spyOn(window, 'matchMedia').mockImplementation(q => ({ matches: matches(q), media: q, onchange: null, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {}, dispatchEvent: () => false }) as MediaQueryList);
 
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
@@ -260,9 +263,11 @@ describe('The note', () => {
     for (const row of rows()) {
       const serial = within(row).getByText(/^no\. \d+$/).textContent!;
       const n = Number(serial.at(-1));
-      const wheel = row.querySelector<HTMLElement>('.wheel')!;
-      expect(wheel.style.getPropertyValue('--n'), serial).toBe(String(n));
-      const easing = wheel.style.getPropertyValue('--clicks');
+      // The serial's line carries the wheel's count and rhythm, so the rule beside the number can follow the clicks.
+      const line = row.querySelector<HTMLElement>('.work__line')!;
+      expect(line.querySelector('.wheel'), serial).not.toBeNull();
+      expect(line.style.getPropertyValue('--n'), serial).toBe(String(n));
+      const easing = line.style.getPropertyValue('--clicks');
       expect(easing, serial).toMatch(/^linear\(.*\)$/);
       const stops = easing.slice('linear('.length, -1).split(', ').map(s => {
         const [v, at = '0%'] = s.split(' ');
@@ -303,6 +308,26 @@ describe('The note', () => {
     }
   });
 
+  it('gives each print one hairline frame a pen can draw, one round both of arro’s phones', () => {
+    render(<Home />);
+    for (const row of rows()) {
+      const frames = row.querySelectorAll('.print rect');
+      expect(frames, row.id).toHaveLength(1);
+      expect(frames[0], row.id).toHaveAttribute('pathLength', '1');
+      expect(frames[0].closest('[aria-hidden="true"]'), row.id).not.toBeNull();
+    }
+    expect(rows()[2].querySelectorAll('.print img')).toHaveLength(2);
+  });
+
+  it('lays a foil over the border of both sides of the note, hidden from screen readers', () => {
+    render(<Home />);
+    for (const note of [screen.getByRole('heading', { level: 1 }).closest('section')!, screen.getByRole('contentinfo')]) {
+      const foil = note.querySelectorAll('.note__plate > .foil > .foil__band');
+      expect(foil, note.className).toHaveLength(1);
+      expect(foil[0].closest('[aria-hidden="true"]'), note.className).not.toBeNull();
+    }
+  });
+
   it('carries its guilloche on the page root, with the border in two inks', () => {
     render(<Home />);
     const root = screen.getByRole('main').parentElement!;
@@ -327,6 +352,160 @@ describe('The note', () => {
       expect(Number(img.getAttribute('height')), img.src).toBeGreaterThan(0);
       expect(img, img.src).toHaveAttribute('loading', 'lazy');
     }
+  });
+});
+
+describe('Copying the email', () => {
+  const MAILTO = `mailto:${COPY.EMAIL}`;
+  const FAILED = `copy did not work, the address is ${COPY.EMAIL}`;
+  const notes = () => ({ hero: screen.getByRole('heading', { level: 1 }).closest('section')!, footer: screen.getByRole('contentinfo') });
+  const buttons = () => Object.entries(notes()).map(([where, note]) => [where, within(note).getByRole('button', { name: 'copy email address' })] as const);
+  const clipboard = (writeText?: (text: string) => Promise<void>) =>
+    Object.defineProperty(navigator, 'clipboard', { value: writeText && { writeText }, configurable: true });
+  const status = () => screen.getByRole('status');
+  // A click, then the clipboard's answer. True when nothing stopped the click's default.
+  const click = async (el: HTMLElement) => {
+    let followed = true;
+    await act(async () => { followed = fireEvent.click(el); });
+    return followed;
+  };
+
+  afterEach(() => {
+    Reflect.deleteProperty(navigator, 'clipboard');
+    vi.useRealTimers();
+  });
+
+  it('shows the address as a plain mailto link in the hero and the footer, with a copy button after it', async () => {
+    const writeText = vi.fn(() => Promise.resolve());
+    clipboard(writeText);
+    render(<Home />);
+    expect(screen.getAllByRole('button', { name: 'copy email address' })).toHaveLength(2);
+    for (const [where, note] of Object.entries(notes())) {
+      const link = within(note).getByRole('link', { name: COPY.EMAIL });
+      expect(link, where).toHaveAttribute('href', MAILTO);
+      // The address may break before the @ on a narrow screen.
+      expect(link.innerHTML, where).toBe(COPY.EMAIL.replace('@', '<wbr>@'));
+      const button = within(note).getByRole('button', { name: 'copy email address' });
+      expect(button, where).toHaveAttribute('type', 'button');
+      expect(link.nextSibling?.textContent, where).toBe(' ');
+      expect(link.nextSibling?.nextSibling, where).toBe(button);
+      expect(button.querySelector('.stamp'), where).toHaveAttribute('aria-hidden', 'true');
+      expect(await click(link), `${where} link opens the mail app`).toBe(true);
+    }
+    expect(writeText).not.toHaveBeenCalled();
+  });
+
+  it('copies the address from the hero and from the footer, stamps the button that copied, and lifts the stamp after its hold', async () => {
+    const writeText = vi.fn(() => Promise.resolve());
+    clipboard(writeText);
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    render(<Home />);
+    for (const [where, button] of buttons()) {
+      writeText.mockClear();
+      await click(button);
+      expect(writeText, where).toHaveBeenCalledExactlyOnceWith(COPY.EMAIL);
+      expect(button.querySelector('.stamp'), where).toHaveTextContent('copied');
+      expect(button, where).toHaveAttribute('data-stamp', 'in');
+      expect(buttons().filter(([, b]) => b !== button).map(([, b]) => b.dataset.stamp), where).toEqual([undefined]);
+      expect(screen.getAllByRole('link', { name: COPY.EMAIL }).filter(l => l.hasAttribute('data-stamp')), where).toEqual([]);
+      // 220ms in and a 1.2s hold, then 140ms out, then gone.
+      act(() => { vi.advanceTimersByTime(1419); });
+      expect(button, where).toHaveAttribute('data-stamp', 'in');
+      act(() => { vi.advanceTimersByTime(1); });
+      expect(button, where).toHaveAttribute('data-stamp', 'out');
+      act(() => { vi.advanceTimersByTime(140); });
+      expect(button, where).not.toHaveAttribute('data-stamp');
+    }
+  });
+
+  it.each(['{Enter}', '[Space]'])('copies from the keyboard with %s, stamping only that button', async key => {
+    const writeText = vi.fn(() => Promise.resolve());
+    clipboard(writeText);
+    render(<Home />);
+    const [[, hero], [, footer]] = buttons();
+    footer.focus();
+    await userEvent.keyboard(key);
+    expect(writeText).toHaveBeenCalledExactlyOnceWith(COPY.EMAIL);
+    expect(footer).toHaveAttribute('data-stamp', 'in');
+    expect(hero).not.toHaveAttribute('data-stamp');
+  });
+
+  it('says the address instead when the clipboard is missing or refuses, with no stamp, each time', async () => {
+    render(<Home />);
+    for (const writeText of [undefined, vi.fn(() => Promise.reject(new Error('denied')))]) {
+      for (const [where, button] of buttons()) {
+        clipboard(writeText);
+        const before = status().firstElementChild;
+        await click(button);
+        const how = `${where}, clipboard ${writeText ? 'refused' : 'missing'}`;
+        expect(button, how).not.toHaveAttribute('data-stamp');
+        expect(status().textContent, how).toBe(FAILED);
+        expect(status().firstElementChild, how).not.toBe(before);
+      }
+    }
+  });
+
+  it('says "email copied" in one polite status line, once for each copy, and clears it when the stamp has gone', async () => {
+    clipboard(() => Promise.resolve());
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const { container } = render(<Home />);
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(container.querySelectorAll('[aria-live], [role="status"], [role="alert"], [role="log"]')).toHaveLength(1);
+    expect(status()).toHaveClass('vh');
+    expect(status()).toBeEmptyDOMElement();
+    const [[, hero], [, footer]] = buttons();
+    await click(hero);
+    const first = status().firstElementChild;
+    expect(status().textContent).toBe('email copied');
+    // A second copy says it again as a new line, not a second line beside the first.
+    await click(footer);
+    expect(status().children).toHaveLength(1);
+    expect(status().firstElementChild).not.toBe(first);
+    expect(status().textContent).toBe('email copied');
+    act(() => { vi.advanceTimersByTime(1420); });
+    expect(status().textContent).toBe('email copied');
+    act(() => { vi.advanceTimersByTime(140); });
+    expect(status()).toBeEmptyDOMElement();
+  });
+
+  it('leaves the header’s email a plain mailto link, with no copy button', async () => {
+    const writeText = vi.fn(() => Promise.resolve());
+    clipboard(writeText);
+    render(<Home />);
+    const header = screen.getByRole('banner');
+    const link = within(header).getByRole('link', { name: 'email' });
+    expect(link).toHaveAttribute('href', MAILTO);
+    expect(within(header).queryByRole('button')).toBeNull();
+    expect(await click(link)).toBe(true);
+    expect(writeText).not.toHaveBeenCalled();
+  });
+});
+
+describe('The medallion on the back of the note', () => {
+  const rings = () => screen.getByRole('contentinfo').querySelectorAll('.medal > svg');
+
+  it('is drawn at once when the browser cannot tell where the back is', () => {
+    vi.stubGlobal('IntersectionObserver', undefined);
+    render(<Home />);
+    expect(rings()).toHaveLength(3);
+  });
+
+  it('is drawn at once with reduced motion', () => {
+    media(q => q.includes('reduced-motion'));
+    render(<Home />);
+    expect(rings()).toHaveLength(3);
+  });
+
+  it('waits until the back of the note comes near, then is drawn', () => {
+    Observer.all = [];
+    vi.stubGlobal('IntersectionObserver', Observer);
+    render(<Home />);
+    expect(rings()).toHaveLength(0);
+    const back = screen.getByRole('contentinfo');
+    act(() => {
+      for (const o of Observer.all) if (o.targets.has(back)) o.cb([{ isIntersecting: true, target: back } as unknown as IntersectionObserverEntry], o as unknown as IntersectionObserver);
+    });
+    expect(rings()).toHaveLength(3);
   });
 });
 

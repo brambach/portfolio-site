@@ -48,7 +48,7 @@ function oval(cx: number, cy: number, rx: number, ry: number): Path {
   return { len, at };
 }
 
-function rose(c: number, rings: Ring[]) {
+function rose(c: number, rings: Ring[], attrs = '') {
   return rings.map(({ r0, r1, n, copies, w = .45, o = .6 }) => {
     const steps = n * 20;
     let d = '';
@@ -57,7 +57,7 @@ function rose(c: number, rings: Ring[]) {
       d += (i ? 'L' : 'M') + f2(c + r * Math.cos(a)) + ',' + f2(c + r * Math.sin(a));
     }
     let g = '';
-    for (let k = 0; k < copies; k++) g += `<path d="${d}"${k ? ` transform="rotate(${f2((k * 360) / n / copies)} ${c} ${c})"` : ''}/>`;
+    for (let k = 0; k < copies; k++) g += `<path${attrs} d="${d}"${k ? ` transform="rotate(${f2((k * 360) / n / copies)} ${c} ${c})"` : ''}/>`;
     return `<g stroke-width="${w}" stroke-opacity="${o}">${g}</g>`;
   }).join('');
 }
@@ -80,6 +80,17 @@ export function borderImage(ink: string): string {
     `<rect x="${i}" y="${i}" width="${W - 2 * i}" height="${W - 2 * i}" stroke-width=".55" stroke-opacity=".75"/>` +
     boss + `</svg>`;
   return svgUrl(svg);
+}
+
+// Each ring is its own svg so it can turn on the compositor without repainting the lace.
+export function medallionRings(size: number): [outer: string, middle: string, inner: string] {
+  const c = size / 2, s = size / 260;
+  const ring = (r: Ring, extra = '') => `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" focusable="false" fill="none" stroke="currentColor">${rose(c, [r], ' pathLength="1"')}${extra}</svg>`;
+  return [
+    ring({ r0: 92 * s, r1: 128 * s, n: 22, copies: 5, o: .62 }, `<circle cx="${c}" cy="${c}" r="${f1(129 * s)}" stroke-width=".7" stroke-opacity=".55"/>`),
+    ring({ r0: 50 * s, r1: 104 * s, n: 14, copies: 6, o: .5 }),
+    ring({ r0: 10 * s, r1: 58 * s, n: 9, copies: 6, o: .62 }),
+  ];
 }
 
 export function cameo(iw: number, ih: number): { w: number; h: number; svg: string } {

@@ -1,8 +1,9 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
 import { afterPaint } from './home/after-paint';
-import { bandRule, borderImage, cameo, waveField } from './home/art/guilloche';
+import { bandRule, borderImage, cameo, medallionRings, waveField } from './home/art/guilloche';
 import Vignette from './home/art/Vignette';
 import { EMAIL, FOOTER, HERO } from './home/copy';
+import CopyEmail, { CopyStatus } from './home/CopyEmail';
 import { useMotionMode } from './home/motion-mode';
 import { useWatch } from './home/motion/watch';
 import Note from './home/Note';
@@ -11,6 +12,7 @@ import './home/banknote.css';
 
 const PAPER = '#f3eee3';
 
+// --border-ink stays one string in one property: the foil reuses it as its mask.
 const GUILLOCHE = {
   '--border-ink': borderImage('#5e2a7e'),
   '--border-cream': borderImage('#efe7d6'),
@@ -18,11 +20,10 @@ const GUILLOCHE = {
   '--band': bandRule('#5e2a7e'),
 } as CSSProperties;
 
-const LINKS = [
-  { label: EMAIL, href: `mailto:${EMAIL}` },
-  { label: 'github', href: 'https://github.com/brambach', away: true },
-  { label: 'x @brycerambach', href: 'https://x.com/brycerambach', away: true },
-  { label: 'linkedin', href: 'https://www.linkedin.com/in/bryce-rambach/', away: true },
+const AWAY = [
+  { label: 'github', href: 'https://github.com/brambach' },
+  { label: 'x @brycerambach', href: 'https://x.com/brycerambach' },
+  { label: 'linkedin', href: 'https://www.linkedin.com/in/bryce-rambach/' },
 ];
 
 const WORK: Card[] = [
@@ -82,55 +83,59 @@ export default function Home() {
 
   const mode = useMotionMode();
   const face = useWatch<HTMLElement>({ oncePerVisit: 'bn-roll' });
+  const medal = useRef<HTMLDivElement>(null);
+  const back = useWatch<HTMLElement>({ near: () => { if (medal.current) medal.current.innerHTML = medallionRings(260).join(''); } });
 
   const lead = HERO.line.slice(0, -HERO.italic.length);
   return <div className="home bn" style={GUILLOCHE} data-mode={mode}>
-    <header className="top label">
-      <a href="/">bryce rambach</a>
-      <nav aria-label="site"><a href="#work">work</a><a href="#about">about</a><a href={`mailto:${EMAIL}`}>email</a></nav>
-    </header>
+    <CopyStatus>
+      <header className="top label">
+        <a href="/">bryce rambach</a>
+        <nav aria-label="site"><a href="#work">work</a><a href="#about">about</a><a href={`mailto:${EMAIL}`}>email</a></nav>
+      </header>
 
-    <main>
-      <Note side="face" micro={HERO.line} aria-labelledby="hero-line" ref={face}>
-        <div className="note__top">
-          <div className="note__text">
-            <h1 id="hero-line">{lead}<em>{HERO.italic}</em></h1>
-            <p className="hero__sub">{HERO.sub}</p>
-            <div className="hero__links">
-              {LINKS.map(l => l.away
-                ? <Away key={l.href} href={l.href}>{l.label}</Away>
-                : <a key={l.href} href={l.href}>{l.label}</a>)}
+      <main>
+        <Note side="face" micro={HERO.line} aria-labelledby="hero-line" ref={face}>
+          <div className="note__top">
+            <div className="note__text">
+              <h1 id="hero-line">{lead}<em>{HERO.italic}</em></h1>
+              <p className="hero__sub">{HERO.sub}</p>
+              <div className="hero__links">
+                <CopyEmail />
+                {AWAY.map(l => <Away key={l.href} href={l.href}>{l.label}</Away>)}
+              </div>
+            </div>
+            <div className="cameo" aria-hidden="true">
+              <span ref={frame} className="cameo__in" />
+              <img className="cameo__art" src="/art/portrait.webp" width={150} height={192} alt="" decoding="async" />
             </div>
           </div>
-          <div className="cameo" aria-hidden="true">
-            <span ref={frame} className="cameo__in" />
-            <img className="cameo__art" src="/art/portrait.webp" width={150} height={192} alt="" decoding="async" />
+          <Vignette label={HERO.art} />
+        </Note>
+
+        <section id="work" className="sec" aria-label="work">
+          <div className="rule"><h2 className="label">work</h2><span className="rule__band" aria-hidden="true" /></div>
+          <div className="rows">{WORK.map(w => <PrintRow key={w.id} card={w} />)}</div>
+        </section>
+      </main>
+
+      <Note side="back" micro={FOOTER.about} id="about" ref={back}>
+        <div className="back">
+          <div className="back__text">
+            <section aria-label="about">
+              <h2 className="label">about</h2>
+              <p className="back__about">i'm a remote employee at an hr and payroll consultancy. alongside that, i founded dervo.</p>
+              <p className="back__about">{FOOTER.about}</p>
+            </section>
+            <div className="back__links">
+              <CopyEmail />
+              <nav aria-label="elsewhere">{AWAY.map(l => <Away key={l.href} href={l.href}>{l.label}</Away>)}</nav>
+            </div>
           </div>
+          <div className="medal" aria-hidden="true" ref={medal} />
+          <p className="colophon">{FOOTER.sign}</p>
         </div>
-        <Vignette label={HERO.art} />
       </Note>
-
-      <section id="work" className="sec" aria-label="work">
-        <div className="rule"><h2 className="label">work</h2><span className="rule__band" aria-hidden="true" /></div>
-        <div className="rows">{WORK.map(w => <PrintRow key={w.id} card={w} />)}</div>
-      </section>
-    </main>
-
-    <Note side="back" micro={FOOTER.about} id="about">
-      <div className="back">
-        <div className="back__text">
-          <section aria-label="about">
-            <h2 className="label">about</h2>
-            <p className="back__about">i'm a remote employee at an hr and payroll consultancy. alongside that, i founded dervo.</p>
-            <p className="back__about">{FOOTER.about}</p>
-          </section>
-          <div className="back__links">
-            <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
-            <nav aria-label="elsewhere">{LINKS.slice(1).map(l => <Away key={l.href} href={l.href}>{l.label}</Away>)}</nav>
-          </div>
-        </div>
-        <p className="colophon">{FOOTER.sign}</p>
-      </div>
-    </Note>
+    </CopyStatus>
   </div>;
 }

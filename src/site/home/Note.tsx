@@ -14,6 +14,6 @@ export default function Note({ side, micro, children, ...rest }: Omit<ComponentP
   const Tag = side === 'face' ? 'section' : 'footer';
   return <Tag {...rest} className={`note note--${side}`}>
     {EDGES.map(e => <Micro key={e} className={`micro--${e}`} text={micro} />)}
-    <div className="note__plate">{children}</div>
+    <div className="note__plate"><span className="foil" aria-hidden="true"><span className="foil__band" /></span>{children}</div>
   </Tag>;
 }

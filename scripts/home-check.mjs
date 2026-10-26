@@ -4,16 +4,18 @@
 //   --diff <dir>      the same shots compared to a baseline, failing on any changed pixel; on failure it writes
 //                     home-<width>-new.png and home-<width>-diff.png (changed pixels in red) beside the baseline
 //   --states          at 1440 and 390: only transform, translate, rotate, scale, opacity and stroke-dashoffset animate;
-//                     the animation names are exactly the contract's; face loops run on load and pause once scrolled
-//                     through, with every watched block seen; every one-shot ends by its block's seen time plus its
-//                     delay and duration (300ms margin) and none is left running or waiting; back on the face, a
-//                     hidden tab pauses its loops and showing it runs them again; no layout shift; the roll plays once
-//                     a visit; a redraw at a new width does not raise the sun again; reduced motion runs nothing and
-//                     reads data-mode="still"
+//                     the animation names are exactly the contract's; face loops run and back loops wait on load, and
+//                     the other way round once scrolled through, with every watched block seen; every one-shot ends
+//                     by its block's seen time plus its delay and duration (300ms margin) and none is left running or
+//                     waiting; a hidden tab pauses every loop and showing it resumes the ones on screen; no layout
+//                     shift; the roll plays once a visit; a redraw at a new width does not raise the sun again;
+//                     reduced motion runs nothing and reads data-mode="still"
 //   --trace           at 390 (phone, 4x CPU): once the face's one-shots end, 4s on the face with no Paint and no
 //                     Layout on the main thread; also prints the longest main-thread task during load and the paints
 //                     during the roll
-//   --lite            at 390: Save-Data goes lite; prefers-reduced-data goes lite; a slow roll goes lite mid-roll, is
+//   --lite            at 390: Save-Data goes lite, the medallion rests drawn with only bn-turn running from the start
+//                     (a crop goes to --out <dir> when given), and a row's number still clicks while its rule is
+//                     printed rather than inked in; prefers-reduced-data goes lite; a slow roll goes lite mid-roll, is
 //                     remembered as "bn-slow" and a reload starts lite; a narrow touch screen alone stays full
 //   --stills <dir>    the page top through the picture once the face has settled, desktop and phone, saved as
 //                     <name>-desktop.png and <name>-mobile.png (--name, default after)
@@ -25,7 +27,7 @@
 //                     settles, time stepped by hand as in --record, at 1440 and 390 (DPR 2), plus the reduced-motion
 //                     rest: birds-<width>-<ms>.png and birds-<width>-reduced.png
 // Usage: node scripts/home-check.mjs [--url http://localhost:4180/] --baseline dir | --diff dir | --states | --trace
-//        | --lite | --stills dir [--name before] | --record dir | --birds dir [--from ms]
+//        | --lite [--out dir] | --stills dir [--name before] | --record dir | --birds dir [--from ms]
 import { chromium } from 'playwright';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -38,7 +40,7 @@ const value = (name) => { const i = args.indexOf(name); return i < 0 ? null : ar
 const URL = value('--url') ?? 'http://localhost:4180/';
 const baseline = value('--baseline'), diff = value('--diff'), stills = value('--stills'), record = value('--record'), birds = value('--birds');
 if (!baseline && !diff && !flag('--states') && !flag('--trace') && !flag('--lite') && !stills && !record && !birds) {
-  console.log('usage: node scripts/home-check.mjs [--url u] --baseline dir | --diff dir | --states | --trace | --lite | --stills dir [--name n] | --record dir | --birds dir [--from ms]');
+  console.log('usage: node scripts/home-check.mjs [--url u] --baseline dir | --diff dir | --states | --trace | --lite [--out dir] | --stills dir [--name n] | --record dir | --birds dir [--from ms]');
   process.exit(2);
 }
 
@@ -52,7 +54,7 @@ const DESKTOP = { name: '1440', width: 1440, height: 900, dpr: 1 };
 const PHONE = { name: '390', width: 390, height: 844, dpr: 2 };
 const TOUCH = { ...PHONE, mobile: true };
 const ALLOWED = new Set(['transform', 'translate', 'rotate', 'scale', 'opacity', 'strokeDashoffset', 'offset', 'easing', 'composite', 'computedOffset']);
-const EXPECTED = ['bn-click', 'vig-bob', 'vig-breathe', 'vig-drift', 'vig-flap', 'vig-rise', 'vig-roll', 'vig-shimmer', 'vig-unroll'];
+const EXPECTED = ['bn-click', 'bn-foil', 'bn-ink', 'bn-pen', 'bn-turn', 'vig-bob', 'vig-breathe', 'vig-drift', 'vig-flap', 'vig-rise', 'vig-roll', 'vig-shimmer', 'vig-unroll'];
 const ROLL = ['vig-roll', 'vig-unroll', 'vig-rise'];
 const MARGIN_MS = 300;
 const TRACE_MS = 4000;
@@ -189,7 +191,7 @@ async function shoot(size) {
   await page.evaluate(async () => {
     for (let y = 0; y < document.documentElement.scrollHeight; y += innerHeight / 2) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 50)); }
   });
-  await page.waitForFunction(() => [...document.images].every((i) => i.complete) && document.querySelector('.cameo__in > svg'));
+  await page.waitForFunction(() => [...document.images].every((i) => i.complete) && document.querySelector('.cameo__in > svg') && document.querySelectorAll('.medal > svg').length === 3);
   await page.evaluate(async () => {
     await Promise.all([...document.images].map((i) => i.decode().catch(() => {})));
     await document.fonts.ready;
@@ -227,9 +229,9 @@ async function runDiff(dir) {
   }
 }
 
-// The face's loops, as the set of their play states ('' when it has none yet).
-const loops = (page) => page.evaluate(() => [...new Set(document.querySelector('.note--face').getAnimations({ subtree: true })
-  .filter((a) => a.effect.getTiming().iterations === Infinity).map((a) => a.playState))].sort().join(','));
+// Each block's loops, as the set of their play states ('' when it has none yet).
+const loops = (page) => page.evaluate(() => Object.fromEntries(['.note--face', '.note--back'].map((s) => [s.slice(7),
+  [...new Set(document.querySelector(s).getAnimations({ subtree: true }).filter((a) => a.effect.getTiming().iterations === Infinity).map((a) => a.playState))].sort().join(',')])));
 
 // Brings each watched block on screen in page order and stays until its one-shots should have ended, so none is
 // scrolled away mid-run.
@@ -257,12 +259,12 @@ async function runStates() {
     const { ctx, page } = await open(size, { init: [motionLog] });
     await page.waitForTimeout(400);
     const first = await loops(page);
-    check(first === 'running', `${at} on load: face loops running`, first);
+    check(first.face === 'running' && (first.back === '' || first.back === 'paused'), `${at} on load: face loops running, back loops waiting`, first);
 
     await scrollThrough(page);
     await page.waitForTimeout(400);
     const after = await loops(page);
-    check(after === 'paused', `${at} scrolled through: face loops paused off screen`, after);
+    check(after.face === 'paused' && after.back === 'running', `${at} scrolled through: face loops paused, back loops running`, after);
     const unseen = await page.evaluate(() => [...document.querySelectorAll('[data-motion]')].filter((el) => el.dataset.seen === undefined).map((el) => el.className));
     const blocks = await page.evaluate(() => document.querySelectorAll('[data-motion]').length);
     check(blocks && !unseen.length, `${at} scrolled through: all ${blocks} watched blocks seen`, unseen);
@@ -294,14 +296,12 @@ async function runStates() {
       else delete document.hidden;
       document.dispatchEvent(new Event('visibilitychange'));
     }, hidden);
-    await page.evaluate(() => scrollTo(0, 0));
-    await page.waitForTimeout(400);
     await setHidden(true);
     const hidden = await loops(page);
-    check(hidden === 'paused', `${at} hidden tab: the face's loops paused on screen`, hidden);
+    check(hidden.face === 'paused' && hidden.back === 'paused', `${at} hidden tab: every loop paused`, hidden);
     await setHidden(false);
     const shown = await loops(page);
-    check(shown === 'running', `${at} shown again: the face's loops run again`, shown);
+    check(shown.face === 'paused' && shown.back === 'running', `${at} shown again: the back's loops run again, the face's stay paused off screen`, shown);
 
     await page.reload({ waitUntil: 'load' });
     await page.waitForSelector('.vig__plate > svg', { state: 'attached' });
@@ -409,10 +409,35 @@ function slowDevice() {
 
 const mode = (page) => page.evaluate(() => document.querySelector('.home').dataset.mode);
 
-async function runLite() {
+async function runLite(out) {
   console.log('lite');
-  const data = await open(PHONE, { init: [saveData] });
+  const data = await open(PHONE, { init: [saveData, motionLog] });
   check(await mode(data.page) === 'lite', 'save-data: data-mode lite', await mode(data.page));
+  await show(data.page, '.note--back');
+  await data.page.waitForFunction(() => document.querySelector('.note--back').dataset.seen === '' && document.querySelectorAll('.medal > svg').length === 3, null, { timeout: 5000 }).catch(() => {});
+  await data.page.waitForTimeout(400);
+  const medal = await data.page.evaluate(() => {
+    window.__log.note();
+    const paths = [...document.querySelectorAll('.medal path')];
+    return {
+      rings: document.querySelectorAll('.medal > svg').length, paths: paths.length,
+      undrawn: paths.filter((p) => parseFloat(getComputedStyle(p).strokeDashoffset) !== 0).length,
+      medal: document.querySelector('.medal').getAnimations({ subtree: true }).map((a) => ({ name: a.animationName, state: a.playState, delay: a.effect.getTiming().delay })),
+      pen: window.__log.names.has('bn-pen'),
+    };
+  });
+  check(medal.rings === 3 && medal.paths && !medal.undrawn && !medal.pen, `save-data: medallion rests drawn, ${medal.paths} paths at stroke-dashoffset 0 and no bn-pen`, medal);
+  check(medal.medal.length === 3 && medal.medal.every((a) => a.name === 'bn-turn' && a.state === 'running' && a.delay === 0), 'save-data: only bn-turn runs on the medallion, three rings, no delay', medal.medal);
+  await show(data.page, '#lucid');
+  await data.page.waitForTimeout(2400);
+  const row = await data.page.evaluate(() => { window.__log.note(); return { click: window.__log.names.has('bn-click'), ink: window.__log.names.has('bn-ink') }; });
+  check(row.click && !row.ink, 'save-data: a row\'s number still clicks and its rule is printed from the start', row);
+  if (out) {
+    mkdirSync(out, { recursive: true });
+    const file = join(out, 'lite-medal-390.png');
+    writeFileSync(file, await data.page.locator('.medal').screenshot());
+    pass(`saved ${file}`);
+  }
   await data.ctx.close();
 
   // Chromium reads prefers-reduced-data only with this Blink feature on, so this case gets its own browser.
@@ -574,7 +599,7 @@ if (baseline) await runBaseline(baseline);
 if (diff) await runDiff(diff);
 if (flag('--states')) await runStates();
 if (flag('--trace')) await runTrace();
-if (flag('--lite')) await runLite();
+if (flag('--lite')) await runLite(value('--out'));
 if (stills) await runStills(stills, value('--name') ?? 'after');
 if (record) await runRecord(record);
 if (birds) await runBirds(birds, Number(value('--from') ?? 0));

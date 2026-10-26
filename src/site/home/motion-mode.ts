@@ -2,7 +2,8 @@ import { useSyncExternalStore } from 'react';
 
 /* The one place the home decides how much to move. The page root carries the answer as data-mode.
    still: the visitor asked for reduced motion, so the page shows the finished print.
-   lite: Save-Data, reduced data, or frames that ran slow this visit.
+   lite: Save-Data, reduced data, or frames that ran slow this visit, so the heaviest drawing (the medallion's pen) is
+         skipped and its rings are there at once.
    full: everything else. A narrow screen or a coarse pointer is no reason to move less. */
 
 export type MotionMode = 'full' | 'lite' | 'still';
