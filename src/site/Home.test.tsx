@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BANNED } from '../banned-names';
 import { projects } from '../projects/catalog';
+import { el, report } from '../test/helpers';
 import Home from './Home';
 import * as COPY from './home/copy';
 import { vignette } from './home/art/vignette';
@@ -478,6 +479,36 @@ describe('Copying the email', () => {
     expect(within(header).queryByRole('button')).toBeNull();
     expect(await click(link)).toBe(true);
     expect(writeText).not.toHaveBeenCalled();
+  });
+});
+
+describe('The foil on the back of the note', () => {
+  const back = () => screen.getByRole('contentinfo');
+  const plate = () => el(back(), '.note__plate');
+  const seeBack = () => act(() => {
+    for (const o of Observer.all) for (const target of [back(), plate()]) report(o, target);
+  });
+
+  it('sweeps once a visit, while the medallion’s pen draws again on every load', () => {
+    Observer.all = [];
+    vi.stubGlobal('IntersectionObserver', Observer);
+    sessionStorage.clear();
+    const first = render(<Home />);
+    expect(plate()).not.toHaveAttribute('data-seen');
+    seeBack();
+    expect(plate()).toHaveAttribute('data-seen', '');
+    expect(back()).toHaveAttribute('data-seen', '');
+    expect(sessionStorage.getItem('bn-foil-back')).toBe('1');
+    first.unmount();
+
+    Observer.all = [];
+    render(<Home />);
+    expect(plate()).toHaveAttribute('data-seen', 'done');
+    expect(back()).not.toHaveAttribute('data-seen');
+    seeBack();
+    expect(plate()).toHaveAttribute('data-seen', 'done');
+    expect(back()).toHaveAttribute('data-seen', '');
+    expect(sessionStorage.getItem('bn-roll')).toBeNull();
   });
 });
 

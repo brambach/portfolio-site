@@ -13,6 +13,10 @@
 //   --trace           at 390 (phone, 4x CPU): once the face's one-shots end, 4s on the face with no Paint and no
 //                     Layout on the main thread; also prints the longest main-thread task during load and the paints
 //                     during the roll
+//   --load            at 390 (phone, 4x CPU), five cold loads traced until the face settles: the longest main-thread
+//                     task, and the longest from the moment the Home chunk has arrived (before it the main entry runs,
+//                     the same on every page), each with what it spent its time on; fails when the median of the
+//                     second is over 50ms
 //   --lite            at 390: Save-Data goes lite, the medallion rests drawn with only bn-turn running from the start
 //                     (a crop goes to --out <dir> when given), and a row's number still clicks while its rule is
 //                     printed rather than inked in; prefers-reduced-data goes lite; a slow roll goes lite mid-roll, is
@@ -29,7 +33,7 @@
 //                     settles, time stepped by hand as in --record, at 1440 and 390 (DPR 2), plus the reduced-motion
 //                     rest: birds-<width>-<ms>.png and birds-<width>-reduced.png
 // Usage: node scripts/home-check.mjs [--url http://localhost:4180/] --baseline dir | --diff dir | --states | --trace
-//        | --lite [--out dir] | --hover | --stills dir [--name before] | --record dir | --birds dir [--from ms]
+//        | --load | --lite [--out dir] | --hover | --stills dir [--name before] | --record dir | --birds dir [--from ms]
 import { chromium } from 'playwright';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -41,8 +45,8 @@ const flag = (name) => args.includes(name);
 const value = (name) => { const i = args.indexOf(name); return i < 0 ? null : args[i + 1]; };
 const URL = value('--url') ?? 'http://localhost:4180/';
 const baseline = value('--baseline'), diff = value('--diff'), stills = value('--stills'), record = value('--record'), birds = value('--birds');
-if (!baseline && !diff && !flag('--states') && !flag('--trace') && !flag('--lite') && !flag('--hover') && !stills && !record && !birds) {
-  console.log('usage: node scripts/home-check.mjs [--url u] --baseline dir | --diff dir | --states | --trace | --lite [--out dir] | --hover | --stills dir [--name n] | --record dir | --birds dir [--from ms]');
+if (!baseline && !diff && !flag('--states') && !flag('--trace') && !flag('--load') && !flag('--lite') && !flag('--hover') && !stills && !record && !birds) {
+  console.log('usage: node scripts/home-check.mjs [--url u] --baseline dir | --diff dir | --states | --trace | --load | --lite [--out dir] | --hover | --stills dir [--name n] | --record dir | --birds dir [--from ms]');
   process.exit(2);
 }
 
@@ -60,6 +64,8 @@ const EXPECTED = ['bn-click', 'bn-foil', 'bn-ink', 'bn-pen', 'bn-turn', 'vig-bob
 const ROLL = ['vig-roll', 'vig-unroll', 'vig-rise'];
 const MARGIN_MS = 300;
 const TRACE_MS = 4000;
+const LOAD_RUNS = 5;
+const LOAD_BUDGET_MS = 50;
 const CATS = 'devtools.timeline,disabled-by-default-devtools.timeline,toplevel';
 const STILLS = [
   { name: 'desktop', width: 1440, height: 900, dpr: 1 },
@@ -311,6 +317,14 @@ async function runStates() {
     await page.waitForTimeout(600);
     const again = await page.evaluate(() => { window.__log.note(); return { seen: document.querySelector('.note--face').dataset.seen, names: [...window.__log.names] }; });
     check(again.seen === 'done' && !again.names.some((n) => ROLL.includes(n)), `${at} reloaded in the same visit: face starts done, no roll or sun rise`, again);
+    await show(page, '.note--back');
+    await page.waitForTimeout(600);
+    const back = await page.evaluate(() => {
+      window.__log.note();
+      const b = document.querySelector('.note--back');
+      return { plate: b.querySelector('.note__plate').dataset.seen, foil: getComputedStyle(b.querySelector('.foil')).display, swept: window.__log.names.has('bn-foil'), pen: window.__log.names.has('bn-pen') };
+    });
+    check(back.plate === 'done' && back.foil === 'none' && !back.swept && back.pen, `${at} reloaded in the same visit: the back's foil stays put and its medallion's pen draws again`, back);
     await ctx.close();
 
     const fresh = await open(size, { init: [motionLog] });
@@ -390,6 +404,72 @@ async function runTrace() {
   })}`);
   named(quiet, 'Paint').length ? fail(`${named(quiet, 'Paint').length} Paint events in ${TRACE_MS / 1000}s on the idle face`) : pass('no Paint on the idle face');
   named(quiet, 'Layout').length ? fail(`${named(quiet, 'Layout').length} Layout events in ${TRACE_MS / 1000}s on the idle face`) : pass('no Layout on the idle face');
+}
+
+// A task's own time by what it did: style, layout, paint, script (by file where the trace names it), html parse, gc.
+const KINDS = { UpdateLayoutTree: 'style', Layout: 'layout', PrePaint: 'paint', Paint: 'paint', Layerize: 'paint', Commit: 'paint', ParseHTML: 'html', MinorGC: 'gc', MajorGC: 'gc' };
+const SCRIPTS = new Set(['FunctionCall', 'EvaluateScript', 'v8.evaluateModule', 'TimerFire', 'FireAnimationFrame', 'EventDispatch', 'RunMicrotasks']);
+function spentOn(task, events) {
+  const inside = events.filter((e) => e.ts >= task.ts && e.ts + e.dur <= task.ts + task.dur).sort((a, b) => a.ts - b.ts || b.dur - a.dur);
+  const stack = [], kind = new Map(), self = new Map();
+  for (const e of inside) {
+    while (stack.length && stack.at(-1).ts + stack.at(-1).dur <= e.ts) stack.pop();
+    const up = stack.at(-1), upKind = up ? kind.get(up) : 'other';
+    const file = (e.args?.data?.url ?? '').split('/').pop().replace(/-[\w-]{8}\.js$/, '.js');
+    let k = KINDS[e.name] ?? (e.name.startsWith('V8.GC') ? 'gc' : SCRIPTS.has(e.name) ? `script ${file}`.trim() : null);
+    if (k?.startsWith('script') && upKind.startsWith('script') && (upKind !== 'script' || !file)) k = upKind;
+    kind.set(e, k ?? upKind);
+    self.set(e, e.dur);
+    if (up) self.set(up, self.get(up) - e.dur);
+    stack.push(e);
+  }
+  const by = {};
+  for (const e of inside) by[kind.get(e)] = (by[kind.get(e)] ?? 0) + self.get(e);
+  return Object.entries(by).filter(([, us]) => us >= 1000).sort((a, b) => b[1] - a[1]).map(([k, us]) => `${k} ${Math.round(us / 1000)}`).join(', ');
+}
+
+// Each load in a new context, so nothing is cached, traced from before navigation until the face has settled.
+async function runLoad() {
+  console.log(`load: longest main-thread task, ${LOAD_RUNS} cold loads, 390 phone at 4x CPU`);
+  const runs = [];
+  for (let i = 0; i < LOAD_RUNS; i++) {
+    let cdp;
+    const events = [];
+    const { ctx, page } = await open(TOUCH, {
+      before: async (page) => {
+        cdp = await page.context().newCDPSession(page);
+        await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+        cdp.on('Tracing.dataCollected', (d) => events.push(...d.value));
+        await cdp.send('Tracing.start', { categories: `${CATS},v8.execute`, transferMode: 'ReportEvents' });
+      },
+    });
+    await page.waitForFunction(faceSettled, null, { timeout: 20000, polling: 100 });
+    await page.evaluate(() => console.timeStamp('bn-load-end'));
+    const complete = new Promise((r) => cdp.once('Tracing.tracingComplete', r));
+    await cdp.send('Tracing.end');
+    await complete;
+    await ctx.close();
+
+    const end = events.find((e) => e.name === 'TimeStamp' && e.args?.data?.message === 'bn-load-end');
+    const main = events.filter((e) => e.pid === end.pid && e.tid === end.tid && e.ph === 'X' && e.dur !== undefined && e.ts <= end.ts);
+    const start = Math.min(...main.map((e) => e.ts));
+    const tasks = [];
+    for (const e of main.filter((e) => e.name === 'RunTask' || e.name === 'ThreadControllerImpl::RunTask').sort((a, b) => a.ts - b.ts)) {
+      if (!tasks.length || e.ts >= tasks.at(-1).ts + tasks.at(-1).dur) tasks.push(e);
+    }
+    const home = events.find((e) => e.name === 'ResourceSendRequest' && /\/assets\/Home-[^/]+\.js$/.test(e.args?.data?.url ?? ''));
+    const arrived = events.find((e) => e.name === 'ResourceFinish' && e.args?.data?.requestId === home?.args.data.requestId);
+    if (!arrived) { fail(`run ${i + 1}: no Home chunk in the trace`); continue; }
+    const longest = (ts) => ts.reduce((a, t) => (t.dur > a.dur ? t : a));
+    const all = longest(tasks), own = longest(tasks.filter((t) => t.ts >= arrived.ts));
+    const line = (t) => `${(t.dur / 1000).toFixed(1)}ms at ${Math.round((t.ts - start) / 1000)}ms (${spentOn(t, main)})`;
+    console.log(`  run ${i + 1}: longest ${line(all)}; from the Home chunk on ${line(own)}`);
+    runs.push({ all: all.dur / 1000, own: own.dur / 1000 });
+  }
+  const spread = (xs) => `median ${median(xs).toFixed(1)}ms, ${Math.min(...xs).toFixed(1)} to ${Math.max(...xs).toFixed(1)}`;
+  console.log(`  longest task: ${spread(runs.map((r) => r.all))}`);
+  const own = runs.map((r) => r.own);
+  check(runs.length === LOAD_RUNS && median(own) <= LOAD_BUDGET_MS, `longest task from the Home chunk on: ${spread(own)} (budget ${LOAD_BUDGET_MS}ms)`);
 }
 
 function saveData() {
@@ -627,6 +707,7 @@ if (baseline) await runBaseline(baseline);
 if (diff) await runDiff(diff);
 if (flag('--states')) await runStates();
 if (flag('--trace')) await runTrace();
+if (flag('--load')) await runLoad();
 if (flag('--lite')) await runLite(value('--out'));
 if (flag('--hover')) await runHover();
 if (stills) await runStills(stills, value('--name') ?? 'after');

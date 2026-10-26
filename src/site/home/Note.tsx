@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import type { ComponentProps, Ref } from 'react';
 
 // Microprint runs twice the longest note edge (at 1440 wide) in its narrowest characters (4px mono on a phone).
 const LONGEST_EDGE_PX = 1110, NARROWEST_CHAR_PX = 2.6;
@@ -10,10 +10,10 @@ export function Micro({ text, className }: { text: string; className: string }) 
 
 const EDGES = ['t', 'r', 'b', 'l'] as const;
 
-export default function Note({ side, micro, children, ...rest }: Omit<ComponentProps<'section'>, 'className'> & { side: 'face' | 'back'; micro: string }) {
+export default function Note({ side, micro, plate, children, ...rest }: Omit<ComponentProps<'section'>, 'className'> & { side: 'face' | 'back'; micro: string; plate?: Ref<HTMLDivElement> }) {
   const Tag = side === 'face' ? 'section' : 'footer';
   return <Tag {...rest} className={`note note--${side}`}>
     {EDGES.map(e => <Micro key={e} className={`micro--${e}`} text={micro} />)}
-    <div className="note__plate"><span className="foil" aria-hidden="true"><span className="foil__band" /></span>{children}</div>
+    <div className="note__plate" ref={plate}><span className="foil" aria-hidden="true"><span className="foil__band" /></span>{children}</div>
   </Tag>;
 }

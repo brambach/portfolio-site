@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { must } from '../../test/helpers';
 
 /* The home's motion contract, read from its two stylesheets: each looping animation is named here, runs only while
    motion is allowed and stops off screen and in a hidden tab. Everything else plays once, for under 5s, and rests on
@@ -174,7 +175,7 @@ describe('The home’s motion contract', () => {
     expect(rules.flatMap(r => [...r.decls.keys()].filter(k => k.startsWith('transition-')).map(k => `${r.sel} { ${k} }`))).toEqual([]);
   });
 
-  it('sweeps the foil once for 3.3s, 2.4s after the face is first seen and at once on the back, only where the border can mask it', () => {
+  it('sweeps the foil once a visit for 3.3s, 2.4s after the face is first seen and at once on the back, only where the border can mask it', () => {
     const foil = oneShots.filter(a => a.name === 'bn-foil');
     expect(foil.map(a => [a.duration, a.delay, a.easing, a.iterations])).toEqual([['3.3s', '2.4s', 'cubic-bezier(.45, 0, .3, 1)', 1]]);
     const back = rules.filter(r => /\.foil__band$/.test(r.sel) && r.decls.has('animation-delay'));
@@ -184,6 +185,11 @@ describe('The home’s motion contract', () => {
     expect(shown.length).toBeGreaterThan(0);
     expect(shown.filter(r => !r.at.includes(WITH_MASK) || !r.at.includes(NO_PREFERENCE)).map(r => r.sel)).toEqual([]);
     expect(rules.find(r => r.sel === '.bn .foil' && !r.at.length)?.decls.get('display')).toBe('none');
+    // The back's plate keeps its own once-a-visit seen (the note's stays per load, for the pen), so a reload in the
+    // same visit puts the back's foil away. It comes after the rule that shows it, at the same weight.
+    const away = rules.filter(r => /\.foil$/.test(r.sel) && r.decls.get('display') === 'none' && r.at.length);
+    expect(away.map(r => [r.sel, r.at])).toEqual([['.bn .note__plate[data-seen="done"] > .foil', [NO_PREFERENCE, WITH_MASK]]]);
+    expect(rules.indexOf(away[0])).toBeGreaterThan(rules.indexOf(must(shown.at(-1), 'a rule that shows the foil')));
     expect(rules.filter(r => /\.foil$/.test(r.sel) && r.decls.has('-webkit-mask-box-image')).map(r => r.decls.get('-webkit-mask-box-image')))
       .toEqual(['var(--border-ink) 30 / var(--edge) round', 'var(--border-cream) 30 / var(--edge) round']);
   });

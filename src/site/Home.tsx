@@ -1,9 +1,10 @@
-import { useEffect, useRef, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, type CSSProperties } from 'react';
 import { afterPaint } from './home/after-paint';
 import { bandRule, borderImage, cameo, medallionRings, waveField } from './home/art/guilloche';
 import Vignette from './home/art/Vignette';
 import { EMAIL, FOOTER, HERO } from './home/copy';
 import CopyEmail, { CopyStatus } from './home/CopyEmail';
+import { later } from './home/later';
 import { useMotionMode } from './home/motion-mode';
 import { useWatch } from './home/motion/watch';
 import Note from './home/Note';
@@ -19,6 +20,14 @@ const GUILLOCHE = {
   '--wave': waveField('#5e2a7e'),
   '--band': bandRule('#5e2a7e'),
 } as CSSProperties;
+// Each of these images is a whole svg document for the browser to build, about 5ms on a slow phone, and the first
+// frame would build all four at once. Asked for here, one a task, they are built before it and kept.
+const built: HTMLImageElement[] = [];
+for (const value of Object.values(GUILLOCHE) as string[]) setTimeout(() => {
+  const img = new Image();
+  img.src = /^url\("(.*)"\)$/.exec(value)![1];
+  built.push(img);
+});
 
 const AWAY = [
   { label: 'github', href: 'https://github.com/brambach' },
@@ -69,6 +78,8 @@ const WORK: Card[] = [
 ];
 
 export default function Home() {
+  const page = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => (page.current ? later(page.current, location.hash.length > 1) : undefined), []);
   useEffect(() => {
     const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     const before = meta?.content;
@@ -85,9 +96,12 @@ export default function Home() {
   const face = useWatch<HTMLElement>({ oncePerVisit: 'bn-roll' });
   const medal = useRef<HTMLDivElement>(null);
   const back = useWatch<HTMLElement>({ near: () => { if (medal.current) medal.current.innerHTML = medallionRings(260).join(''); } });
+  // The back's foil sweeps once a visit, as the face's does, so its plate keeps a seen of its own. The note's seen
+  // stays per load: the medallion's pen draws every time the back is first seen.
+  const backFoil = useWatch<HTMLDivElement>({ oncePerVisit: 'bn-foil-back' });
 
   const lead = HERO.line.slice(0, -HERO.italic.length);
-  return <div className="home bn" style={GUILLOCHE} data-mode={mode}>
+  return <div ref={page} className="home bn" style={GUILLOCHE} data-mode={mode}>
     <CopyStatus>
       <header className="top label">
         <a href="/">bryce rambach</a>
@@ -119,7 +133,7 @@ export default function Home() {
         </section>
       </main>
 
-      <Note side="back" micro={FOOTER.about} id="about" ref={back}>
+      <Note side="back" micro={FOOTER.about} id="about" ref={back} plate={backFoil} data-later="">
         <div className="back">
           <div className="back__text">
             <section aria-label="about">

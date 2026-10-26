@@ -38,6 +38,8 @@
   font: 400 17px/1.62 var(--sans); -webkit-font-smoothing: antialiased;
 }
 .bn > *, .bn main > * { max-width: var(--col); margin-inline: auto; }
+/* A block below the first screen sits out the page's first frame as an empty box about a row tall (later.ts). */
+.bn [data-later] { content-visibility: hidden; contain-intrinsic-block-size: 500px; }
 /* index.css fades every link's color; this page moves only transform, opacity and dashoffset. */
 .bn a { color: inherit; transition: none; }
 /* Every text link rests on a faint hairline. Pointing at it or focusing it prints a solid line over that one. */
@@ -253,10 +255,13 @@
   }
   .bn [data-motion]:not([data-seen="done"]) .wheel__col { animation: bn-click calc(var(--n) * 260ms + 160ms) .25s var(--clicks) backwards; }
 
-  /* The foil catches the light once: 2.4s after the face is first seen, and on the back as soon as it shows. Firefox
-     has no box mask, and unmasked the band would light the whole note, so the foil shows only where the mask works. */
+  /* The foil catches the light once a visit: 2.4s after the face is first seen, and on the back as soon as it shows.
+     The back's plate is watched for its foil alone, so a reload puts the back's foil away while the note's pen still
+     draws. Firefox has no box mask, and unmasked the band would light the whole note, so the foil shows only where
+     the mask works. */
   @supports (-webkit-mask-box-image: none) {
     .bn [data-motion]:not([data-seen="done"]) .foil { display: block; }
+    .bn .note__plate[data-seen="done"] > .foil { display: none; }
   }
   .bn [data-motion]:not([data-seen="done"]) .foil__band { animation: bn-foil 3.3s 2.4s cubic-bezier(.45, 0, .3, 1) backwards; }
   .bn [data-motion].note--back:not([data-seen="done"]) .foil__band { animation-delay: 0s; }

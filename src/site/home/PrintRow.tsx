@@ -35,7 +35,7 @@ export default function PrintRow({ card: { id, serial, name, kind, what, facts, 
   const page = `/projects/${id}`;
   const row = useWatch<HTMLElement>({ threshold: .12 });
   const n = Number(serial[2]);
-  return <article ref={row} className="work" id={id}>
+  return <article ref={row} className="work" id={id} data-later="">
     <p className="work__line" aria-hidden="true" style={{ '--n': n, '--clicks': clicks(n) } as CSSProperties}>
       <span className="serial">{`no. ${serial}`}<span className="wheel"><span className="wheel__col" /></span></span>
       <Micro className="micro--rule" text={`${name}, ${kind}`} />
