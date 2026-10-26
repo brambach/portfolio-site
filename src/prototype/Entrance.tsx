@@ -42,7 +42,7 @@ export default function Entrance() {
   // Arriving from the flat road on /work: skip the walk-up and the intro, and pick up at the overlook where the page ended.
   const [fromWork]=useState(()=>{const yes=scenicMode&&new URLSearchParams(location.search).get('from')==='work';if(yes){try{sessionStorage.setItem("bryce-arrived","yes");}catch{}}return yes;});
   const [memory,setMemory]=useState(readJourneyMemory);
-  const [previousStops]=useState(()=>({coffee:memory.discoveries.includes('coffee'),lake:memory.tahoe}));
+  const [previousStops]=useState(()=>({coffee:memory.discoveries.includes('coffee'),lake:memory.lake}));
   const [resetPrompt,setResetPrompt]=useState(false);
   const [intro,setIntro] = useState<IntroStep>(scenicMode ? fromWork ? "done" : memory.onboarded ? "returning" : "welcome" : "done");
   const introLaptopSeen = useRef(false);
@@ -294,7 +294,7 @@ export default function Entrance() {
     // a reload after this should be an ordinary visit
     const url=new URL(location.href);url.searchParams.delete('from');history.replaceState(history.state,'',url);
   },[fromWork,ready,screenElement]);
-  useEffect(()=>{if(telemetry.stop==="lake"&&drive.phase==="parked"){trackJourney("tahoe_reached");setMemory(rememberJourney({tahoe:true}));}},[telemetry.stop,drive.phase]);
+  useEffect(()=>{if(telemetry.stop==="lake"&&drive.phase==="parked"){trackJourney("lake_reached");setMemory(rememberJourney({lake:true}));}},[telemetry.stop,drive.phase]);
   useEffect(()=>{if(race.phase==="racing")trackJourney("race_started");if(race.phase==="finished")trackJourney("race_finished");},[race.phase]);
   useEffect(()=>{
     if(drive.phase!=="parked"||telemetry.stop!=="lake"||race.phase!=="idle")setLakeView(false);
@@ -621,7 +621,7 @@ export default function Entrance() {
         </>}
         {(visit.phase==='walking'||visit.phase==='exploring') && <button onClick={()=>sceneRef.current?.returnToCar()}>{visit.stop==='cafe' && visit.coffee?'Take coffee back to the car':'Back to the car'}</button>}
       </section>}
-      {phase === "inside" && intro === "returning" && <section className="journey-note" aria-label="Welcome back"><span>THE LONG WAY / BACK AGAIN</span><h1>You know where the keys are.</h1><p>Your introduction is saved. Take another trip, or head straight to the work.</p><button onClick={()=>{sceneRef.current?.allowIgnition();setIntro("done");setHint(false);}}>Take another drive</button>{memory.tahoe&&townMode&&<button onClick={()=>{if(sceneRef.current?.replayRace()){setIntro("done");setLakeDismissed(true);setHint(false);focusCabin();}}}>Back to the race</button>}<a href="/projects">Open my projects ↗</a><button onClick={()=>setIntro("welcome")}>Show me around again</button></section>}
+      {phase === "inside" && intro === "returning" && <section className="journey-note" aria-label="Welcome back"><span>THE LONG WAY / BACK AGAIN</span><h1>You know where the keys are.</h1><p>Your introduction is saved. Take another trip, or head straight to the work.</p><button onClick={()=>{sceneRef.current?.allowIgnition();setIntro("done");setHint(false);}}>Take another drive</button>{memory.lake&&townMode&&<button onClick={()=>{if(sceneRef.current?.replayRace()){setIntro("done");setLakeDismissed(true);setHint(false);focusCabin();}}}>Back to the race</button>}<a href="/projects">Open my projects ↗</a><button onClick={()=>setIntro("welcome")}>Show me around again</button></section>}
       {phase === "inside" && (intro === "welcome" || intro === "ready") && <section className="journey-note" aria-label="Before we go">
         <span>BRYCE RAMBACH / {intro === "welcome" ? "BEFORE WE GO" : "YOUR TURN"}</span>
         <h1>{intro === "welcome" ? "Before we go." : "The road is yours."}</h1>
@@ -661,9 +661,9 @@ export default function Entrance() {
       {routeBlocked&&!object&&laptop==='idle'&&!routeMap&&<aside className="route-blocked-note" role="status"><span>LAKE APPROACH</span><p>The car is already committed to the lake turnout. Stay with the scenic approach, or go straight to {JOURNEY_STOPS.find(stop=>stop.id===routeBlocked.requested)?.name??'that stop'}.</p><button onClick={()=>goStraight(routeBlocked.requested)}>Go straight to {JOURNEY_STOPS.find(stop=>stop.id===routeBlocked.requested)?.name??'that stop'}</button><button onClick={()=>{setRouteBlocked(null);focusCabin();}}>Stay on the approach</button></aside>}
       {routeJump&&<aside className="route-jump-cover" role="status" aria-live="polite"><span>SHORT ROUTE</span><strong>Heading to {routeJump.label}.</strong></aside>}
       {raceTimes&&<RaceTimes returnFocusRef={raceTimesReturnFocusRef} close={()=>setRaceTimes(false)}/>}
-      {lastResult&&<RacePanel retry={phase==="inside"&&memory.tahoe?retryRace:undefined} race={{...idleRace,phase:"finished",elapsed:lastResult.elapsed}} resume={lastResult} cancel={()=>{setLastResult(null);focusCabin();}}/>}
+      {lastResult&&<RacePanel retry={phase==="inside"&&memory.lake?retryRace:undefined} race={{...idleRace,phase:"finished",elapsed:lastResult.elapsed}} resume={lastResult} cancel={()=>{setLastResult(null);focusCabin();}}/>}
       {egg&&!object&&!menu&&!raceTimes&&race.phase!=="finished"&&<aside className="journey-egg" role="status">{egg}</aside>}
-      {race.phase!=="idle" && !lastResult && <RacePanel key={raceAttempt} retry={memory.tahoe?retryRace:undefined} race={race} cancel={()=>{sceneRef.current?.cancelRace();focusCabin();}}/>}
+      {race.phase!=="idle" && !lastResult && <RacePanel key={raceAttempt} retry={memory.lake?retryRace:undefined} race={race} cancel={()=>{sceneRef.current?.cancelRace();focusCabin();}}/>}
       {(journeyMode||townMode) && routeMap && <JourneyMap firstTrip={scenicMode&&!visited.includes("lake")} stops={townMode?JOURNEY_STOPS.filter(stop=>["cafe","tennis","lake"].includes(stop.id)):undefined} accessRoads={townMode?scenicAccess:undefined} position={{x:telemetry.x,z:telemetry.z}} restoreFocus={()=>hostRef.current?.querySelector("canvas")?.focus()} distance={telemetry.distance} visited={visited} close={()=>setRouteMap(false)} navigate={id=>{setRouteMap(false);setRouteBlocked(null);sceneRef.current?.navigate(id);}} goStraight={townMode?goStraight:undefined} routePreview={id=>sceneRef.current?.routePreview(id)} roadLength={scenicRoad.length}/>}
       {object && (
         <CabinObjects

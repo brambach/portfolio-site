@@ -4,7 +4,7 @@
 
 Updated 6 September 2026. Active. This update implements Bryce's guided-journey feedback; it isn't whole-site acceptance.
 
-The latest direction supersedes the earlier optional-first-stop flow: a short mandatory cabin introduction, then driving, then a mandatory Tahoe-inspired lake turnout with Bryce's family connection and clear project access. Keep text brief and the jokes occasional. Bryce wants pacing and personal discoveries, not long descriptions. Coffee and tennis remain optional destinations. The lake ends the first trip; continuing around the road is an explicit choice afterward.
+The latest direction supersedes the earlier optional-first-stop flow: a short mandatory cabin introduction, then driving, then a mandatory lake turnout with Bryce's family connection and clear project access. Keep text brief and the jokes occasional. Bryce wants pacing and personal discoveries, not long descriptions. Coffee and tennis remain optional destinations. The lake ends the first trip; continuing around the road is an explicit choice afterward.
 
 Implemented: welcome, contact card, racket, photo board and physical project laptop before unlocking ignition; direct town-to-lake cruise at an 18 m/s ceiling (157 seconds in simulation); first-approach assistance that preserves braking and pause/resume; lake copy and both laptop and full-portfolio links; two small sign jokes. The recorded acceleration bed now fades into a steady recorded spectrum near redline. Lower-rev tuning and engine/drivetrain ratios are preserved.
 
@@ -54,7 +54,7 @@ The faster staged traffic encounter registered contact after a 97 km/h telemetry
 1. Enter the Porsche and follow the contact card, racket, photo board and laptop tour. The keys unlock afterward; the quiet project reader remains available directly.
 2. Before ignition, the café invitation offers Pull in or Keep going. Coffee and tennis are optional. Their moving invitations disappear before braking and alignment room runs out.
 3. Drive manually, use Cruise or Turbo, or hold a steady speed. The first lake approach guides the car into its turnout while retaining braking and pause/resume.
-4. At Tahoe, read the brief family connection and finish through projects or Say hello. Continue exploring is an explicit choice.
+4. At the lake, read the brief family connection and finish through projects or Say hello. Continue exploring is an explicit choice.
 5. The menu has an independent Radio music switch. The original quiet music and short optional phone ring still need a listening review. No spoken recording of Bryce is included.
 
 ## Representative views
@@ -103,7 +103,7 @@ Five focused tests pass, covering total rollover/partial batches, warmup visibil
 
 The current goal preserves the approved town and journey, with UI/material polish and a clear portfolio finish. Race track, time trial and leaderboard remain outside the written goal; Bryce questioned that separation but hasn't yet replaced that clause.
 
-Added warm paper materials and restrained tour footers, coherent instrument controls, earlier optional stop invitations, a clear Tahoe thank-you and contact link, original synthesized radio music with an independent switch, and one optional original phone-ring interaction. The call currently shows a short text reply, not a voice recording. The quiet radio and new ring haven't been auditioned by Bryce.
+Added warm paper materials and restrained tour footers, coherent instrument controls, earlier optional stop invitations, a clear lake thank-you and contact link, original synthesized radio music with an independent switch, and one optional original phone-ring interaction. The call currently shows a short text reply, not a voice recording. The quiet radio and new ring haven't been auditioned by Bryce.
 
 Browser checks: desktop welcome/contact material; 390-pixel contact/racket/photo board; 320 x 568 keyboard scrolling to the photo-board footer; laptop text/touch refinement with a measured 44.14-pixel key-handoff target; compact three-row driving controls; persistent pre-ignition café invitation; successful Pull in arrival and engine-off at the café. Viewport override reset and test tab closed. These are browser viewport checks, not physical-phone evidence. An editing-time React dependency-array warning occurred during hot reload; the subsequent tour and café check ran after a full reload. No claim of a clean full-route console/performance run from this test.
 
@@ -113,7 +113,7 @@ Full suite: 259 tests across 57 files passed before the final narrow-screen and 
 
 ## Current first-trip performance, 6 September
 
-A fresh normal-motion run of `http://localhost:3001/?town&profile=journey` completed the mandatory cabin tour, skipped optional stops, followed normal Cruise to the mandatory Tahoe turnout and opened the five-folder laptop from the finish. Codex browser, Apple M4 / 16 GiB, 1280 x 720, muted with radio enabled. The saved preview was stationary, parked and switched off under prior permission before the run, and Engine off was reverified afterward. No tests, builds or edits ran during driving. Other desktop applications remained open.
+A fresh normal-motion run of `http://localhost:3001/?town&profile=journey` completed the mandatory cabin tour, skipped optional stops, followed normal Cruise to the mandatory lake turnout and opened the five-folder laptop from the finish. Codex browser, Apple M4 / 16 GiB, 1280 x 720, muted with radio enabled. The saved preview was stationary, parked and switched off under prior permission before the run, and Engine off was reverified afterward. No tests, builds or edits ran during driving. Other desktop applications remained open.
 
 Complete cumulative driving totals, including the 34-frame final partial window: 10,354 frames, 152,591.3 ms summed driving intervals, 67.854 fps, maximum 33.8 ms, zero intervals above 50 ms. Density ranged 1.15-1.35. Mean submission was 3.482 ms. This is a single-machine result for the current direct first trip, not a like-for-like comparison to the older three-stop route. No browser warnings or errors were captured in this run.
 
@@ -124,13 +124,13 @@ Evidence: `.codex/review/current-first-trip-complete-totals.json` and `current-f
 Next work should target the entry/object stalls, final reduced-motion/cleanup checks and human visual/audio acceptance. Current driving performance has evidence; physical phones and weaker hardware remain unverified.
 
 
-## Tahoe finish and reduced motion, 6 September
+## Lake finish and reduced motion, 6 September
 
-Moved the desktop finish card to the lower left and shortened the closing sentence so the lake and mountain view stays visible. Portfolio and contact links share a compact row. A fresh reduced-motion browser journey completed all four mandatory cabin objects, handed over the keys, skipped the optional café and arrived at Tahoe. The finish displayed every action at 1280 x 720. Evidence: `.codex/review/tahoe-finish-reduced-desktop.jpg`.
+Moved the desktop finish card to the lower left and shortened the closing sentence so the lake and mountain view stays visible. Portfolio and contact links share a compact row. A fresh reduced-motion browser journey completed all four mandatory cabin objects, handed over the keys, skipped the optional café and arrived at the lake. The finish displayed every action at 1280 x 720. Evidence: `.codex/review/lake-finish-reduced-desktop.jpg`.
 
 The finish's full-portfolio link loaded `/projects` with all five folders, contact and biography. Opening arro displayed its project notes. This verifies the fallback navigation and content, not memory cleanup or every project's source material. Restored Movement to Follow device and closed the test tab; the saved user preview stayed open.
 
-TypeScript and 12 Entrance tests pass (`/tmp/finish-layout-check.log`, `/tmp/finish-layout-tests.log`). Production build passes (`/tmp/tahoe-finish-build.log`) with the existing large-chunk warning. This check didn't audition audio or test a physical phone. Bryce's final visual/audio review remains open.
+TypeScript and 12 Entrance tests pass (`/tmp/finish-layout-check.log`, `/tmp/finish-layout-tests.log`). Production build passes (`/tmp/lake-finish-build.log`) with the existing large-chunk warning. This check didn't audition audio or test a physical phone. Bryce's final visual/audio review remains open.
 
 
 ## Laptop keyboard focus, 6 September

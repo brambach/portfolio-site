@@ -8,7 +8,7 @@ Updated 6 September 2026. Status: active, not accepted as complete.
 
 ## Scope and current direction
 
-Build a convincing personal Porsche website with continuous entry, readable physical cabin content, satisfying driving and responsive recorded sound. The main fictional route visits a neighbourhood café for a flat white, optional tennis club and store, foothills and forest, a hiking trailhead and a Tahoe-inspired destination. Don't use private addresses. Let visitors skip, stop, explore and return through an in-car map. Travel moves gradually from warm afternoon toward evening.
+Build a convincing personal Porsche website with continuous entry, readable physical cabin content, satisfying driving and responsive recorded sound. The main fictional route visits a neighbourhood café for a flat white, optional tennis club and store, foothills and forest, a hiking trailhead and a lake-inspired destination. Don't use private addresses. Let visitors skip, stop, explore and return through an in-car map. Travel moves gradually from warm afternoon toward evening.
 
 Bryce's latest direct requests add a late city drive, manual steering and pedals, more speed and engine volume, downshifts and traffic. The city implementation is a working performance prototype. Keep it available while developing the coherent journey; its procedural blocks aren't an accepted final environment.
 
@@ -48,9 +48,9 @@ Add a connected main road, destination parking and an in-car route map. The caf�
 
 Exit checks: visit, skip and revisit each stop; park, explore and resume without redirects or camera discontinuities; maintain correct car and object state; check keyboard, touch and reduced motion.
 
-### 4. Add tennis, store and Tahoe arrival
+### 4. Add tennis, store and lake arrival
 
-Add optional turnoffs that rejoin the same route. Use the supplied tennis facts only. Tahoe is inspired by his parents' place, with no claimed address or invented family detail. Include a coherent place for the requested late city drive and traffic without abandoning the forest journey.
+Add optional turnoffs that rejoin the same route. Use the supplied tennis facts only. The lake is inspired by his parents' place, with no claimed address or invented family detail. Include a coherent place for the requested late city drive and traffic without abandoning the forest journey.
 
 Exit checks: map navigation reaches every implemented destination and returns naturally; scenery and time progression stay continuous; each stop adds a personal purpose without giant placeholder interiors.
 
@@ -90,7 +90,7 @@ The service window now has an open, shallow interior with warm lighting, counter
 
 The journey now includes raised terrain around the forest road and a ground-following trail to a viewpoint. The trail visit reuses the engine-off door transition, supports returning midway, and preserves reduced-motion behaviour. Trees follow the terrain and their nearby selection follows the walking camera. The existing credited CC0 forest recording loads on demand for the trail and fades when returning to the cabin.
 
-Tests prove road clearance, rising trail elevation, walking eye clearance, return continuity, reduced-motion state and delayed audio cleanup. Browser arrival/walk evidence is in VERIFICATION.md. This doesn't accept the landscape as visually complete: forest density, the lake shoreline, road edges, distant scenery and physical turnoffs still need work. The viewpoint is a first implementation of the requested walking stop, not a finished Tahoe vista.
+Tests prove road clearance, rising trail elevation, walking eye clearance, return continuity, reduced-motion state and delayed audio cleanup. Browser arrival/walk evidence is in VERIFICATION.md. This doesn't accept the landscape as visually complete: forest density, the lake shoreline, road edges, distant scenery and physical turnoffs still need work. The viewpoint is a first implementation of the requested walking stop, not a finished lake vista.
 
 ## Lake basin progress, 6 September
 

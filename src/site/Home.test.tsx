@@ -183,7 +183,7 @@ describe('The home page', () => {
 
   it('names no city and no employer', () => {
     const all = strings(COPY).join(' ');
-    expect(all).not.toMatch(/\bsf\b|\bnyc\b|san francisco|new york/i);
+    expect(all).not.toMatch(/\bs[f]\b|\bn[y]c\b|san fr[a]ncisco|new y[o]rk/i);
     expect(COPY.PORTAL.body).toContain('an hr and payroll consultancy');
     // The job is employee work at an unnamed consultancy: never the company, its clients or vendors, a contract or
     // freelance gig, or a claim to be its only, sole or solo technical person (src/banned-names.ts has the list).

@@ -3,12 +3,12 @@
   <img alt="Bryce Rambach. Open to founding roles, and open to moving." src="assets/banner-light.svg" width="100%">
 </picture>
 
-Hey, I'm Bryce. I graduated from SDSU in May 2026 with a CS degree. I build agent tooling and care a lot about how software feels. Right now I'm looking at founding or product engineer roles at early-stage AI startups, and I'm open to moving.
+Hey, I'm Bryce. I graduated from college in May 2026 with a CS degree. I build agent tooling and care a lot about how software feels. Right now I'm looking at founding or product engineer roles at early-stage AI startups, and I'm open to moving.
 
 ### What I'm building
 
-- **[comehome](https://github.com/brambach/comehome)**: a shareable lost-pet page for Tahoe and Truckee with last-known point, sightings mapped as a corridor, and a QR flyer.
-- **[dryline](https://github.com/brambach/dryline)**: a daily digest of conditions on 20 Lake Tahoe and Truckee trails, cited and deterministic.
+- **[comehome](https://github.com/brambach/comehome)**: a shareable lost-pet page for a mountain town with last-known point, sightings mapped as a corridor, and a QR flyer.
+- **[dryline](https://github.com/brambach/dryline)**: a daily digest of conditions on 20 mountain trails, cited and deterministic.
 - **[easeprint](https://github.com/brambach/easeprint)**: how 20 real sites move, measured in a browser with exact cubic-bezier values and durations.
 - **[arro](https://github.com/brambach/arro)**: a private running-streak app for families (Expo/React Native).
 - **[brycerambach.com](https://brycerambach.com)** ([source](https://github.com/brambach/portfolio-site)): my portfolio. You scroll down a road and a flat green 911 drives past a billboard for each project, or you [take the wheel](https://brycerambach.com/drive) of a 3D one.

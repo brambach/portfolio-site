@@ -525,20 +525,20 @@ it('allows car shortcut letters in the leaderboard name without starting the eng
   expect(name).toHaveFocus();
 });
 it('recognizes a completed introduction without requiring every object again',async()=>{
-  localStorage.setItem('bryce-journey-v2',JSON.stringify({onboarded:true,tahoe:false,discoveries:['card']}));
+  localStorage.setItem('bryce-journey-v2',JSON.stringify({onboarded:true,lake:false,discoveries:['card']}));
   const user=userEvent.setup();render(<Entrance/>);await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));
   expect(screen.getByRole('region',{name:'Welcome back'})).toBeInTheDocument();expect(screen.queryByRole('button',{name:/Back to the race/})).not.toBeInTheDocument();
   await user.click(screen.getByRole('button',{name:/Take another drive/}));expect(screen.getByRole('button',{name:'Turn the ignition key'})).toBeInTheDocument();
 });
 
 it('offers the race shortcut only after the lake and starts it explicitly',async()=>{
-  localStorage.setItem('bryce-journey-v2',JSON.stringify({onboarded:true,tahoe:true,discoveries:['lake']}));
+  localStorage.setItem('bryce-journey-v2',JSON.stringify({onboarded:true,lake:true,discoveries:['lake']}));
   const user=userEvent.setup();render(<Entrance/>);await user.click(await screen.findByRole('button',{name:'Get in the Porsche'}));
   await user.click(screen.getByRole('button',{name:/Back to the race/}));expect(scene.replayRace).toHaveBeenCalledOnce();expect(screen.queryByRole('region',{name:'Welcome back'})).not.toBeInTheDocument();
 });
 
 it('starts a fresh request on retry without registering the previous finish again',async()=>{
-  localStorage.setItem('bryce-journey-v2',JSON.stringify({onboarded:true,tahoe:true,discoveries:['lake']}));
+  localStorage.setItem('bryce-journey-v2',JSON.stringify({onboarded:true,lake:true,discoveries:['lake']}));
   const calls:Record<string,unknown>[]=[];
   vi.stubGlobal('fetch',vi.fn(async(_url:string,options?:RequestInit)=>{
     const body=options?.body?JSON.parse(String(options.body)):null;if(body)calls.push(body);

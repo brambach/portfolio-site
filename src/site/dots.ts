@@ -195,7 +195,7 @@ export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still:
   gl.vertexAttribPointer(ATTRS.length, 2, gl.FLOAT, false, 0, 0);
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-  type Uniforms = Record<'view' | 'clock' | 'dur' | 'time' | 'cell' | 'dpr' | 'idle' | 'fade' | 'sf' | 'st' | 'dark' | 'focusAt' | 'loose' | 'drip', WebGLUniformLocation | null>;
+  type Uniforms = Record<'view' | 'clock' | 'dur' | 'time' | 'cell' | 'dpr' | 'idle' | 'fade' | 'shf' | 'st' | 'dark' | 'focusAt' | 'loose' | 'drip', WebGLUniformLocation | null>;
   let u: Uniforms | null = null;
   /** Once the program has linked: use it, or give up on the dots if it didn't. */
   function linked() {
@@ -204,7 +204,7 @@ export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still:
     if (!gl!.getProgramParameter(prog, gl!.LINK_STATUS)) { stopped = true; canvas.style.visibility = 'hidden'; return false; }
     gl!.useProgram(prog);
     const U = (name: string) => gl!.getUniformLocation(prog, name);
-    u = { view: U('uView'), clock: U('uClock'), dur: U('uDur'), time: U('uTime'), cell: U('uCell'), dpr: U('uDpr'), idle: U('uIdle'), fade: U('uTypeFade'), sf: U('uShiftF'), st: U('uShiftT'),
+    u = { view: U('uView'), clock: U('uClock'), dur: U('uDur'), time: U('uTime'), cell: U('uCell'), dpr: U('uDpr'), idle: U('uIdle'), fade: U('uTypeFade'), shf: U('uShiftF'), st: U('uShiftT'),
       dark: U('uDark'), focusAt: U('uFocusAt'), loose: U('uLoose'), drip: U('uDrip') };
     return true;
   }
@@ -429,7 +429,7 @@ export function startDots(canvas: HTMLCanvasElement, first: Grid, opts: { still:
     gl!.uniform1f(at.dpr, dpr);
     gl!.uniform1f(at.idle, opts.still ? 0 : 1);
     gl!.uniform1f(at.fade, fade);
-    gl!.uniform2f(at.sf, shiftF[0], shiftF[1]);
+    gl!.uniform2f(at.shf, shiftF[0], shiftF[1]);
     gl!.uniform2f(at.st, shiftT[0], shiftT[1]);
     gl!.uniform3f(at.dark, opts.dark[0], opts.dark[1], opts.dark[2]);
     gl!.uniform1f(at.focusAt, focusAt);

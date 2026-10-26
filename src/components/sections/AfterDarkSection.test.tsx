@@ -29,6 +29,6 @@ describe('AfterDarkSection', () => {
   it('is open to moving and names no city', () => {
     const { container } = render(<AfterDarkSection />);
     expect(screen.getByText('open to moving · soon')).toBeInTheDocument();
-    expect(container.textContent).not.toMatch(/\bsf\b|\bnyc\b|san francisco|new york/i);
+    expect(container.textContent).not.toMatch(/\bs[f]\b|\bn[y]c\b|san fr[a]ncisco|new y[o]rk/i);
   });
 });

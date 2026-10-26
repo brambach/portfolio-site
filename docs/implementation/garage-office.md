@@ -12,7 +12,7 @@ For a lost password, use an explicit owner-authorized recovery procedure through
 
 ## What the numbers mean
 
-Redis holds aggregate daily counts for visit, car_entered, tahoe_reached, race_started, race_finished and time_posted. A random session identifier lives in sessionStorage. Sessions renew after 12 hours. Client guards and atomic Redis deduplication prevent repeated effects, reloads and retries from counting the same step twice. Deduplication keys expire after 24 hours. Daily aggregate keys expire after 90 days; the dashboard shows up to 30 UTC days.
+Redis holds aggregate daily counts for visit, car_entered, lake_reached, race_started, race_finished and time_posted. A random session identifier lives in sessionStorage. Sessions renew after 12 hours. Client guards and atomic Redis deduplication prevent repeated effects, reloads and retries from counting the same step twice. Deduplication keys expire after 24 hours. Daily aggregate keys expire after 90 days; the dashboard shows up to 30 UTC days.
 
 These are browser-tab session counts, not unique people or total attempts. Repeated races within a session count once. Steps are assigned to their occurrence date; a session spanning midnight can contribute different steps on different days. Don't interpret these daily totals as a matched conversion funnel.
 

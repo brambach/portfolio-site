@@ -1,4 +1,4 @@
-export type JourneyEvent='project_opened'|'project_study_opened'|'contact_clicked'|'social_clicked'|'race_retried'|'visit'|'car_entered'|'tahoe_reached'|'race_started'|'race_finished'|'time_posted'|'scene_loading'|'scene_ready'|'scene_load_failed'|'scene_render_failed'|'intro_completed'|'ready_under_3s'|'ready_3_to_8s'|'ready_8_to_15s'|'ready_over_15s';
+export type JourneyEvent='project_opened'|'project_study_opened'|'contact_clicked'|'social_clicked'|'race_retried'|'visit'|'car_entered'|'lake_reached'|'race_started'|'race_finished'|'time_posted'|'scene_loading'|'scene_ready'|'scene_load_failed'|'scene_render_failed'|'intro_completed'|'ready_under_3s'|'ready_3_to_8s'|'ready_8_to_15s'|'ready_over_15s';
 const sent=new Set<string>();
 const pending=new Set<string>();
 export function trackJourney(event:JourneyEvent){

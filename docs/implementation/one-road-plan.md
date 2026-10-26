@@ -4,7 +4,7 @@ Status: in progress. Written 2026-09-28.
 
 Decided (Bryce left these to judgement, 2026-09-28):
 - The flat road becomes `/`, and the 3D drive moves to `/drive`. The switch happens last, once the handoff works.
-- Arriving from the page, the 3D drive starts at the Tahoe overlook at dusk.
+- Arriving from the page, the 3D drive starts at the lake overlook at dusk.
 - AgentSky moves to the glovebox, and Dervo leads everywhere as the headline project.
 
 Done so far:
@@ -38,7 +38,7 @@ The idea: **it's one trip.** `/work` is the trip told flat and fast. The 3D driv
 ## Decisions needed first
 
 1. **Which page is the front door?** Proposal: `/work`'s road becomes `/`, and the 3D drive moves to `/drive`. It's quicker to load, works on phones, and shows the work first. The drive then becomes the reward at the end of it. The alternative is to keep the 3D at `/` and treat `/work` as the "light" version. That's easier, but it keeps the two-sites feeling.
-2. **Where does the 3D drive start when you come from the page?** Option A: at the Tahoe overlook at dusk, where the page ended. You're in the seat, the engine's ticking, and you drive home yourself. Option B: back in town at dusk, taking the long way again with the wheel. A is the stronger continuation. B shows more of the world.
+2. **Where does the 3D drive start when you come from the page?** Option A: at the lake overlook at dusk, where the page ended. You're in the seat, the engine's ticking, and you drive home yourself. Option B: back in town at dusk, taking the long way again with the wheel. A is the stronger continuation. B shows more of the world.
 3. **AgentSky.** See the end of this doc.
 
 ## Phase 0 - One look (foundation)

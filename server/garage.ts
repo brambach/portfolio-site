@@ -1,7 +1,7 @@
 import {randomBytes,scrypt,timingSafeEqual,createHash} from 'node:crypto';
 import {command,type Command} from './garage-store.js';
 export const passwordKey='portfolio:garage:v1:password';
-export const steps=['project_opened','project_study_opened','contact_clicked','social_clicked','race_retried','visit','car_entered','tahoe_reached','race_started','race_finished','time_posted','scene_loading','scene_ready','scene_load_failed','scene_render_failed','intro_completed','ready_under_3s','ready_3_to_8s','ready_8_to_15s','ready_over_15s'] as const;
+export const steps=['project_opened','project_study_opened','contact_clicked','social_clicked','race_retried','visit','car_entered','lake_reached','race_started','race_finished','time_posted','scene_loading','scene_ready','scene_load_failed','scene_render_failed','intro_completed','ready_under_3s','ready_3_to_8s','ready_8_to_15s','ready_over_15s'] as const;
 export const sources=['direct','x','linkedin','github','other'] as const;
 const digest=(value:string)=>createHash('sha256').update(value).digest('hex');
 const derive=(password:string,salt:string)=>new Promise<Buffer>((resolve,reject)=>scrypt(password,salt,64,{N:32768,r:8,p:1,maxmem:64*1024*1024},(error,key)=>error?reject(error):resolve(key)));
