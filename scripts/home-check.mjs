@@ -17,6 +17,8 @@
 //                     (a crop goes to --out <dir> when given), and a row's number still clicks while its rule is
 //                     printed rather than inked in; prefers-reduced-data goes lite; a slow roll goes lite mid-roll, is
 //                     remembered as "bn-slow" and a reload starts lite; a narrow touch screen alone stays full
+//   --hover           at 1440, pointing at a print or at its row's name draws the frame round it and lifts it; with
+//                     reduced motion, and on a 390 touch screen, pointing at it changes nothing
 //   --stills <dir>    the page top through the picture once the face has settled, desktop and phone, saved as
 //                     <name>-desktop.png and <name>-mobile.png (--name, default after)
 //   --record <dir>    the stills plus reduced-motion-desktop.png, and clips from the moment the face is seen with its
@@ -27,7 +29,7 @@
 //                     settles, time stepped by hand as in --record, at 1440 and 390 (DPR 2), plus the reduced-motion
 //                     rest: birds-<width>-<ms>.png and birds-<width>-reduced.png
 // Usage: node scripts/home-check.mjs [--url http://localhost:4180/] --baseline dir | --diff dir | --states | --trace
-//        | --lite [--out dir] | --stills dir [--name before] | --record dir | --birds dir [--from ms]
+//        | --lite [--out dir] | --hover | --stills dir [--name before] | --record dir | --birds dir [--from ms]
 import { chromium } from 'playwright';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -39,8 +41,8 @@ const flag = (name) => args.includes(name);
 const value = (name) => { const i = args.indexOf(name); return i < 0 ? null : args[i + 1]; };
 const URL = value('--url') ?? 'http://localhost:4180/';
 const baseline = value('--baseline'), diff = value('--diff'), stills = value('--stills'), record = value('--record'), birds = value('--birds');
-if (!baseline && !diff && !flag('--states') && !flag('--trace') && !flag('--lite') && !stills && !record && !birds) {
-  console.log('usage: node scripts/home-check.mjs [--url u] --baseline dir | --diff dir | --states | --trace | --lite [--out dir] | --stills dir [--name n] | --record dir | --birds dir [--from ms]');
+if (!baseline && !diff && !flag('--states') && !flag('--trace') && !flag('--lite') && !flag('--hover') && !stills && !record && !birds) {
+  console.log('usage: node scripts/home-check.mjs [--url u] --baseline dir | --diff dir | --states | --trace | --lite [--out dir] | --hover | --stills dir [--name n] | --record dir | --birds dir [--from ms]');
   process.exit(2);
 }
 
@@ -487,6 +489,32 @@ async function runLite(out) {
   await touch.ctx.close();
 }
 
+// The print's frame, lift and shadow as computed, after pointing at a part of the row once it has settled.
+async function runHover() {
+  console.log('hover');
+  const print = (page) => page.evaluate(() => {
+    const p = document.querySelector('#dervo .print'), rule = getComputedStyle(p.querySelector('.print__rule'));
+    return { frame: `${rule.opacity} ${rule.strokeDashoffset}`, lift: getComputedStyle(p.querySelector('.print__frame')).transform, shadow: getComputedStyle(p, '::before').opacity };
+  });
+  const DRAWN = { frame: '1 0px', lift: 'matrix(1, 0, 0, 1, 0, -3)', shadow: '1' };
+  for (const { name, size, reducedMotion, at, drawn } of [
+    { name: '1440, pointing at the print', size: DESKTOP, at: '#dervo .print', drawn: true },
+    { name: '1440, pointing at the row\'s name', size: DESKTOP, at: '#dervo h3 a', drawn: true },
+    { name: '1440 reduced motion, pointing at the print', size: DESKTOP, reducedMotion: 'reduce', at: '#dervo .print', drawn: false },
+    { name: '390 touch screen, pointing at the print', size: TOUCH, at: '#dervo .print', drawn: false },
+  ]) {
+    const { ctx, page } = await open(size, { reducedMotion });
+    await show(page, '#dervo');
+    await page.waitForTimeout(2500);
+    const before = await print(page);
+    await page.hover(at);
+    await page.waitForTimeout(700);
+    const after = await print(page);
+    check(JSON.stringify(after) === JSON.stringify(drawn ? DRAWN : before), `${name}: ${drawn ? 'the frame is drawn and the print lifts' : 'nothing changes'}`, { before, after });
+    await ctx.close();
+  }
+}
+
 async function still(size, file, reducedMotion) {
   const { ctx, page } = await open(size, { reducedMotion });
   await page.waitForFunction(faceSettled, null, { timeout: 15000 });
@@ -600,6 +628,7 @@ if (diff) await runDiff(diff);
 if (flag('--states')) await runStates();
 if (flag('--trace')) await runTrace();
 if (flag('--lite')) await runLite(value('--out'));
+if (flag('--hover')) await runHover();
 if (stills) await runStills(stills, value('--name') ?? 'after');
 if (record) await runRecord(record);
 if (birds) await runBirds(birds, Number(value('--from') ?? 0));
