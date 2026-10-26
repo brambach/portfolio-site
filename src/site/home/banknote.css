@@ -177,6 +177,8 @@
 .bn .back__links, .bn .back__links nav { display: flex; flex-wrap: wrap; gap: 10px 26px; }
 .bn .back__links { margin-top: 36px; font-size: .9375rem; }
 .bn .back__links a { color: var(--cream); padding-bottom: 2px; }
+/* with the text zoomed on a narrow screen, a link too long for the note breaks inside instead of running past it. */
+.bn .hero__links a, .bn .back__links a { overflow-wrap: anywhere; }
 /* The copy button beside each email link, set like a label. */
 .bn .copy { position: relative; margin-left: 10px; padding: 6px 4px; min-height: 24px; border: 0; background: none; color: var(--muted); font: 500 12px/1 var(--sans); font-variant-caps: all-small-caps; letter-spacing: .08em; cursor: pointer; }
 .bn .copy:hover { color: var(--blue); }
@@ -220,7 +222,7 @@
             mask-image: radial-gradient(ellipse 90% 60% at 40% 62%, #000 0, rgb(0 0 0 / .5) 45%, transparent 100%);
   }
   .bn .cameo { order: -1; zoom: .64; }
-  .bn h1 { font-size: 2.875rem; }
+  .bn h1 { font-size: clamp(2rem, calc((100vw - 128px) / 4.4), 2.875rem); overflow-wrap: break-word; }
   .bn .hero__sub { margin-top: 18px; }
   .bn .hero__links { gap: 8px 20px; }
   .bn .vig { margin: 18px 0 6px; height: calc(100cqw / 1.5); height: round(down, 100cqw / 1.5, 1px); }

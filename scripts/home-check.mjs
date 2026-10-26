@@ -28,6 +28,9 @@
 //                     remembered as "bn-slow" and a reload starts lite; a narrow touch screen alone stays full
 //   --hover           at 1440, pointing at a print or at its row's name draws the frame round it and lifts it; with
 //                     reduced motion, and on a 390 touch screen, pointing at it changes nothing
+//   --hero            at 320, 340, 360 and 390 with reduced motion, in --browser chromium, firefox or webkit (default
+//                     chromium; every other mode runs in chromium): the h1's rendered character boxes, grouped into
+//                     lines, read exactly "i build tools" and "for ai agents.", and none of them runs past the h1's box
 //   --stills <dir>    the page top through the picture once the face has settled, desktop and phone, saved as
 //                     <name>-desktop.png and <name>-mobile.png (--name, default after)
 //   --record <dir>    the stills plus reduced-motion-desktop.png, and clips from the moment the face is seen with its
@@ -38,9 +41,9 @@
 //                     settles, time stepped by hand as in --record, at 1440 and 390 (DPR 2), plus the reduced-motion
 //                     rest: birds-<width>-<ms>.png and birds-<width>-reduced.png
 // Usage: node scripts/home-check.mjs [--url http://localhost:4180/] --baseline dir | --diff dir | --states | --trace
-//        | --load --main-url http://localhost:4181/ | --lite [--out dir] | --hover | --stills dir [--name before]
-//        | --record dir | --birds dir [--from ms]
-import { chromium } from 'playwright';
+//        | --load --main-url http://localhost:4181/ | --lite [--out dir] | --hover
+//        | --hero [--browser chromium|firefox|webkit] | --stills dir [--name before] | --record dir | --birds dir [--from ms]
+import { chromium, firefox, webkit } from 'playwright';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { loadavg, tmpdir } from 'node:os';
@@ -51,9 +54,15 @@ const flag = (name) => args.includes(name);
 const value = (name) => { const i = args.indexOf(name); return i < 0 ? null : args[i + 1]; };
 const URL = value('--url') ?? 'http://localhost:4180/';
 const MAIN_URL = value('--main-url');
+const ENGINES = { chromium, firefox, webkit };
+const BROWSER = value('--browser') ?? 'chromium';
 const baseline = value('--baseline'), diff = value('--diff'), stills = value('--stills'), record = value('--record'), birds = value('--birds');
-if (!baseline && !diff && !flag('--states') && !flag('--trace') && !flag('--load') && !flag('--lite') && !flag('--hover') && !stills && !record && !birds) {
-  console.log('usage: node scripts/home-check.mjs [--url u] --baseline dir | --diff dir | --states | --trace | --load --main-url u | --lite [--out dir] | --hover | --stills dir [--name n] | --record dir | --birds dir [--from ms]');
+if (!baseline && !diff && !flag('--states') && !flag('--trace') && !flag('--load') && !flag('--lite') && !flag('--hover') && !flag('--hero') && !stills && !record && !birds) {
+  console.log('usage: node scripts/home-check.mjs [--url u] --baseline dir | --diff dir | --states | --trace | --load --main-url u | --lite [--out dir] | --hover | --hero [--browser chromium|firefox|webkit] | --stills dir [--name n] | --record dir | --birds dir [--from ms]');
+  process.exit(2);
+}
+if (!Object.hasOwn(ENGINES, BROWSER)) {
+  console.log('usage: --browser is chromium, firefox or webkit');
   process.exit(2);
 }
 if (flag('--load') && !MAIN_URL) {
@@ -646,6 +655,47 @@ async function runHover() {
   }
 }
 
+// the headline as laid out: each character's box, grouped into lines by height in reading order, and the characters
+// whose box runs past the h1's sides. the note's 1fr grid track widens to fit a word too long for it and takes the
+// h1's box along, so the sides are the h1's box cut to the note's padding.
+const HERO_WIDTHS = [320, 340, 360, 390];
+const HERO_LINES = ['i build tools', 'for ai agents.'];
+async function runHero() {
+  console.log(`hero in ${BROWSER}`);
+  const on = BROWSER === 'chromium' ? browser : await ENGINES[BROWSER].launch();
+  for (const width of HERO_WIDTHS) {
+    const { ctx, page } = await open({ width, height: 800, dpr: 2 }, { reducedMotion: 'reduce', on });
+    const hero = await page.evaluate(() => {
+      const h1 = document.querySelector('.bn h1'), box = h1.getBoundingClientRect(), range = document.createRange();
+      const note = h1.closest('.note__top'), noteBox = note.getBoundingClientRect(), pad = getComputedStyle(note);
+      const left = Math.max(box.left, noteBox.left + parseFloat(pad.paddingLeft));
+      const right = Math.min(box.right, noteBox.right - parseFloat(pad.paddingRight));
+      const walk = document.createTreeWalker(h1, NodeFilter.SHOW_TEXT), lines = [], out = [];
+      for (let node; (node = walk.nextNode());) {
+        for (let i = 0; i < node.length; i++) {
+          range.setStart(node, i);
+          range.setEnd(node, i + 1);
+          // a collapsed space has no box, and the space a line breaks at can have an empty one.
+          const r = [...range.getClientRects()].find((rect) => rect.width > 0);
+          if (!r) continue;
+          let line = lines.at(-1);
+          if (!line || (r.top + r.bottom) / 2 > line.bottom) lines.push(line = { bottom: r.bottom, text: '' });
+          line.text += node.data[i];
+          if (r.left < left - .5 || r.right > right + .5) out.push(node.data[i]);
+        }
+      }
+      return {
+        lines: lines.map((l) => l.text.replace(/\s+/g, ' ').trim()), out: out.join(''), sides: [left, right],
+        scroll: h1.scrollWidth - h1.clientWidth, size: getComputedStyle(h1).fontSize,
+      };
+    });
+    check(JSON.stringify(hero.lines) === JSON.stringify(HERO_LINES), `${width}: at ${hero.size} the h1 reads ${hero.lines.map((l) => `"${l}"`).join(' / ')}`);
+    check(!hero.out && hero.scroll <= 0, `${width}: nothing in the h1 runs past its box`, hero);
+    await ctx.close();
+  }
+  if (on !== browser) await on.close();
+}
+
 async function still(size, file, reducedMotion) {
   const { ctx, page } = await open(size, { reducedMotion });
   await page.waitForFunction(faceSettled, null, { timeout: 15000 });
@@ -761,6 +811,7 @@ if (flag('--trace')) await runTrace();
 if (flag('--load')) await runLoad();
 if (flag('--lite')) await runLite(value('--out'));
 if (flag('--hover')) await runHover();
+if (flag('--hero')) await runHero();
 if (stills) await runStills(stills, value('--name') ?? 'after');
 if (record) await runRecord(record);
 if (birds) await runBirds(birds, Number(value('--from') ?? 0));
