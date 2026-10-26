@@ -3,6 +3,8 @@ import { afterPaint } from './home/after-paint';
 import { bandRule, borderImage, cameo, waveField } from './home/art/guilloche';
 import Vignette from './home/art/Vignette';
 import { EMAIL, FOOTER, HERO } from './home/copy';
+import { useMotionMode } from './home/motion-mode';
+import { useWatch } from './home/motion/watch';
 import Note from './home/Note';
 import PrintRow, { Away, type Card } from './home/PrintRow';
 import './home/banknote.css';
@@ -78,15 +80,18 @@ export default function Home() {
   const frame = useRef<HTMLSpanElement>(null);
   useEffect(() => afterPaint(() => { if (frame.current) frame.current.innerHTML = cameo(150, 192).svg; }), []);
 
+  const mode = useMotionMode();
+  const face = useWatch<HTMLElement>({ oncePerVisit: 'bn-roll' });
+
   const lead = HERO.line.slice(0, -HERO.italic.length);
-  return <div className="home bn" style={GUILLOCHE}>
+  return <div className="home bn" style={GUILLOCHE} data-mode={mode}>
     <header className="top label">
       <a href="/">bryce rambach</a>
       <nav aria-label="site"><a href="#work">work</a><a href="#about">about</a><a href={`mailto:${EMAIL}`}>email</a></nav>
     </header>
 
     <main>
-      <Note side="face" micro={HERO.line} aria-labelledby="hero-line">
+      <Note side="face" micro={HERO.line} aria-labelledby="hero-line" ref={face}>
         <div className="note__top">
           <div className="note__text">
             <h1 id="hero-line">{lead}<em>{HERO.italic}</em></h1>

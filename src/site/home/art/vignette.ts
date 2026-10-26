@@ -10,16 +10,16 @@
    bigger sun and coarser rules. */
 
 /** The picture's separately moving parts, in paint order (bottom first). Each is its own element in the output,
- *  carrying class `vig__<name>`. Land parts are full plate size; sun, halo, glints and birds are cropped to their
- *  own boxes so their compositor layers stay small. */
+ *  carrying class `vig__<name>`. Land parts are full plate size; sun, glints and birds are cropped to their own boxes
+ *  so their compositor layers stay small. */
 export type Part =
-  | 'halo' | 'sun'                       // glow ring and halftone sun, both clipped to the sky
+  | 'sun'                                // halftone sun, clipped to the sky
   | 'far' | 'mid' | 'near' | 'water'     // land, by draw order (sky rules go with far, pines with near)
   | 'ridges'                             // ridge lines and horizon: the pen that leads the draw-in
   | 'glints'                             // three bands: .vig__glints[data-band="0|1|2"]
   | 'bird';                              // three: div.vig__bird > div > two svg.vig__wing, each bird with --i for its timing
 // The ridges sit under the near banks: in this order the split paints the same pixels as the single land svg did.
-export const PARTS: readonly Part[] = ['halo', 'sun', 'far', 'mid', 'ridges', 'near', 'water', 'glints', 'bird'];
+export const PARTS: readonly Part[] = ['sun', 'far', 'mid', 'ridges', 'near', 'water', 'glints', 'bird'];
 
 type Ridge = (x: number) => number;
 
@@ -176,11 +176,6 @@ export function vignette(width: number, height: number): string {
   const ink = (sw: string, body: string) => `<g fill="none" stroke="currentColor" stroke-width="${sw}">${body}</g>`;
   const tone = (ts: string[], op: number[]) => ts.map((d, i) => d && `<path d="${d}" stroke-opacity="${op[i]}"/>`).join('');
 
-  const glowR = sunR * 1.3, glow = crop(sunX - glowR, sunY - glowR, sunX + glowR, sunY + glowR);
-  const halo =
-    `<svg class="vig__halo" style="${glow.at}" ${glow.box}><defs><radialGradient id="vig-glow" gradientUnits="userSpaceOnUse" cx="${f1(sunX)}" cy="${f1(sunY)}" r="${f1(glowR)}">` +
-    `<stop offset=".6" stop-opacity="0"/><stop offset=".84" stop-opacity=".22"/><stop offset="1" stop-opacity="0"/></radialGradient></defs>` +
-    `<rect x="${f1(sunX - glowR)}" y="${f1(sunY - glowR)}" width="${f1(glowR * 2)}" height="${f1(glowR * 2)}" fill="url(#vig-glow)" clip-path="url(#vig-sky)"/></svg>`;
   const disc = crop(sunX - sunR - 2, sunY - sunR - 2, sunX + sunR + 2, sunY + sunR + 2);
   const sun =
     `<svg class="vig__sun" style="${disc.at}" ${disc.box}><defs><clipPath id="vig-sky"><path d="${skyClip}"/></clipPath></defs>` +
@@ -204,5 +199,5 @@ export function vignette(width: number, height: number): string {
       `<path d="M0,0Q${f1(-l * 0.42)},${f1(-l * 0.32)} ${f1(-l)},${f1(-l * 0.24)}" fill="none" stroke="currentColor" stroke-width=".8" stroke-linecap="round" stroke-opacity=".5"/></svg>`;
     return `<div class="vig__bird" style="left:${Math.round(x0 + w * u) - n - 1}px;top:${Math.round(y0 + h * v) - t}px;--i:${i}"><div>${wing + wing}</div></div>`;
   }).join('');
-  return halo + sun + land + shimmer + birds;
+  return sun + land + shimmer + birds;
 }

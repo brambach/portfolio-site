@@ -1,5 +1,7 @@
 /* The hero's engraving: the plate, its mask and where each part sits. */
 .vig { position: relative; margin: var(--s4) calc(var(--gutter) * -1) 0; aspect-ratio: 4.4 / 1; color: var(--display-ink); }
+/* The roll's window and the drawing in it. At rest both are the picture's own box. */
+.roll, .roll__in { position: absolute; inset: 0; }
 .vig__plate {
   position: absolute; inset: 0;
   -webkit-mask-image: linear-gradient(90deg, transparent, rgb(0 0 0 / .55) 8%, #000 16%, #000 84%, rgb(0 0 0 / .55) 92%, transparent), linear-gradient(transparent, #000 18%, #000 82%, rgb(0 0 0 / .4) 93%, transparent);
@@ -8,61 +10,49 @@
   mask-composite: intersect;
 }
 /* Only the land layers fill the plate (`.vig__plate svg` would blow a bird's svg up to the whole plate). The sun,
-   its glow, the glints and the birds sit in their own small boxes, placed by the drawing. */
+   the glints and the birds sit in their own small boxes, placed by the drawing. */
 .vig__plate > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.vig__plate > .vig__halo, .vig__plate > .vig__sun, .vig__plate > .vig__glints { inset: auto; width: auto; height: auto; }
+.vig__plate > .vig__sun, .vig__plate > .vig__glints { inset: auto; width: auto; height: auto; }
 .vig__bird, .vig__wing { position: absolute; }
 /* A wing turns at the shoulder: its svg's right edge less 1px, halfway down. The right wing is the left one mirrored
    after it turns, so both rise and fall together. */
 .vig__wing { left: 0; top: 0; transform-origin: calc(100% - 1px) 50%; }
 .vig__wing + .vig__wing { scale: -1 1; }
 .vig__sun, .vig__glints { fill: var(--primary); }
-.vig__halo stop { stop-color: var(--primary); }
-/* The glow shows only while motion runs, so the still picture stays as it was drawn. */
-.vig__halo { opacity: 0; }
 .vig__glints { opacity: .72; }
 
-/* The draw-in, once a visit. Until the first view every part waits hidden. Then the land inks in left to right, back
-   to front, with the ridge lines leading like a pen; the sun fades up and settles 6px into place; the glow, the glints
-   and the birds fade in. All of it ends by 4.2s. The loops keep running underneath on the same parts, so nothing
-   fights: the sun settles by translate while it breathes by transform, and the fades use a filter while the loops own
-   opacity. Once the glow is in, Vignette marks the plate done and these rules let go. */
-.vig__plate:not([data-drawn]) > * { visibility: hidden; }
-.vig__plate[data-drawn=""] > .vig__ridges { animation: vig-sweep 1.4s ease-in-out both; }
-.vig__plate[data-drawn=""] > .vig__far { animation: vig-sweep 1.65s .25s ease-in-out both; }
-.vig__plate[data-drawn=""] > .vig__mid { animation: vig-sweep 1.8s .5s ease-in-out both; }
-.vig__plate[data-drawn=""] > .vig__near { animation: vig-sweep 1.8s .8s ease-in-out both; }
-.vig__plate[data-drawn=""] > .vig__water { animation: vig-sweep 1.8s 1.2s ease-in-out both; }
-.vig__plate[data-drawn=""]:not([data-motion="still"]) .vig__sun { animation: vig-breathe 14s ease-in-out infinite, vig-settle 2.4s 1.6s cubic-bezier(.3, .6, .3, 1) both; }
-.vig__plate[data-drawn=""]:not([data-motion="still"]) .vig__halo { animation: vig-glow 9s ease-in-out infinite, vig-in 2s 2.2s both; }
-.vig__plate[data-drawn=""]:not([data-motion="still"]) .vig__glints { animation: vig-shimmer var(--shimmer, 5.3s) ease-in-out infinite, vig-in 2s 2.2s both; }
-.vig__plate[data-drawn=""]:not([data-motion="still"]) .vig__bird { animation: vig-drift calc(40s + var(--i) * 9s) calc(var(--i) * -17s) ease-in-out infinite alternate, vig-in .8s 2.8s both; }
-@keyframes vig-sweep {
-  from { clip-path: inset(0 100% 0 0); }
-  to { clip-path: inset(0); }
-}
-@keyframes vig-settle { from { translate: 0 -6px; opacity: 0; } }
-@keyframes vig-in { from { filter: opacity(0); } }
-
-/* Loops, only while motion is allowed. Each bird beats its wings four times, about 1.1 to 1.4s a beat, then glides
-   with them held up a little for 7 to 8s. It drifts sideways about 1.6% of the plate (the plate is the screen's width)
-   while it rises and falls 3px on a shorter, unrelated period, so its path curves. Every period and start differs by
-   --i, so the birds never fall into step. */
-.vig__plate:not([data-motion="still"]) .vig__bird { animation: vig-drift calc(40s + var(--i) * 9s) calc(var(--i) * -17s) ease-in-out infinite alternate; }
-.vig__plate:not([data-motion="still"]) .vig__bird > div { animation: vig-bob calc(6.5s + var(--i) * 1.6s) calc(var(--i) * -2.9s) ease-in-out infinite alternate; }
-.vig__plate:not([data-motion="still"]) .vig__wing { animation: vig-flap calc(11s + var(--i) * 1.3s) calc(var(--i) * -4.1s) ease-in-out infinite; }
-/* The sun breathes 2px from its settled place and back, and its glow swells on a shorter breath so the two drift
-   in and out of step. */
-.vig__plate:not([data-motion="still"]) .vig__sun { animation: vig-breathe 14s ease-in-out infinite; }
-.vig__plate:not([data-motion="still"]) .vig__halo { animation: vig-glow 9s ease-in-out infinite; }
 /* The three glint bands interleave rows, so each sliding and fading on its own period, started out of step, keeps
    the reflection shimmering without a pattern. */
 .vig__glints[data-band="1"] { --shimmer: 6.7s -2.2s; }
 .vig__glints[data-band="2"] { --shimmer: 8.1s -5.1s; }
-.vig__plate:not([data-motion="still"]) .vig__glints { animation: vig-shimmer var(--shimmer, 5.3s) ease-in-out infinite; }
-/* Off screen, every animation holds its frame and picks up from there. Important, because the shorthands above reset
-   the play state with a more specific selector. */
-.vig__plate[data-motion="off"] * { animation-play-state: paused !important; }
+
+/* The roll, once a visit: a soft edge sweeps the picture in from the left. .roll is one 160px fade wider than the
+   picture and slides in from its own width to the left; .roll__in is the same box sliding the other way, so the two
+   cancel and the drawing holds still while only the masked edge moves. The plate is pulled back to the picture's box,
+   so vignette.ts still draws at exactly the box's size. */
+@media (prefers-reduced-motion: no-preference) {
+  .vig { overflow: clip; }
+  .roll { right: -160px; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 160px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 160px), transparent); }
+  .roll .vig__plate { right: 160px; }
+  .bn [data-motion]:not([data-seen="done"]) .roll { animation: vig-roll 1.7s .1s cubic-bezier(.35, 0, .2, 1) backwards; }
+  .bn [data-motion]:not([data-seen="done"]) .roll__in { animation: vig-unroll 1.7s .1s cubic-bezier(.35, 0, .2, 1) backwards; }
+
+  /* Loops. Each bird beats its wings four times, about 1.1 to 1.4s a beat, then glides with them held up a little for
+     7 to 8s. It drifts sideways about 1.6% of the plate (the plate is the screen's width) while it rises and falls 3px
+     on a shorter, unrelated period, so its path curves. Every period and start differs by --i, so the birds never fall
+     into step. */
+  .bn [data-motion]:not([data-motion="still"]) .vig__bird { animation: vig-drift calc(40s + var(--i) * 9s) calc(var(--i) * -17s) ease-in-out infinite alternate; }
+  .bn [data-motion]:not([data-motion="still"]) .vig__bird > div { animation: vig-bob calc(6.5s + var(--i) * 1.6s) calc(var(--i) * -2.9s) ease-in-out infinite alternate; }
+  .bn [data-motion]:not([data-motion="still"]) .vig__wing { animation: vig-flap calc(11s + var(--i) * 1.3s) calc(var(--i) * -4.1s) ease-in-out infinite; }
+  /* The sun breathes 2px from its place and back. On the roll it rises into place first, then breathes. A sun drawn
+     again at a new width just breathes. */
+  .bn [data-motion]:not([data-motion="still"]) .vig__sun { animation: vig-breathe 14s ease-in-out infinite; }
+  .bn [data-motion]:not([data-motion="still"]):not([data-seen="done"]) .vig__plate:not([data-redrawn]) .vig__sun { animation: vig-rise 2s .9s cubic-bezier(.3, .6, .3, 1) backwards, vig-breathe 14s 2.9s ease-in-out infinite; }
+  .bn [data-motion]:not([data-motion="still"]) .vig__glints { animation: vig-shimmer var(--shimmer, 5.3s) ease-in-out infinite; }
+}
+@keyframes vig-roll { from { transform: translateX(-100%); } }
+@keyframes vig-unroll { from { transform: translateX(100%); } }
+@keyframes vig-rise { from { translate: 0 5px; opacity: 0; } }
 @keyframes vig-flap {
   0%, 40%, 100% { transform: rotate(0); }
   4%, 14%, 24% { transform: rotate(-20deg); }
@@ -79,16 +69,7 @@
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(2px); }
 }
-@keyframes vig-glow {
-  0%, 100% { opacity: .55; }
-  50% { opacity: .9; }
-}
 @keyframes vig-shimmer {
   0%, 100% { transform: translateX(-1.5px); opacity: .75; }
   50% { transform: translateX(1.5px); opacity: .45; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .vig__plate * { animation: none !important; }
-  /* Only the parts' own boxes: the sun and its glow keep their clip to the sky. */
-  .vig__plate > * { clip-path: none !important; }
 }

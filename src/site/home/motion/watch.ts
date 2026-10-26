@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from 'react';
+import { useLayoutEffect, useRef, type RefObject } from 'react';
 import { useMotionMode, type MotionMode } from '../motion-mode';
 
 /* The page's one place that watches blocks come into view. It writes attributes straight onto each registered
@@ -91,11 +91,13 @@ export function watch(el: HTMLElement, mode: MotionMode, { threshold = 0.25, nea
   };
 }
 
-/** React side: a ref that registers on mount and unregisters on unmount. It registers again when the motion mode
- *  changes, and reads the options once per registration. */
+/** React side: a ref that registers on mount and unregisters on unmount, and reads the options once per
+ *  registration. It registers before the first paint, so a one-shot waits at its first frame from the start. It
+ *  registers again only when the page turns still or back: lite changes only what CSS draws, and registering again
+ *  would paint every block off for a frame and call near a second time. */
 export function useWatch<T extends HTMLElement>(opts?: WatchOptions): RefObject<T | null> {
   const ref = useRef<T>(null);
   const mode = useMotionMode();
-  useEffect(() => (ref.current ? watch(ref.current, mode, opts) : undefined), [mode]);
+  useLayoutEffect(() => (ref.current ? watch(ref.current, mode, opts) : undefined), [mode === 'still']);
   return ref;
 }

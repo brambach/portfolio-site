@@ -1,33 +1,64 @@
 import { useSyncExternalStore } from 'react';
 
-/* The one place the home decides how much to move. Every scene reads only this.
-   still: the visitor asked for reduced motion, so scenes paint their finished state.
-   lite: a narrow screen (<760px), a coarse pointer or Save-Data, so nothing pins and scrubbed scenes play once.
-   full: everything else. */
+/* The one place the home decides how much to move. The page root carries the answer as data-mode.
+   still: the visitor asked for reduced motion, so the page shows the finished print.
+   lite: Save-Data, reduced data, or frames that ran slow this visit.
+   full: everything else. A narrow screen or a coarse pointer is no reason to move less. */
 
 export type MotionMode = 'full' | 'lite' | 'still';
 
-const QUERIES = ['(prefers-reduced-motion: reduce)', '(max-width: 759.98px)', '(pointer: coarse)'] as const;
+const REDUCE = '(prefers-reduced-motion: reduce)', LESS_DATA = '(prefers-reduced-data: reduce)';
+const SLOW = 'bn-slow', FRAMES = 30, SLOW_FRAME_MS = 20;
 
 type Connection = EventTarget & { saveData?: boolean };
 const connection = () => (typeof navigator === 'undefined' ? undefined : (navigator as Navigator & { connection?: Connection }).connection);
 const media = (q: string) => (typeof matchMedia === 'function' ? matchMedia(q) : null);
 
+// The visit remembers a slow device in storage. When storage is blocked, this page alone remembers it here.
+let slowHere = false;
+const slow = () => { try { return sessionStorage.getItem(SLOW) === '1'; } catch { return slowHere; } };
+
+const decided = new Set<() => void>();
+const markSlow = () => {
+  slowHere = true;
+  try { sessionStorage.setItem(SLOW, '1'); } catch { /* slowHere keeps this page lite */ }
+  decided.forEach(fn => fn());
+};
+
 export function motionMode(): MotionMode {
   if (typeof window === 'undefined') return 'still';
-  const [reduce, narrow, coarse] = QUERIES.map(q => media(q)?.matches ?? false);
-  if (reduce) return 'still';
-  return narrow || coarse || connection()?.saveData ? 'lite' : 'full';
+  if (media(REDUCE)?.matches) return 'still';
+  return connection()?.saveData || media(LESS_DATA)?.matches || slow() ? 'lite' : 'full';
+}
+
+/** Times the next 30 frames. If they average over 20ms, the page goes lite for the rest of the visit. Only a full page
+ *  is timed. Returns the cancel. */
+export function timeFrames(): () => void {
+  if (motionMode() !== 'full') return () => {};
+  let raf = 0, n = 0, t0 = 0;
+  // A hidden tab stops sending frames, and that gap would read as slow, so a tab change ends the timing undecided.
+  const stop = () => { cancelAnimationFrame(raf); document.removeEventListener('visibilitychange', stop); };
+  const tick = (t: number) => {
+    if (n === 0) t0 = t;
+    if (n++ < FRAMES) { raf = requestAnimationFrame(tick); return; }
+    stop();
+    if ((t - t0) / FRAMES > SLOW_FRAME_MS) markSlow();
+  };
+  raf = requestAnimationFrame(tick);
+  document.addEventListener('visibilitychange', stop);
+  return stop;
 }
 
 function subscribe(onChange: () => void) {
-  const lists = QUERIES.map(media).filter((m): m is MediaQueryList => !!m);
+  const lists = [REDUCE, LESS_DATA].map(media).filter((m): m is MediaQueryList => !!m);
   lists.forEach(m => m.addEventListener?.('change', onChange));
   const conn = connection();
   conn?.addEventListener?.('change', onChange);
+  decided.add(onChange);
   return () => {
     lists.forEach(m => m.removeEventListener?.('change', onChange));
     conn?.removeEventListener?.('change', onChange);
+    decided.delete(onChange);
   };
 }
 

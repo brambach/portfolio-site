@@ -6,7 +6,6 @@ import { BANNED } from '../banned-names';
 import { projects } from '../projects/catalog';
 import Home from './Home';
 import * as COPY from './home/copy';
-import { motionMode } from './home/motion-mode';
 import { vignette } from './home/art/vignette';
 import { PROJECT_META } from './meta';
 import { WORK_IDS } from './routes';
@@ -15,7 +14,17 @@ import WorkPage from './WorkPage';
 const DASHES = /[–—]/;
 const strings = (v: unknown): string[] => typeof v === 'string' ? [v] : v && typeof v === 'object' ? Object.values(v).flatMap(strings) : [];
 
-afterEach(() => vi.restoreAllMocks());
+class Observer {
+  static all: Observer[] = [];
+  readonly targets = new Set<Element>();
+  constructor(readonly cb: IntersectionObserverCallback, readonly options: IntersectionObserverInit = {}) { Observer.all.push(this); }
+  observe(el: Element) { this.targets.add(el); }
+  unobserve(el: Element) { this.targets.delete(el); }
+  disconnect() { this.targets.clear(); }
+  takeRecords() { return []; }
+}
+
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe('The home page', () => {
   it('leads with the line and who is saying it', () => {
@@ -236,6 +245,42 @@ describe('The note', () => {
     expect(rows().map(r => within(r).getByText(/^no\. \d+$/).textContent)).toEqual(['no. 001', 'no. 002', 'no. 003', 'no. 004']);
   });
 
+  it('watches each row for an eighth of it coming into view, so its number clicks up as it arrives', () => {
+    Observer.all = [];
+    vi.stubGlobal('IntersectionObserver', Observer);
+    render(<Home />);
+    for (const row of rows()) {
+      const own = Observer.all.filter(o => o.targets.has(row));
+      expect(own.map(o => o.options.threshold), row.id).toEqual([0.12]);
+    }
+  });
+
+  it('clicks each number up on a wheel, one digit at a time, overshooting once on the last click', () => {
+    render(<Home />);
+    for (const row of rows()) {
+      const serial = within(row).getByText(/^no\. \d+$/).textContent!;
+      const n = Number(serial.at(-1));
+      const wheel = row.querySelector<HTMLElement>('.wheel')!;
+      expect(wheel.style.getPropertyValue('--n'), serial).toBe(String(n));
+      const easing = wheel.style.getPropertyValue('--clicks');
+      expect(easing, serial).toMatch(/^linear\(.*\)$/);
+      const stops = easing.slice('linear('.length, -1).split(', ').map(s => {
+        const [v, at = '0%'] = s.split(' ');
+        return { v: Number(v), at: parseFloat(at) };
+      });
+      expect(stops[0], serial).toEqual({ v: 0, at: 0 });
+      expect(stops.at(-1), serial).toEqual({ v: 1, at: 100 });
+      // Rounded to two places, so a digit's value is within .005 of k/n.
+      const near = (v: number, want: number) => Math.abs(v - want) <= .005 + 1e-9;
+      const holds = (k: number) => stops.findIndex((s, i) => i > 0 && near(stops[i - 1].v, k / n) && near(s.v, k / n) && s.at > stops[i - 1].at);
+      for (let k = 0; k < n; k++) expect(holds(k), `${serial} holds on ${k}`).toBeGreaterThan(0);
+      const over = stops.filter(s => s.v > 1);
+      expect(over, serial).toHaveLength(1);
+      expect(near(over[0].v, 1 + .06 / n), `${serial} overshoots by ${over[0].v - 1}`).toBe(true);
+      expect(over[0].at, serial).toBeGreaterThan(stops[holds(n - 1)].at);
+    }
+  });
+
   it('prints microprint only from lines on the page, repeated, and hidden from screen readers', () => {
     const { container } = render(<Home />);
     const face = screen.getByRole('heading', { level: 1 }).closest('section')!;
@@ -282,24 +327,6 @@ describe('The note', () => {
       expect(Number(img.getAttribute('height')), img.src).toBeGreaterThan(0);
       expect(img, img.src).toHaveAttribute('loading', 'lazy');
     }
-  });
-});
-
-describe('How much the home moves', () => {
-  const media = (matches: (q: string) => boolean) => vi.spyOn(window, 'matchMedia').mockImplementation(q => ({ matches: matches(q), media: q, onchange: null, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {}, dispatchEvent: () => false }) as MediaQueryList);
-
-  it('is still with reduced motion, lite on a phone or a touch screen, and full otherwise', () => {
-    media(q => q.includes('reduced-motion'));
-    expect(motionMode()).toBe('still');
-    vi.restoreAllMocks();
-    media(q => q.includes('max-width'));
-    expect(motionMode()).toBe('lite');
-    vi.restoreAllMocks();
-    media(q => q.includes('coarse'));
-    expect(motionMode()).toBe('lite');
-    vi.restoreAllMocks();
-    media(() => false);
-    expect(motionMode()).toBe('full');
   });
 });
 

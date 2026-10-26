@@ -15,7 +15,7 @@ describe.each([
 ])('the picture at $w x $h', ({ w, h, sun, glints }) => {
   it('has each part once, three glint bands and three birds, in paint order', () => {
     const el = plate(w, h);
-    for (const part of ['halo', 'sun', ...LAND]) expect(el.querySelectorAll(`.vig__${part}`)).toHaveLength(1);
+    for (const part of ['sun', ...LAND]) expect(el.querySelectorAll(`.vig__${part}`)).toHaveLength(1);
     expect([...el.querySelectorAll('.vig__glints')].map(g => g.getAttribute('data-band'))).toEqual(['0', '1', '2']);
     expect([...el.querySelectorAll('.vig__bird')].map(b => (b as HTMLElement).style.getPropertyValue('--i'))).toEqual(['0', '1', '2']);
     const order = [...el.children].map(c => c.getAttribute('class')!.replace('vig__', ''));
