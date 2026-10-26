@@ -22,6 +22,9 @@ const GUILLOCHE = {
 } as CSSProperties;
 // Each of these images is a whole svg document for the browser to build, about 5ms on a slow phone, and the first
 // frame would build all four at once. Asked for here, one a task, they are built before it and kept.
+// Plex Mono sets the microprint, which is on the first screen. Left to the first frame, the font is asked for while
+// that frame is laid out and every line of it is set again when it arrives. Asked for now, it is usually here first.
+document.fonts?.load('400 1em "IBM Plex Mono"');
 const built: HTMLImageElement[] = [];
 for (const value of Object.values(GUILLOCHE) as string[]) setTimeout(() => {
   const img = new Image();
@@ -127,7 +130,7 @@ export default function Home() {
           <Vignette label={HERO.art} />
         </Note>
 
-        <section id="work" className="sec" aria-label="work">
+        <section id="work" className="sec" aria-label="work" data-later="">
           <div className="rule"><h2 className="label">work</h2><span className="rule__band" aria-hidden="true" /></div>
           <div className="rows">{WORK.map(w => <PrintRow key={w.id} card={w} />)}</div>
         </section>
