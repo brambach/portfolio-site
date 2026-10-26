@@ -1,25 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { useMotionMode } from '../motion-mode';
+import { useEffect } from 'react';
+import { useWatch } from '../motion/watch';
 import { vignette } from './vignette';
 import './vignette.css';
 
 /* The hero's engraving. Its box keeps its size from CSS, so the page doesn't shift when the drawing lands. It's drawn
    after the first paint, at the box's own size, and again if the box changes width. */
-
-/** What the picture is doing. The only thing CSS reads.
- *  still: reduced motion, painted finished, nothing runs.
- *  off: off screen (or never seen yet), every animation paused.
- *  on: on screen, running. */
-export type Motion = 'still' | 'off' | 'on';
-
-/* data-drawn: absent until first seen; "" runs the draw-in; "done" paints it finished (reduced motion, the draw-in
-   has ended, or it already drew in once this visit). */
-type Drawn = '' | 'done' | undefined;
-
-const DRAWN_KEY = 'vig-drawn';
-
-// Blocked storage just means the picture draws in again.
-const drewThisVisit = () => { try { return sessionStorage.getItem(DRAWN_KEY) === '1'; } catch { return false; } };
 
 const afterPaint = (fn: () => void) => {
   let t = 0;
@@ -28,10 +13,7 @@ const afterPaint = (fn: () => void) => {
 };
 
 export default function Vignette({ label }: { label: string }) {
-  const still = useMotionMode() === 'still';
-  const plate = useRef<HTMLDivElement>(null);
-  const [onScreen, setOnScreen] = useState(false);
-  const [drawn, setDrawn] = useState<Drawn>(() => (still || drewThisVisit() ? 'done' : undefined));
+  const plate = useWatch<HTMLDivElement>({ oncePerVisit: 'vig-drawn' });
 
   useEffect(() => {
     const el = plate.current;
@@ -46,25 +28,22 @@ export default function Vignette({ label }: { label: string }) {
     const cancel = afterPaint(draw);
     const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(() => { window.clearTimeout(timer); timer = window.setTimeout(draw, 150); }) : null;
     ro?.observe(el);
-    const io = !still && typeof IntersectionObserver === 'function'
-      ? new IntersectionObserver(([e]) => {
-        setOnScreen(e.isIntersecting);
-        if (e.isIntersecting) setDrawn(d => d ?? '');
-      }, { threshold: 0.25 })
-      : null;
-    // Without IntersectionObserver there is no way to tell, so it counts as on screen and shows finished.
-    if (io) io.observe(el); else if (!still) { setOnScreen(true); setDrawn('done'); }
-    return () => { cancel(); window.clearTimeout(timer); ro?.disconnect(); io?.disconnect(); };
-  }, [still]);
+    // vignette.css runs the draw-in off data-drawn, so it follows data-seen until the glow's end marks it done. The
+    // draw-in starts a frame late, so the drawing's heavy first render happens while its parts are still hidden.
+    let flip = () => {};
+    const mirror = () => {
+      if (el.dataset.seen === 'done') el.dataset.drawn = 'done';
+      else if (el.dataset.seen === '') flip = afterPaint(() => { el.dataset.drawn ??= ''; });
+    };
+    const mo = new MutationObserver(mirror);
+    mo.observe(el, { attributeFilter: ['data-seen'] });
+    mirror();
+    return () => { cancel(); flip(); window.clearTimeout(timer); ro?.disconnect(); mo.disconnect(); };
+  }, []);
 
-  useEffect(() => {
-    if (drawn === '') try { sessionStorage.setItem(DRAWN_KEY, '1'); } catch { /* the next load draws in again */ }
-  }, [drawn]);
-
-  const motion: Motion = still ? 'still' : onScreen ? 'on' : 'off';
   return <figure className="vig hero__in">
     {/* The glow fades in last, so its end is the end of the draw-in. */}
-    <div ref={plate} className="vig__plate" role="img" aria-label={label} data-motion={motion} data-drawn={still ? 'done' : drawn}
-      onAnimationEnd={e => { if ((e.target as Element).classList.contains('vig__halo')) setDrawn('done'); }} />
+    <div ref={plate} className="vig__plate" role="img" aria-label={label}
+      onAnimationEnd={e => { if ((e.target as Element).classList.contains('vig__halo')) e.currentTarget.dataset.drawn = 'done'; }} />
   </figure>;
 }

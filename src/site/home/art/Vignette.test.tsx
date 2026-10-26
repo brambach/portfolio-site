@@ -6,10 +6,11 @@ import Vignette from './Vignette';
 
 class Observer {
   static all: Observer[] = [];
+  readonly targets = new Set<Element>();
   constructor(readonly cb: IntersectionObserverCallback, readonly options?: IntersectionObserverInit) { Observer.all.push(this); }
-  observe() {}
-  unobserve() {}
-  disconnect() {}
+  observe(el: Element) { this.targets.add(el); }
+  unobserve(el: Element) { this.targets.delete(el); }
+  disconnect() { this.targets.clear(); }
   takeRecords() { return []; }
 }
 
@@ -21,8 +22,9 @@ class Resizes {
   disconnect() {}
 }
 
-const view = (isIntersecting: boolean) => act(() => {
-  for (const o of Observer.all) o.cb([{ isIntersecting } as IntersectionObserverEntry], o as unknown as IntersectionObserver);
+// Async, so the plate has picked up the change to data-seen by the time it returns.
+const view = (isIntersecting: boolean) => act(async () => {
+  for (const o of Observer.all) o.cb([...o.targets].map(target => ({ isIntersecting, target }) as IntersectionObserverEntry), o as unknown as IntersectionObserver);
 });
 
 const reduceMotion = (on: boolean) => vi.spyOn(window, 'matchMedia').mockImplementation(q => ({
@@ -30,11 +32,15 @@ const reduceMotion = (on: boolean) => vi.spyOn(window, 'matchMedia').mockImpleme
   addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {}, dispatchEvent: () => false,
 }) as MediaQueryList);
 
+// Runs the next frame and anything waiting on it.
+const frame = () => act(() => { vi.runAllTimers(); });
+
 const plate = () => screen.getByRole('img', { name: HERO.art });
 // React picks the event name from what the browser's styles support; under jsdom that's the prefixed one.
 const animationEnd = (el: Element) => { for (const type of ['animationend', 'webkitAnimationEnd']) fireEvent(el, new Event(type, { bubbles: true })); };
 
 beforeEach(() => {
+  vi.useFakeTimers();
   Observer.all = [];
   Resizes.all = [];
   vi.stubGlobal('IntersectionObserver', Observer);
@@ -64,28 +70,28 @@ describe('The hero picture', () => {
     expect(Observer.all[0].options?.threshold).toBe(0.25);
   });
 
-  it('starts when it comes into view and stops when it leaves', () => {
+  it('starts when it comes into view and stops when it leaves', async () => {
     render(<Vignette label={HERO.art} />);
     expect(plate()).toHaveAttribute('data-motion', 'off');
     expect(plate()).not.toHaveAttribute('data-drawn');
-    view(true);
+    await view(true);
+    frame();
     expect(plate()).toHaveAttribute('data-motion', 'on');
     expect(plate()).toHaveAttribute('data-drawn', '');
-    view(false);
+    await view(false);
     expect(plate()).toHaveAttribute('data-motion', 'off');
-    view(true);
+    await view(true);
     expect(plate()).toHaveAttribute('data-motion', 'on');
   });
 
-  it('draws in only once, through a redraw and a second view', () => {
-    vi.useFakeTimers();
+  it('draws in only once, through a redraw and a second view', async () => {
     let width = 390;
     vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(() => width);
     vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(96);
     render(<Vignette label={HERO.art} />);
-    act(() => { vi.runAllTimers(); });
+    frame();
     expect(plate().querySelector('svg')).not.toBeNull();
-    view(true);
+    await view(true);
     width = 768;
     act(() => {
       for (const r of Resizes.all) r.cb([], r as unknown as ResizeObserver);
@@ -93,19 +99,19 @@ describe('The hero picture', () => {
     });
     expect(plate().querySelector('.vig__sun')?.getAttribute('viewBox')).toBeTruthy();
     expect(plate()).toHaveAttribute('data-drawn', '');
-    view(false);
-    view(true);
+    await view(false);
+    await view(true);
     expect(plate()).toHaveAttribute('data-drawn', '');
   });
 
-  it('is marked drawn once its glow has faded in, and stays so through a redraw', () => {
-    vi.useFakeTimers();
+  it('is marked drawn once its glow has faded in, and stays so through a redraw', async () => {
     let width = 390;
     vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(() => width);
     vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(96);
     render(<Vignette label={HERO.art} />);
-    act(() => { vi.runAllTimers(); });
-    view(true);
+    frame();
+    await view(true);
+    frame();
     animationEnd(plate().querySelector('.vig__ridges')!);
     animationEnd(plate().querySelector('.vig__sun')!);
     expect(plate()).toHaveAttribute('data-drawn', '');
@@ -120,42 +126,66 @@ describe('The hero picture', () => {
     expect(plate()).toHaveAttribute('data-drawn', 'done');
   });
 
-  it('shows the picture finished on a later load in the same visit, and still runs its loops', () => {
+  it('starts its draw-in a frame after it is first seen, but shows a later load finished at once', async () => {
     const first = render(<Vignette label={HERO.art} />);
-    view(true);
+    await view(true);
+    expect(plate()).toHaveAttribute('data-motion', 'on');
+    expect(plate()).not.toHaveAttribute('data-drawn');
+    frame();
+    expect(plate()).toHaveAttribute('data-drawn', '');
     first.unmount();
     Observer.all = [];
     render(<Vignette label={HERO.art} />);
     expect(plate()).toHaveAttribute('data-drawn', 'done');
-    view(true);
+  });
+
+  it('pauses while the tab is hidden and runs again when it is shown', async () => {
+    let hidden = false;
+    vi.spyOn(Document.prototype, 'hidden', 'get').mockImplementation(() => hidden);
+    const tab = (h: boolean) => act(() => { hidden = h; document.dispatchEvent(new Event('visibilitychange')); });
+    render(<Vignette label={HERO.art} />);
+    await view(true);
+    tab(true);
+    expect(plate()).toHaveAttribute('data-motion', 'off');
+    tab(false);
+    expect(plate()).toHaveAttribute('data-motion', 'on');
+  });
+
+  it('shows the picture finished on a later load in the same visit, and still runs its loops', async () => {
+    const first = render(<Vignette label={HERO.art} />);
+    await view(true);
+    first.unmount();
+    Observer.all = [];
+    render(<Vignette label={HERO.art} />);
+    expect(plate()).toHaveAttribute('data-drawn', 'done');
+    await view(true);
     expect(plate()).toHaveAttribute('data-drawn', 'done');
     expect(plate()).toHaveAttribute('data-motion', 'on');
   });
 
-  it('draws in as usual when the browser blocks storage', () => {
+  it('draws in as usual when the browser blocks storage', async () => {
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('blocked'); });
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('blocked'); });
     render(<Vignette label={HERO.art} />);
     expect(plate()).not.toHaveAttribute('data-drawn');
-    view(true);
+    await view(true);
+    frame();
     expect(plate()).toHaveAttribute('data-drawn', '');
     expect(plate()).toHaveAttribute('data-motion', 'on');
   });
 
   it('shows the picture finished and running when the browser has no IntersectionObserver', () => {
-    vi.useFakeTimers();
     vi.stubGlobal('IntersectionObserver', undefined);
     vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(390);
     vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(96);
     render(<Vignette label={HERO.art} />);
-    act(() => { vi.runAllTimers(); });
+    frame();
     expect(plate()).toHaveAttribute('data-drawn', 'done');
     expect(plate()).toHaveAttribute('data-motion', 'on');
     expect(plate().querySelector('.vig__ridges')).not.toBeNull();
   });
 
   it('stops watching and drawing once it is gone', () => {
-    vi.useFakeTimers();
     vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(390);
     vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(96);
     const views = vi.spyOn(Observer.prototype, 'disconnect');
@@ -164,7 +194,7 @@ describe('The hero picture', () => {
     const { unmount } = render(<Vignette label={HERO.art} />);
     act(() => { for (const r of Resizes.all) r.cb([], r as unknown as ResizeObserver); });
     unmount();
-    act(() => { vi.runAllTimers(); });
+    frame();
     expect(views).toHaveBeenCalledOnce();
     expect(sizes).toHaveBeenCalledOnce();
     expect(draws).not.toHaveBeenCalled();
