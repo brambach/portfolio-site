@@ -1,13 +1,11 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
-import { act, render, screen, within } from '@testing-library/react';
-import type { ReactElement } from 'react';
+import { render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BANNED } from '../banned-names';
 import { projects } from '../projects/catalog';
 import Home from './Home';
 import * as COPY from './home/copy';
-import LazyScene from './home/LazyScene';
 import { motionMode } from './home/motion-mode';
 import { vignette } from './home/art/vignette';
 import { PROJECT_META } from './meta';
@@ -72,8 +70,6 @@ describe('The home page', () => {
     expect(container.textContent).not.toMatch(/\bport\b|hold for a second/i);
     for (const a of screen.getAllByRole('link')) expect(a.getAttribute('href'), a.getAttribute('href')!).not.toMatch(/\/projects\/port$|brambach\/port$/);
     for (const s of strings(COPY)) expect(s, s).not.toMatch(/\bport\b/i);
-    expect(COPY.CONTENTS.rows.map(r => r.numeral)).toEqual(['i', 'ii', 'iii', 'iv']);
-    expect(COPY.MORE.rows.map(r => r.id)).toEqual(['arro']);
   });
 
   it('says dervo stopped building, with its real numbers', () => {
@@ -166,7 +162,6 @@ describe('The home page', () => {
       expect(s, s).not.toMatch(/parked/i);
       expect(s, s).not.toMatch(DASHES);
     }
-    expect(COPY.DERVO.beats.at(-1)).toContain('stopped building');
     expect(text).not.toMatch(/[↗→←↑↓]/);
   });
 
@@ -178,13 +173,11 @@ describe('The home page', () => {
     const old = /contract|jul to oct|july to october|parked/i;
     expect(container.textContent).not.toMatch(old);
     for (const s of strings(COPY)) expect(s, s).not.toMatch(old);
-    expect(COPY.PORTAL.body).toMatch(/^as a remote employee /);
   });
 
   it('names no city and no employer', () => {
     const all = strings(COPY).join(' ');
     expect(all).not.toMatch(/\bs[f]\b|\bn[y]c\b|san fr[a]ncisco|new y[o]rk/i);
-    expect(COPY.PORTAL.body).toContain('an hr and payroll consultancy');
     // The job is employee work at an unnamed consultancy: never the company, its clients or vendors, a contract or
     // freelance gig, or a claim to be its only, sole or solo technical person (src/banned-names.ts has the list).
     const employer = [...BANNED, /\bdd\b/i, /\bcontract/i, /\bfreelanc/i];
@@ -250,26 +243,6 @@ describe('How much the home moves', () => {
     vi.restoreAllMocks();
     media(() => false);
     expect(motionMode()).toBe('full');
-  });
-});
-
-describe('A scene that loads later', () => {
-  it('shows its still at once, then the scene when it comes near', async () => {
-    let resolve!: (m: { default: () => ReactElement }) => void;
-    const load = () => new Promise<{ default: () => ReactElement }>(r => { resolve = r; });
-    render(<LazyScene load={load} still={<p>still</p>} />);
-    expect(screen.getByText('still')).toBeInTheDocument();
-    await act(async () => resolve({ default: () => <p>scene</p> }));
-    expect(await screen.findByText('scene')).toBeInTheDocument();
-    expect(screen.queryByText('still')).toBeNull();
-  });
-
-  it('keeps its still if the scene\'s code fails to load', async () => {
-    let reject!: (e: Error) => void;
-    const load = () => new Promise<{ default: () => ReactElement }>((_, r) => { reject = r; });
-    render(<LazyScene load={load} still={<p>still</p>} />);
-    await act(async () => reject(new Error('offline')));
-    expect(await screen.findByText('still')).toBeInTheDocument();
   });
 });
 

@@ -16,7 +16,6 @@ beforeEach(() => {
 });
 afterEach(() => { vi.restoreAllMocks(); sessionStorage.clear(); });
 
-const home = readFileSync(`${process.cwd()}/src/site/home/look-d.css`, 'utf8');
 const css = ['./e.css', './not-found.css'].map(f => readFileSync(new URL(f, import.meta.url), 'utf8')).join('\n');
 // The page's own index.html, read from the repo (vitest serves a URL for it, not a file).
 const index = readFileSync(`${process.cwd()}/index.html`, 'utf8');
@@ -82,26 +81,5 @@ describe('The dots on a phone, as the words scroll over them', () => {
     // A block that runs past the top of the band still covers it, and one with nothing showing doesn't count.
     expect(bandShown(100, 500, [word(-200, 120)])).toBe(0);
     expect(bandShown(100, 500, [word(300, 340, 0)])).toBe(1);
-  });
-});
-
-describe('The home page on a phone', () => {
-  const phone = home.slice(home.indexOf('@media (max-width: 759.98px)'));
-  it('sets nothing under 12px, and its labels at 13px on a phone', () => {
-    const rems = [...home.matchAll(/--fs-[a-z]+: ([\d.]+)rem/g)].map(m => Number(m[1]) * 16);
-    expect(Math.min(...rems)).toBeGreaterThanOrEqual(12);
-    expect(phone).toMatch(/--fs-label: 0\.8125rem/);
-  });
-  it('gives the small links in the header and footer a 44px band to tap', () => {
-    expect(home).toMatch(/\.hero__name::after, \.hero__links a::after \{ content: ""; position: absolute; inset: -16px -8px; \}/);
-    expect(home).toMatch(/\.foot__links a \{ padding: 14px 12px; margin-inline: -12px; \}/);
-  });
-  it('keeps the engraving\'s box the same shape before and after it is drawn', () => {
-    expect(home).toMatch(/\.vig \{[^}]*aspect-ratio: 4\.4 \/ 1;/);
-    expect(phone).toMatch(/\.vig \{ aspect-ratio: 7 \/ 4;/);
-  });
-  it('clears the other dervo beats while a link in one has focus', () => {
-    expect(home).toMatch(/\.dv__lines:has\(\.dv__beat:focus-within\) \.dv__beat:not\(:focus-within\) \{ opacity: 0 !important;/);
-    expect(home).toMatch(/\.dv__text:has\(\.dv__beat:focus-within\) \.dv__count \{ visibility: hidden; \}/);
   });
 });

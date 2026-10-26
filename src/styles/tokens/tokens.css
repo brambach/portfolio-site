@@ -3,7 +3,7 @@
   /workspace/design-system/tokens/tokens.css (@brambach/design-tokens v0.1.0,
   branch design-system-components, 23 Oct 2026). To update, copy the file
   again (design-system/tokens/sync.sh); the look D overrides live in
-  src/site/home/look-d.css, scoped to .home.
+  src/site/simple.css, scoped to .home.
 */
 
 /*
