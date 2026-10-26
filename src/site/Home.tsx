@@ -117,7 +117,7 @@ export default function Home() {
   // stays per load: the medallion's pen draws every time the back is first seen.
   const backFoil = useWatch<HTMLDivElement>({ oncePerVisit: 'bn-foil-back' });
 
-  const lead = HERO.line.slice(0, -HERO.italic.length);
+  const lead = HERO.line.slice(HERO.first.length + 1, -HERO.italic.length);
   return <div ref={page} className="home bn" style={GUILLOCHE} data-mode={mode}>
     <CopyStatus>
       <header className="top label">
@@ -129,7 +129,7 @@ export default function Home() {
         <Note side="face" micro={HERO.line} aria-labelledby="hero-line" ref={face}>
           <div className="note__top">
             <div className="note__text">
-              <h1 id="hero-line">{lead}<em>{HERO.italic}</em></h1>
+              <h1 id="hero-line"><span className="hero__l">{HERO.first}</span> <span className="hero__l">{lead}<em>{HERO.italic}</em></span></h1>
               <p className="hero__sub">{HERO.sub}</p>
               <div className="hero__links">
                 <CopyEmail />

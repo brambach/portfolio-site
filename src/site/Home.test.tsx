@@ -34,7 +34,11 @@ afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 describe('The home page', () => {
   it('leads with the line and who is saying it', () => {
     render(<Home />);
-    expect(screen.getByRole('heading', { level: 1, name: 'i build tools for ai agents.' })).toBeInTheDocument();
+    const line = screen.getByRole('heading', { level: 1, name: 'i build tools for ai agents.' });
+    const lines = [...line.querySelectorAll('.hero__l')];
+    expect(lines.map(l => l.textContent)).toEqual(['i build tools', 'for ai agents.']);
+    expect([...line.querySelectorAll('em')].map(e => e.textContent)).toEqual(['ai agents.']);
+    expect(lines[1]).toContainElement(line.querySelector('em'));
     expect(screen.getByText(/^i'm bryce\. i'm 22, i finished a cs degree in may/)).toHaveTextContent(/open to moving\.$/);
   });
 

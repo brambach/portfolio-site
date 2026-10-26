@@ -5,6 +5,8 @@ export const EMAIL = 'bryce.rambach@gmail.com';
 
 export const HERO = {
   line: 'i build tools for ai agents.',
+  /** The start of the line, set as its own line so it breaks here in every browser. */
+  first: 'i build tools',
   /** The end of the line, set in the serif's italic. */
   italic: 'ai agents.',
   sub: "i'm bryce. i'm 22, i finished a cs degree in may, and i'm looking for a founding engineer role at an early ai startup. open to moving.",

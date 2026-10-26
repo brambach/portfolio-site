@@ -96,6 +96,7 @@
 .bn .note__text { position: relative; }
 .bn h1 { font: 400 clamp(3rem, 6vw, 5.4rem)/1.02 var(--serif); letter-spacing: -.02em; color: var(--display); text-wrap: balance; }
 .bn h1 em { font-style: italic; }
+.bn h1 .hero__l { display: block; }
 .bn .hero__sub { margin-top: 24px; max-width: 540px; color: var(--ink-2); text-wrap: pretty; }
 .bn .hero__links { display: flex; flex-wrap: wrap; gap: 10px 26px; margin-top: 22px; }
 .bn .hero__links a { color: var(--ink-2); padding-bottom: 2px; }
