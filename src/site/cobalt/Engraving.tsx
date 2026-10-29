@@ -2,6 +2,15 @@
    in with a dash offset (pathLength 1), and the layers are grouped so Home.tsx can move them on scroll and set the
    sun by the visitor's clock. Ids start with c- so they can't meet another page's. */
 
+/* Where the trees and flowers stand, in the scene's units. Pines are [x, y, width, height]; aspens are [x, trunk]. */
+const PINES = [[6, 320, 34, 88], [34, 340, 26, 68], [54, 306, 40, 102], [90, 346, 24, 62], [108, 330, 30, 78], [134, 352, 22, 56], [152, 338, 28, 70], [178, 358, 20, 50], [196, 350, 22, 58], [218, 364, 18, 44], [238, 370, 15, 38], [256, 374, 13, 34], [380, 378, 12, 30], [394, 372, 14, 36], [560, 380, 12, 28], [574, 376, 14, 32], [704, 378, 13, 30], [790, 374, 15, 34], [1000, 360, 20, 50], [1020, 342, 28, 68], [1046, 356, 22, 54], [1066, 322, 36, 88], [1098, 344, 26, 66], [1122, 310, 40, 100], [1158, 336, 30, 74]] as const;
+const ASPENS = [[300, 16], [322, 20], [344, 14], [438, 18], [462, 22], [488, 15], [512, 19], [612, 17], [636, 21], [660, 15], [740, 18], [764, 14], [840, 20], [866, 16]] as const;
+const FLOWERS = [[284, 402], [292, 405], [362, 403], [372, 400], [420, 404], [452, 401], [500, 405], [530, 402], [598, 404], [688, 401], [722, 405], [812, 403], [884, 402], [930, 405]] as const;
+
+/** Snow for the winter sky: a fixed scatter, drawn twice so the fall can loop without a seam. */
+const FLAKES = Array.from({ length: 70 }, (_, i) => [(i * 173.3) % 1200, (i * 97.7) % 560, 0.9 + (i % 4) * 0.35] as const);
+const LEAVES = Array.from({ length: 12 }, (_, i) => ({ x: 120 + ((i * 211) % 980), d: 14 + (i % 5) * 3, delay: -(i * 2.3) }));
+
 /** The shared patterns and shapes. Rendered once per page, before anything that uses them. */
 export function Plates() {
   return <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true" focusable="false">
@@ -12,6 +21,7 @@ export function Plates() {
 <pattern id="c-sky" width="12" height="11" patternUnits="userSpaceOnUse"><line x1="0" y1="5.5" x2="12" y2="5.5" strokeWidth=".45" stroke="#2440a0" /></pattern>
 <pattern id="c-dg" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(-38)"><line x1="0" y1="2" x2="4" y2="2" strokeWidth=".85" stroke="#2440a0" /></pattern>
 <pattern id="c-dgx" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><line x1="0" y1="2" x2="4" y2="2" strokeWidth=".7" stroke="#2440a0" /><line x1="2" y1="0" x2="2" y2="4" strokeWidth=".5" stroke="#2440a0" /></pattern>
+<pattern id="c-dot2" width="2.2" height="2.2" patternUnits="userSpaceOnUse"><circle cx="1.1" cy="1.1" r=".7" fill="#2440a0" /></pattern>
 <pattern id="c-dot" width="4.5" height="4.5" patternUnits="userSpaceOnUse"><circle cx="2.25" cy="2.25" r=".6" fill="#2440a0" /></pattern>
 <linearGradient id="c-fadeG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#000" /><stop offset=".55" stopColor="#fff" stopOpacity=".55" /><stop offset="1" stopColor="#fff" /></linearGradient>
 <mask id="c-skyfade" maskUnits="userSpaceOnUse" x="0" y="0" width="1200" height="400"><rect x="0" y="0" width="1200" height="400" fill="url(#c-fadeG)" /></mask>
@@ -19,6 +29,7 @@ export function Plates() {
 <path id="c-nearL" pathLength="1" d="M0 372 L70 336 L140 306 L200 262 L250 222 L270 216 L296 236 L340 268 L400 304 L470 334 L540 356 L620 376 L620 400 L0 400 Z" />
 <path id="c-nearR" pathLength="1" d="M640 382 L720 350 L790 322 L850 300 L905 284 L950 296 L1000 276 L1050 290 L1110 308 L1160 322 L1200 330 L1200 400 L640 400 Z" />
 <symbol id="c-pine" viewBox="0 0 20 52" overflow="visible"><path pathLength="1" d="M10 1 L13 11 L11.5 11 L15.5 21 L13 21 L17.5 32 L14 32 L19 44 L1 44 L6 32 L2.5 32 L7 21 L4.5 21 L8.5 11 L7 11 Z" fill="url(#c-dg)" strokeWidth=".9" strokeLinejoin="round" stroke="#2440a0" /><line pathLength="1" x1="10" y1="44" x2="10" y2="52" strokeWidth="1.2" stroke="#2440a0" /></symbol>
+<symbol id="c-pineSnow" viewBox="0 0 20 52" overflow="visible"><path className="nos" fill="#f6f3ec" d="M10 1 L11.8 7 L8.2 7 Z M8.5 11 L11.5 11 L13.4 16 L6.6 16 Z M7 21 L13 21 L15 26 L5 26 Z M6 32 L14 32 L16.2 37 L3.8 37 Z" /></symbol>
 </defs></defs>
   </svg>;
 }
@@ -64,6 +75,11 @@ export function Scene({ label }: { label: string }) {
 <g id="c-pFar">
 <use href="#c-far" fill="#f6f3ec" strokeWidth=".8" className="ink" />
 <use href="#c-far" fill="url(#c-dot)" className="nos hatch" />
+<g className="hatch"><g className="s s-w s-sp">
+<path d="M272 276 L300 262 L330 272 L322 274 L314 270 L306 276 L296 270 L286 278 Z" fill="#f6f3ec" strokeWidth=".7" />
+<path d="M532 274 L560 258 L590 267 L580 270 L572 266 L562 273 L552 267 L542 275 Z" fill="#f6f3ec" strokeWidth=".7" />
+<path d="M930 266 L960 250 L995 262 L985 265 L975 260 L964 268 L952 262 L942 270 Z" fill="#f6f3ec" strokeWidth=".7" />
+</g></g>
 </g>
 <g id="c-pNear">
 <use href="#c-nearL" fill="#f6f3ec" strokeWidth="1.1" className="ink l2" />
@@ -73,11 +89,25 @@ export function Scene({ label }: { label: string }) {
 <use href="#c-nearR" fill="#f6f3ec" strokeWidth="1.1" className="ink l3" />
 <use href="#c-nearR" fill="url(#c-hzs)" className="nos hatch" />
 <path d="M905 284 L950 296 L1000 276 L1050 290 L1110 308 L1160 322 L1200 330 L1200 400 L1010 400 L980 340 Z" fill="url(#c-dg)" className="nos hatch" />
+<g className="hatch"><g className="s s-w">
+<path d="M222 244 L250 222 L270 216 L296 236 L312 248 L300 246 L290 254 L280 244 L268 256 L258 244 L244 252 L234 244 Z" fill="#f6f3ec" strokeWidth=".8" />
+<path d="M878 292 L905 284 L930 291 L922 293 L914 290 L906 295 L896 290 L888 295 Z" fill="#f6f3ec" strokeWidth=".7" />
+<path d="M972 287 L1000 276 L1028 284 L1018 286 L1010 283 L1001 289 L992 283 L982 289 Z" fill="#f6f3ec" strokeWidth=".7" />
+</g></g>
 </g>
 <g id="c-pFront">
 <path className="hatch" d="M0 402 Q180 392 360 398 T720 396 T1200 398 L1200 412 L0 412 Z" fill="url(#c-hz)" strokeWidth=".9" />
-<g className="pines">
-<use href="#c-pine" x="6" y="320" width="34" height="88" /><use href="#c-pine" x="34" y="340" width="26" height="68" /><use href="#c-pine" x="54" y="306" width="40" height="102" /><use href="#c-pine" x="90" y="346" width="24" height="62" /><use href="#c-pine" x="108" y="330" width="30" height="78" /><use href="#c-pine" x="134" y="352" width="22" height="56" /><use href="#c-pine" x="152" y="338" width="28" height="70" /><use href="#c-pine" x="178" y="358" width="20" height="50" /><use href="#c-pine" x="196" y="350" width="22" height="58" /><use href="#c-pine" x="218" y="364" width="18" height="44" /><use href="#c-pine" x="238" y="370" width="15" height="38" /><use href="#c-pine" x="256" y="374" width="13" height="34" /><use href="#c-pine" x="380" y="378" width="12" height="30" /><use href="#c-pine" x="394" y="372" width="14" height="36" /><use href="#c-pine" x="560" y="380" width="12" height="28" /><use href="#c-pine" x="574" y="376" width="14" height="32" /><use href="#c-pine" x="704" y="378" width="13" height="30" /><use href="#c-pine" x="790" y="374" width="15" height="34" /><use href="#c-pine" x="1000" y="360" width="20" height="50" /><use href="#c-pine" x="1020" y="342" width="28" height="68" /><use href="#c-pine" x="1046" y="356" width="22" height="54" /><use href="#c-pine" x="1066" y="322" width="36" height="88" /><use href="#c-pine" x="1098" y="344" width="26" height="66" /><use href="#c-pine" x="1122" y="310" width="40" height="100" /><use href="#c-pine" x="1158" y="336" width="30" height="74" />
+<g className="pines">{PINES.map(([x, y, w, h]) => <use key={x} href="#c-pine" x={x} y={y} width={w} height={h} />)}</g>
+<g className="hatch"><g className="s s-w">{PINES.map(([x, y, w, h]) => <use key={x} href="#c-pineSnow" x={x} y={y} width={w} height={h} />)}</g></g>
+<g className="hatch">
+<g className="s s-sp">{FLOWERS.map(([x, y], i) => <g key={i}><line x1={x} y1={y + 6} x2={x} y2={y + 1.6} strokeWidth=".6" /><circle cx={x} cy={y} r="1.6" fill="#f6f3ec" strokeWidth=".7" /></g>)}</g>
+{ASPENS.map(([x, h], i) => <g key={i}>
+<line x1={x} y1={410} x2={x} y2={410 - h} strokeWidth=".9" />
+<g className="s s-w"><path d={`M${x} ${410 - h * .7} l-6 -7 M${x} ${410 - h * .85} l5 -8 M${x} ${410 - h} l-3 -6 M${x} ${410 - h} l3 -7`} fill="none" strokeWidth=".7" /></g>
+<g className="s s-sp"><ellipse cx={x} cy={410 - h - 4} rx={5} ry={7} fill="url(#c-dot)" strokeWidth=".6" /></g>
+<g className="s s-su"><ellipse cx={x} cy={410 - h - 6} rx={8} ry={11} fill="url(#c-dg)" strokeWidth=".8" /></g>
+<g className="s s-f"><ellipse cx={x} cy={410 - h - 6} rx={8} ry={11} fill="#f6f3ec" strokeWidth="1" /><ellipse cx={x} cy={410 - h - 6} rx={8} ry={11} fill="url(#c-dot2)" className="nos" /></g>
+</g>)}
 </g>
 <g className="water-in">
 <g className="water" fill="none">
@@ -107,7 +137,16 @@ export function Scene({ label }: { label: string }) {
 <path d="M940 486 L1200 474 L1200 490 L942 498 Z" fill="url(#c-dg)" strokeWidth="1" />
 <path d="M942 498 L942 548 M990 496 L990 552 M1040 494 L1040 556 M1090 492 L1090 558 M1140 490 L1140 560 M1190 488 L1190 560" fill="none" strokeWidth="2" />
 <path d="M960 486 L960 470 M1180 475 L1180 458" fill="none" strokeWidth="1.6" />
-</g>  </svg>;
+<g className="hatch"><g className="s s-su"><g className="boat">
+<path d="M500 470 L500 414" fill="none" strokeWidth="1" />
+<path d="M503 416 L503 466 L532 466 Z" fill="url(#c-hzs)" strokeWidth=".9" />
+<path d="M497 422 L497 466 L476 466 Z" fill="#f6f3ec" strokeWidth=".9" />
+<path d="M466 470 L534 470 L526 479 L474 479 Z" fill="url(#c-dg)" strokeWidth=".9" />
+<path d="M478 486 L522 486 M486 492 L514 492" fill="none" strokeWidth=".6" strokeDasharray="6 4" />
+</g></g></g>
+</g>
+<g className="hatch"><g className="s s-w">{[0, 1].map(k => <g key={k} className={`snowfall s${k}`}>{FLAKES.filter((_, i) => i % 2 === k).map(([x, y, r], i) => <g key={i}><circle cx={x} cy={y} r={r} fill="#f6f3ec" strokeWidth=".6" /><circle cx={x} cy={y - 560} r={r} fill="#f6f3ec" strokeWidth=".6" /></g>)}</g>)}</g></g>
+<g className="hatch"><g className="s s-f">{LEAVES.map((l, i) => <g key={i} className="leaf" style={{ animationDuration: `${l.d}s`, animationDelay: `${l.delay}s` }}><path d={`M${l.x} -10 q5 -5 10 0 q-5 5 -10 0 Z`} fill="url(#c-dg)" strokeWidth=".7" /></g>)}</g></g>  </svg>;
 }
 
 /** The footer strip: a shoreline, a few pines, and birds that take off as you reach the bottom. */

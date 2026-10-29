@@ -15,20 +15,23 @@ export const HERO = {
   art: 'An engraving of a Lake Tahoe shoreline with pines, mountains, a dock and birds over the water. The sun can be dragged across the sky to change the time of day.',
   clockHint: 'drag the sun',
   slider: 'Time of day',
+  seasons: 'Season',
 };
 
 export const NOW = {
   label: 'now',
-  lead: "I build tools for AI agents and care a lot about how software feels. I'm 22, I finished a CS degree in May, and I'm looking for a founding or product engineer role at an early AI startup. Open to moving.",
+  lead: "I build tools for AI agents and care a lot about how software feels. Right now that's receipts, which makes an agent show its work before it calls a task done. I'm 22, I finished a CS degree in May, and I'm looking for a founding or product engineer role at an early AI startup. Open to moving.",
 };
 
-export type Work = { name: string; kind: string; href: string; img: string; alt: string; line: string; caption: string; portrait?: boolean };
+export type Work = { name: string; kind: string; href?: string; img: string; alt: string; line: string; caption: string; portrait?: boolean };
 
-export const WORK: { title: string; year: string; rows: Work[]; also: { name: string; href: string; line: string }[] } = {
+export const WORK: { title: string; year: string; rows: Work[]; also: { name: string; href?: string; line: string }[] } = {
   title: 'Selected work',
   year: '2026',
   rows: [
     { name: 'Dervo', kind: 'mac app', href: '/projects/dervo', img: '/cobalt/dervo-home.jpg', alt: 'Dervo Home, showing what moved while you were away', line: 'Runs Claude Code and Codex in your projects, then tells you where they left off.', caption: 'dervo · home, with example projects · stopped oct 2026' },
+    { name: 'receipts', kind: 'agent tool', img: '/cobalt/receipts.jpg', alt: 'A receipt from receipts lite: 106 verified, 0 unverified, each item with the check that proves it', line: "Your agent says it's done. receipts makes it show its work, with your repo's own checks as proof.", caption: 'receipts · its own receipt, from its own repo · not public yet' },
+    { name: 'tastepack', kind: 'claude code plugin', img: '/cobalt/tastepack.jpg', alt: 'A tastepack TASTE.md listing what the screenshots share, each with a count like 9 of 15', line: 'Turns the screenshots you save into a taste pack your coding agent follows. Then tests it blind.', caption: 'tastepack · from its sample pack · not public yet' },
     { name: 'Trace', kind: 'local tool', href: 'https://github.com/brambach/trace', img: '/cobalt/trace.jpg', alt: 'Trace dashboard with project sparklines and prompt patterns', line: 'Makes every Claude Code prompt searchable and shows how your prompting changes.', caption: 'trace · today and patterns · made-up sessions' },
     { name: 'easeprint', kind: 'motion study', href: 'https://github.com/brambach/easeprint', img: '/cobalt/easeprint.jpg', alt: 'easeprint index page', line: 'How 20 real sites move, measured in a browser down to the cubic-bezier.', caption: 'easeprint · measured 2026-10-17' },
     { name: 'dryline', kind: 'daily digest', href: 'https://github.com/brambach/dryline', img: '/cobalt/dryline.jpg', alt: 'dryline daily digest of Tahoe trail conditions', line: 'Which Tahoe and Truckee trails are dry today, with a cited source for every line.', caption: 'dryline · 20 trails, no llm in the rules' },
@@ -36,17 +39,18 @@ export const WORK: { title: string; year: string; rows: Work[]; also: { name: st
   ],
   also: [
     { name: 'comehome', href: 'https://github.com/brambach/comehome', line: 'a lost-pet page for Tahoe and Truckee' },
+    { name: 'voice', line: 'how I write on X, written down so agents can match it or stay out of the way' },
   ],
 };
 
 export const ABOUT = {
   title: 'About',
   body: [
-    'I like the part of software most people skip: the second pass on a curve, the empty state, the line of copy that says what the tool didn\'t check. Most of what I build is for people running coding agents, because that\'s where I spend my own days.',
+    'I like the parts of software most people skip, like the empty state, or the one line that says what a tool didn\'t check. Most of what I build is for people running coding agents, because that\'s where I spend my own days.',
     'By day I build HR and payroll integrations as a remote employee. Alongside that I founded Dervo, a Mac app for running Claude Code and Codex side by side.',
     'I do my best work on a small team where one person owns a product from the API at the bottom to the words on the buttons.',
   ],
-  off: 'off the clock: dawn miles, clay tennis, coffee, the green 911',
+  off: 'off the clock: dawn miles, clay tennis, coffee, the green 911, a little snowboarding',
 };
 
 export const FOOTER = {

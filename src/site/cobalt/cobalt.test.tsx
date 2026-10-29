@@ -3,7 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BANNED } from '../../banned-names';
 import * as COPY from './copy';
 import DervoPage from './DervoPage';
-import Home, { clockLabel, dayFromClock, sunAt } from './Home';
+import { fireEvent } from '@testing-library/react';
+import Home, { clockLabel, dayFromClock, seasonOf, sunAt } from './Home';
 
 const DASHES = /[–—]/;
 const strings = (v: unknown): string[] => typeof v === 'string' ? [v] : v && typeof v === 'object' ? Object.values(v).flatMap(strings) : [];
@@ -20,13 +21,26 @@ describe('The cobalt home', () => {
     expect(screen.getByRole('slider', { name: 'Time of day' })).toBeInTheDocument();
   });
 
-  it('lists the work in order, Dervo to its own page and the rest to their source', () => {
+  it('lists the work in order, Dervo to its own page, public work to its source, and work not public yet unlinked', () => {
     render(<Home />);
     const work = within(screen.getByRole('region', { name: 'Selected work' }));
-    expect(work.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(['Dervo', 'Trace', 'easeprint', 'dryline', 'Arro']);
-    const rows = work.getAllByRole('listitem').map(li => li.querySelector('a')!);
-    expect(rows.map(a => a.getAttribute('href'))).toEqual(['/projects/dervo', 'https://github.com/brambach/trace', 'https://github.com/brambach/easeprint', 'https://github.com/brambach/dryline', 'https://github.com/brambach/arro']);
-    rows.forEach(a => expect(a.querySelector('img')).not.toBeNull());
+    expect(work.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(['Dervo', 'receipts', 'tastepack', 'Trace', 'easeprint', 'dryline', 'Arro']);
+    const items = work.getAllByRole('listitem');
+    expect(items.map(li => li.querySelector('a')?.getAttribute('href') ?? null)).toEqual(['/projects/dervo', null, null, 'https://github.com/brambach/trace', 'https://github.com/brambach/easeprint', 'https://github.com/brambach/dryline', 'https://github.com/brambach/arro']);
+    items.forEach(li => expect(li.querySelector('img')).not.toBeNull());
+    expect(work.getByText(/^Also:/)).toHaveTextContent('voice, how I write on X');
+  });
+
+  it('starts on the season of the month and lets you switch it', () => {
+    const { container } = render(<Home />);
+    const root = container.querySelector('.cb')!;
+    expect(root).toHaveAttribute('data-season', seasonOf(new Date()));
+    const group = within(screen.getByRole('group', { name: 'Season' }));
+    expect(group.getAllByRole('button').map(b => b.textContent)).toEqual(['winter', 'spring', 'summer', 'fall']);
+    fireEvent.click(group.getByRole('button', { name: 'winter' }));
+    expect(root).toHaveAttribute('data-season', 'winter');
+    expect(group.getByRole('button', { name: 'winter' })).toHaveAttribute('aria-pressed', 'true');
+    expect(group.getByRole('button', { name: 'fall' })).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('opens every link off the site in a new tab with rel noopener and says so, and keeps its own links in the tab', () => {
@@ -98,6 +112,13 @@ describe('The words', () => {
       expect(t, t).not.toMatch(/\bs[f]\b|\bn[y]c\b|san fr[a]ncisco|new y[o]rk/i);
       for (const re of employer) expect(t, t).not.toMatch(re);
     }
+  });
+});
+
+describe('The seasons', () => {
+  it('snow from December through March, spring in April and May, summer to September, then fall', () => {
+    const month = (m: number) => seasonOf(new Date(2026, m, 15));
+    expect([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(month)).toEqual(['winter', 'winter', 'winter', 'spring', 'spring', 'summer', 'summer', 'summer', 'summer', 'fall', 'fall', 'winter']);
   });
 });
 

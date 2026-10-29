@@ -5,7 +5,8 @@ import { A, ArrowRight, paintPaper } from './parts';
 import './cobalt.css';
 
 /* The home page: the name settles over an engraved Tahoe scene that follows the visitor's clock, and the sun can be
-   dragged across the sky to scrub the day into night. Below it, a quiet work list (a sticky preview on a desktop, a
+   dragged across the sky to scrub the day into night. The season follows the month (snow on the peaks and pines in
+   winter, a sailboat in summer, aspens turning in fall) and four quiet buttons switch it. Below it, a quiet work list (a sticky preview on a desktop, a
    picture under each row on a phone), a short about, and a footer whose birds take off as you arrive. */
 
 const reduced = () => typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -24,6 +25,15 @@ export function clockLabel(t: number) {
   return `${(hr % 12) || 12}:${String(mn).padStart(2, '0')} ${hr < 12 ? 'am' : 'pm'} in tahoe · ${HERO.clockHint}`;
 }
 
+export const SEASONS = ['winter', 'spring', 'summer', 'fall'] as const;
+export type Season = typeof SEASONS[number];
+
+/** The lake's season by month: snow from December through March, then a short spring, a long summer and fall. */
+export function seasonOf(date: Date): Season {
+  const m = date.getMonth();
+  return m === 11 || m <= 2 ? 'winter' : m <= 4 ? 'spring' : m <= 8 ? 'summer' : 'fall';
+}
+
 /** The sun's path: a high arc through the day, then the moon's low arc after dusk. In the scene's own units. */
 export function sunAt(t: number) {
   const DAY = 0.76, night = t > DAY;
@@ -34,6 +44,7 @@ export function sunAt(t: number) {
 export default function Home() {
   const root = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
+  const [season, setSeason] = useState<Season>(() => seasonOf(new Date()));
 
   useEffect(paintPaper, []);
 
@@ -141,7 +152,7 @@ export default function Home() {
     return () => io?.disconnect();
   }, []);
 
-  return <div className="cb" ref={root}>
+  return <div className="cb" ref={root} data-season={season}>
     <Plates />
     <div className="wrap">
       <header className="top">
@@ -160,6 +171,9 @@ export default function Home() {
           </div>
           <Scene label={HERO.art} />
           <div className="todbar">
+            <div className="seasons mono" role="group" aria-label={HERO.seasons}>
+              {SEASONS.map(s => <button key={s} type="button" aria-pressed={s === season} onClick={() => setSeason(s)}>{s}</button>)}
+            </div>
             <label htmlFor="c-tod" className="mono" id="c-clock">{HERO.clockHint}</label>
             <input id="c-tod" className="tod" type="range" min="0" max="1000" defaultValue="500" aria-label={HERO.slider} />
           </div>
@@ -174,21 +188,25 @@ export default function Home() {
           <div className="sec-head"><h2 className="serif" id="c-work">{WORK.title}</h2><p className="mono">{WORK.year}</p></div>
           <div className="work">
             <ul className="rows">
-              {WORK.rows.map((p, i) => <li key={p.name} className="row-item">
-                <A href={p.href} className="row" onMouseEnter={() => setActive(i)} onFocus={() => setActive(i)}>
+              {WORK.rows.map((p, i) => {
+                const inner = <>
                   <span className="mono">0{i + 1}</span>
-                  <div className="main"><h3>{p.name}<ArrowRight /></h3><span className="ln">{p.line}</span></div>
+                  <div className="main"><h3>{p.name}{p.href && <ArrowRight />}</h3><span className="ln">{p.line}</span></div>
                   <span className="mono kind">{p.kind}</span>
                   <div className="shot-m"><img src={p.img} alt={p.alt} loading="lazy" decoding="async" className={p.portrait ? 'portrait' : undefined} /></div>
-                </A>
-              </li>)}
+                </>;
+                // Work that isn't public yet has no page to go to, so its row is plain text.
+                return <li key={p.name} className="row-item">{p.href
+                  ? <A href={p.href} className="row" onMouseEnter={() => setActive(i)} onFocus={() => setActive(i)}>{inner}</A>
+                  : <div className="row" onMouseEnter={() => setActive(i)} onFocus={() => setActive(i)}>{inner}</div>}</li>;
+              })}
             </ul>
             <figure className="preview" aria-hidden="true">
               <div className="frame">{WORK.rows.map((p, i) => <img key={p.name} src={p.img} alt="" decoding="async" className={[p.portrait && 'portrait', i === active && 'on'].filter(Boolean).join(' ')} />)}</div>
               <figcaption className="mono">{WORK.rows[active].caption}</figcaption>
             </figure>
           </div>
-          <p className="also">Also: {WORK.also.map(a => <span key={a.name}><A href={a.href} className="link">{a.name}</A>, {a.line}.</span>)}</p>
+          <p className="also">Also: {WORK.also.map((a, i) => <span key={a.name}>{i > 0 && ' '}{a.href ? <A href={a.href} className="link">{a.name}</A> : a.name}, {a.line}.</span>)}</p>
         </section>
 
         <section className="about" id="about" aria-labelledby="c-about">
