@@ -9,7 +9,7 @@ import { WORK_IDS } from './routes';
 
 export const ORIGIN = 'https://brycerambach.com';
 /** Bumped when the pictures change, so link previews fetch the new ones. */
-const V = 'e3';
+const V = 'c1';
 
 export type PageMeta = {
   /** Where the page's HTML goes in the build. */
@@ -33,8 +33,8 @@ export const HOME_META: PageMeta = {
   path: '/',
   title: NAME,
   description: HOME_DESCRIPTION,
-  image: `/og/home-look-d.jpg?v=${V}`,
-  imageAlt: 'Bryce Rambach’s home page: “i build tools for ai agents.” above an engraving of hills and pines over still water, with a blue sun rising behind the far ridge',
+  image: `/og/home-cobalt.jpg?v=${V}`,
+  imageAlt: 'Bryce Rambach’s home page: his name and “I design software, then build it myself.” over a cobalt engraving of a Lake Tahoe shoreline with pines, mountains, a dock and the sun over the water',
 };
 
 export const PROJECT_META: PageMeta[] = WORK_IDS.map(id => {

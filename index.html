@@ -57,8 +57,11 @@
             link.href = href;
             document.head.appendChild(link);
           });
-          root.style.background = '#f3eee3';
-          if (meta) meta.setAttribute('content', '#f3eee3');
+          // The home and Dervo's page are on the cobalt look's warm paper (src/site/cobalt/cobalt.css); the other
+          // project pages keep the cream.
+          var paper = path === '' || path === '/projects/dervo' ? '#f6f3ec' : '#f3eee3';
+          root.style.background = paper;
+          if (meta) meta.setAttribute('content', paper);
           return;
         }
         var raw = q.get('hour'), m = raw && /^(\d{1,2})(?::(\d{2}))?$/.exec(raw), now = new Date();
