@@ -35,7 +35,7 @@ export const STORIES: Record<StoryId, Story> = {
     meta: 'local tool · 2026 · live demo',
     line: 'Stop saying the same thing to your agent.',
     lead: 'Trace finds the corrections you keep repeating to your coding agent and writes them into CLAUDE.md. It reads your Claude Code and Codex sessions on your own machine, drafts one line for each habit, and keeps counting to see if the fix held.',
-    live: { href: 'https://trace-rust-three.vercel.app/fixes', label: 'Try the demo' },
+    live: { href: 'https://trace.brycerambach.com/fixes', label: 'Try the demo' },
     hero: { src: '/projects/trace/fixes.jpg', alt: 'Trace fixes: "4 habits worth writing down." above "How to run tests", three times the agent was told to use pnpm vitest run, and the CLAUDE.md line drafted from them', caption: 'trace · fixes · made up sessions', w: 1600, h: 1125, phone: { src: '/projects/trace/fixes-phone.jpg', w: 780, h: 1500 } },
     facts: [
       { label: 'what it reads', value: 'Claude Code and Codex session files, on your machine' },
@@ -68,7 +68,7 @@ export const STORIES: Record<StoryId, Story> = {
     meta: 'chrome extension · 2026 · live',
     line: 'How does that site feel so good?',
     lead: 'easeprint is a Chrome extension that reads how the page you\'re on moves. It collects the curves and durations the site actually uses, draws them as one print, and lets you copy them straight into your code.',
-    live: { href: 'https://easeprint.vercel.app', label: 'Get easeprint' },
+    live: { href: 'https://easeprint.brycerambach.com', label: 'Get easeprint' },
     hero: { src: '/projects/easeprint/home.jpg', alt: 'The easeprint site: "How does that site feel so good?" beside the side panel reading stripe.com, its motion drawn as a fingerprint over a list of tiers with their curves and durations', caption: 'easeprint · the panel reading stripe.com', w: 1600, h: 1298, phone: { src: '/projects/easeprint/home-phone.jpg', w: 780, h: 1170 } },
     facts: [
       { label: 'what it reads', value: 'CSS transitions and animations, Web Animations, and JavaScript motion fitted back to a curve from its frames' },
