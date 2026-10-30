@@ -1,14 +1,18 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { PROJECT_META } from '../meta';
 import { DERVO, NAME } from './copy';
 import DervoDemo from './DervoDemo';
 import { A, ArrowLeft, ArrowRight, paintPaper } from './parts';
+import { useEntrance } from '../useEntrance';
+import '../motion.css';
 import './cobalt.css';
 
 /* Dervo's page in the cobalt look: one calm column, the app's Home rebuilt in HTML rising in under the headline, and
    the catalog's honest account of where it stands. */
 
 export default function DervoPage() {
+  const root = useRef<HTMLDivElement>(null);
+  useEntrance(root, 'Alegreya');
   useEffect(() => {
     const unpaint = paintPaper(), title = document.title;
     document.title = PROJECT_META.find(p => p.path === '/projects/dervo')!.title;
@@ -16,7 +20,7 @@ export default function DervoPage() {
     return () => { unpaint(); document.title = title; };
   }, []);
 
-  return <div className="cb">
+  return <div className="cb" ref={root}>
     <div className="wrap project">
       <header className="top">
         <a href="/#work" className="back"><ArrowLeft />{DERVO.back}</a>
@@ -31,7 +35,7 @@ export default function DervoPage() {
           <p className="lead">{DERVO.lead}</p>
         </section>
 
-        <figure className="wide rise">
+        <figure className="wide rise" data-enter data-handover="dervo">
           <DervoDemo label={DERVO.demo} />
           <figcaption className="mono">{DERVO.demoCaption}</figcaption>
         </figure>

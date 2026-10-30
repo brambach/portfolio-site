@@ -679,10 +679,14 @@ html[data-arc="dark"] .day-clock {
 @view-transition {
   navigation: auto;
 }
-::view-transition-old(root),
+/* Leaving is quicker than arriving: the old page gets out of the way, then the new one comes up. */
+::view-transition-old(root) {
+  animation-duration: 0.18s;
+  animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
+}
 ::view-transition-new(root) {
   animation-duration: 0.45s;
-  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
 }
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root),

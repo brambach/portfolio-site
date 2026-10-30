@@ -11,7 +11,8 @@
   --news: #fbf3df; --card: #fffaf0; --ink: #1f1b16; --body: #2e2922; --soft: #4f473c;
   --orange: #e8742a; --yellow: #f8d45c; --red: #c9402a; --purple: #6f56a0; --green: #4f7a2c;
   --hand: 'Patrick Hand', 'Comic Sans MS', system-ui, sans-serif; --letter: 'Patrick Hand SC', 'Patrick Hand', system-ui, sans-serif;
-  --boing: cubic-bezier(.34, 1.8, .5, 1); --ease: cubic-bezier(.2, .7, .1, 1);
+  /* The site's motion (../motion.css) with the dial turned up: a comic's spring overshoots harder than the house one. */
+  --boing: cubic-bezier(.34, 1.8, .5, 1); --ease: var(--m-quick);
   --wob: 18px 6px 22px 5px / 6px 20px 5px 18px; --wob2: 6px 22px 5px 16px / 20px 6px 18px 5px;
   min-height: 100svh; color: var(--ink); font-family: var(--hand); font-size: 19px; line-height: 1.5; -webkit-font-smoothing: antialiased;
   background-color: var(--news);
@@ -28,7 +29,7 @@
 .pk .letter { font-family: var(--letter); }
 .pk .label { font-family: var(--letter); font-size: 15px; letter-spacing: .03em; color: var(--soft); }
 .pk .link { background-image: linear-gradient(var(--orange), var(--orange)); background-size: 100% 3px; background-repeat: no-repeat; background-position: 0 92%; transition: background-size .35s var(--boing), color .2s; }
-.pk .link:hover { background-size: 100% 40%; }
+@media (hover: hover) { .pk .link:hover { background-size: 100% 40%; } }
 
 .pk .top { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding-block: 18px 0; }
 .pk .top .name { font-size: 26px; }
@@ -58,7 +59,7 @@
 .pk .sfx.go { animation: pk-sfx .9s var(--boing) both; }
 .pk .hintbar { display: flex; justify-content: flex-end; align-items: center; gap: 14px; margin-top: 16px; flex-wrap: wrap; }
 .pk .hint { font: inherit; font-family: var(--letter); font-size: 16px; color: var(--ink); background: var(--card); border: 2.5px solid var(--ink); border-radius: var(--wob2); box-shadow: 3px 4px 0 var(--ink); padding: 6px 14px 4px; cursor: pointer; transition: transform .25s var(--boing), box-shadow .25s var(--boing); }
-.pk .hint:hover { transform: translate(-1px, -2px) rotate(-1deg); box-shadow: 4px 6px 0 var(--ink); }
+@media (hover: hover) { .pk .hint:hover { transform: translate(-1px, -2px) rotate(-1deg); box-shadow: 4px 6px 0 var(--ink); } }
 .pk .hint:active { transform: translate(2px, 3px) scale(.97); box-shadow: 1px 1px 0 var(--ink); }
 
 /* the motion: letters drop in and squash, things boing */
@@ -104,6 +105,10 @@
 .pk .pop.seen { opacity: 1; transform: rotate(var(--tilt, 0deg)); animation: pk-in .7s var(--boing) backwards; }
 @keyframes pk-in { from { opacity: 0; transform: scale(.88) rotate(-2deg); } to { opacity: 1; transform: rotate(var(--tilt, 0deg)); } }
 
+/* Coming back home: already printed, so it's simply there. */
+.pk.again .ch, .pk.again .hero-balloon, .pk.again .pop.seen { animation: none; }
+.pk.again .pop { opacity: 1; transform: rotate(var(--tilt, 0deg)); }
+
 /* home sections */
 .pk .now { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding-block: 56px 0; }
 .pk .big-balloon { max-width: 760px; font-size: clamp(19px, 2.1vw, 23px); padding: 26px 34px; border-radius: 38px 44px 40px 36px / 44px 38px 42px 40px; }
@@ -115,7 +120,8 @@
 .pk .work-panel { display: flex; flex-direction: column; gap: 14px; height: 100%; box-sizing: border-box; padding: 14px; transition: transform .45s var(--boing), box-shadow .45s var(--boing); }
 .pk .cell:nth-child(2n) .work-panel { --tilt: .6deg; }
 .pk .cell:nth-child(2n+1) .work-panel { --tilt: -.5deg; }
-.pk .work-panel:hover, .pk .work-panel:focus-visible { transform: translate(-2px, -5px) rotate(calc(var(--tilt, 0deg) * -2)); box-shadow: 8px 11px 0 var(--ink); }
+.pk .work-panel:focus-visible { transform: translate(-2px, -5px) rotate(calc(var(--tilt, 0deg) * -2)); box-shadow: 8px 11px 0 var(--ink); }
+@media (hover: hover) { .pk .work-panel:hover { transform: translate(-2px, -5px) rotate(calc(var(--tilt, 0deg) * -2)); box-shadow: 8px 11px 0 var(--ink); } }
 .pk .work-panel:active { transform: translate(3px, 3px) scale(.985); box-shadow: 2px 2px 0 var(--ink); transition-duration: .1s; }
 .pk .shot { display: block; aspect-ratio: 16/10; overflow: hidden; border: 2.5px solid var(--ink); border-radius: 8px 4px 10px 3px; background: #efe2c4; }
 .pk .wide-cell .shot { aspect-ratio: 16/8; }
@@ -125,7 +131,7 @@
 .pk .words h3 { font-size: 30px; line-height: 1.1; display: flex; align-items: center; gap: 10px; }
 .pk .words .arrow path { stroke: var(--ink); stroke-width: 2.2; }
 .pk .work-panel .arrow { transition: transform .4s var(--boing); }
-.pk .work-panel:hover .arrow { transform: translateX(6px); }
+@media (hover: hover) { .pk .work-panel:hover .arrow { transform: translateX(6px); } }
 .pk .words .ln { font-size: 19px; line-height: 1.45; color: var(--body); }
 .pk .words .label { margin-top: 6px; }
 .pk .also { margin-top: 36px; font-size: 19px; color: var(--soft); max-width: 720px; }
@@ -148,7 +154,7 @@
 .pk .project { padding-block: 18px 0; }
 .pk .back { display: inline-flex; align-items: center; gap: 10px; font-family: var(--letter); font-size: 18px; }
 .pk .back svg { transition: transform .4s var(--boing); }
-.pk .back:hover svg { transform: translateX(-5px); }
+@media (hover: hover) { .pk .back:hover svg { transform: translateX(-5px); } }
 .pk .p-head { max-width: 760px; margin: 0 auto; padding-top: 64px; display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
 .pk .p-head h1 { font-size: clamp(72px, 11vw, 132px); line-height: .9; transform-origin: 50% 100%; animation: pk-drop .9s var(--ease) both; }
 .pk .p-head .balloon { font-size: clamp(22px, 2.8vw, 30px); animation: pk-pop .7s var(--boing) .5s both; }
@@ -169,7 +175,7 @@
 .pk .next { display: inline-flex; align-items: center; gap: 14px; }
 .pk .next .letter { font-size: 44px; line-height: 1; }
 .pk .next svg { transition: transform .4s var(--boing); }
-.pk .next:hover svg { transform: translateX(6px); }
+@media (hover: hover) { .pk .next:hover svg { transform: translateX(6px); } }
 
 @media (max-width: 819px) {
   .pk .strip { grid-template-columns: minmax(0, 1fr); gap: 24px; }

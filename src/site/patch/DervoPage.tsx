@@ -1,9 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { PROJECT_META } from '../meta';
 import { DERVO, NAME } from '../cobalt/copy';
 import DervoDemo from '../cobalt/DervoDemo';
 import { A, ArrowLeft, ArrowRight } from '../cobalt/parts';
 import { paintNewsprint } from './parts';
+import { useEntrance } from '../useEntrance';
+import '../motion.css';
 import '../cobalt/cobalt.css';
 import './patch.css';
 
@@ -11,6 +13,8 @@ import './patch.css';
    panel, and the same honest account of where it stands. The demo keeps its cobalt styles, so the page loads both. */
 
 export default function DervoPage() {
+  const root = useRef<HTMLDivElement>(null);
+  useEntrance(root, 'Patrick Hand SC');
   useEffect(() => {
     const unpaint = paintNewsprint(), title = document.title;
     document.title = PROJECT_META.find(p => p.path === '/projects/dervo')!.title;
@@ -18,7 +22,7 @@ export default function DervoPage() {
     return () => { unpaint(); document.title = title; };
   }, []);
 
-  return <div className="pk">
+  return <div className="pk" ref={root}>
     <div className="wrap project">
       <header className="top">
         <a href="/#work" className="back"><ArrowLeft />{DERVO.back}</a>
@@ -26,14 +30,14 @@ export default function DervoPage() {
       </header>
 
       <main>
-        <section className="p-head" aria-labelledby="pk-dervo">
+        <section className="p-head" aria-labelledby="pk-dervo" data-enter>
           <p className="caption">{DERVO.meta}</p>
           <h1 className="letter" id="pk-dervo">{DERVO.name}</h1>
           <p className="balloon">{DERVO.line}</p>
           <p className="lead">{DERVO.lead}</p>
         </section>
 
-        <figure className="wide panel rise">
+        <figure className="wide panel rise" data-enter data-handover="dervo">
           <div className="cb"><DervoDemo label={DERVO.demo} /></div>
           <figcaption className="label">{DERVO.demoCaption}</figcaption>
         </figure>

@@ -57,9 +57,16 @@
             link.href = href;
             document.head.appendChild(link);
           });
-          // The home and Dervo's page are on the cobalt look's warm paper (src/site/cobalt/cobalt.css); the other
-          // project pages keep the cream.
-          var paper = path === '' || path === '/projects/dervo' ? '#f6f3ec' : '#f3eee3';
+          // The home's page chunk, so the first screen's code comes down alongside the app's.
+          if (path === '') [/* home-chunks */].forEach(function (href) {
+            var link = document.createElement('link');
+            link.rel = 'modulepreload';
+            link.href = href;
+            document.head.appendChild(link);
+          });
+          // The home and Dervo's page are on the paper of the look they wear (src/site/look.ts, filled in by the
+          // build); the other project pages keep the cream.
+          var paper = path === '' || path === '/projects/dervo' ? /* home-paper */'#f6f3ec' : '#f3eee3';
           root.style.background = paper;
           if (meta) meta.setAttribute('content', paper);
           return;
