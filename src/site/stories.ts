@@ -101,7 +101,7 @@ export const STORIES: Record<StoryId, Story> = {
     meta: 'trail forecast · 2026 · live',
     line: 'A surf forecast for Tahoe trails.',
     lead: 'Every morning dryline pulls public snow, rain and forecast data and makes a call on 20 trails. Each reason links to its source, and for every muddy or snowy trail it says the day it should dry out.',
-    live: { href: 'https://dryline-ten.vercel.app', label: 'Open dryline' },
+    live: { href: 'https://dryline.brycerambach.com', label: 'Open dryline' },
     hero: { src: '/projects/dryline/today.jpg', alt: 'dryline today: "18 of 20 trails are muddy today. Most dry by Monday." over an ink engraving of the basin with every trail at its high point and the snow line across it', caption: 'dryline today · drag the days and the snow line moves', w: 1600, h: 1125, phone: { src: '/projects/dryline/today-phone.jpg', w: 780, h: 1500 } },
     facts: [
       { label: 'what it reads', value: 'Public snow, rain and NWS forecast data, every morning' },
