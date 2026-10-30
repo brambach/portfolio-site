@@ -122,7 +122,7 @@ export const STORIES: Record<StoryId, Story> = {
       title: 'Where it stands',
       body: [
         'It\'s live and makes a new call every morning.',
-        'Reports from riders at the trailhead and a morning note for the trails you pick are built but not open yet. Once they are, the reports become the ground truth the forecast gets scored against.',
+        'Riders can send a report from the trailhead, and you can get a morning email for the trails you pick. The reports are the ground truth the forecast gets scored against.',
       ],
     },
     description: 'A surf forecast for Tahoe trails. Every morning dryline makes a call on 20 trails from public snow, rain and forecast data, with a source for every reason and the day each muddy trail should dry out.',
