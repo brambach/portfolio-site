@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { ABOUT, EMAIL, FOOTER, HERO, NAME, NAV, NOW, WORK } from './copy';
 import { FootArt, Plates, Scene } from './Engraving';
 import { A, ArrowRight, paintPaper } from './parts';
+import { useEntrance } from '../useEntrance';
+import '../motion.css';
 import './cobalt.css';
 
 /* The home page: the name settles over an engraved Tahoe scene that follows the visitor's clock, and the sun can be
@@ -36,6 +38,8 @@ export default function Home() {
   const [active, setActive] = useState(0);
 
   useEffect(paintPaper, []);
+  // The first screen waits for the serif it's set in, so the name never settles in Georgia and then jumps.
+  useEntrance(root, 'Alegreya');
 
   // The sun and the time of day.
   useEffect(() => {
@@ -150,11 +154,11 @@ export default function Home() {
       </header>
 
       <main>
-        <section className="hero" id="c-hero" aria-labelledby="c-name">
+        <section className="hero" id="c-hero" aria-labelledby="c-name" data-enter>
           <div className="hero-copy" id="c-heroCopy">
             <h1 className="serif" id="c-name">
               <span className="cb-vh">{NAME}</span>
-              {[...NAME].map((c, i) => <span key={i} className="ch" aria-hidden="true" style={{ animationDelay: `${(0.15 + i * 0.045).toFixed(3)}s` }}>{c === ' ' ? ' ' : c}</span>)}
+              {[...NAME].map((c, i) => <span key={i} className="ch" aria-hidden="true" style={{ animationDelay: `${(0.1 + i * 0.04).toFixed(2)}s` }}>{c === ' ' ? ' ' : c}</span>)}
             </h1>
             <p className="serif-i line line-in">{HERO.line}<svg className="under eng" viewBox="0 0 300 12" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path pathLength={1} d="M2 8 C60 3 120 10 180 6 S270 4 298 7" fill="none" strokeWidth="1.4" strokeLinecap="round" /></svg></p>
           </div>

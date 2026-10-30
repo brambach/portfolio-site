@@ -1,0 +1,32 @@
+/* The site's motion, in one place. Both looks (cobalt and the pumpkin patch) move by the same rules and spend these
+   values; a look turns the dials (how far a thing overshoots, how long a stagger runs) but never adds a new kind of
+   move. The thinking behind it is in docs/motion.md.
+
+   Arrive   content landing on the page. Rationed: one per screen, and it plays once.
+   Spring   something with character answering you: a pumpkin, the sun, an arrow. Overshoots and settles.
+   Quick    hover, focus, a small state change.
+   Press    the moment a finger or click lands.
+   Leave    anything going away. Faster than it came.
+   Drift    untouched, looping. Long enough that a cycle is never seen whole. */
+
+:root {
+  --m-arrive: cubic-bezier(.19, 1, .22, 1);
+  --t-arrive: .9s;
+  --m-spring: cubic-bezier(.2, 1.4, .4, 1);
+  --t-spring: .45s;
+  --m-quick: cubic-bezier(.2, .7, .1, 1);
+  --t-quick: .22s;
+  --t-press: .12s;
+  --m-leave: cubic-bezier(.4, 0, 1, 1);
+  --t-leave: .18s;
+  --m-drift: ease-in-out;
+  /* A wave, not a queue: past about 80ms a stagger reads as things waiting their turn. */
+  --t-stagger: 40ms;
+  /* A pen accelerates into a stroke and eases out of it: line art draws on this, never on the arrive curve. */
+  --m-ink: cubic-bezier(.45, .05, .2, 1);
+}
+
+/* Nothing in the first screen moves until its type is in. A page holds its entrance (class "held") until the faces
+   it's lettered in have loaded, or a short wait runs out, so the name never starts dropping in a fallback face and
+   jumps when the real one lands. See useEntrance.ts. */
+.held [data-enter], .held [data-enter] * { animation-play-state: paused !important; }

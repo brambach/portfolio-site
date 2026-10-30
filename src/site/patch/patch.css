@@ -11,7 +11,8 @@
   --news: #fbf3df; --card: #fffaf0; --ink: #1f1b16; --body: #2e2922; --soft: #4f473c;
   --orange: #e8742a; --yellow: #f8d45c; --red: #c9402a; --purple: #6f56a0; --green: #4f7a2c;
   --hand: 'Patrick Hand', 'Comic Sans MS', system-ui, sans-serif; --letter: 'Patrick Hand SC', 'Patrick Hand', system-ui, sans-serif;
-  --boing: cubic-bezier(.34, 1.8, .5, 1); --ease: cubic-bezier(.2, .7, .1, 1);
+  /* The site's motion (../motion.css) with the dial turned up: a comic's spring overshoots harder than the house one. */
+  --boing: cubic-bezier(.34, 1.8, .5, 1); --ease: var(--m-quick);
   --wob: 18px 6px 22px 5px / 6px 20px 5px 18px; --wob2: 6px 22px 5px 16px / 20px 6px 18px 5px;
   min-height: 100svh; color: var(--ink); font-family: var(--hand); font-size: 19px; line-height: 1.5; -webkit-font-smoothing: antialiased;
   background-color: var(--news);

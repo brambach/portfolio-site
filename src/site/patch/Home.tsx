@@ -4,6 +4,8 @@ import { A, ArrowRight } from '../cobalt/parts';
 import { FootArt, Leaf, Plates, Scene } from './Art';
 import { PATCH } from './copy';
 import { paintNewsprint } from './parts';
+import { useEntrance } from '../useEntrance';
+import '../motion.css';
 import './patch.css';
 
 /* The home page as a Sunday comic: the name is lettered into a title box over a pumpkin patch at dusk, and the
@@ -22,10 +24,37 @@ export function replay(el: Element, cls: string) {
   el.classList.add(cls);
 }
 
+/** The boil: the ink swaps between three wobble filters about eight times a second while it's on screen. */
+function startBoil(el: HTMLElement) {
+  if (reduced()) return;
+  const groups = [el.querySelector('#pk-ink')!, el.querySelector('#pk-footInk')!];
+  const shown = new Set<Element>();
+  let i = 0;
+  const tick = setInterval(() => {
+    if (document.hidden) return;
+    i = (i + 1) % 3;
+    for (const g of groups) if (shown.has(g)) g.setAttribute('filter', `url(#pk-b${i})`);
+  }, 125);
+  let io: IntersectionObserver | undefined;
+  if (typeof IntersectionObserver === 'function') {
+    io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? shown.add(e.target) : shown.delete(e.target)));
+    groups.forEach(g => io!.observe(g));
+  } else groups.forEach(g => shown.add(g));
+  return () => { clearInterval(tick); io?.disconnect(); };
+}
+
 export default function Home() {
   const root = useRef<HTMLDivElement>(null);
 
   useEffect(paintNewsprint, []);
+
+  // The first screen waits for its lettering, then the name drops in. The boil only starts once the name has landed:
+  // it repaints the whole drawing eight times a second, and on a phone that would fight the letters for frames.
+  useEntrance(root, 'Patrick Hand SC', () => {
+    let stop: (() => void) | undefined;
+    const t = setTimeout(() => { stop = startBoil(root.current!); }, 1700);
+    return () => { clearTimeout(t); stop?.(); };
+  });
 
   // Tapping a pumpkin bounces it with a sound effect; three taps on the big one light its face.
   useEffect(() => {
@@ -62,25 +91,6 @@ export default function Home() {
     scene.addEventListener('pointerdown', down);
     btn.addEventListener('click', all);
     return () => { scene.removeEventListener('pointerdown', down); btn.removeEventListener('click', all); };
-  }, []);
-
-  // The boil: the ink swaps between three wobble filters about eight times a second while the hero is on screen.
-  useEffect(() => {
-    if (reduced()) return;
-    const el = root.current!, groups = [el.querySelector('#pk-ink')!, el.querySelector('#pk-footInk')!];
-    const shown = new Set<Element>();
-    let i = 0;
-    const tick = setInterval(() => {
-      if (document.hidden) return;
-      i = (i + 1) % 3;
-      for (const g of groups) if (shown.has(g)) g.setAttribute('filter', `url(#pk-b${i})`);
-    }, 125);
-    let io: IntersectionObserver | undefined;
-    if (typeof IntersectionObserver === 'function') {
-      io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? shown.add(e.target) : shown.delete(e.target)));
-      groups.forEach(g => io!.observe(g));
-    } else groups.forEach(g => shown.add(g));
-    return () => { clearInterval(tick); io?.disconnect(); };
   }, []);
 
   // Scroll: the patch sinks a little as you leave it; the footer's bats take off as you arrive.
@@ -126,7 +136,7 @@ export default function Home() {
       </header>
 
       <main>
-        <section className="hero panel" id="pk-hero" aria-labelledby="pk-name">
+        <section className="hero panel" id="pk-hero" aria-labelledby="pk-name" data-enter>
           <Scene label={PATCH.art} />
           <div className="leaves" aria-hidden="true">{LEAVES.map((c, i) => <span key={i} className="leaf" style={{ left: `${6 + i * 12}%`, animationDelay: `${-i * 1.7}s`, animationDuration: `${9 + (i % 3) * 2.5}s` }}><Leaf c={c} /></span>)}</div>
           <div className="hero-copy" id="pk-heroCopy">
