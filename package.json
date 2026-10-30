@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "npm run test:guard && vite build",
-    "test:guard": "vitest run src/repo-names.test.ts src/site/Home.test.tsx src/site/cobalt/cobalt.test.tsx src/site/patch/patch.test.tsx",
+    "test:guard": "vitest run src/repo-names.test.ts src/site/Home.test.tsx src/site/cobalt/cobalt.test.tsx src/site/patch/patch.test.tsx src/site/stories.test.tsx",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",

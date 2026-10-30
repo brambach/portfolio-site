@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { HOME_META, headTags, NOT_FOUND_META, PAGES, PROJECT_META, sitemap, withMeta } from './meta';
-import { WORK_IDS } from './routes';
+import { STORY_IDS, WORK_IDS } from './routes';
 
 const DASHES = /[\u2013\u2014]/;
 const root = process.cwd();
@@ -67,7 +67,7 @@ describe('vercel.json', () => {
   const config = JSON.parse(readFileSync(path.join(root, 'vercel.json'), 'utf8')) as {
     redirects: { source: string; destination: string }[]; rewrites: { source: string; destination: string }[];
   };
-  const ids = WORK_IDS.join('|');
+  const ids = WORK_IDS.join('|'), pages = [...WORK_IDS, ...STORY_IDS].join('|');
 
   it('sends the motion lab to the site, a lab project to the same project first', () => {
     expect(config.redirects.map(r => [r.source, r.destination])).toEqual([
@@ -78,7 +78,7 @@ describe('vercel.json', () => {
   });
 
   it('serves each project’s own page and nothing else under /projects, so the rest gets the not-found page', () => {
-    expect(config.rewrites).toContainEqual({ source: `/projects/:id(${ids})`, destination: '/projects/:id.html' });
+    expect(config.rewrites).toContainEqual({ source: `/projects/:id(${pages})`, destination: '/projects/:id.html' });
     expect(config.rewrites.some(r => r.source === '/projects/:path*' || r.source.startsWith('/lab'))).toBe(false);
   });
 });

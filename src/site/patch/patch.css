@@ -199,3 +199,7 @@
   .pk .leaves { display: none; }
   .pk .pump.lit .face { opacity: 1; }
 }
+
+/* a product page's way to the live product */
+.pk .p-head .live { display: inline-flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 18px; }
+.pk .p-head .live .arrow path { stroke: var(--ink); stroke-width: 2.2; }
