@@ -2,11 +2,12 @@ import { lazy, Suspense } from 'react';
 import type { Route } from './routes';
 
 /* The site: the home page at /, a page per project at /projects/<id>, and a page for addresses that don't exist.
-   Each is its own chunk, so a project page doesn't load the home page's motion and the other way round. The home and
-   Dervo's page are in the cobalt look (src/site/cobalt); the other projects keep their pages for now. */
+   Each is its own chunk, so a project page doesn't load the home page's motion and the other way round. For Halloween
+   the home and Dervo's page wear the pumpkin patch look (src/site/patch); the cobalt look (src/site/cobalt) stays put
+   to switch back to. The other projects keep their pages for now. */
 
-const Home = lazy(() => import('./cobalt/Home'));
-const DervoPage = lazy(() => import('./cobalt/DervoPage'));
+const Home = lazy(() => import('./patch/Home'));
+const DervoPage = lazy(() => import('./patch/DervoPage'));
 const WorkPage = lazy(() => import('./WorkPage'));
 const NotFound = lazy(() => import('./NotFound'));
 
