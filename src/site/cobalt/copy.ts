@@ -29,7 +29,7 @@ export const WORK: { title: string; year: string; rows: Work[]; also: { name: st
   year: '2026',
   rows: [
     { name: 'Dervo', kind: 'mac app', href: '/projects/dervo', img: '/cobalt/dervo-home.jpg', alt: 'Dervo Home, showing what moved while you were away', line: 'Runs Claude Code and Codex in your projects, then tells you where they left off.', caption: 'dervo · home, with example projects · stopped oct 2026' },
-    { name: 'Trace', kind: 'local tool', href: 'https://github.com/brambach/trace', img: '/cobalt/trace-patterns.jpg', alt: 'Trace patterns page: a prompt length chart and how often prompts include a file path or an error', line: 'Makes every Claude Code prompt searchable and shows how your prompting changes.', caption: 'trace · patterns · made-up sessions' },
+    { name: 'Trace', kind: 'local tool', href: '/projects/trace', img: '/projects/trace/card.jpg', alt: 'Trace today: "You corrected the agent once today." over a strip of the day\'s prompts, with the correction in red', line: 'Finds the corrections you keep repeating to your coding agent and writes them into CLAUDE.md.', caption: 'trace · live demo · made up sessions' },
     { name: 'easeprint', kind: 'chrome extension', href: '/projects/easeprint', img: '/projects/easeprint/card.jpg', alt: 'easeprint: "How does that site feel so good?" beside its side panel reading stripe.com as a fingerprint', line: 'A Chrome extension that reads how any site moves and copies the motion into your code.', caption: 'easeprint · live · the stripe.com print' },
     { name: 'dryline', kind: 'trail forecast', href: '/projects/dryline', img: '/projects/dryline/card.jpg', alt: 'dryline today: 18 of 20 trails muddy, most dry by Monday, over an ink engraving of the basin and its trails', line: 'A surf forecast for Tahoe trails. It says which ones are dry today, and the day the muddy ones will be.', caption: 'dryline · live · no AI in the call' },
     { name: 'comehome', kind: 'lost pet network', href: '/projects/comehome', img: '/projects/comehome/card.jpg', alt: 'A comehome lost page for Juniper, a made up dog, with her latest sighting and an "I saw this pet" button', line: 'Turns a lost pet flyer into a network for a town, with a trail on an ink map that grows with every sighting.', caption: 'comehome · live demo · made up pets' },
@@ -91,5 +91,5 @@ export const DERVO = {
     ],
   },
   back: 'All work',
-  next: { label: 'next', name: 'Trace', href: 'https://github.com/brambach/trace' },
+  next: { label: 'next', name: 'Trace', href: '/projects/trace' },
 };

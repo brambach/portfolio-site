@@ -10,7 +10,7 @@
 export const WORK_IDS = ['dervo', 'arro', 'lucid', 'integration-portal', 'agentsky'] as const;
 export type WorkId = (typeof WORK_IDS)[number];
 /** The projects that grew into products, with their pages in stories.ts. */
-export const STORY_IDS = ['easeprint', 'dryline', 'comehome'] as const;
+export const STORY_IDS = ['trace', 'easeprint', 'dryline', 'comehome'] as const;
 export type StoryId = (typeof STORY_IDS)[number];
 
 /** Pages from before this design that are still linked from it (the drive and the road, under "Side quests") or

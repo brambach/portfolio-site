@@ -29,6 +29,39 @@ export type Story = {
 };
 
 export const STORIES: Record<StoryId, Story> = {
+  trace: {
+    id: 'trace',
+    name: 'Trace',
+    meta: 'local tool · 2026 · live demo',
+    line: 'Stop saying the same thing to your agent.',
+    lead: 'Trace finds the corrections you keep repeating to your coding agent and writes them into CLAUDE.md. It reads your Claude Code and Codex sessions on your own machine, drafts one line for each habit, and keeps counting to see if the fix held.',
+    live: { href: 'https://trace-rust-three.vercel.app/fixes', label: 'Try the demo' },
+    hero: { src: '/projects/trace/fixes.jpg', alt: 'Trace fixes: "4 habits worth writing down." above "How to run tests", three times the agent was told to use pnpm vitest run, and the CLAUDE.md line drafted from them', caption: 'trace · fixes · made up sessions', w: 1600, h: 1125, phone: { src: '/projects/trace/fixes-phone.jpg', w: 780, h: 1500 } },
+    facts: [
+      { label: 'what it reads', value: 'Claude Code and Codex session files, on your machine' },
+      { label: 'writes', value: 'One CLAUDE.md line per habit, as a local edit or a PR' },
+    ],
+    source: { href: 'https://github.com/brambach/trace', label: 'GitHub' },
+    does: {
+      title: 'What it does',
+      items: [
+        ['Finds the repeats.', 'Every time you correct the agent it gets counted, and when the same correction shows up across sessions it becomes a fix with the quotes behind it.'],
+        ['Writes the line.', 'Each fix is one line for CLAUDE.md. Apply it as a local edit, or as a PR from a throwaway worktree.'],
+        ['Checks it held.', 'After you apply one it keeps counting, so you can see if the agent stopped needing the correction.'],
+      ],
+    },
+    call: { title: 'The call', body: 'No model writes anything. It counts and quotes, so every fix is something you actually said.' },
+    shot: { src: '/projects/trace/replay.jpg', alt: 'A Trace replay of one session on an ink strip, with the correction "no, pnpm vitest run" underlined in red and the fix Trace drafted from it', caption: 'a session replayed · the correction in red pencil', w: 1600, h: 1404 },
+    stands: {
+      title: 'Where it stands',
+      body: [
+        'It runs locally on your own sessions. Each Friday it writes you a letter about the week.',
+        'The demo is live with made up sessions, and nothing you click there is saved.',
+      ],
+    },
+    description: 'Trace finds the corrections you keep repeating to your coding agent and writes them into CLAUDE.md. It reads Claude Code and Codex sessions locally, quotes what you said, and checks if each fix held.',
+    og: { src: '/og/trace.jpg', alt: 'Trace fixes: "4 habits worth writing down." with the corrections behind the first one' },
+  },
   easeprint: {
     id: 'easeprint',
     name: 'easeprint',
