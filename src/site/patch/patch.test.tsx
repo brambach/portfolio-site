@@ -33,13 +33,13 @@ describe('The pumpkin patch home', () => {
     expect(screen.getByText(COPY.PATCH.lit)).toBeInTheDocument();
   });
 
-  it('lists the work in order as panels, Dervo to its own page and the rest to their source', () => {
+  it('lists the work in order as panels, Dervo to its own page, the rest to their source, and work not public yet unlinked', () => {
     render(<Home />);
     const work = within(screen.getByRole('region', { name: 'Selected work' }));
     expect(work.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(COBALT.WORK.rows.map(r => r.name));
-    const rows = work.getAllByRole('listitem').map(li => li.querySelector('a')!);
-    expect(rows.map(a => a.getAttribute('href'))).toEqual(COBALT.WORK.rows.map(r => r.href));
-    rows.forEach(a => expect(a.querySelector('img')).not.toBeNull());
+    const items = work.getAllByRole('listitem');
+    expect(items.map(li => li.querySelector('a')?.getAttribute('href') ?? null)).toEqual(COBALT.WORK.rows.map(r => r.href ?? null));
+    items.forEach(li => expect(li.querySelector('img')).not.toBeNull());
   });
 
   it('opens every link off the site in a new tab with rel noopener and says so, and keeps its own links in the tab', () => {

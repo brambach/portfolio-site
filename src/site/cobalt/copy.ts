@@ -15,27 +15,32 @@ export const HERO = {
   art: 'An engraving of a Lake Tahoe shoreline with pines, mountains, a dock and birds over the water. The sun can be dragged across the sky to change the time of day.',
   clockHint: 'drag the sun',
   slider: 'Time of day',
+  seasons: 'Season',
 };
 
 export const NOW = {
   label: 'now',
-  lead: "I build tools for AI agents and care a lot about how software feels. I'm 22, I finished a CS degree in May, and I'm looking for a founding or product engineer role at an early AI startup. Open to moving.",
+  lead: "I build tools for AI agents and care a lot about how software feels. Right now that's receipts, which makes an agent show its work before it calls a task done. I'm 22, I finished a CS degree in May, and I'm looking for a founding or product engineer role at an early AI startup. Open to moving.",
 };
 
-export type Work = { name: string; kind: string; href: string; img: string; alt: string; line: string; caption: string; portrait?: boolean };
+export type Work = { name: string; kind: string; href?: string; img: string; alt: string; line: string; caption: string; portrait?: boolean };
 
-export const WORK: { title: string; year: string; rows: Work[]; also: { name: string; href: string; line: string }[] } = {
+export const WORK: { title: string; year: string; rows: Work[]; also: { name: string; href?: string; line: string }[] } = {
   title: 'Selected work',
   year: '2026',
   rows: [
     { name: 'Dervo', kind: 'mac app', href: '/projects/dervo', img: '/cobalt/dervo-home.jpg', alt: 'Dervo Home, showing what moved while you were away', line: 'Runs Claude Code and Codex in your projects, then tells you where they left off.', caption: 'dervo · home, with example projects · stopped oct 2026' },
+    { name: 'receipts', kind: 'agent tool', img: '/cobalt/receipts.jpg', alt: 'A receipt from receipts lite: 106 verified, 0 unverified, each item with the check that proves it', line: "Your agent says it's done. receipts makes it show its work, with your repo's own checks as proof.", caption: 'receipts · its own receipt, from its own repo · not public yet' },
+    { name: 'tastepack', kind: 'claude code plugin', img: '/cobalt/tastepack.jpg', alt: 'A tastepack TASTE.md listing what the screenshots share, each with a count like 9 of 15', line: 'Turns the screenshots you save into a taste pack your coding agent follows. Then tests it blind.', caption: 'tastepack · from its sample pack · not public yet' },
     { name: 'Trace', kind: 'local tool', href: '/projects/trace', img: '/projects/trace/card.jpg', alt: 'Trace today: "You corrected the agent once today." over a strip of the day\'s prompts, with the correction in red', line: 'Finds the corrections you keep repeating to your coding agent and writes them into CLAUDE.md.', caption: 'trace · live demo · made up sessions' },
     { name: 'easeprint', kind: 'chrome extension', href: '/projects/easeprint', img: '/projects/easeprint/card.jpg', alt: 'easeprint: "How does that site feel so good?" beside its side panel reading stripe.com as a fingerprint', line: 'A Chrome extension that reads how any site moves and copies the motion into your code.', caption: 'easeprint · live · the stripe.com print' },
     { name: 'dryline', kind: 'trail forecast', href: '/projects/dryline', img: '/projects/dryline/card.jpg', alt: 'dryline today: 18 of 20 trails muddy, most dry by Monday, over an ink engraving of the basin and its trails', line: 'A surf forecast for Tahoe trails. It says which ones are dry today, and the day the muddy ones will be.', caption: 'dryline · live · no AI in the call' },
     { name: 'comehome', kind: 'lost pet network', href: '/projects/comehome', img: '/projects/comehome/card.jpg', alt: 'A comehome lost page for Juniper, a made up dog, with her latest sighting and an "I saw this pet" button', line: 'Turns a lost pet flyer into a network for a town, with a trail on an ink map that grows with every sighting.', caption: 'comehome · live demo · made up pets' },
     { name: 'Arro', kind: 'iphone app', href: 'https://github.com/brambach/arro', img: '/cobalt/arro-today.jpg', alt: 'Arro Today screen showing a family streak', line: 'A daily movement streak for families who live apart. A walk counts the same as a marathon.', caption: 'arro · reached testflight', portrait: true },
   ],
-  also: [],
+  also: [
+    { name: 'voice', line: 'how I write on X, written down so agents can match it or stay out of the way' },
+  ],
 };
 
 export const ABOUT = {
@@ -45,7 +50,7 @@ export const ABOUT = {
     'By day I build HR and payroll integrations as a remote employee. Alongside that I founded Dervo, a Mac app for running Claude Code and Codex side by side.',
     'I do my best work on a small team where one person owns a product from the API at the bottom to the words on the buttons.',
   ],
-  off: 'off the clock: dawn miles, clay tennis, coffee, the green 911',
+  off: 'off the clock: dawn miles, clay tennis, coffee, the green 911, a little snowboarding',
 };
 
 export const FOOTER = {

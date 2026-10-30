@@ -167,15 +167,19 @@ export default function Home() {
         <section id="work" aria-labelledby="pk-work">
           <div className="sec-head"><h2 className="caption-h" id="pk-work">{WORK.title}</h2><p className="label">{WORK.year}</p></div>
           <ul className="strip">
-            {WORK.rows.map((p, i) => <li key={p.name} className={i === 0 ? 'cell wide-cell' : 'cell'}>
-              <A href={p.href} className="panel work-panel pop">
+            {WORK.rows.map((p, i) => {
+              const inner = <>
                 <span className="caption">0{i + 1} · {p.kind}</span>
-                <div className="shot" data-handover={handover(p.href)}><img src={p.img} alt={p.alt} loading="lazy" decoding="async" className={p.portrait ? 'portrait' : undefined} /></div>
-                <div className="words"><h3 className="letter">{p.name}<ArrowRight /></h3><span className="ln">{p.line}</span><span className="label">{p.caption}</span></div>
-              </A>
-            </li>)}
+                <div className="shot" data-handover={p.href && handover(p.href)}><img src={p.img} alt={p.alt} loading="lazy" decoding="async" className={p.portrait ? 'portrait' : undefined} /></div>
+                <div className="words"><h3 className="letter">{p.name}{p.href && <ArrowRight />}</h3><span className="ln">{p.line}</span><span className="label">{p.caption}</span></div>
+              </>;
+              // Work that isn't public yet has no page to go to, so its panel isn't a link.
+              return <li key={p.name} className={i === 0 ? 'cell wide-cell' : 'cell'}>{p.href
+                ? <A href={p.href} className="panel work-panel pop">{inner}</A>
+                : <div className="panel work-panel">{inner}</div>}</li>;
+            })}
           </ul>
-          {WORK.also.length > 0 && <p className="also">Also: {WORK.also.map(a => <span key={a.name}><A href={a.href} className="link">{a.name}</A>, {a.line}.</span>)}</p>}
+          {WORK.also.length > 0 && <p className="also">Also: {WORK.also.map((a, i) => <span key={a.name}>{i > 0 && ' '}{a.href ? <A href={a.href} className="link">{a.name}</A> : a.name}, {a.line}.</span>)}</p>}
         </section>
 
         <section className="about" id="about" aria-labelledby="pk-about">

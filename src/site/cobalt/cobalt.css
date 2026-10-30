@@ -56,6 +56,20 @@
 .cb .sun.dragging { cursor: grabbing; transition: none; }
 .cb .night { transition: opacity .9s ease; }
 .cb .dragging-scene .night, .cb .dragging-scene .refl { transition: none; }
+/* seasons: the scene follows the visitor's month and the four buttons under it switch it */
+.cb .s { opacity: 0; transition: opacity 1.2s ease; pointer-events: none; }
+.cb[data-season="winter"] .s-w, .cb[data-season="spring"] .s-sp, .cb[data-season="summer"] .s-su, .cb[data-season="fall"] .s-f { opacity: 1; }
+.cb .snowfall { animation: cb-snow 30s linear infinite; }
+.cb .snowfall.s1 { animation-duration: 46s; }
+@keyframes cb-snow { from { transform: translate(0, 0); } to { transform: translate(-40px, 560px); } }
+.cb .leaf { transform-box: fill-box; transform-origin: center; animation: cb-leaf 16s linear infinite; }
+@keyframes cb-leaf { 0% { transform: translate(0, 0) rotate(0); opacity: 0; } 8% { opacity: 1; } 85% { opacity: 1; } 100% { transform: translate(-160px, 470px) rotate(540deg); opacity: 0; } }
+.cb .boat { animation: cb-sail 38s ease-in-out infinite alternate; }
+@keyframes cb-sail { to { transform: translateX(150px); } }
+.cb .seasons { display: flex; gap: 14px; }
+.cb .seasons button { appearance: none; background: none; border: 0; padding: 4px 0; cursor: pointer; font: inherit; color: var(--faint); background-image: linear-gradient(currentColor, currentColor); background-size: 0 1px; background-repeat: no-repeat; background-position: 0 100%; transition: background-size .4s var(--ease), color .3s; }
+.cb .seasons button:hover { color: var(--ink); }
+.cb .seasons button[aria-pressed="true"] { color: var(--text); background-size: 100% 1px; }
 .cb .refl { transition: transform .9s var(--ease), opacity .6s; }
 
 /* the first second, in order: the name settles letter by letter, then the line under it, while the ink draws the
