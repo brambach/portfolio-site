@@ -37,7 +37,7 @@ export default function StoryPage({ id }: { id: StoryId }) {
         </section>
 
         <figure className="wide rise" data-enter data-handover={id}>
-          <img src={s.hero.src} alt={s.hero.alt} decoding="async" width={s.hero.w} height={s.hero.h} />
+          <picture>{s.hero.phone && <source media="(max-width: 560px)" srcSet={s.hero.phone.src} width={s.hero.phone.w} height={s.hero.phone.h} />}<img src={s.hero.src} alt={s.hero.alt} decoding="async" width={s.hero.w} height={s.hero.h} /></picture>
           <figcaption className="mono">{s.hero.caption}</figcaption>
         </figure>
 
