@@ -95,6 +95,39 @@ export const STORIES: Record<StoryId, Story> = {
     description: 'A surf forecast for Tahoe trails. Every morning dryline makes a call on 20 trails from public snow, rain and forecast data, with a source for every reason and the day each muddy trail should dry out.',
     og: { src: '/og/dryline.jpg', alt: 'dryline: "18 of 20 trails are muddy today. Most dry by Monday." over an ink engraving of the basin and its trails' },
   },
+  comehome: {
+    id: 'comehome',
+    name: 'comehome',
+    meta: 'lost pet network · 2026 · live demo',
+    line: 'Bring them home.',
+    lead: 'comehome turns a lost pet flyer into a network for a town. An owner makes a page in two minutes, the neighbors near where the pet was last seen get one alert, and every sighting extends a trail on an ink map.',
+    live: { href: 'https://comehome-ochre.vercel.app/p/juniper-demo', label: 'Try the demo' },
+    hero: { src: '/projects/comehome/lost.jpg', alt: 'A comehome page for Juniper, a lost dog: last seen yesterday, latest sighting 43 minutes ago, and an "I saw this pet" button', caption: 'a lost page · juniper is made up', w: 1600, h: 975, phone: { src: '/projects/comehome/lost-phone.jpg', w: 780, h: 1500 } },
+    facts: [
+      { label: 'built with', value: 'Next.js, Postgres, MapLibre and Twilio' },
+      { label: 'the demo', value: 'Made up pets on an in-memory database' },
+    ],
+    source: { href: 'https://github.com/brambach/comehome', label: 'GitHub' },
+    does: {
+      title: 'What it does',
+      items: [
+        ['Report it any way.', 'From the page, from the QR code on the flyer, or by texting a photo to one number. No account.'],
+        ['A trail that draws itself.', 'Each sighting drops a pin and extends the trail, and the owner sees what\'s new since they last looked.'],
+        ['Found in one stroke.', 'Marking a pet found closes the route, and the page turns into a short found story. Shelters and vets get JSON and RSS feeds.'],
+      ],
+    },
+    call: { title: 'The call', body: 'The page guesses where the pet is heading and says it\'s a guess. It only knows the direction of the last few sightings, not roads, water or hills.' },
+    shot: { src: '/projects/comehome/phones.jpg', alt: 'Three comehome screens on a phone: Juniper\'s lost page, the neighbor sign up, and Mochi\'s found story', caption: 'a lost page, the neighbor sign up and a found story', w: 1600, h: 877 },
+    stands: {
+      title: 'Where it stands',
+      body: [
+        'My dog Boots came home after 51 days. That\'s why this exists.',
+        'The demo is live with made up pets, and nothing you send leaves the server.',
+      ],
+    },
+    description: 'A lost pet flyer that turns into a network for a town. comehome alerts the neighbors nearby, takes sightings from a page, a QR code or a text, and draws them as a trail on an ink map.',
+    og: { src: '/og/comehome.jpg', alt: 'comehome: a lost page for Juniper, a made up dog, with her last sighting and an "I saw this pet" button' },
+  },
 };
 
 export const storyById = (id: string | null | undefined) => (STORY_IDS as readonly string[]).includes(id ?? '') ? STORIES[id as StoryId] : null;
