@@ -5,7 +5,6 @@ export const PATCH = {
   art: 'A hand-drawn comic panel: a pumpkin patch at dusk behind a wooden fence, a big moon, bats, and a kid in a bedsheet ghost costume. Tap a pumpkin to make it bounce.',
   hint: 'tap the pumpkins',
   lit: 'the big one is lit',
-  balloon: 'Happy Halloween from the patch!',
   footArt: 'Pumpkins along the fence and a little ghost waving goodbye',
   footBalloon: 'Say hello.',
   sign: 'drawn and built by me, which is sort of the point',
