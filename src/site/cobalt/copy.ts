@@ -42,7 +42,7 @@ export const WORK: { title: string; year: string; rows: Work[]; also: { name: st
 export const ABOUT = {
   title: 'About',
   body: [
-    'I like the part of software most people skip: the second pass on a curve, the empty state, the line of copy that says what the tool didn\'t check. Most of what I build is for people running coding agents, because that\'s where I spend my own days.',
+    'I like the part of software most people skip, like the second pass on a curve or the empty state. Most of what I build is for people running coding agents, because that\'s where I spend my own days.',
     'By day I build HR and payroll integrations as a remote employee. Alongside that I founded Dervo, a Mac app for running Claude Code and Codex side by side.',
     'I do my best work on a small team where one person owns a product from the API at the bottom to the words on the buttons.',
   ],
@@ -64,7 +64,7 @@ export const DERVO = {
   meta: 'mac app · 2026 · stopped',
   name: 'Dervo',
   line: 'Run more agents than you can watch.',
-  lead: 'A Mac app for running Claude Code and Codex side by side. It tells you what finished, what\'s stuck and what needs you, so you can leave agents running and come back to a few sentences instead of four terminals.',
+  lead: 'A Mac app for running Claude Code and Codex side by side. You leave your agents running, and when you come back it gives you a few sentences instead of four terminals.',
   demo: 'Dervo Home rebuilt in HTML: a request is typed, sent, and picked up by the Live board thread',
   demoCaption: 'dervo home, rebuilt in html · example projects · loops every 12 seconds',
   facts: [
@@ -76,12 +76,12 @@ export const DERVO = {
     title: 'What it does',
     items: [
       ['One chat per project.', 'Home reads every thread, finds the right one or starts a new one, and splits a request into separate jobs by the files they touch.'],
-      ['Catch up.', '"Since you left" lists what moved, what needs your review and what\'s stuck.'],
-      ['Threads that report honestly.', 'Every run ends with what changed, what was checked, what wasn\'t, and what\'s next.'],
+      ['Catch up.', '"Since you left" shows what moved while you were away and which threads are waiting on you.'],
+      ['Threads that report honestly.', 'Every run ends with a short report, including anything it didn\'t get to test.'],
       ['Your accounts, not ours.', 'It starts the published Claude Code and Codex tools with their own sign-ins and never proxies tokens.'],
     ] as [string, string][],
   },
-  call: { title: 'The call', body: 'Status comes from the record of what each run did, not from the agent\'s account of itself. Catch up reads that record, and one request to Home finds the right thread or starts a new one.' },
+  call: { title: 'The call', body: 'Status comes from the record of what each run actually did, so Catch up never has to take the agent\'s word for it.' },
   shot: { src: '/cobalt/dervo-thread.jpg', alt: 'A Dervo thread showing a run and its report', caption: 'a thread and its run report' },
   hood: { title: 'Under the hood', body: 'A Tauri shell in Rust with signed, notarized releases and signed updates, a React interface and a Python backend that runs Claude Code and Codex. When one agent hits its usage limit, the thread can continue in the other.' },
   stands: {
