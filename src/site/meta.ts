@@ -1,6 +1,7 @@
 import { projects } from '../projects/catalog';
 import { NAME } from './content';
 import { WORK_IDS } from './routes';
+import { STORY_IDS, STORIES, type Story } from './stories';
 
 /* What each page tells search engines and link previews: its title, a description, its address and its picture.
    The build writes a copy of index.html for every page with these filled in (see vite.config.ts), so they're there
@@ -59,7 +60,15 @@ export const NOT_FOUND_META: PageMeta = {
   noindex: true,
 };
 
-export const PAGES = [HOME_META, ...PROJECT_META, NOT_FOUND_META];
+/** A product page's title, in the same shape as the project pages'. */
+export const storyTitle = (s: Story) => `${s.name.toLowerCase()}, ${NAME.toLowerCase()}`;
+
+export const STORY_META: PageMeta[] = STORY_IDS.map(id => {
+  const s = STORIES[id];
+  return { file: `projects/${id}.html`, path: `/projects/${id}`, title: storyTitle(s), description: s.description, image: `${s.og.src}?v=${V}`, imageAlt: s.og.alt };
+});
+
+export const PAGES = [HOME_META, ...PROJECT_META, ...STORY_META, NOT_FOUND_META];
 
 const attr = (text: string) => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
@@ -101,8 +110,8 @@ export function withMeta(html: string, page: PageMeta) {
   return out;
 }
 
-/** The sitemap: the home page and the project pages. */
+/** The sitemap: the home page, the project pages and the product pages. */
 export function sitemap() {
-  const urls = [HOME_META, ...PROJECT_META].map(p => `  <url><loc>${ORIGIN}${p.path}</loc></url>`);
+  const urls = [HOME_META, ...PROJECT_META, ...STORY_META].map(p => `  <url><loc>${ORIGIN}${p.path}</loc></url>`);
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
 }

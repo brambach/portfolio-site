@@ -29,7 +29,7 @@ function shotOf(id: string) {
   });
 }
 
-const idOf = (r: Route | null) => r?.name === 'project' ? r.id : null;
+const idOf = (r: Route | null) => r?.name === 'project' || r?.name === 'story' ? r.id : null;
 
 /** The route the site shows, kept in step with the address. `load` fetches a route's page before the swap, so the
  *  new page is there to hand over to. */

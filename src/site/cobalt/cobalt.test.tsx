@@ -20,12 +20,13 @@ describe('The cobalt home', () => {
     expect(screen.getByRole('slider', { name: 'Time of day' })).toBeInTheDocument();
   });
 
-  it('lists the work in order, Dervo to its own page and the rest to their source', () => {
+  it('lists the work in order, each to its own page or its source', () => {
     render(<Home />);
     const work = within(screen.getByRole('region', { name: 'Selected work' }));
-    expect(work.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(['Dervo', 'Trace', 'easeprint', 'dryline', 'Arro']);
+    expect(work.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(COPY.WORK.rows.map(r => r.name));
     const rows = work.getAllByRole('listitem').map(li => li.querySelector('a')!);
-    expect(rows.map(a => a.getAttribute('href'))).toEqual(['/projects/dervo', 'https://github.com/brambach/trace', 'https://github.com/brambach/easeprint', 'https://github.com/brambach/dryline', 'https://github.com/brambach/arro']);
+    expect(rows.map(a => a.getAttribute('href'))).toEqual(COPY.WORK.rows.map(r => r.href));
+    expect(rows[0]).toHaveAttribute('href', '/projects/dervo');
     rows.forEach(a => expect(a.querySelector('img')).not.toBeNull());
   });
 

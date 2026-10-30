@@ -2,13 +2,16 @@
    mirrors this to paint the right paper before anything loads) can decide without loading them.
 
    - /                  the home page
-   - /projects/<id>     a project's page, for the five in WORK_IDS
+   - /projects/<id>     a project's page, for the five in WORK_IDS and the products in STORY_IDS (stories.ts)
    - anything else      not found, unless it's one of the older pages main.tsx still serves (OLDER_PATHS) */
 
 /** The projects with a page, in the order the pages walk through them: the two on the home page's index
  *  first, then the rest. */
 export const WORK_IDS = ['dervo', 'arro', 'lucid', 'integration-portal', 'agentsky'] as const;
 export type WorkId = (typeof WORK_IDS)[number];
+/** The projects that grew into products, with their pages in stories.ts. */
+export const STORY_IDS = ['trace', 'easeprint', 'dryline', 'comehome'] as const;
+export type StoryId = (typeof STORY_IDS)[number];
 
 /** Pages from before this design that are still linked from it (the drive and the road, under "Side quests") or
  *  that have their own reasons to stay. main.tsx serves them as before. */
@@ -17,7 +20,7 @@ export const OLDER_PATHS = ['/work', '/drive', '/next', '/admin', '/previous', '
 export const ROAD_KEYS = ['mile'] as const;
 export const DRIVE_KEYS = ['from', 'town', 'city', 'journey', 'forest'] as const;
 
-export type Route = { name: 'home' } | { name: 'project'; id: WorkId } | { name: 'missing' };
+export type Route = { name: 'home' } | { name: 'project'; id: WorkId } | { name: 'story'; id: StoryId } | { name: 'missing' };
 
 const trim = (pathname: string) => pathname.replace(/\/+$/, '');
 
@@ -35,7 +38,9 @@ export function siteRoute(pathname: string, search = ''): Route | null {
   }
   if ((OLDER_PATHS as readonly string[]).includes(path)) return null;
   const id = workId(path);
-  return id ? { name: 'project', id } : { name: 'missing' };
+  if (id) return { name: 'project', id };
+  const story = /^\/projects\/([^/]+)$/.exec(path)?.[1];
+  return story && (STORY_IDS as readonly string[]).includes(story) ? { name: 'story', id: story as StoryId } : { name: 'missing' };
 }
 
 /** Where an address from the motion lab lives now (vercel.json says the same, so this only runs where that

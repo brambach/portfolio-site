@@ -175,7 +175,7 @@ export default function Home() {
               </A>
             </li>)}
           </ul>
-          <p className="also">Also: {WORK.also.map(a => <span key={a.name}><A href={a.href} className="link">{a.name}</A>, {a.line}.</span>)}</p>
+          {WORK.also.length > 0 && <p className="also">Also: {WORK.also.map(a => <span key={a.name}><A href={a.href} className="link">{a.name}</A>, {a.line}.</span>)}</p>}
         </section>
 
         <section className="about" id="about" aria-labelledby="pk-about">

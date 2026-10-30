@@ -213,3 +213,6 @@
   .cb .dv-type { width: auto; }
   .cb .dv-ph { opacity: 0; }
 }
+
+/* a product page's way to the live product */
+.cb .p-head .live { display: inline-flex; align-items: center; gap: 10px; margin-top: 26px; font-size: 17px; color: var(--ink); }

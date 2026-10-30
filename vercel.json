@@ -55,7 +55,7 @@
       "destination": "/index.html"
     },
     {
-      "source": "/projects/:id(dervo|arro|lucid|integration-portal|agentsky)",
+      "source": "/projects/:id(dervo|arro|lucid|integration-portal|agentsky|trace|easeprint|dryline|comehome)",
       "destination": "/projects/:id.html"
     },
     {
