@@ -21,12 +21,14 @@ describe('The cobalt home', () => {
     expect(screen.getByRole('slider', { name: 'Time of day' })).toBeInTheDocument();
   });
 
-  it('lists the work in order, Dervo to its own page, public work to its source, and work not public yet unlinked', () => {
+  it('lists the work in order, each to its own page or its source, and work not public yet unlinked', () => {
     render(<Home />);
     const work = within(screen.getByRole('region', { name: 'Selected work' }));
-    expect(work.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(['Dervo', 'receipts', 'tastepack', 'Trace', 'easeprint', 'dryline', 'Arro']);
+    expect(work.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(COPY.WORK.rows.map(r => r.name));
     const items = work.getAllByRole('listitem');
-    expect(items.map(li => li.querySelector('a')?.getAttribute('href') ?? null)).toEqual(['/projects/dervo', null, null, 'https://github.com/brambach/trace', 'https://github.com/brambach/easeprint', 'https://github.com/brambach/dryline', 'https://github.com/brambach/arro']);
+    expect(items.map(li => li.querySelector('a')?.getAttribute('href') ?? null)).toEqual(COPY.WORK.rows.map(r => r.href ?? null));
+    expect(items[0].querySelector('a')).toHaveAttribute('href', '/projects/dervo');
+    expect(COPY.WORK.rows.filter(r => !r.href).map(r => r.name)).toEqual(['receipts', 'tastepack']);
     items.forEach(li => expect(li.querySelector('img')).not.toBeNull());
     expect(work.getByText(/^Also:/)).toHaveTextContent('voice, how I write on X');
   });

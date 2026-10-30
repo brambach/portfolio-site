@@ -25,7 +25,9 @@
           ? !['mile', 'from', 'town', 'city', 'journey', 'forest'].some(function (k) { return q.has(k); })
           : older.indexOf(path) < 0);
         // A project's page wears the home's cream paper and faces (src/site/project.css).
-        var work = !window.__notFound && /^\/projects\/(dervo|arro|lucid|integration-portal|agentsky)$/.test(path);
+        var work = !window.__notFound && /^\/projects\/(dervo|arro|lucid|integration-portal|agentsky|trace|easeprint|dryline|comehome)$/.test(path);
+        // Dervo's page and the product pages (STORY_IDS in src/site/routes.ts) wear the home's look and its paper.
+        var looked = path === '' || /^\/projects\/(dervo|trace|easeprint|dryline|comehome)$/.test(path);
         // Sentient, the display face of the not-found page (src/site/e.css), comes from Fontshare (its licence
         // doesn't allow the files in a public repo). The home and the project pages are set in their own
         // self-hosted faces, and the older pages bring their own (/next asks for Sentient itself, in QuietIndex.tsx),
@@ -57,9 +59,16 @@
             link.href = href;
             document.head.appendChild(link);
           });
-          // The home and Dervo's page are on the cobalt look's warm paper (src/site/cobalt/cobalt.css); the other
-          // project pages keep the cream.
-          var paper = path === '' || path === '/projects/dervo' ? '#f6f3ec' : '#f3eee3';
+          // The home's page chunk, so the first screen's code comes down alongside the app's.
+          if (path === '') [/* home-chunks */].forEach(function (href) {
+            var link = document.createElement('link');
+            link.rel = 'modulepreload';
+            link.href = href;
+            document.head.appendChild(link);
+          });
+          // The home and Dervo's page are on the paper of the look they wear (src/site/look.ts, filled in by the
+          // build); the other project pages keep the cream.
+          var paper = looked ? /* home-paper */'#f6f3ec' : '#f3eee3';
           root.style.background = paper;
           if (meta) meta.setAttribute('content', paper);
           return;

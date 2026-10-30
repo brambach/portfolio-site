@@ -13,14 +13,15 @@
   --ink: #2440a0; --text: #1b2238; --body: #2c3347; --soft: #4c5468; --faint: #5f6577;
   --serif: 'Alegreya', Georgia, serif;
   --sans: 'Hanken Grotesk Variable', system-ui, sans-serif; --mono: 'IBM Plex Mono', ui-monospace, monospace;
-  --ease: cubic-bezier(.2, .7, .1, 1); --spring: cubic-bezier(.34, 1.5, .64, 1);
+  /* The site's motion (../motion.css), at its quietest: print doesn't bounce, so only things you touch spring. */
+  --ease: var(--m-quick); --spring: var(--m-spring);
   --lift: 0 40px 90px -50px rgba(27, 34, 90, .55), 0 0 0 1px rgba(36, 64, 160, .08);
   min-height: 100svh; background: var(--paper); color: var(--text);
   font-family: var(--sans); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased;
 }
 .cb ::selection { background: var(--ink); color: var(--paper); }
 .cb a { color: inherit; text-decoration: none; }
-.cb a:hover { color: var(--ink); }
+@media (hover: hover) { .cb a:hover { color: var(--ink); } }
 .cb p, .cb h1, .cb h2, .cb h3, .cb figure, .cb ul { margin: 0; }
 .cb h1, .cb h2, .cb h3 { text-wrap: balance; font-weight: 400; }
 .cb :focus-visible { outline: 2px solid var(--text); outline-offset: 4px; border-radius: 4px; }
@@ -30,7 +31,7 @@
 .cb .serif-i { font-family: var(--serif); font-weight: 400; font-style: italic; }
 .cb .mono { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: lowercase; color: var(--faint); }
 .cb .link { background-image: linear-gradient(currentColor, currentColor); background-size: 0 1px; background-repeat: no-repeat; background-position: 0 100%; transition: background-size .4s var(--ease); }
-.cb .link:hover { background-size: 100% 1px; }
+@media (hover: hover) { .cb .link:hover { background-size: 100% 1px; } }
 
 .cb .top { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding-block: 22px 0; }
 .cb .top .name { font-size: 22px; }
@@ -71,15 +72,19 @@
 .cb .seasons button[aria-pressed="true"] { color: var(--text); background-size: 100% 1px; }
 .cb .refl { transition: transform .9s var(--ease), opacity .6s; }
 
-/* the first second: the name settles letter by letter, the ink draws in, the hatching and water fade up */
-.cb .ch { display: inline-block; animation: cb-settle 1s var(--ease) both; }
-@keyframes cb-settle { from { opacity: 0; transform: translateY(.35em); filter: blur(10px); } to { opacity: 1; transform: none; filter: blur(0); } }
-.cb .line-in { animation: cb-settle 1.1s var(--ease) .9s both; }
-.cb .under path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: cb-ink 1.2s cubic-bezier(.45, .05, .2, 1) 1.6s forwards; }
-.cb .ink { stroke-dasharray: 1; stroke-dashoffset: 1; animation: cb-ink 2.6s cubic-bezier(.45, .05, .2, 1) forwards; }
-.cb .ink.l2 { animation-delay: .3s; }
-.cb .ink.l3 { animation-delay: .6s; }
-.cb .pines use { stroke-dasharray: 1; stroke-dashoffset: 1; animation: cb-ink 2s cubic-bezier(.45, .05, .2, 1) .8s forwards; }
+/* the first second, in order: the name settles letter by letter, then the line under it, while the ink draws the
+   scene in behind them and the hatching and water fade up last. Rise and fade run on their own curves, so a letter
+   is readable before it has finished moving. Transform and opacity only: the old blur cost a repaint of every
+   letter on every frame, which is what made the name stutter on a phone. */
+.cb .ch { display: inline-block; animation: cb-rise-in var(--t-arrive) var(--m-arrive) both, cb-fade-in .5s ease-out both; }
+@keyframes cb-rise-in { from { transform: translateY(.32em); } to { transform: none; } }
+@keyframes cb-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.cb .line-in { animation: cb-rise-in var(--t-arrive) var(--m-arrive) .75s both, cb-fade-in .6s ease-out .75s both; }
+.cb .under path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: cb-ink 1.2s var(--m-ink) 1.5s forwards; }
+.cb .ink { stroke-dasharray: 1; stroke-dashoffset: 1; animation: cb-ink 2.6s var(--m-ink) .35s forwards; }
+.cb .ink.l2 { animation-delay: .6s; }
+.cb .ink.l3 { animation-delay: .85s; }
+.cb .pines use { stroke-dasharray: 1; stroke-dashoffset: 1; animation: cb-ink 2s var(--m-ink) 1s forwards; }
 @keyframes cb-ink { to { stroke-dashoffset: 0; } }
 .cb .hatch { opacity: 0; animation: cb-fade 1.8s ease 1.4s forwards; }
 .cb .water-in { opacity: 0; animation: cb-fade 2s ease 1.8s forwards; }
@@ -92,6 +97,12 @@
 .cb .water line:nth-child(2n) { animation-duration: 56s; animation-direction: reverse; }
 @keyframes cb-shimmer { to { stroke-dashoffset: -400; } }
 
+/* Coming back home: already printed, so it's simply there. */
+.cb.again .ch, .cb.again .line-in, .cb.again .ink, .cb.again .under path, .cb.again .pines use, .cb.again .hatch, .cb.again .water-in { animation: none; }
+.cb.again .ink, .cb.again .under path, .cb.again .pines use { stroke-dashoffset: 0; }
+.cb.again .hatch, .cb.again .water-in { opacity: 1; }
+.cb.again .row .shot-m img { transition: none; }
+
 /* home sections */
 .cb .now { display: flex; flex-wrap: wrap; gap: 12px 64px; padding-block: 64px 0; }
 .cb .now .mono { flex: 0 0 200px; margin-top: 6px; }
@@ -102,6 +113,7 @@
 .cb .work { display: flex; flex-wrap: wrap; gap: 40px 64px; align-items: flex-start; }
 .cb .rows { flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; list-style: none; padding: 0; }
 .cb .row { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 14px; align-items: baseline; padding-block: 18px; transition: opacity .35s var(--ease); }
+.cb .row:active { opacity: .55; transition-duration: var(--t-press); }
 .cb .row .main { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .cb .row h3 { font-size: 20px; font-weight: 500; display: flex; align-items: center; gap: 10px; }
 .cb .row .ln { font-size: 15px; line-height: 1.55; color: var(--soft); }
@@ -148,7 +160,7 @@
 .cb .project { padding-block: 24px 0; }
 .cb .back { display: inline-flex; align-items: center; gap: 10px; font-size: 15px; color: var(--soft); }
 .cb .back svg { transition: transform .4s var(--spring); }
-.cb .back:hover svg { transform: translateX(-4px); }
+@media (hover: hover) { .cb .back:hover svg { transform: translateX(-4px); } }
 .cb .p-head { max-width: 720px; margin: 0 auto; padding-top: 72px; }
 .cb .p-head .mono { margin-bottom: 18px; }
 .cb .p-head h1 { font-size: clamp(64px, 10vw, 124px); line-height: 1; }
@@ -167,13 +179,13 @@
 .cb .wide { max-width: 1136px; margin: 72px auto 0; }
 .cb .wide img { display: block; width: 100%; height: auto; border-radius: 10px; box-shadow: var(--lift); }
 .cb .wide figcaption { margin-top: 14px; }
-.cb .rise { animation: cb-rise 1.3s var(--ease) .35s both; }
+.cb .rise { animation: cb-rise 1.3s var(--m-arrive) .35s both; }
 @keyframes cb-rise { from { opacity: 0; transform: translateY(40px) scale(.98); } to { opacity: 1; transform: none; } }
 .cb .next-row { max-width: 1136px; margin: 0 auto; padding-block: 120px 56px; display: flex; justify-content: space-between; align-items: baseline; gap: 20px; flex-wrap: wrap; }
 .cb .next { display: inline-flex; align-items: baseline; gap: 14px; }
 .cb .next .serif { font-size: 40px; line-height: 1; }
 .cb .next svg { transition: transform .4s var(--spring); }
-.cb .next:hover svg { transform: translateX(4px); }
+@media (hover: hover) { .cb .next:hover svg { transform: translateX(4px); } }
 
 /* dervo demo */
 .cb .dv { --d: 12s; position: relative; aspect-ratio: 16/10; max-width: 100%; border-radius: 12px; overflow: hidden; background: #f7f6f3; color: #1b1b19; font-family: var(--sans); line-height: 1.3; box-shadow: var(--lift); container-type: inline-size; }
@@ -215,3 +227,6 @@
   .cb .dv-type { width: auto; }
   .cb .dv-ph { opacity: 0; }
 }
+
+/* a product page's way to the live product */
+.cb .p-head .live { display: inline-flex; align-items: center; gap: 10px; margin-top: 26px; font-size: 17px; color: var(--ink); }

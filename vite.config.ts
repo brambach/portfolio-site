@@ -7,6 +7,7 @@ import path from 'path';
 import { defineConfig } from 'vitest/config';
 import {loadEnv, type Plugin} from 'vite';
 import { PAGES, sitemap, withMeta } from './src/site/meta';
+import { LOOK, LOOKS } from './src/site/look';
 
 /** Writes a copy of index.html for every page of the site with its own title, description, address and picture
  *  (src/site/meta.ts), the not-found page the host serves for unknown addresses, and the sitemap. */
@@ -18,15 +19,23 @@ const sitePages = (): Plugin => ({
     const index = bundle['index.html'];
     if (!index || index.type !== 'asset') throw new Error('site-pages: no index.html in the build');
     const html = String(index.source);
-    // The home's faces for its first screen (the headline's serif, Alegreya, roman and its italic, and Hanken), handed
-    // to the route script in index.html, which preloads them on the home page only: /work, /next and the rest get
-    // this file too and don't use them.
+    // The home's first screen in the look it wears (src/site/look.ts): the faces its headline is lettered in, and its
+    // page chunk with that chunk's stylesheet. Handed to the route script in index.html, which preloads them on the
+    // home page only (the faces on Dervo's page too), so they come down alongside the app instead of after it: without
+    // this the name started dropping in a fallback face and jumped when the real one landed. /work, /next and the rest
+    // get this file too and don't use them.
+    const look = LOOKS[LOOK];
     const font = (re: RegExp) => Object.keys(bundle).find(f => re.test(f));
-    const fonts = [/alegreya-latin-400-normal-[\w-]+\.woff2$/, /alegreya-latin-400-italic-[\w-]+\.woff2$/,
-      /hanken-grotesk-latin-wght-normal-[\w-]+\.woff2$/].map(font).filter(Boolean).map(f => JSON.stringify(`/${f}`));
-    if (!html.includes('[/* home-fonts */]')) throw new Error('site-pages: no home-fonts list in index.html');
+    const fonts = look.fonts.map(font).filter(Boolean).map(f => JSON.stringify(`/${f}`));
+    const home = Object.values(bundle).find(c => c.type === 'chunk' && c.facadeModuleId?.endsWith(look.home));
+    if (!home || home.type !== 'chunk') throw new Error(`site-pages: no chunk for ${look.home}`);
+    const chunks = [home.fileName, ...home.imports].map(f => JSON.stringify(`/${f}`));
+    for (const hole of ['[/* home-fonts */]', '[/* home-chunks */]', "/* home-paper */'#f6f3ec'"]) {
+      if (!html.includes(hole)) throw new Error(`site-pages: no ${hole} in index.html`);
+    }
     for (const page of PAGES) {
-      const source = withMeta(html, page).replace('[/* home-fonts */]', `[${fonts.join(', ')}]`);
+      const source = withMeta(html, page).replace('[/* home-fonts */]', `[${fonts.join(', ')}]`)
+        .replace('[/* home-chunks */]', `[${chunks.join(', ')}]`).replace("/* home-paper */'#f6f3ec'", JSON.stringify(look.paper));
       if (page.file === 'index.html') index.source = source;
       else this.emitFile({ type: 'asset', fileName: page.file, source });
     }
