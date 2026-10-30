@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ABOUT, EMAIL, FOOTER, HERO, NAME, NAV, NOW, WORK } from '../cobalt/copy';
 import { A, ArrowRight } from '../cobalt/parts';
 import { FootArt, Leaf, Plates, Scene } from './Art';
 import { PATCH } from './copy';
 import { paintNewsprint } from './parts';
 import { useEntrance } from '../useEntrance';
+import { markSeen, seenBefore } from '../navigate';
 import '../motion.css';
 import './patch.css';
 
@@ -14,6 +15,8 @@ import './patch.css';
 
 const reduced = () => typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clamp = (n: number) => Math.min(1, Math.max(0, n));
+/** The project a link opens on this site, for the picture that grows into its page (navigate.ts). */
+const handover = (href: string) => /^\/projects\/([\w-]+)$/.exec(href)?.[1];
 const SFX = ['BOING!', 'BONK!', 'THUMP!', 'POP!', 'BOING!'];
 const LEAVES = ['#e8742a', '#d8432c', '#f2b632', '#b8572a', '#e8742a', '#f2b632', '#d8432c', '#b8572a'];
 
@@ -45,6 +48,9 @@ function startBoil(el: HTMLElement) {
 
 export default function Home() {
   const root = useRef<HTMLDivElement>(null);
+  // Coming back to the home this visit, it's already printed: nothing replays its entrance.
+  const [again] = useState(() => seenBefore('home'));
+  useEffect(() => markSeen('home'), []);
 
   useEffect(paintNewsprint, []);
 
@@ -127,7 +133,7 @@ export default function Home() {
     return () => io?.disconnect();
   }, []);
 
-  return <div className="pk" ref={root}>
+  return <div className={again ? 'pk again' : 'pk'} ref={root}>
     <Plates />
     <div className="wrap">
       <header className="top">
@@ -164,7 +170,7 @@ export default function Home() {
             {WORK.rows.map((p, i) => <li key={p.name} className={i === 0 ? 'cell wide-cell' : 'cell'}>
               <A href={p.href} className="panel work-panel pop">
                 <span className="caption">0{i + 1} · {p.kind}</span>
-                <div className="shot"><img src={p.img} alt={p.alt} loading="lazy" decoding="async" className={p.portrait ? 'portrait' : undefined} /></div>
+                <div className="shot" data-handover={handover(p.href)}><img src={p.img} alt={p.alt} loading="lazy" decoding="async" className={p.portrait ? 'portrait' : undefined} /></div>
                 <div className="words"><h3 className="letter">{p.name}<ArrowRight /></h3><span className="ln">{p.line}</span><span className="label">{p.caption}</span></div>
               </A>
             </li>)}

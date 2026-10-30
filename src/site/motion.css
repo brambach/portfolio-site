@@ -30,3 +30,9 @@
    it's lettered in have loaded, or a short wait runs out, so the name never starts dropping in a fallback face and
    jumps when the real one lands. See useEntrance.ts. */
 .held [data-enter], .held [data-enter] * { animation-play-state: paused !important; }
+
+/* The handover (navigate.ts): a picture both pages mark grows from where it sat into where it lands, on the arrive
+   curve, while the rest of the page crossfades. What it lands on is already in place, so its own entrance is off. */
+::view-transition-group(handover) { animation-duration: .7s; animation-timing-function: var(--m-arrive); }
+::view-transition-old(handover), ::view-transition-new(handover) { animation-duration: .35s; height: 100%; object-fit: cover; }
+[data-landed] { animation: none !important; }

@@ -3,6 +3,7 @@ import { ABOUT, EMAIL, FOOTER, HERO, NAME, NAV, NOW, WORK } from './copy';
 import { FootArt, Plates, Scene } from './Engraving';
 import { A, ArrowRight, paintPaper } from './parts';
 import { useEntrance } from '../useEntrance';
+import { markSeen, seenBefore } from '../navigate';
 import '../motion.css';
 import './cobalt.css';
 
@@ -12,6 +13,8 @@ import './cobalt.css';
 
 const reduced = () => typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clamp = (n: number) => Math.min(1, Math.max(0, n));
+/** The project a link opens on this site, for the picture that grows into its page (navigate.ts). */
+const handover = (href: string) => /^\/projects\/([\w-]+)$/.exec(href)?.[1];
 
 /** Where the clock puts the day: 0 is 5am, 1 is midnight, and the small hours count as midnight. */
 export function dayFromClock(date: Date) {
@@ -36,6 +39,9 @@ export function sunAt(t: number) {
 export default function Home() {
   const root = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
+  // Coming back to the home this visit, it's already printed: nothing replays its entrance.
+  const [again] = useState(() => seenBefore('home'));
+  useEffect(() => markSeen('home'), []);
 
   useEffect(paintPaper, []);
   // The first screen waits for the serif it's set in, so the name never settles in Georgia and then jumps.
@@ -145,7 +151,7 @@ export default function Home() {
     return () => io?.disconnect();
   }, []);
 
-  return <div className="cb" ref={root}>
+  return <div className={again ? 'cb again' : 'cb'} ref={root}>
     <Plates />
     <div className="wrap">
       <header className="top">
@@ -183,12 +189,12 @@ export default function Home() {
                   <span className="mono">0{i + 1}</span>
                   <div className="main"><h3>{p.name}<ArrowRight /></h3><span className="ln">{p.line}</span></div>
                   <span className="mono kind">{p.kind}</span>
-                  <div className="shot-m"><img src={p.img} alt={p.alt} loading="lazy" decoding="async" className={p.portrait ? 'portrait' : undefined} /></div>
+                  <div className="shot-m" data-handover={handover(p.href)}><img src={p.img} alt={p.alt} loading="lazy" decoding="async" className={p.portrait ? 'portrait' : undefined} /></div>
                 </A>
               </li>)}
             </ul>
             <figure className="preview" aria-hidden="true">
-              <div className="frame">{WORK.rows.map((p, i) => <img key={p.name} src={p.img} alt="" decoding="async" className={[p.portrait && 'portrait', i === active && 'on'].filter(Boolean).join(' ')} />)}</div>
+              <div className="frame">{WORK.rows.map((p, i) => <img key={p.name} data-handover={handover(p.href)} src={p.img} alt="" decoding="async" className={[p.portrait && 'portrait', i === active && 'on'].filter(Boolean).join(' ')} />)}</div>
               <figcaption className="mono">{WORK.rows[active].caption}</figcaption>
             </figure>
           </div>

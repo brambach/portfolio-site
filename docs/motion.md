@@ -45,6 +45,18 @@ the old page fades in 0.18s and the new one comes up in 0.45s.
 **Transform and opacity on anything big.** Both run on the compositor and stay smooth on a phone. No animated blur,
 no animated layout. Line art may draw its stroke, since it's thin and happens once.
 
+**A page arrives once per visit.** Coming back to the home doesn't replay the name or pop the panels again; it's
+already printed, so it's simply there (the `again` class).
+
+**Pages hand over, they don't reload.** Moving between the home and a project's page happens in place
+(`src/site/navigate.ts`) inside a view transition. A picture both pages mark with the same `data-handover` grows
+from where it sat into where it lands (0.7s on the arrive curve) while the rest of the page crossfades. Tap Dervo and
+its screenshot becomes the live demo at the top of its page; go back and it shrinks into its card, at the scroll you
+left. Anything else (other sites, the older pages, a new tab) is a plain navigation.
+
+**Hovers only where there's a pointer.** Hover moves sit behind `@media (hover: hover)`, so a tap on a phone never
+leaves a card stuck lifted. On a phone a tap gets the press instead.
+
 **Reduced motion lands where it ends.** With the setting on, everything is already in place and nothing loops, but
 touches still work: the sun still drags and the big pumpkin still lights.
 

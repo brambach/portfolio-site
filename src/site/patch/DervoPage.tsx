@@ -37,7 +37,7 @@ export default function DervoPage() {
           <p className="lead">{DERVO.lead}</p>
         </section>
 
-        <figure className="wide panel rise" data-enter>
+        <figure className="wide panel rise" data-enter data-handover="dervo">
           <div className="cb"><DervoDemo label={DERVO.demo} /></div>
           <figcaption className="label">{DERVO.demoCaption}</figcaption>
         </figure>
