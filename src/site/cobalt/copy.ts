@@ -11,7 +11,7 @@ export const NAV = [
 ];
 
 export const HERO = {
-  line: 'I design software, then build it myself.',
+  line: 'I fuss over the pixels, the motion and the code.',
   art: 'An engraving of a Lake Tahoe shoreline with pines, mountains, a dock and birds over the water. The sun can be dragged across the sky to change the time of day.',
   clockHint: 'drag the sun',
   slider: 'Time of day',

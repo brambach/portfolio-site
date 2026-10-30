@@ -11,7 +11,7 @@ import { STORY_IDS, STORIES, type Story } from './stories';
 
 export const ORIGIN = 'https://brycerambach.com';
 /** Bumped when the pictures change, so link previews fetch the new ones. */
-const V = 'h1';
+const V = 'h2';
 
 export type PageMeta = {
   /** Where the page's HTML goes in the build. */
@@ -38,10 +38,10 @@ export const HOME_META: PageMeta = {
   // The card wears the same look as the home page, so switching LOOK back after Halloween switches it too.
   ...(LOOK === 'patch' ? {
     image: `/og/home-patch.jpg?v=${V}`,
-    imageAlt: 'Bryce Rambach’s home page as a Sunday comic: his name in a title box and “I design software, then build it myself.” in a speech balloon, over a pumpkin patch at dusk with a full moon, bats and a bedsheet ghost',
+    imageAlt: 'Bryce Rambach’s home page as a Sunday comic: his name in a title box and “I fuss over the pixels, the motion and the code.” in a speech balloon, over a pumpkin patch at dusk with a full moon, bats and a bedsheet ghost',
   } : {
     image: `/og/home-cobalt.jpg?v=${V}`,
-    imageAlt: 'Bryce Rambach’s home page: his name and “I design software, then build it myself.” over a cobalt engraving of a Lake Tahoe shoreline with pines, mountains, a dock and the sun over the water',
+    imageAlt: 'Bryce Rambach’s home page: his name and “I fuss over the pixels, the motion and the code.” over a cobalt engraving of a Lake Tahoe shoreline with pines, mountains, a dock and the sun over the water',
   }),
 };
 
