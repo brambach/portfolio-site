@@ -43,7 +43,7 @@ export default function StoryPage({ id }: { id: StoryId }) {
 
         <dl className="facts">
           {s.facts.map(f => <div key={f.label}><dt className="mono">{f.label}</dt><dd>{f.value}</dd></div>)}
-          <div><dt className="mono">source</dt><dd><A className="link" href={s.source.href}>{s.source.label}</A></dd></div>
+          <div><dt className="mono">source</dt><dd>{s.source.href ? <A className="link" href={s.source.href}>{s.source.label}</A> : s.source.label}</dd></div>
         </dl>
 
         <section className="p-col" aria-labelledby={`c-${id}-does`}>

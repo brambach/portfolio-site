@@ -6,6 +6,8 @@ import { PATCH } from './copy';
 import { paintNewsprint } from './parts';
 import { useEntrance } from '../useEntrance';
 import { markSeen, seenBefore } from '../navigate';
+import { loadGsap, reduced, scrollMotion, TRAIL, type G } from '../gsap';
+import { hop, hops, replay, startBoil } from './toon';
 import '../motion.css';
 import './patch.css';
 
@@ -13,38 +15,11 @@ import './patch.css';
    pumpkins bounce when you tap them (three taps light the big one). The work is a strip of panels, the now is a speech
    balloon, and a little ghost waves from the footer while the bats take off. The lines boil like hand-drawn animation. */
 
-const reduced = () => typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clamp = (n: number) => Math.min(1, Math.max(0, n));
 /** The project a link opens on this site, for the picture that grows into its page (navigate.ts). */
 const handover = (href: string) => /^\/projects\/([\w-]+)$/.exec(href)?.[1];
 const SFX = ['BOING!', 'BONK!', 'THUMP!', 'POP!', 'BOING!'];
 const LEAVES = ['#e8742a', '#d8432c', '#f2b632', '#b8572a', '#e8742a', '#f2b632', '#d8432c', '#b8572a'];
-
-/** Restarts a CSS animation class on an element, so a second tap bounces it again. */
-export function replay(el: Element, cls: string) {
-  el.classList.remove(cls);
-  void (el as HTMLElement).getBoundingClientRect();
-  el.classList.add(cls);
-}
-
-/** The boil: the ink swaps between three wobble filters about eight times a second while it's on screen. */
-function startBoil(el: HTMLElement) {
-  if (reduced()) return;
-  const groups = [el.querySelector('#pk-ink')!, el.querySelector('#pk-footInk')!];
-  const shown = new Set<Element>();
-  let i = 0;
-  const tick = setInterval(() => {
-    if (document.hidden) return;
-    i = (i + 1) % 3;
-    for (const g of groups) if (shown.has(g)) g.setAttribute('filter', `url(#pk-b${i})`);
-  }, 125);
-  let io: IntersectionObserver | undefined;
-  if (typeof IntersectionObserver === 'function') {
-    io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? shown.add(e.target) : shown.delete(e.target)));
-    groups.forEach(g => io!.observe(g));
-  } else groups.forEach(g => shown.add(g));
-  return () => { clearInterval(tick); io?.disconnect(); };
-}
 
 export default function Home() {
   const root = useRef<HTMLDivElement>(null);
@@ -58,7 +33,7 @@ export default function Home() {
   // it repaints the whole drawing eight times a second, and on a phone that would fight the letters for frames.
   useEntrance(root, 'Patrick Hand SC', () => {
     let stop: (() => void) | undefined;
-    const t = setTimeout(() => { stop = startBoil(root.current!); }, 1700);
+    const t = setTimeout(() => { stop = startBoil([root.current!.querySelector('#pk-ink')!, root.current!.querySelector('#pk-footInk')!], 'pk-b'); }, 1700);
     return () => { clearTimeout(t); stop?.(); };
   });
 
@@ -67,7 +42,9 @@ export default function Home() {
     const el = root.current!;
     const scene = el.querySelector<SVGSVGElement>('#pk-scene')!, hero = el.querySelector<HTMLElement>('#pk-hero')!;
     const sfx = el.querySelector<HTMLElement>('#pk-sfx')!, lit = el.querySelector<HTMLElement>('#pk-lit')!;
-    let taps = 0, n = 0;
+    let taps = 0, n = 0, g: G | undefined, gone = false;
+    // Until GSAP is here a tap plays the CSS bounce, which starts over on every tap.
+    if (!reduced()) loadGsap().then(x => { if (!gone) g = x; }).catch(() => {});
     const pop = (x: number, y: number) => {
       const r = hero.getBoundingClientRect();
       sfx.textContent = SFX[n++ % SFX.length];
@@ -76,7 +53,7 @@ export default function Home() {
       replay(sfx, 'go');
     };
     const bounce = (p: Element) => {
-      replay(p, 'boing');
+      if (g) hop(g, p as SVGGraphicsElement); else replay(p, 'boing');
       if (p.classList.contains('big') && ++taps >= 3 && !p.classList.contains('lit')) {
         p.classList.add('lit');
         lit.textContent = PATCH.lit;
@@ -96,28 +73,42 @@ export default function Home() {
     const btn = el.querySelector<HTMLButtonElement>('#pk-bounce')!;
     scene.addEventListener('pointerdown', down);
     btn.addEventListener('click', all);
-    return () => { scene.removeEventListener('pointerdown', down); btn.removeEventListener('click', all); };
+    return () => {
+      gone = true;
+      scene.removeEventListener('pointerdown', down);
+      btn.removeEventListener('click', all);
+      el.querySelectorAll('#pk-scene .pump').forEach(p => hops.get(p)?.kill());
+    };
   }, []);
 
-  // Scroll: the patch sinks a little as you leave it; the footer's bats take off as you arrive.
+  // Scroll: the title box sinks and tips a little as you leave the patch; the footer's bats take off as you arrive.
+  // GSAP scrubs both a beat behind the scroll, so they move with some weight; before it loads they follow 1:1.
   useEffect(() => {
-    if (reduced()) return;
     const el = root.current!;
     const copy = el.querySelector<HTMLElement>('#pk-heroCopy')!, hero = el.querySelector<HTMLElement>('#pk-hero')!, foot = el.querySelector<HTMLElement>('#pk-foot')!;
     const bats = [...el.querySelectorAll<SVGGElement>('.fbat')];
-    let frame = 0;
-    const paint = () => {
-      frame = 0;
-      const vh = window.innerHeight, r = hero.getBoundingClientRect();
-      const p = clamp(-r.top / Math.max(1, r.height));
-      copy.style.transform = `translateY(${-p * 60}px) rotate(${-p * 4}deg)`;
-      const q = clamp((vh - foot.getBoundingClientRect().top) / (vh * 0.75)), e = q * q * (3 - 2 * q);
-      for (const b of bats) b.style.transform = `translate(${e * Number(b.dataset.dx)}px,${e * Number(b.dataset.dy)}px)`;
-    };
-    const onScroll = () => { if (!frame) frame = requestAnimationFrame(paint); };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    paint();
-    return () => { window.removeEventListener('scroll', onScroll); cancelAnimationFrame(frame); };
+    return scrollMotion(el, () => {
+      let frame = 0;
+      const paint = () => {
+        frame = 0;
+        const vh = window.innerHeight, r = hero.getBoundingClientRect();
+        const p = clamp(-r.top / Math.max(1, r.height));
+        copy.style.transform = `translateY(${-p * 60}px) rotate(${-p * 4}deg)`;
+        const q = clamp((vh - foot.getBoundingClientRect().top) / (vh * 0.75)), e = q * q * (3 - 2 * q);
+        for (const b of bats) b.style.transform = `translate(${e * Number(b.dataset.dx)}px,${e * Number(b.dataset.dy)}px)`;
+      };
+      const onScroll = () => { if (!frame) frame = requestAnimationFrame(paint); };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      paint();
+      return () => {
+        window.removeEventListener('scroll', onScroll);
+        cancelAnimationFrame(frame);
+        [copy, ...bats].forEach(n => { n.style.transform = ''; });
+      };
+    }, ({ gsap }) => {
+      gsap.fromTo(copy, { y: 0, rotation: 0 }, { y: -60, rotation: -4, ease: 'none', scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: TRAIL } });
+      for (const b of bats) gsap.fromTo(b, { x: 0, y: 0 }, { x: Number(b.dataset.dx), y: Number(b.dataset.dy), ease: 'sine.inOut', scrollTrigger: { trigger: foot, start: 'top bottom', end: 'top 25%', scrub: TRAIL + 0.2 } });
+    });
   }, []);
 
   // Panels and balloons pop in once they scroll into view. Arriving at /#work or /#about lands there.

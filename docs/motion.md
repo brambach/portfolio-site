@@ -1,6 +1,6 @@
 # Motion
 
-How things move on brycerambach.com, in both looks. The values live in `src/site/motion.css`; this is the why.
+How things move on brycerambach.com, in every look. The values live in `src/site/motion.css`; this is the why.
 
 ## The idea
 
@@ -60,6 +60,22 @@ leaves a card stuck lifted. On a phone a tap gets the press instead.
 **Reduced motion lands where it ends.** With the setting on, everything is already in place and nothing loops, but
 touches still work: the sun still drags and the big pumpkin still lights.
 
+## Where GSAP comes in
+
+CSS does every arrival and every loop, and should keep doing them: it's free, it runs before any script, and it's
+already tuned. GSAP (`src/site/gsap.ts`) takes the two kinds of move CSS can't do well.
+
+**Scroll that trails.** The hero leaving (the hills parting, the name sinking) and the footer's birds or bats taking
+off are scrubbed with ScrollTrigger, 0.6s behind the scroll (0.8s for the birds). They move with a little weight
+instead of sticking to the scrollbar. Same distances as before.
+
+**Answers you can interrupt.** A pumpkin's hop is a GSAP timeline, so a tap while it's still in the air catches it
+and throws it a little higher instead of snapping it back to the ground and starting over.
+
+GSAP is never in the first load. It's fetched when the browser goes idle, so it can't hold up the name, and until it
+arrives (or if it never does) the page runs the hand-written versions it had before. With reduced motion it isn't
+loaded at all.
+
 ## How each look tunes it
 
 | | Cobalt | Pumpkin patch |
@@ -70,3 +86,32 @@ touches still work: the sun still drags and the big pumpkin still lights.
 | Arrive on scroll | phone pictures unveil upward | panels pop in |
 
 A new look picks its dials. It doesn't add a fifth verb.
+
+## The dinner table (Thanksgiving)
+
+The third look, `src/site/harvest`, is the pumpkin patch's yard a month later, and it's the one look where GSAP does
+most of the moving. It still has one idea: **the afternoon goes by as you scroll.** Everything else serves that.
+
+The hero is a stack of layers that share one viewBox (sky plates, sun and geese, the yard, a dusk wash, the table,
+the lights), so the scroll can move one without repainting the others. `story.ts` holds all of the GSAP.
+
+| Move | Verb | How |
+|---|---|---|
+| The sun sets, the sky goes rose then plum, dusk falls on the yard | Scroll | One timeline scrubbed 0.6s behind the scroll. It's done by the time the hero is half gone, so you see it finish |
+| The string of lights comes on, one bulb at a time | Scroll | Same timeline, staggered left to right |
+| The tree drops its last leaves | Scroll | MotionPath, one leaf after another |
+| The lights swing with how fast you scroll and ring back to rest | Answer | ScrollTrigger velocity, then an elastic settle when the scroll stops |
+| One leaf falls the whole page and lands on the pile in the footer | Scroll | A pendulum scrubbed 1s behind. It passes behind the panels, never over the work |
+| The page's paper warms toward evening | Scroll | One fixed wash, opacity only |
+| Night at the footer: the moon rises, the lights come on, the geese leave | Scroll | Scrubbed as the footer arrives |
+| A slice of pie arcs to the kid's plate | Answer | MotionPath, then an elastic landing. Three go, the fourth is saved for you |
+| The leaf pile, kicked | Answer | Physics2D: real arcs under gravity |
+| Bump the table | Answer | The patch's hop on every dish, 60ms apart |
+| Steam off the pie | Drift | DrawSVG, paused when the hero is off screen |
+
+The rules above still hold. The name lands in CSS before GSAP is fetched. The plugins come in their own chunk after
+the core (`loadToon`). Before they arrive every tap has a CSS answer, and with reduced motion the page is a finished
+afternoon standing still, where tapping the pie still takes a slice.
+
+Things that move every frame sit outside the two groups that boil (the yard and the table), so a scroll never asks
+the browser to redo the wobble filter.

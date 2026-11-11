@@ -29,6 +29,7 @@ export const WORK: { title: string; year: string; rows: Work[]; also: { name: st
   title: 'Selected work',
   year: '2026',
   rows: [
+    { name: 'Jared', kind: 'ai teammate', href: '/projects/jared', img: '/projects/jared/card.jpg', alt: 'A team chat where Jared drafts a $4,200 invoice and asks the owner for an OK before it goes out', line: 'An AI teammate for small businesses. He works in your Slack and asks before he does anything that matters.', caption: 'jared · in pilot · redrawn, made up business' },
     { name: 'Dervo', kind: 'mac app', href: '/projects/dervo', img: '/cobalt/dervo-home.jpg', alt: 'Dervo Home, showing what moved while you were away', line: 'Runs Claude Code and Codex in your projects, then tells you where they left off.', caption: 'dervo · home, with example projects · stopped oct 2026' },
     { name: 'receipts', kind: 'agent tool', img: '/cobalt/receipts.jpg', alt: 'A receipt from receipts lite: 106 verified, 0 unverified, each item with the check that proves it', line: "Your agent says it's done. receipts makes it show its work, with your repo's own checks as proof.", caption: 'receipts · its own receipt, from its own repo · not public yet' },
     { name: 'tastepack', kind: 'claude code plugin', img: '/cobalt/tastepack.jpg', alt: 'A tastepack TASTE.md listing what the screenshots share, each with a count like 9 of 15', line: 'Turns the screenshots you save into a taste pack your coding agent follows. Then tests it blind.', caption: 'tastepack · from its sample pack · not public yet' },

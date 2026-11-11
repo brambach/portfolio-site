@@ -27,7 +27,7 @@ describe('The cobalt home', () => {
     expect(work.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(COPY.WORK.rows.map(r => r.name));
     const items = work.getAllByRole('listitem');
     expect(items.map(li => li.querySelector('a')?.getAttribute('href') ?? null)).toEqual(COPY.WORK.rows.map(r => r.href ?? null));
-    expect(items[0].querySelector('a')).toHaveAttribute('href', '/projects/dervo');
+    expect(items[0].querySelector('a')).toHaveAttribute('href', '/projects/jared');
     expect(COPY.WORK.rows.filter(r => !r.href).map(r => r.name)).toEqual(['receipts', 'tastepack']);
     items.forEach(li => expect(li.querySelector('img')).not.toBeNull());
     expect(work.getByText(/^Also:/)).toHaveTextContent('voice, how I write on X');

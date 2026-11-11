@@ -2,8 +2,8 @@
    it is original line art. Ids start with pk- so they can't meet another page's. The ink sits in one group so Home.tsx
    can swap its boil filter a few times a second, the way a hand-drawn cartoon's lines shimmer. */
 
-const INK = '#1f1b16';
-const stroke = { stroke: INK, strokeWidth: 3, strokeLinejoin: 'round' as const, strokeLinecap: 'round' as const, vectorEffect: 'non-scaling-stroke' as const };
+export const INK = '#1f1b16';
+export const stroke = { stroke: INK, strokeWidth: 3, strokeLinejoin: 'round' as const, strokeLinecap: 'round' as const, vectorEffect: 'non-scaling-stroke' as const };
 
 /** Filters and shapes. Rendered once per page, before anything that uses them. */
 export function Plates() {
@@ -22,7 +22,7 @@ export function Plates() {
 }
 
 /** A pumpkin standing on (x, y). The big one has a face that lights up. */
-function Pumpkin({ x, y, s, big, i }: { x: number; y: number; s: number; big?: boolean; i: number }) {
+export function Pumpkin({ x, y, s, big, i }: { x: number; y: number; s: number; big?: boolean; i: number }) {
   return <g transform={`translate(${x} ${y}) scale(${s})`}>
     <g className={big ? 'pump big' : 'pump'} data-i={i}>
       <ellipse cx="0" cy="-2" rx="52" ry="7" fill={INK} opacity=".18" />
@@ -45,7 +45,7 @@ const PUMPKINS: { x: number; y: number; s: number; big?: boolean }[] = [
 ];
 
 /** The kid in the bedsheet, standing on (x, y). */
-function Ghost({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+export function Ghost({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
   return <g transform={`translate(${x} ${y}) scale(${s})`}>
     <g className="ghost">
       <ellipse cx="0" cy="0" rx="46" ry="7" fill={INK} opacity=".18" />
