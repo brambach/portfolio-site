@@ -18,7 +18,8 @@ export type Story = {
   live: { href: string; label: string };
   hero: Pic;
   facts: { label: string; value: string }[];
-  source: { href: string; label: string };
+  /** Where the code is. No `href` when it's private, and the page says so in plain words. */
+  source: { href?: string; label: string };
   does: { title: string; items: [string, string][] };
   call: { title: string; body: string };
   shot: Pic;
@@ -29,6 +30,42 @@ export type Story = {
 };
 
 export const STORIES: Record<StoryId, Story> = {
+  jared: {
+    id: 'jared',
+    name: 'Jared',
+    meta: 'ai teammate · 2026 · in pilot',
+    line: 'He asks before he does anything that matters.',
+    lead: 'Jared is an AI teammate for small businesses. The owner texts him to get set up, then he works in the team\'s Slack with the apps the business already uses. He reads and drafts on his own. Sending an email or moving money waits for a yes.',
+    live: { href: 'https://heyjared.co', label: 'Visit heyjared.co' },
+    hero: { src: '/projects/jared/thread.jpg', alt: 'A team chat at a made up cabinet shop: Sam asks Jared to send a $4,200 invoice, Jared drafts it and asks the owner, she types "approve", and it sends after 30 seconds with an Undo button', caption: 'a thread with jared · redrawn · the business is made up', w: 1600, h: 1125, phone: { src: '/projects/jared/thread-phone.jpg', w: 780, h: 1500 } },
+    facts: [
+      { label: 'role', value: 'Founding engineer. I built the first version and I\'m still building it' },
+      { label: 'built with', value: 'TypeScript on Bun, Postgres, Claude and Google Cloud Run' },
+      { label: 'tested by', value: 'Ten benchmark tasks with planted failures on every change, and a 56 scenario stress suite' },
+    ],
+    source: { label: 'Private' },
+    does: {
+      title: 'What it does',
+      items: [
+        ['Sets up by text.', 'The owner texts Jared\'s number. He looks the business up and drafts a short profile for the owner to check, then sends one link to add him to Slack.'],
+        ['Works in Slack.', 'Ask him in a channel or a DM and he answers in that thread, using the apps the business connected, like Gmail and Stripe.'],
+        ['Asks first.', 'Anything that sends email or moves money waits for a yes from someone allowed to give it. Each yes covers one exact action and expires after 15 minutes.'],
+        ['Remembers.', 'When someone edits one of his drafts he offers to remember the change. The owner can see every note, and anyone can tell him to forget one.'],
+        ['Speaks up.', 'He sends a morning brief and points out things like an unpaid invoice. He only reads until someone says go.'],
+      ],
+    },
+    call: { title: 'The call', body: 'A gate in plain code decides what needs a yes, and it sorts every action before it runs. A tool it doesn\'t recognize gets treated like a send.' },
+    shot: { src: '/projects/jared/text.jpg', alt: 'A text conversation where an owner tells Jared her business name, he reads back what he found and sends a one-time link to add him to Slack, beside the profile he drafted for her to check', caption: 'set up by text · redrawn · the business is made up', w: 1600, h: 1000 },
+    stands: {
+      title: 'Where it stands',
+      body: [
+        'I started on November 2, 2026, on top of an earlier prototype and the open source OpenAide project. Five days later the first business was set up by text and had him in its Slack.',
+        'He\'s in an early pilot, and there\'s a waitlist on his site. The code is private, so the pictures here are redrawn with a made up business.',
+      ],
+    },
+    description: 'Jared is an AI teammate for small businesses. The owner sets him up by text, he works in the team\'s Slack with the business\'s own apps, and anything that sends email or moves money waits for a yes.',
+    og: { src: '/og/jared.jpg', alt: 'Jared: "He asks before he does anything that matters." beside a team chat where he drafts an invoice and waits for the owner to approve it' },
+  },
   trace: {
     id: 'trace',
     name: 'Trace',
