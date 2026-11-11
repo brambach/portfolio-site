@@ -1,6 +1,6 @@
 # Motion
 
-How things move on brycerambach.com, in both looks. The values live in `src/site/motion.css`; this is the why.
+How things move on brycerambach.com, in every look. The values live in `src/site/motion.css`; this is the why.
 
 ## The idea
 
@@ -86,3 +86,32 @@ loaded at all.
 | Arrive on scroll | phone pictures unveil upward | panels pop in |
 
 A new look picks its dials. It doesn't add a fifth verb.
+
+## The dinner table (Thanksgiving)
+
+The third look, `src/site/harvest`, is the pumpkin patch's yard a month later, and it's the one look where GSAP does
+most of the moving. It still has one idea: **the afternoon goes by as you scroll.** Everything else serves that.
+
+The hero is a stack of layers that share one viewBox (sky plates, sun and geese, the yard, a dusk wash, the table,
+the lights), so the scroll can move one without repainting the others. `story.ts` holds all of the GSAP.
+
+| Move | Verb | How |
+|---|---|---|
+| The sun sets, the sky goes rose then plum, dusk falls on the yard | Scroll | One timeline scrubbed 0.6s behind the scroll. It's done by the time the hero is half gone, so you see it finish |
+| The string of lights comes on, one bulb at a time | Scroll | Same timeline, staggered left to right |
+| The tree drops its last leaves | Scroll | MotionPath, one leaf after another |
+| The lights swing with how fast you scroll and ring back to rest | Answer | ScrollTrigger velocity, then an elastic settle when the scroll stops |
+| One leaf falls the whole page and lands on the pile in the footer | Scroll | A pendulum scrubbed 1s behind. It passes behind the panels, never over the work |
+| The page's paper warms toward evening | Scroll | One fixed wash, opacity only |
+| Night at the footer: the moon rises, the lights come on, the geese leave | Scroll | Scrubbed as the footer arrives |
+| A slice of pie arcs to the kid's plate | Answer | MotionPath, then an elastic landing. Three go, the fourth is saved for you |
+| The leaf pile, kicked | Answer | Physics2D: real arcs under gravity |
+| Bump the table | Answer | The patch's hop on every dish, 60ms apart |
+| Steam off the pie | Drift | DrawSVG, paused when the hero is off screen |
+
+The rules above still hold. The name lands in CSS before GSAP is fetched. The plugins come in their own chunk after
+the core (`loadToon`). Before they arrive every tap has a CSS answer, and with reduced motion the page is a finished
+afternoon standing still, where tapping the pie still takes a slice.
+
+Things that move every frame sit outside the two groups that boil (the yard and the table), so a scroll never asks
+the browser to redo the wobble filter.

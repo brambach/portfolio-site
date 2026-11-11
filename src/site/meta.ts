@@ -35,8 +35,11 @@ export const HOME_META: PageMeta = {
   path: '/',
   title: NAME,
   description: HOME_DESCRIPTION,
-  // The card wears the same look as the home page, so switching LOOK back after Halloween switches it too.
-  ...(LOOK === 'patch' ? {
+  // The card wears the same look as the home page, so switching LOOK switches it too.
+  ...(LOOK === 'harvest' ? {
+    image: `/og/home-harvest.jpg?v=${V}`,
+    imageAlt: 'Bryce Rambach’s home page as a Sunday comic: his name in a title box and “I fuss over the pixels, the motion and the code.” in a speech balloon, over a yard set for dinner with a pie on a checked tablecloth, a string of lights, a bedsheet ghost and a low sun',
+  } : LOOK === 'patch' ? {
     image: `/og/home-patch.jpg?v=${V}`,
     imageAlt: 'Bryce Rambach’s home page as a Sunday comic: his name in a title box and “I fuss over the pixels, the motion and the code.” in a speech balloon, over a pumpkin patch at dusk with a full moon, bats and a bedsheet ghost',
   } : {

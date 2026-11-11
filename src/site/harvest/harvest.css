@@ -1,0 +1,71 @@
+/* The dinner table look: the pumpkin patch's Sunday comic (../patch/patch.css, which this sits on top of) a month
+   later. Same newsprint, ink, lettering and springs. What's new is the afternoon: the hero is a stack of layers the
+   scroll moves apart (sky, sun, yard, dusk, table, lights), and the page behind everything warms toward evening as you
+   go down. Everything here sits under .hv, next to .pk. */
+
+.pk.hv { --cran: #a8324a; --dusk: #54447f; position: relative; isolation: isolate; }
+.hv .wrap { position: relative; z-index: 1; }
+.hv .wrap > header, .hv .wrap > main, .hv .wrap > footer { position: relative; z-index: 1; }
+
+/* The page's own dusk: one fixed wash under the content, faded in by the scroll (GSAP). Cards keep their own paper,
+   so they read as lit. */
+.hv .dusk-page { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0; background-color: #f3d2a2; background-image: radial-gradient(rgba(168, 50, 74, .14) 1.3px, transparent 1.6px); background-size: 11px 11px; }
+
+/* The hero: layers that share one viewBox. */
+.pk.hv .hero { background: #f7d774; }
+.hv .stage { position: relative; height: clamp(500px, 52vw, 640px); overflow: hidden; isolation: isolate; border-radius: 13px 3px 17px 2px / 3px 15px 2px 13px; }
+.hv .stage > * { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hv .sky { background: radial-gradient(#ec8a3a 1.9px, transparent 2.3px) 0 0 / 10px 10px, radial-gradient(#ec8a3a 1.9px, transparent 2.3px) 5px 5px / 10px 10px; -webkit-mask-image: linear-gradient(transparent 4%, #000 70%); mask-image: linear-gradient(transparent 4%, #000 70%); }
+.hv .sky-rose { opacity: 0; background-color: #f29c6c; background-image: radial-gradient(#d9573f 1.9px, transparent 2.3px), radial-gradient(#d9573f 1.9px, transparent 2.3px); background-size: 10px 10px; background-position: 0 0, 5px 5px; }
+.hv .sky-plum { opacity: 0; background: var(--dusk); }
+.hv .tint { opacity: 0; mix-blend-mode: multiply; pointer-events: none; }
+.hv .far, .hv .back, .hv .lights { pointer-events: none; }
+.hv .live { touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.hv .live .pump, .hv .live .ghost, .hv .live .dish, .hv .live .pile { cursor: pointer; }
+.hv .lights { overflow: visible; }
+
+/* What moves on its own: the sun's rays turn, the geese beat their wings and drift, the flames lean. All slow. */
+.hv .rays { transform-origin: 745px 205px; animation: hv-turn 90s linear infinite; }
+@keyframes hv-turn { to { transform: rotate(360deg); } }
+.hv .wing { transform-box: fill-box; transform-origin: 50% 100%; animation: hv-beat .62s ease-in-out infinite alternate; }
+@keyframes hv-beat { to { transform: scaleY(-.45); } }
+.hv .skein { animation: hv-south 38s ease-in-out infinite alternate; }
+@keyframes hv-south { from { transform: translate(880px, 96px); } to { transform: translate(800px, 84px); } }
+.hv .flame { transform-box: fill-box; transform-origin: 50% 100%; animation: hv-lean 1.7s ease-in-out infinite alternate; }
+@keyframes hv-lean { from { transform: skewX(-7deg) scaleY(.94); } to { transform: skewX(6deg) scaleY(1.06); } }
+
+/* The table: anything on it hops from its foot, and so does the kid behind it. Before GSAP arrives a tap plays the
+   patch's CSS bounce (.boing); after, hops are GSAP timelines you can catch in the air. */
+.hv .dish, .hv .pile, .hv #hv-kid { transform-box: fill-box; transform-origin: 50% 100%; }
+.hv .dish.boing, .hv .pile.boing { animation: pk-boing .75s var(--ease); }
+.hv .slice { transition: opacity .2s; }
+.hv .slice.gone { opacity: 0; pointer-events: none; }
+.hv .got { opacity: 0; transform-box: fill-box; transform-origin: 50% 100%; }
+.hv .got.on { opacity: 1; animation: pk-pop .5s var(--boing) both; }
+.hv .loose { opacity: 0; transform-box: fill-box; transform-origin: center; }
+.hv .wisp { opacity: 0; }
+
+/* One leaf falls the length of the page with you (GSAP moves it), behind the panels and in front of the paper. */
+.hv .fall { position: absolute; left: 0; top: 0; z-index: 0; width: 30px; height: 34px; margin: -17px 0 0 -15px; pointer-events: none; opacity: 0; will-change: transform; }
+/* For the last stretch it comes forward, so it lands on the pile and not behind the panel. */
+.hv .fall.near { z-index: 2; }
+.hv .fall svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+/* The footer: the yard that night, in a panel of its own. */
+.hv .night { overflow: hidden; border-width: 4px; padding: 0; margin-bottom: 26px; background: var(--dusk); }
+.pk.hv .foot-art { height: clamp(220px, 27vw, 330px); margin: 0; overflow: hidden; }
+/* The night's lights breathe a little, each on its own clock. */
+.hv .foot-lights .glow, .hv .candle-glow .glow { animation: hv-twinkle 3.2s ease-in-out infinite alternate; }
+.hv .foot-lights .bulb:nth-child(2n) .glow { animation-duration: 4.1s; animation-delay: -1.3s; }
+.hv .foot-lights g:nth-child(3n) > .bulb .glow { animation-duration: 2.6s; animation-delay: -.7s; }
+@keyframes hv-twinkle { from { opacity: 1; } to { opacity: .55; } }
+
+@media (max-width: 560px) {
+  .hv .stage { height: 540px; }
+}
+
+/* Reduced motion: a finished afternoon, standing still. Taps still take a slice. */
+@media (prefers-reduced-motion: reduce) {
+  .hv .fall { display: none; }
+  .hv .got.on { opacity: 1; transform: none; }
+}

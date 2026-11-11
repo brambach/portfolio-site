@@ -35,6 +35,18 @@ export function loadGsap() {
   return loading;
 }
 
+let toon: Promise<G> | null = null;
+
+/** GSAP with the plugins a drawn scene wants on top: MotionPath (a leaf's way down), Physics2D (a kicked leaf pile)
+ *  and DrawSVG (steam). Their own chunk, fetched after the core, and only by a look that uses them. */
+export function loadToon() {
+  toon ??= loadGsap().then(g => Promise.all([import('gsap/MotionPathPlugin'), import('gsap/Physics2DPlugin'), import('gsap/DrawSVGPlugin')]).then(([m, p, d]) => {
+    g.gsap.registerPlugin(m.MotionPathPlugin, p.Physics2DPlugin, d.DrawSVGPlugin);
+    return g;
+  })).catch(e => { toon = null; throw e; });
+  return toon;
+}
+
 export const reduced = () => typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** How far the scrub trails the scroll, in seconds. Long enough to feel like weight, short enough that the page
@@ -43,11 +55,11 @@ export const TRAIL = 0.6;
 
 /** Runs `fallback` (the hand-rolled scroll the page always had) at once, then hands over to `withGsap` when GSAP
  *  arrives. `withGsap` builds its tweens inside a gsap.context, so leaving the page reverts every one of them. */
-export function scrollMotion(root: HTMLElement, fallback: () => () => void, withGsap: (g: G) => void) {
+export function scrollMotion(root: HTMLElement, fallback: () => () => void, withGsap: (g: G) => void, load = loadGsap) {
   if (reduced()) return () => {};
   let stopFallback: (() => void) | undefined = fallback(), gone = false;
   let ctx: { revert: () => void } | undefined;
-  loadGsap().then(g => {
+  load().then(g => {
     if (gone) return;
     stopFallback?.();
     stopFallback = undefined;

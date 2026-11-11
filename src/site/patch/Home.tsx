@@ -7,6 +7,7 @@ import { paintNewsprint } from './parts';
 import { useEntrance } from '../useEntrance';
 import { markSeen, seenBefore } from '../navigate';
 import { loadGsap, reduced, scrollMotion, TRAIL, type G } from '../gsap';
+import { hop, hops, replay, startBoil } from './toon';
 import '../motion.css';
 import './patch.css';
 
@@ -20,52 +21,6 @@ const handover = (href: string) => /^\/projects\/([\w-]+)$/.exec(href)?.[1];
 const SFX = ['BOING!', 'BONK!', 'THUMP!', 'POP!', 'BOING!'];
 const LEAVES = ['#e8742a', '#d8432c', '#f2b632', '#b8572a', '#e8742a', '#f2b632', '#d8432c', '#b8572a'];
 
-/** Restarts a CSS animation class on an element, so a second tap bounces it again. */
-export function replay(el: Element, cls: string) {
-  el.classList.remove(cls);
-  void (el as HTMLElement).getBoundingClientRect();
-  el.classList.add(cls);
-}
-
-/** A pumpkin's hop, in GSAP: squash, spring up stretched, fall, land squashed and wobble still. A tap while it's
- *  still in the air catches it and throws it higher instead of starting over from the ground. */
-const hops = new WeakMap<Element, gsap.core.Timeline>();
-export function hop({ gsap }: G, p: SVGGraphicsElement) {
-  hops.get(p)?.kill();
-  const h = p.getBBox().height || 80, y = Number(gsap.getProperty(p, 'y')) || 0, aloft = y < -2;
-  const top = aloft ? Math.max(-0.6 * h, Math.min(-0.34 * h, y - 0.2 * h)) : -0.34 * h;
-  // GSAP works out the origin itself and writes it into the transform, measured from the drawing's own space, so the
-  // CSS bounce's fill-box would put it in twice.
-  p.style.transformBox = 'view-box';
-  gsap.set(p, { transformOrigin: '50% 100%' });
-  const tl = gsap.timeline({ onComplete: () => { hops.delete(p); } });
-  if (!aloft) tl.to(p, { scaleX: 1.22, scaleY: 0.72, duration: 0.11, ease: 'power2.out' });
-  tl.to(p, { y: top, scaleX: 0.84, scaleY: 1.2, duration: aloft ? 0.22 : 0.19, ease: 'power2.out' })
-    .to(p, { y: 0, scaleX: 1, scaleY: 1, duration: 0.17 + (-top / h - 0.34) * 0.3, ease: 'power2.in' })
-    .to(p, { scaleX: 1.16, scaleY: 0.84, duration: 0.07, ease: 'power1.out' })
-    .to(p, { scaleX: 1, scaleY: 1, duration: 0.55, ease: 'elastic.out(1, 0.4)' });
-  hops.set(p, tl);
-}
-
-/** The boil: the ink swaps between three wobble filters about eight times a second while it's on screen. */
-function startBoil(el: HTMLElement) {
-  if (reduced()) return;
-  const groups = [el.querySelector('#pk-ink')!, el.querySelector('#pk-footInk')!];
-  const shown = new Set<Element>();
-  let i = 0;
-  const tick = setInterval(() => {
-    if (document.hidden) return;
-    i = (i + 1) % 3;
-    for (const g of groups) if (shown.has(g)) g.setAttribute('filter', `url(#pk-b${i})`);
-  }, 125);
-  let io: IntersectionObserver | undefined;
-  if (typeof IntersectionObserver === 'function') {
-    io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? shown.add(e.target) : shown.delete(e.target)));
-    groups.forEach(g => io!.observe(g));
-  } else groups.forEach(g => shown.add(g));
-  return () => { clearInterval(tick); io?.disconnect(); };
-}
-
 export default function Home() {
   const root = useRef<HTMLDivElement>(null);
   // Coming back to the home this visit, it's already printed: nothing replays its entrance.
@@ -78,7 +33,7 @@ export default function Home() {
   // it repaints the whole drawing eight times a second, and on a phone that would fight the letters for frames.
   useEntrance(root, 'Patrick Hand SC', () => {
     let stop: (() => void) | undefined;
-    const t = setTimeout(() => { stop = startBoil(root.current!); }, 1700);
+    const t = setTimeout(() => { stop = startBoil([root.current!.querySelector('#pk-ink')!, root.current!.querySelector('#pk-footInk')!], 'pk-b'); }, 1700);
     return () => { clearTimeout(t); stop?.(); };
   });
 
