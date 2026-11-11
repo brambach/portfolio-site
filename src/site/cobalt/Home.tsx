@@ -4,6 +4,7 @@ import { FootArt, Plates, Scene } from './Engraving';
 import { A, ArrowRight, paintPaper } from './parts';
 import { useEntrance } from '../useEntrance';
 import { markSeen, seenBefore } from '../navigate';
+import { reduced, scrollMotion, TRAIL } from '../gsap';
 import '../motion.css';
 import './cobalt.css';
 
@@ -12,7 +13,6 @@ import './cobalt.css';
    winter, a sailboat in summer, aspens turning in fall) and four quiet buttons switch it. Below it, a quiet work list (a sticky preview on a desktop, a
    picture under each row on a phone), a short about, and a footer whose birds take off as you arrive. */
 
-const reduced = () => typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clamp = (n: number) => Math.min(1, Math.max(0, n));
 /** The project a link opens on this site, for the picture that grows into its page (navigate.ts). */
 const handover = (href: string) => /^\/projects\/([\w-]+)$/.exec(href)?.[1];
@@ -124,29 +124,41 @@ export default function Home() {
     };
   }, []);
 
-  // Scroll: the hills part and the sun sinks as you leave the hero; the footer's birds take off as you arrive.
+  // Scroll: the hills part and the sun sinks as you leave the hero; the footer's birds take off as you arrive. GSAP
+  // scrubs it all a beat behind the scroll, so the layers glide rather than stick; before it loads they follow 1:1.
   useEffect(() => {
-    if (reduced()) return;
     const el = root.current!;
     const $ = (id: string) => el.querySelector<HTMLElement | SVGElement>(`#${id}`)!;
     const layers: [Element & ElementCSSInlineStyle, number][] = [[$('c-pSun'), 190], [$('c-pFar'), -20], [$('c-pNear'), -50], [$('c-pFront'), -100]];
     const copy = $('c-heroCopy'), hero = $('c-hero'), foot = $('c-foot');
     const birds = [...el.querySelectorAll<SVGGElement>('.fbird')];
-    let frame = 0;
-    const paint = () => {
-      frame = 0;
-      const vh = window.innerHeight, r = hero.getBoundingClientRect();
-      const p = clamp(-r.top / Math.max(1, r.height));
-      for (const [layer, by] of layers) layer.style.transform = `translateY(${p * by}px)`;
-      copy.style.transform = `translateY(${-p * 80}px)`;
-      copy.style.opacity = (1 - p * 1.2).toFixed(2);
-      const q = clamp((vh - foot.getBoundingClientRect().top) / (vh * 0.75)), e = q * q * (3 - 2 * q);
-      for (const b of birds) b.style.transform = `translate(${e * Number(b.dataset.dx)}px,${e * Number(b.dataset.dy)}px)`;
-    };
-    const onScroll = () => { if (!frame) frame = requestAnimationFrame(paint); };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    paint();
-    return () => { window.removeEventListener('scroll', onScroll); cancelAnimationFrame(frame); };
+    return scrollMotion(el, () => {
+      let frame = 0;
+      const paint = () => {
+        frame = 0;
+        const vh = window.innerHeight, r = hero.getBoundingClientRect();
+        const p = clamp(-r.top / Math.max(1, r.height));
+        for (const [layer, by] of layers) layer.style.transform = `translateY(${p * by}px)`;
+        copy.style.transform = `translateY(${-p * 80}px)`;
+        copy.style.opacity = (1 - p * 1.2).toFixed(2);
+        const q = clamp((vh - foot.getBoundingClientRect().top) / (vh * 0.75)), e = q * q * (3 - 2 * q);
+        for (const b of birds) b.style.transform = `translate(${e * Number(b.dataset.dx)}px,${e * Number(b.dataset.dy)}px)`;
+      };
+      const onScroll = () => { if (!frame) frame = requestAnimationFrame(paint); };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      paint();
+      return () => {
+        window.removeEventListener('scroll', onScroll);
+        cancelAnimationFrame(frame);
+        [...layers.map(l => l[0]), copy, ...birds].forEach(n => { n.style.transform = ''; });
+        copy.style.opacity = '';
+      };
+    }, ({ gsap }) => {
+      const leave = gsap.timeline({ defaults: { ease: 'none' }, scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: TRAIL } });
+      for (const [layer, by] of layers) leave.fromTo(layer, { y: 0 }, { y: by, duration: 1 }, 0);
+      leave.fromTo(copy, { y: 0 }, { y: -80, duration: 1 }, 0).fromTo(copy, { opacity: 1 }, { opacity: 0, duration: 1 / 1.2 }, 0);
+      for (const b of birds) gsap.fromTo(b, { x: 0, y: 0 }, { x: Number(b.dataset.dx), y: Number(b.dataset.dy), ease: 'sine.inOut', scrollTrigger: { trigger: foot, start: 'top bottom', end: 'top 25%', scrub: TRAIL + 0.2 } });
+    });
   }, []);
 
   // On a phone each row's picture rises once it scrolls into view. Arriving at /#work or /#about lands there.

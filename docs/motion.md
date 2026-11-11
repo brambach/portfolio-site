@@ -60,6 +60,22 @@ leaves a card stuck lifted. On a phone a tap gets the press instead.
 **Reduced motion lands where it ends.** With the setting on, everything is already in place and nothing loops, but
 touches still work: the sun still drags and the big pumpkin still lights.
 
+## Where GSAP comes in
+
+CSS does every arrival and every loop, and should keep doing them: it's free, it runs before any script, and it's
+already tuned. GSAP (`src/site/gsap.ts`) takes the two kinds of move CSS can't do well.
+
+**Scroll that trails.** The hero leaving (the hills parting, the name sinking) and the footer's birds or bats taking
+off are scrubbed with ScrollTrigger, 0.6s behind the scroll (0.8s for the birds). They move with a little weight
+instead of sticking to the scrollbar. Same distances as before.
+
+**Answers you can interrupt.** A pumpkin's hop is a GSAP timeline, so a tap while it's still in the air catches it
+and throws it a little higher instead of snapping it back to the ground and starting over.
+
+GSAP is never in the first load. It's fetched when the browser goes idle, so it can't hold up the name, and until it
+arrives (or if it never does) the page runs the hand-written versions it had before. With reduced motion it isn't
+loaded at all.
+
 ## How each look tunes it
 
 | | Cobalt | Pumpkin patch |
