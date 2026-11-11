@@ -30,7 +30,9 @@ describe('The product pages', () => {
       const { unmount } = render(<Page id={id} />);
       expect(screen.getByRole('heading', { level: 1, name: s.name })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: new RegExp(s.live.label) })).toHaveAttribute('href', s.live.href);
-      expect(screen.getByRole('link', { name: new RegExp(s.source.label) })).toHaveAttribute('href', s.source.href);
+      // Private code has no link, so the page says so in plain words instead.
+      if (s.source.href) expect(screen.getByRole('link', { name: new RegExp(s.source.label) })).toHaveAttribute('href', s.source.href);
+      else { expect(screen.getByText(s.source.label)).toBeInTheDocument(); expect(screen.queryByRole('link', { name: new RegExp(s.source.label) })).toBeNull(); }
       expect(screen.getByRole('img', { name: s.hero.alt })).toBeInTheDocument();
       unmount();
     }
