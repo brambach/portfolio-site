@@ -1,0 +1,92 @@
+/* The snow look: the pumpkin patch's Sunday comic (../patch/patch.css, which this sits on top of) two months on, for
+   Christmas. Same newsprint, ink, lettering and springs, with the paper's accent turned from pumpkin to holly red. What's
+   new is the snow: it falls in the hero, piles up on every panel you pass, and one snowball rolls down the whole page.
+   The hero is a stack of layers the scroll moves apart (sky, moon, yard, night, lights, the kid and the tree), and the
+   page behind everything cools toward night as you go down. Everything here sits under .sn, next to .pk. */
+
+.pk.sn {
+  --orange: #c8323a; --red: #c8323a; --pine: #2f6b3a; --night: #2b386f;
+  position: relative; isolation: isolate;
+  background-image: radial-gradient(rgba(200, 50, 58, .11) 1.3px, transparent 1.6px);
+}
+.sn .wrap { position: relative; z-index: 1; }
+.sn .wrap > header, .sn .wrap > main, .sn .wrap > footer { position: relative; z-index: 1; }
+
+/* The page's own nightfall: one fixed wash under the content, faded in by the scroll (GSAP). Cards keep their own
+   paper, so they read as lit windows. */
+.sn .night-page { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0; background-color: #dfe6f2; background-image: radial-gradient(rgba(43, 56, 111, .13) 1.3px, transparent 1.6px); background-size: 11px 11px; }
+
+/* Section titles go holly red with a cap of snow, and the title box gets snow and a sprig. */
+.pk.sn .caption-h { position: relative; background: var(--red); color: #fffaf0; }
+.sn .cap { position: absolute; left: 6px; top: -24px; width: calc(100% - 16px); height: 40px; display: block; overflow: visible; pointer-events: none; z-index: 1; transform-origin: 50% 68%; }
+.sn .caption-h .cap { left: 2px; top: -25px; width: calc(100% - 6px); }
+.sn .title-box { position: relative; }
+.sn .title-box .cap { top: -25px; left: 8px; width: calc(100% - 26px); }
+.sn .holly { position: absolute; right: -16px; top: -18px; width: 62px; height: 28px; overflow: visible; transform: rotate(14deg); }
+
+/* The hero: layers that share one viewBox. */
+.pk.sn .hero { background: #aac2e6; }
+.sn .stage { position: relative; height: clamp(500px, 52vw, 640px); overflow: hidden; isolation: isolate; border-radius: 13px 3px 17px 2px / 3px 15px 2px 13px; }
+.sn .stage > * { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.sn .sky { background: radial-gradient(#87a3d6 1.9px, transparent 2.3px) 0 0 / 10px 10px, radial-gradient(#87a3d6 1.9px, transparent 2.3px) 5px 5px / 10px 10px; -webkit-mask-image: linear-gradient(transparent 4%, #000 70%); mask-image: linear-gradient(transparent 4%, #000 70%); }
+.sn .sky-dusk { opacity: 0; background-color: #8088c6; background-image: radial-gradient(#6a6fb2 1.9px, transparent 2.3px), radial-gradient(#6a6fb2 1.9px, transparent 2.3px); background-size: 10px 10px; background-position: 0 0, 5px 5px; }
+.sn .sky-night { opacity: 0; background: var(--night); }
+.sn .tint { opacity: 0; mix-blend-mode: multiply; pointer-events: none; }
+.sn .far, .sn .yard, .sn .lights { pointer-events: none; }
+.sn .live { touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.sn .live .pine, .sn .live .box, .sn .live .gift, .sn .live .snowman, .sn .live .ghost, .sn .live .pile, .sn .live .pump { cursor: pointer; }
+
+/* The snow. Each flake falls on its own clock and drifts side to side as it goes. */
+.sn .snowfall, .sn .gust { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.sn .flake { position: absolute; top: -20px; display: block; animation: sn-fall 10s linear infinite; will-change: transform; }
+.sn .flake i { display: block; width: 100%; height: 100%; border-radius: 50%; background: #fbfdff; animation: sn-drift 3.2s ease-in-out infinite alternate; }
+@keyframes sn-fall { from { transform: translateY(0); } to { transform: translateY(700px); } }
+@keyframes sn-drift { from { transform: translateX(-14px); } to { transform: translateX(14px); } }
+
+/* Make it snow: a gust of flakes blows through once, on the slant. */
+.sn .gust .flake { opacity: 0; animation: none; }
+.sn .gust.go .flake { animation: sn-gust 1.9s cubic-bezier(.35, .1, .6, 1) both; }
+@keyframes sn-gust { 0% { opacity: 0; transform: translate(-80px, -30px); } 10% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(240px, 680px); } }
+
+/* Things you tap hop from their foot. Before GSAP arrives a tap plays the patch's CSS bounce (.boing); after, hops are
+   GSAP timelines you can catch in the air. */
+.sn .gift, .sn .pile, .sn .pine, .sn .box, .sn #sn-kid, .sn .hat { transform-box: fill-box; transform-origin: 50% 100%; }
+.sn .gift.boing, .sn .pile.boing, .sn .pine.boing, .sn .hat.boing { animation: pk-boing .75s var(--ease); }
+.sn .hung { opacity: 0; transform-box: fill-box; transform-origin: 50% 0; }
+.sn .hung.on { opacity: 1; animation: pk-pop .5s var(--boing) both; }
+.sn .boxed { transition: opacity .2s; }
+.sn .boxed.gone { opacity: 0; pointer-events: none; }
+.sn .tbulb, .sn .tglow { transition: opacity .3s; }
+.sn .pine.lit .tbulb { opacity: 1; }
+.sn .pine.lit .tglow { opacity: 1; }
+.sn .loose { opacity: 0; transform-box: fill-box; transform-origin: center; }
+.sn .lights { overflow: visible; }
+/* The lit tree's lights twinkle, each on its own clock. */
+.sn .pine.lit .tglow, .sn .foot-lights .glow, .sn .tree-glow .glow { animation: hv-twinkle 3.2s ease-in-out infinite alternate; }
+.sn .pine.lit g:nth-child(3n) > .tglow { animation-duration: 2.4s; animation-delay: -.8s; }
+.sn .pine.lit g:nth-child(2n) > .tglow { animation-duration: 4s; animation-delay: -1.6s; }
+.sn .foot-lights .bulb:nth-child(2n) .glow { animation-duration: 4.1s; animation-delay: -1.3s; }
+@keyframes hv-twinkle { from { opacity: 1; } to { opacity: .55; } }
+
+/* One snowball rolls the length of the page with you (GSAP moves it), behind the panels and in front of the paper, and
+   ends up as the footer snowman's head. */
+.sn .roll { position: absolute; left: 0; top: 0; z-index: 0; width: 40px; height: 40px; pointer-events: none; opacity: 0; will-change: transform; }
+.sn .roll.near { z-index: 2; }
+.sn .roll svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+/* The footer: the yard on Christmas Eve, in a panel of its own. */
+.sn .night { overflow: hidden; border-width: 4px; padding: 0; margin-bottom: 26px; background: var(--night); }
+.pk.sn .foot-art { height: clamp(220px, 27vw, 330px); margin: 0; overflow: hidden; }
+
+@media (max-width: 560px) {
+  .sn .stage { height: 540px; }
+  .sn .holly { right: -10px; width: 52px; }
+}
+
+/* Reduced motion: Christmas Eve standing still, with the lights on and the snow caps already down. Taps still trim the
+   tree. */
+@media (prefers-reduced-motion: reduce) {
+  .sn .snowfall, .sn .gust, .sn .roll { display: none; }
+  .sn #sn-lights .shine { opacity: 1; }
+  .sn .hung.on { opacity: 1; transform: none; }
+}

@@ -115,3 +115,28 @@ afternoon standing still, where tapping the pie still takes a slice.
 
 Things that move every frame sit outside the two groups that boil (the yard and the table), so a scroll never asks
 the browser to redo the wobble filter.
+
+## The first snow (Christmas)
+
+The fourth look, `src/site/snow`, is the same yard two months on, under snow. It keeps the dinner table's machinery
+(the layered hero, `story.ts` holding all the GSAP, CSS answers until the plugins land) and has one idea of its own:
+**the snow is on everything you've already read.** It falls in the hero, piles up on each panel as it comes up the
+screen, and one snowball rolls the whole page down to be the snowman's head.
+
+| Move | Verb | How |
+|---|---|---|
+| Evening turns to night, the moon comes up, the string along the fence comes on | Scroll | One timeline scrubbed 0.6s behind, done by the time the hero is half gone |
+| Snow falls in the hero and streams with how fast you scroll | Drift, then answer | CSS loops per flake; ScrollTrigger velocity moves the whole layer and lets it settle |
+| Snow piles up on every panel as it comes up the screen | Scroll | A cap per panel, scaleY from its base, scrubbed from the panel's top entering to 35% up. Drawn at its real width so the lumps stay round |
+| One snowball rolls the length of the page | Scroll | Zigzags like switchbacks, turns by the distance it travels over its radius, grows from a third of the head's size. Behind the panels, in front in the last gap |
+| It lands on the footer snowman, and the face and hat go on | Scroll, then answer | Past 98.5% of the scroll it swaps for the drawn head; the face pops and the hat drops with a bounce. Scrolling back up takes them off again |
+| A sleigh flies up to cross the moon | Scroll | MotionPath, scrubbed as the footer arrives |
+| The page cools toward night | Scroll | One fixed wash, opacity only |
+| Trim the tree | Answer | Three ornaments and then the star arc from the box (MotionPath) and land swinging on their hooks; the star spins on. Then the tree's lights come on from the bottom |
+| Tip the snowman's hat | Answer | It pops off, flips once and lands with a squash. A tap while it's up throws it higher |
+| Make it snow | Answer | A one-shot gust in CSS; the presents hop one after another and the kid jumps |
+| Kick a drift | Answer | Physics2D, the same kick as the leaf pile |
+
+With reduced motion it's Christmas Eve standing still: no falling snow and no snowball, the lights on, the snow
+already down on every panel, and tapping the tree still trims it. Without GSAP the caps are down and the snowman
+already has its head.

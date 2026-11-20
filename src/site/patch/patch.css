@@ -203,3 +203,7 @@
 /* a product page's way to the live product */
 .pk .p-head .live { display: inline-flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 18px; }
 .pk .p-head .live .arrow path { stroke: var(--ink); stroke-width: 2.2; }
+
+/* Christmas on the project pages (look.ts COMIC_PAGE): holly red where the pumpkin orange was, to match the snow home. */
+.pk.xmas { --orange: #c8323a; --red: #c8323a; background-image: radial-gradient(rgba(200, 50, 58, .11) 1.3px, transparent 1.6px); }
+.pk.xmas .caption-h { background: #c8323a; color: #fffaf0; }
