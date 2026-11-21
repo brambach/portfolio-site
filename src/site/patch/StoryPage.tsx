@@ -5,6 +5,7 @@ import { STORIES, type StoryId } from '../stories';
 import { storyTitle } from '../meta';
 import { paintNewsprint } from './parts';
 import { useEntrance } from '../useEntrance';
+import { COMIC_PAGE } from '../look';
 import '../motion.css';
 import './patch.css';
 
@@ -21,7 +22,7 @@ export default function StoryPage({ id }: { id: StoryId }) {
     return () => { unpaint(); document.title = title; };
   }, [s]);
 
-  return <div className="pk" ref={root}>
+  return <div className={COMIC_PAGE} ref={root}>
     <div className="wrap project">
       <header className="top">
         <a href="/#work" className="back"><ArrowLeft />All work</a>

@@ -5,6 +5,7 @@ import DervoDemo from '../cobalt/DervoDemo';
 import { A, ArrowLeft, ArrowRight } from '../cobalt/parts';
 import { paintNewsprint } from './parts';
 import { useEntrance } from '../useEntrance';
+import { COMIC_PAGE } from '../look';
 import '../motion.css';
 import '../cobalt/cobalt.css';
 import './patch.css';
@@ -22,7 +23,7 @@ export default function DervoPage() {
     return () => { unpaint(); document.title = title; };
   }, []);
 
-  return <div className="pk" ref={root}>
+  return <div className={COMIC_PAGE} ref={root}>
     <div className="wrap project">
       <header className="top">
         <a href="/#work" className="back"><ArrowLeft />{DERVO.back}</a>

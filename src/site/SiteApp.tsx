@@ -6,7 +6,7 @@ import type { Route, StoryId, WorkId } from './routes';
 /* The site: the home page at /, a page per project at /projects/<id>, and a page for addresses that don't exist.
    Each is its own chunk, so a project page doesn't load the home page's motion and the other way round. The home and
    Dervo's page wear the look named in look.ts: the pumpkin patch (src/site/patch) for Halloween, the dinner table
-   (src/site/harvest) for Thanksgiving, or cobalt (src/site/cobalt), and so do the product pages (StoryPage, words in stories.ts). The other projects keep their pages
+   (src/site/harvest) for Thanksgiving, the first snow (src/site/snow) for Christmas, or cobalt (src/site/cobalt), and so do the product pages (StoryPage, words in stories.ts). The other projects keep their pages
    for now. Moving between them happens in place
    (navigate.ts), so the Dervo picture can grow into its page. */
 
@@ -20,7 +20,7 @@ function page<P extends object>(load: () => Promise<{ default: ComponentType<P> 
 }
 
 const pages = {
-  home: page(() => LOOK === 'harvest' ? import('./harvest/Home') : LOOK === 'patch' ? import('./patch/Home') : import('./cobalt/Home')),
+  home: page(() => LOOK === 'snow' ? import('./snow/Home') : LOOK === 'harvest' ? import('./harvest/Home') : LOOK === 'patch' ? import('./patch/Home') : import('./cobalt/Home')),
   dervo: page(() => COMIC ? import('./patch/DervoPage') : import('./cobalt/DervoPage')),
   story: page<{ id: StoryId }>(() => COMIC ? import('./patch/StoryPage') : import('./cobalt/StoryPage')),
   work: page<{ id: WorkId }>(() => import('./WorkPage')),

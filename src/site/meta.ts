@@ -36,7 +36,10 @@ export const HOME_META: PageMeta = {
   title: NAME,
   description: HOME_DESCRIPTION,
   // The card wears the same look as the home page, so switching LOOK switches it too.
-  ...(LOOK === 'harvest' ? {
+  ...(LOOK === 'snow' ? {
+    image: `/og/home-snow.jpg?v=${V}`,
+    imageAlt: 'Bryce Rambach’s home page as a Sunday comic: his name in a title box with snow on it and “I fuss over the pixels, the motion and the code.” in a speech balloon, over a snowy yard with a snowman, a little pine with presents under it and a bedsheet ghost in a knit hat and scarf',
+  } : LOOK === 'harvest' ? {
     image: `/og/home-harvest.jpg?v=${V}`,
     imageAlt: 'Bryce Rambach’s home page as a Sunday comic: his name in a title box and “I fuss over the pixels, the motion and the code.” in a speech balloon, over a yard set for dinner with a pie on a checked tablecloth, a string of lights, a bedsheet ghost and a low sun',
   } : LOOK === 'patch' ? {
