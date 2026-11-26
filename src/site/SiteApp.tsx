@@ -20,7 +20,7 @@ function page<P extends object>(load: () => Promise<{ default: ComponentType<P> 
 }
 
 const pages = {
-  home: page(() => LOOK === 'snow' ? import('./snow/Home') : LOOK === 'harvest' ? import('./harvest/Home') : LOOK === 'patch' ? import('./patch/Home') : import('./cobalt/Home')),
+  home: page(() => LOOK === 'block' ? import('./block/Home') : LOOK === 'snow' ? import('./snow/Home') : LOOK === 'harvest' ? import('./harvest/Home') : LOOK === 'patch' ? import('./patch/Home') : import('./cobalt/Home')),
   dervo: page(() => COMIC ? import('./patch/DervoPage') : import('./cobalt/DervoPage')),
   story: page<{ id: StoryId }>(() => COMIC ? import('./patch/StoryPage') : import('./cobalt/StoryPage')),
   work: page<{ id: WorkId }>(() => import('./WorkPage')),

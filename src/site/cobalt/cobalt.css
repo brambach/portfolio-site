@@ -7,6 +7,7 @@
    Hanken Grotesk for reading, Plex Mono for labels. Everything sits under .cb so nothing leaks into the older pages. */
 
 :root:has(.cb) { background: #f6f3ec; }
+:root:has(.cb.bw) { background: #ffffff; }
 
 .cb {
   --paper: #f6f3ec; --card: #fbf9f4;
@@ -19,6 +20,15 @@
   min-height: 100svh; background: var(--paper); color: var(--text);
   font-family: var(--sans); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased;
 }
+.cb.bw {
+  /* The project pages under the black and white home: white paper, black ink, Inter Tight where Alegreya was. */
+  --paper: #ffffff; --card: #fafafa;
+  --ink: #0a0a0a; --text: #0a0a0a; --body: #262626; --soft: #525252; --faint: #6b6b6b;
+  --serif: 'Inter Tight Variable', system-ui, sans-serif;
+  --lift: 0 40px 90px -50px rgba(0, 0, 0, .35), 0 0 0 1px rgba(0, 0, 0, .08);
+}
+.cb.bw .serif, .cb.bw .serif-i { font-style: normal; letter-spacing: -.025em; font-weight: 500; }
+.cb.bw img, .cb.bw .dv { filter: grayscale(1); }
 .cb ::selection { background: var(--ink); color: var(--paper); }
 .cb a { color: inherit; text-decoration: none; }
 @media (hover: hover) { .cb a:hover { color: var(--ink); } }

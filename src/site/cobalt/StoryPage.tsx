@@ -4,6 +4,8 @@ import { A, ArrowLeft, ArrowRight, paintPaper } from './parts';
 import { STORIES, type StoryId } from '../stories';
 import { storyTitle } from '../meta';
 import { useEntrance } from '../useEntrance';
+import { PROJECT_PAGE } from '../look';
+import '@fontsource-variable/inter-tight';
 import '../motion.css';
 import './cobalt.css';
 
@@ -20,7 +22,7 @@ export default function StoryPage({ id }: { id: StoryId }) {
     return () => { unpaint(); document.title = title; };
   }, [s]);
 
-  return <div className="cb" ref={root}>
+  return <div className={PROJECT_PAGE} ref={root}>
     <div className="wrap project">
       <header className="top">
         <a href="/#work" className="back"><ArrowLeft />All work</a>
