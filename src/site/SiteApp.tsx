@@ -25,15 +25,16 @@ const pages = {
   story: page<{ id: StoryId }>(() => COMIC ? import('./patch/StoryPage') : import('./cobalt/StoryPage')),
   work: page<{ id: WorkId }>(() => import('./WorkPage')),
   teammate: page(() => import('./block/TeammatePage')),
+  psyche: page(() => import('./block/PsychePage')),
   missing: page(() => import('./NotFound')),
 };
 
-const pageOf = (r: Route) => r.name === 'home' ? pages.home : r.name === 'story' ? pages.story : r.name === 'teammate' ? pages.teammate : r.name === 'project' ? r.id === 'dervo' ? pages.dervo : pages.work : pages.missing;
+const pageOf = (r: Route) => r.name === 'home' ? pages.home : r.name === 'story' ? pages.story : r.name === 'case' ? r.id === 'psyche' ? pages.psyche : pages.teammate : r.name === 'project' ? r.id === 'dervo' ? pages.dervo : pages.work : pages.missing;
 
 export default function SiteApp({ route: first }: { route: Route }) {
   const route = useSiteRoute(first, r => pageOf(r).fetch);
-  const Home = pages.home.View, DervoPage = pages.dervo.View, StoryPage = pages.story.View, WorkPage = pages.work.View, TeammatePage = pages.teammate.View, NotFound = pages.missing.View;
+  const Home = pages.home.View, DervoPage = pages.dervo.View, StoryPage = pages.story.View, WorkPage = pages.work.View, TeammatePage = pages.teammate.View, PsychePage = pages.psyche.View, NotFound = pages.missing.View;
   return <Suspense fallback={null}>
-    {route.name === 'home' ? <Home /> : route.name === 'story' ? <StoryPage key={route.id} id={route.id} /> : route.name === 'teammate' ? <TeammatePage /> : route.name === 'project' ? route.id === 'dervo' ? <DervoPage /> : <WorkPage key={route.id} id={route.id} /> : <NotFound />}
+    {route.name === 'home' ? <Home /> : route.name === 'story' ? <StoryPage key={route.id} id={route.id} /> : route.name === 'case' ? route.id === 'psyche' ? <PsychePage /> : <TeammatePage /> : route.name === 'project' ? route.id === 'dervo' ? <DervoPage /> : <WorkPage key={route.id} id={route.id} /> : <NotFound />}
   </Suspense>;
 }

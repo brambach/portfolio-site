@@ -6,6 +6,8 @@ import DervoPage from '../cobalt/DervoPage';
 import * as COPY from './copy';
 import Home from './Home';
 import TeammatePage from './TeammatePage';
+import PsychePage from './PsychePage';
+import { PSYCHE } from './psyche';
 import { TEAMMATE } from './teammate';
 import { siteRoute } from '../routes';
 import { PAGES } from '../meta';
@@ -106,8 +108,8 @@ describe('The black and white home', () => {
 
 describe('The AI teammate story', () => {
   it('has its own address, page and link preview', () => {
-    expect(siteRoute('/projects/ai-teammate')).toEqual({ name: 'teammate' });
-    expect(siteRoute('/projects/ai-teammate/')).toEqual({ name: 'teammate' });
+    expect(siteRoute('/projects/ai-teammate')).toEqual({ name: 'case', id: 'ai-teammate' });
+    expect(siteRoute('/projects/ai-teammate/')).toEqual({ name: 'case', id: 'ai-teammate' });
     expect(PAGES.find(p => p.path === '/projects/ai-teammate')).toMatchObject({ file: 'projects/ai-teammate.html', title: TEAMMATE.title });
   });
 
@@ -132,11 +134,48 @@ describe('The AI teammate story', () => {
   });
 });
 
+describe('The Psyche story', () => {
+  it('has its own address, page and link preview, and the home row leads to it', () => {
+    expect(siteRoute('/projects/psyche')).toEqual({ name: 'case', id: 'psyche' });
+    expect(PAGES.find(p => p.path === '/projects/psyche')).toMatchObject({ file: 'projects/psyche.html', title: PSYCHE.title });
+    expect(COPY.ROWS.find(r => r.name === 'Psyche')).toMatchObject({ href: '/projects/psyche', go: 'Read the story' });
+  });
+
+  it('leads with the headline, the numbers and the coast, then the case study in order, with its source', () => {
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    const { container } = render(<PsychePage />);
+    expect(screen.getByRole('heading', { level: 1, name: PSYCHE.h1 })).toBeInTheDocument();
+    expect(within(screen.getByRole('list', { name: 'By the numbers' })).getAllByRole('listitem').map(li => li.querySelector('.t-vh')!.textContent)).toEqual(['53,793', '43', '13', '$0']);
+    expect(screen.getAllByRole('heading', { level: 2 }).map(h => h.textContent)).toEqual([PSYCHE.principle.h2, PSYCHE.both.h2, PSYCHE.game.h2, PSYCHE.decisions.h2, PSYCHE.science.h2, PSYCHE.tracks.h2, PSYCHE.voice.label, PSYCHE.limits.h2]);
+    const pics = Object.values(PSYCHE.pics);
+    expect([...container.querySelectorAll('img')].map(i => i.getAttribute('src')).sort()).toEqual(pics.map(p => p.src).sort());
+    pics.forEach(p => expect(screen.getByAltText(p.alt)).toHaveAttribute('width', String(p.w)));
+    expect(screen.getByRole('img', { name: PSYCHE.principle.alt })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Source on GitHub/ })).toHaveAttribute('href', 'https://github.com/brambach/psyche');
+    expect(screen.getByRole('list', { name: PSYCHE.both.chainLabel }).children).toHaveLength(6);
+    const levels = [...container.querySelectorAll('h1, h2, h3, h4, h5, h6')].map(h => Number(h.tagName[1]));
+    levels.forEach((l, i) => { if (i) expect(l - levels[i - 1], String(levels)).toBeLessThanOrEqual(1); });
+  });
+
+  it('ships its pictures as files, not inlined', async () => {
+    const { existsSync, statSync } = await import('node:fs');
+    for (const p of Object.values(PSYCHE.pics)) {
+      const file = `${process.cwd()}/public${p.src}`;
+      expect(existsSync(file), file).toBe(true);
+      expect(statSync(file).size, file).toBeLessThan(200_000);
+    }
+  });
+
+  it('adds up: the split is 2,817 choices', () => {
+    expect(PSYCHE.both.split.a + PSYCHE.both.split.b).toBe(2817);
+  });
+});
+
 describe('The words', () => {
   it('use no dashes, never say parked, and name no port, city or employer', () => {
     vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-    const { container } = render(<><Home /><DervoPage /><TeammatePage /></>);
-    const texts = [container.textContent!, ...strings(COPY), ...strings(TEAMMATE)];
+    const { container } = render(<><Home /><DervoPage /><TeammatePage /><PsychePage /></>);
+    const texts = [container.textContent!, ...strings(COPY), ...strings(TEAMMATE), ...strings(PSYCHE)];
     const employer = [...BANNED, /\bdd\b/i, /\bcontract/i, /\bfreelanc/i];
     for (const t of texts) {
       expect(t, t).not.toMatch(DASHES);

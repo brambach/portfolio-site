@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { NAME } from '../cobalt/copy';
-import { ArrowLeft, paintPaper } from '../cobalt/parts';
+import { ArrowLeft } from '../cobalt/parts';
 import { useEntrance } from '../useEntrance';
+import { CaseTop, Count, fmt, usePage, useReveal } from './caseStudy';
 import { TEAMMATE as T } from './teammate';
 import '@fontsource-variable/inter';
 import '@fontsource-variable/inter-tight';
@@ -12,27 +12,6 @@ import './teammate.css';
 /* The AI teammate's story, in the black and white look: the case study Bryce wrote, in one narrow column with the
    pictures a little wider. Everything is drawn in HTML and SVG so it stays sharp and in the site's ink. Below the first
    screen, things rise in as they scroll into view, the numbers count up once and the chart's bars grow. */
-
-const fmt = (n: number) => n.toLocaleString('en-US');
-
-/** A number that counts up from zero the first time `go` turns true. */
-function Count({ n, go }: { n: number; go: boolean }) {
-  const [shown, setShown] = useState(n);
-  useEffect(() => {
-    if (!go || matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-    let raf = 0, t0 = 0;
-    const step = (t: number) => {
-      t0 ||= t;
-      const p = Math.min(1, (t - t0) / 1100);
-      setShown(Math.round(n * (1 - (1 - p) ** 3)));
-      if (p < 1) raf = requestAnimationFrame(step);
-    };
-    setShown(0);
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [go, n]);
-  return <>{fmt(shown)}</>;
-}
 
 function Diagram() {
   return <svg className="t-diagram" viewBox="0 0 380 560" role="img" aria-labelledby="t-dg">
@@ -125,35 +104,13 @@ const ICONS = [
 
 export default function TeammatePage() {
   const root = useRef<HTMLDivElement>(null);
-  const [seen, setSeen] = useState<Record<string, boolean>>({});
   useEntrance(root, 'Inter Tight Variable');
-
-  useEffect(() => {
-    const unpaint = paintPaper(), title = document.title;
-    document.title = T.title;
-    window.scrollTo(0, 0);
-    return () => { unpaint(); document.title = title; };
-  }, []);
-
-  // Below the fold, things rise in once as they arrive. What's already on screen stays put, so the first frame is whole.
-  useEffect(() => {
-    const el = root.current!;
-    const all = [...el.querySelectorAll<HTMLElement>('.t-reveal')];
-    const mark = (n: HTMLElement) => { n.classList.add('in'); if (n.dataset.key) setSeen(s => ({ ...s, [n.dataset.key!]: true })); };
-    if (typeof IntersectionObserver !== 'function') { all.forEach(mark); return; }
-    el.classList.add('t-js');
-    const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { io.unobserve(e.target); mark(e.target as HTMLElement); } }), { threshold: 0.18, rootMargin: '0px 0px -8% 0px' });
-    const vh = innerHeight || 800;
-    all.forEach(n => (n.getBoundingClientRect().top < vh ? mark(n) : io.observe(n)));
-    return () => io.disconnect();
-  }, []);
+  usePage(T.title);
+  const seen = useReveal(root);
 
   return <div className="cb bw tm" ref={root}>
     <div className="wrap project">
-      <header className="top">
-        <a href="/#work" className="back"><ArrowLeft />All work</a>
-        <a href="/" className="serif name">{NAME}</a>
-      </header>
+      <CaseTop />
 
       <main className="t-col">
         <section className="t-hero" aria-labelledby="t-title" data-enter>

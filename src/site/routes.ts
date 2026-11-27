@@ -3,7 +3,7 @@
 
    - /                  the home page
    - /projects/<id>     a project's page, for the five in WORK_IDS and the products in STORY_IDS (stories.ts)
-   - /projects/ai-teammate   the AI teammate's case study (TEAMMATE_PATH)
+   - /projects/<id>     a case study, for the two in CASE_IDS (block/)
    - anything else      not found, unless it's one of the older pages main.tsx still serves (OLDER_PATHS) */
 
 /** The projects with a page, in the order the pages walk through them: the two on the home page's index
@@ -21,10 +21,12 @@ export const OLDER_PATHS = ['/work', '/drive', '/next', '/admin', '/previous', '
 export const ROAD_KEYS = ['mile'] as const;
 export const DRIVE_KEYS = ['from', 'town', 'city', 'journey', 'forest'] as const;
 
-/** The AI teammate's story: a case study page of its own in the black and white look (block/TeammatePage.tsx). */
-export const TEAMMATE_PATH = '/projects/ai-teammate';
+/** Case studies Bryce wrote, each a page of its own in the black and white look (block/TeammatePage.tsx,
+ *  block/PsychePage.tsx). */
+export const CASE_IDS = ['ai-teammate', 'psyche'] as const;
+export type CaseId = (typeof CASE_IDS)[number];
 
-export type Route = { name: 'home' } | { name: 'project'; id: WorkId } | { name: 'story'; id: StoryId } | { name: 'teammate' } | { name: 'missing' };
+export type Route = { name: 'home' } | { name: 'project'; id: WorkId } | { name: 'story'; id: StoryId } | { name: 'case'; id: CaseId } | { name: 'missing' };
 
 const trim = (pathname: string) => pathname.replace(/\/+$/, '');
 
@@ -43,8 +45,8 @@ export function siteRoute(pathname: string, search = ''): Route | null {
   if ((OLDER_PATHS as readonly string[]).includes(path)) return null;
   const id = workId(path);
   if (id) return { name: 'project', id };
-  if (path === TEAMMATE_PATH) return { name: 'teammate' };
   const story = /^\/projects\/([^/]+)$/.exec(path)?.[1];
+  if (story && (CASE_IDS as readonly string[]).includes(story)) return { name: 'case', id: story as CaseId };
   return story && (STORY_IDS as readonly string[]).includes(story) ? { name: 'story', id: story as StoryId } : { name: 'missing' };
 }
 
