@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { A } from '../cobalt/parts';
 import { EMAIL, LOUPE, NAME, SOCIAL } from './copy';
-import { cursorOn, resync, smooth } from './feel';
+import { cursorOn, irisFrom, resync, smooth } from './feel';
 
 /* What every loupe page shares: the dark paper in the browser bar, the weighted scroll and the cursor, the bar along
    the top, and the logos. */
@@ -17,6 +17,7 @@ export function useLoupePage(title?: string) {
     root.classList.add('lp-root');
     smooth();
     cursorOn();
+    irisFrom();
     resync();
     return () => {
       if (meta && before) meta.content = before;

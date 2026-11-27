@@ -31,6 +31,18 @@ export function resync() {
   lenis?.scrollTo(window.scrollY, { immediate: true, force: true });
 }
 
+/** Where the last press was, so the next page can open out of that spot (the iris in loupe.css). */
+let pressing = false;
+export function irisFrom() {
+  if (pressing || testing()) return;
+  pressing = true;
+  addEventListener('pointerdown', e => {
+    const s = document.documentElement.style;
+    s.setProperty('--lp-x', `${Math.round(e.clientX)}px`);
+    s.setProperty('--lp-y', `${Math.round(e.clientY)}px`);
+  }, { capture: true, passive: true });
+}
+
 /* The cursor: a dot right on the pointer and a ring that trails it. Over a link the ring opens up, over a picture that
    opens a page it becomes a lens with an arrow, and over the hero it steps aside for the real loupe. */
 

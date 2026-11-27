@@ -332,3 +332,11 @@
   .lp-hello span { transform: none; }
   .lp-role::before { animation: none; }
 }
+
+/* --- moving between pages ---------------------------------------------------------------------------------------- */
+/* A page reached in place opens out of the spot that was pressed, like a lens coming up, while the page left behind
+   sinks back. A picture handed over (navigate.ts) keeps the plain crossfade, so the picture is what moves. */
+@keyframes lp-iris { from { clip-path: circle(0 at var(--lp-x, 50%) var(--lp-y, 50%)); } to { clip-path: circle(150vmax at var(--lp-x, 50%) var(--lp-y, 50%)); } }
+@keyframes lp-sink { to { transform: scale(.94); opacity: .35; } }
+:root.lp-root[data-nav="swap"]::view-transition-new(root) { animation: lp-iris .85s cubic-bezier(.6, 0, .15, 1) both; }
+:root.lp-root[data-nav="swap"]::view-transition-old(root) { animation: lp-sink .85s cubic-bezier(.6, 0, .15, 1) both; }
