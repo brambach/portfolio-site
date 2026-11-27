@@ -5,6 +5,10 @@ import * as COBALT from '../cobalt/copy';
 import DervoPage from '../cobalt/DervoPage';
 import * as COPY from './copy';
 import Home from './Home';
+import TeammatePage from './TeammatePage';
+import { TEAMMATE } from './teammate';
+import { siteRoute } from '../routes';
+import { PAGES } from '../meta';
 
 const DASHES = /[–—]/;
 const strings = (v: unknown): string[] => typeof v === 'string' ? [v] : v && typeof v === 'object' ? Object.values(v).flatMap(strings) : [];
@@ -44,12 +48,14 @@ describe('The black and white home', () => {
       expect(li.querySelector('img')).toHaveAttribute('alt', COPY.ROWS[i].alt);
       expect(li.querySelector('a.go')?.getAttribute('href') ?? null).toBe(COPY.ROWS[i].href ?? null);
     });
-    expect(COPY.ROWS.filter(r => !r.href).map(r => r.name)).toEqual(['AI teammate', 'receipts', 'tastepack']);
+    expect(COPY.ROWS.filter(r => !r.href).map(r => r.name)).toEqual(['receipts', 'tastepack']);
+    expect(rows[0].querySelector('a.go')).toHaveAccessibleName('Read the story');
   });
 
   it('keeps the AI teammate unnamed', () => {
-    const { container } = render(<Home />);
-    for (const t of [container.innerHTML, ...strings(COPY)]) expect(t).not.toMatch(/jared|perceptional|heyjared/i);
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    const { container } = render(<><Home /><TeammatePage /></>);
+    for (const t of [container.innerHTML, ...strings(COPY), ...strings(TEAMMATE)]) expect(t).not.toMatch(/jared|perceptional|heyjared/i);
   });
 
   it('shows the links as logos that still say where they go, at the top and in the footer', () => {
@@ -98,11 +104,39 @@ describe('The black and white home', () => {
   });
 });
 
+describe('The AI teammate story', () => {
+  it('has its own address, page and link preview', () => {
+    expect(siteRoute('/projects/ai-teammate')).toEqual({ name: 'teammate' });
+    expect(siteRoute('/projects/ai-teammate/')).toEqual({ name: 'teammate' });
+    expect(PAGES.find(p => p.path === '/projects/ai-teammate')).toMatchObject({ file: 'projects/ai-teammate.html', title: TEAMMATE.title });
+  });
+
+  it('leads with the headline and the numbers, then the case study in order', () => {
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    const { container } = render(<TeammatePage />);
+    expect(screen.getByRole('heading', { level: 1, name: TEAMMATE.h1 })).toBeInTheDocument();
+    expect(within(screen.getByRole('list', { name: 'By the numbers' })).getAllByRole('listitem').map(li => li.querySelector('.t-vh')!.textContent)).toEqual(['3 days', '1,000+', '122', '8,400+']);
+    expect(screen.getAllByRole('heading', { level: 2 }).map(h => h.textContent)).toEqual([TEAMMATE.voice.label, TEAMMATE.system.h2, TEAMMATE.start.h2, TEAMMATE.decisions.h2, TEAMMATE.worked.h2, TEAMMATE.learned.h2]);
+    expect(screen.getByRole('img', { name: TEAMMATE.system.alt })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: TEAMMATE.speed.chartAlt }).querySelectorAll('rect')).toHaveLength(TEAMMATE.perDay.length);
+    expect(screen.getByRole('img', { name: TEAMMATE.trust.phone.label })).toHaveTextContent('yeah but make it due Friday');
+    expect(screen.getByRole('table')).toHaveTextContent('ReachSlack onlyText, Slack, Discord, Telegram');
+    expect(screen.getByRole('contentinfo')).toHaveTextContent(TEAMMATE.privacy);
+    const levels = [...container.querySelectorAll('h1, h2, h3, h4, h5, h6')].map(h => Number(h.tagName[1]));
+    levels.forEach((l, i) => { if (i) expect(l - levels[i - 1], String(levels)).toBeLessThanOrEqual(1); });
+  });
+
+  it('adds up: 1,030 pull requests over the 21 days charted, the most on Nov 19', () => {
+    expect(TEAMMATE.perDay.reduce((a, b) => a + b, 0)).toBe(1030);
+    expect(TEAMMATE.perDay.indexOf(Math.max(...TEAMMATE.perDay)) + 4).toBe(19);
+  });
+});
+
 describe('The words', () => {
   it('use no dashes, never say parked, and name no port, city or employer', () => {
     vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-    const { container } = render(<><Home /><DervoPage /></>);
-    const texts = [container.textContent!, ...strings(COPY)];
+    const { container } = render(<><Home /><DervoPage /><TeammatePage /></>);
+    const texts = [container.textContent!, ...strings(COPY), ...strings(TEAMMATE)];
     const employer = [...BANNED, /\bdd\b/i, /\bcontract/i, /\bfreelanc/i];
     for (const t of texts) {
       expect(t, t).not.toMatch(DASHES);

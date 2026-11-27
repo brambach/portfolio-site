@@ -1,7 +1,8 @@
 import { projects } from '../projects/catalog';
 import { NAME } from './content';
 import { LOOK } from './look';
-import { WORK_IDS } from './routes';
+import { TEAMMATE_PATH, WORK_IDS } from './routes';
+import { TEAMMATE } from './block/teammate';
 import { STORY_IDS, STORIES, type Story } from './stories';
 
 /* What each page tells search engines and link previews: its title, a description, its address and its picture.
@@ -84,7 +85,17 @@ export const STORY_META: PageMeta[] = STORY_IDS.map(id => {
   return { file: `projects/${id}.html`, path: `/projects/${id}`, title: storyTitle(s), description: s.description, image: `${s.og.src}?v=${V}`, imageAlt: s.og.alt };
 });
 
-export const PAGES = [HOME_META, ...PROJECT_META, ...STORY_META, NOT_FOUND_META];
+/** The AI teammate's case study. Unnamed, like the page. */
+export const TEAMMATE_META: PageMeta = {
+  file: 'projects/ai-teammate.html',
+  path: TEAMMATE_PATH,
+  title: TEAMMATE.title,
+  description: TEAMMATE.description,
+  image: `/og/ai-teammate.jpg?v=${V}`,
+  imageAlt: 'The AI teammate case study: "From forked prototype to a production AI teammate in three weeks" over its numbers, 3 days to production, 1,000+ merged pull requests, 122 rollouts and 8,400+ tests',
+};
+
+export const PAGES = [HOME_META, ...PROJECT_META, ...STORY_META, TEAMMATE_META, NOT_FOUND_META];
 
 const attr = (text: string) => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
@@ -128,6 +139,6 @@ export function withMeta(html: string, page: PageMeta) {
 
 /** The sitemap: the home page, the project pages and the product pages. */
 export function sitemap() {
-  const urls = [HOME_META, ...PROJECT_META, ...STORY_META].map(p => `  <url><loc>${ORIGIN}${p.path}</loc></url>`);
+  const urls = [HOME_META, ...PROJECT_META, ...STORY_META, TEAMMATE_META].map(p => `  <url><loc>${ORIGIN}${p.path}</loc></url>`);
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
 }
