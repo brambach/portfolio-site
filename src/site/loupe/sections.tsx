@@ -58,7 +58,7 @@ export function Statement() {
     <div className="lp-wrap">
       <Scrub text={first} className="lp-big" />
       <div ref={ref} className={inView ? 'lp-statement-rest in' : 'lp-statement-rest'}>
-        <p className="lp-mono-s lp-open"><i aria-hidden="true" />{LOUPE.open}</p>
+        <p className="lp-mono-s lp-open">{LOUPE.open}</p>
         <p>{rest.join(' ')}</p>
       </div>
     </div>

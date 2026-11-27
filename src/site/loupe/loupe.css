@@ -20,7 +20,6 @@
   --faint: #5d5b56;
   --line: rgba(243, 241, 235, .13);
   --line2: rgba(243, 241, 235, .07);
-  --on: #c9f25b;
   --disp: "Archivo Variable", "Archivo", "Helvetica Neue", Arial, sans-serif;
   --read: "Geist Variable", "Geist", system-ui, -apple-system, sans-serif;
   --mono: "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -112,7 +111,6 @@
 .lp:not(.gl) .lp-name .ln + .ln { animation-delay: .08s; }
 .lp-hero-foot { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) auto; align-items: end; gap: 24px; border-top: 1px solid var(--line); padding-top: 18px; }
 .lp-role { font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 10px; }
-.lp-role::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--on); box-shadow: 0 0 0 0 rgba(201, 242, 91, .5); animation: lp-pulse 2.6s ease-out infinite; }
 .lp-tag { font-family: var(--serif); font-style: italic; font-size: clamp(22px, 2.3vw, 34px); line-height: 1.1; letter-spacing: -.005em; max-width: 22em; }
 .lp-hero-foot > * { animation: lp-rise 1s var(--ease) both; animation-delay: calc(1.15s + var(--d, 0s)); }
 .lp-hero-foot > :nth-child(2) { --d: .08s; }
@@ -126,7 +124,6 @@
   .lp-name { font-size: clamp(40px, 15.6vw, 140px); margin-bottom: 22px; }
 }
 @keyframes lp-rise { from { opacity: 0; transform: translateY(28px); } }
-@keyframes lp-pulse { 0% { box-shadow: 0 0 0 0 rgba(201, 242, 91, .55); } 70%, 100% { box-shadow: 0 0 0 12px rgba(201, 242, 91, 0); } }
 
 /* --- the sheet that slides over the hero ------------------------------------------------------------------------ */
 .lp-main { position: relative; z-index: 2; background: var(--bg); border-radius: clamp(20px, 2.4vw, 36px) clamp(20px, 2.4vw, 36px) 0 0; box-shadow: 0 -40px 90px rgba(0, 0, 0, .65); }
@@ -139,8 +136,7 @@
 .lp-big.scrub .w.lit { color: var(--fg); }
 .lp-statement-rest { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px 48px; margin-top: clamp(40px, 7vw, 96px); padding-top: 24px; border-top: 1px solid var(--line); font-size: clamp(17px, 1.4vw, 21px); line-height: 1.5; color: var(--mute); }
 .lp-statement-rest p:last-child { max-width: 34em; color: var(--fg); }
-.lp-open { display: flex; align-items: center; gap: 10px; align-self: start; }
-.lp-open i { width: 8px; height: 8px; border-radius: 50%; background: var(--on); }
+.lp-open { align-self: start; }
 .lp-statement-rest > * { opacity: 0; transform: translateY(24px); transition: opacity 1s var(--ease), transform 1.2s var(--ease); }
 .lp-statement-rest.in > * { opacity: 1; transform: none; }
 .lp-statement-rest.in > :nth-child(2) { transition-delay: .1s; }
@@ -312,7 +308,7 @@
 .lp-mail:hover { background-size: 0 2px; background-position: 100% 100%; }
 .lp-copy { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--line); transition: background .35s var(--ease), border-color .35s, transform .5s var(--spring); }
 .lp-copy:hover { background: var(--fg); color: var(--bg); transform: rotate(-8deg); }
-.lp-copy.done { background: var(--on); color: #0a0a0a; border-color: var(--on); }
+.lp-copy.done { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .lp-copy svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .lp-contact .lp-logos { margin: 28px 0 0 -10px; }
 .lp-fine { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px 32px; margin-top: clamp(56px, 8vw, 110px); padding-top: 20px; border-top: 1px solid var(--line); font-size: 13px; color: var(--mute); }
@@ -330,7 +326,6 @@
   .lp *, .lp *::before, .lp *::after { animation-duration: .001s !important; animation-delay: 0s !important; transition-duration: .001s !important; transition-delay: 0s !important; }
   .lp-statement-rest > *, .lp-rows li, .lp-about-text > * { opacity: 1; transform: none; }
   .lp-hello span { transform: none; }
-  .lp-role::before { animation: none; }
 }
 
 /* --- moving between pages ---------------------------------------------------------------------------------------- */
