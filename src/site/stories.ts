@@ -9,13 +9,13 @@ export { STORY_IDS, type StoryId };
 /** `phone` is the same screen as the product draws it on a phone, shown there instead. */
 export type Pic = { src: string; alt: string; caption: string; w: number; h: number; phone?: { src: string; w: number; h: number } };
 export type Story = {
-  id: StoryId;
+  id: StoryId | 'arro';
   name: string;
   meta: string;
   line: string;
   lead: string;
-  /** The live product, opened off the site. */
-  live: { href: string; label: string };
+  /** The live product, opened off the site. `kind` names it in the footer when it isn't a live product. */
+  live: { href: string; label: string; kind?: string };
   hero: Pic;
   facts: { label: string; value: string }[];
   /** Where the code is. No `href` when it's private, and the page says so in plain words. */
@@ -191,13 +191,49 @@ export const STORIES: Record<StoryId, Story> = {
     stands: {
       title: 'Where it stands',
       body: [
-        'My dog Boots came home after 51 days. That\'s why this exists.',
         'The demo is live with made up pets, and nothing you send leaves the server.',
       ],
     },
     description: 'A lost pet flyer that turns into a network for a town. comehome alerts the neighbors nearby, takes sightings from a page, a QR code or a text, and draws them as a trail on an ink map.',
     og: { src: '/og/comehome.jpg', alt: 'comehome: a lost page for Juniper, a made up dog, with her last sighting and an "I saw this pet" button' },
   },
+};
+
+/** Arro's page in the black and white look. It isn't in STORIES because the older looks still give it a WorkPage
+ *  (routes.ts WORK_IDS). Every fact is from the arro repo's README and src/projects/catalog.ts. */
+export const ARRO: Story = {
+  id: 'arro',
+  name: 'Arro',
+  meta: 'iphone app · 2026 · stopped',
+  line: 'One streak for a family that lives apart.',
+  lead: 'Arro is an iPhone app for families who live apart. Everyone moves a little each day, and the family keeps one streak together. Any workout counts, and a walk counts the same as a marathon.',
+  live: { href: 'https://github.com/brambach/arro', label: 'Read the source', kind: 'source' },
+  hero: { src: '/projects/arro/story.jpg', alt: 'Three Arro screens: Today with the family streak on day 24, the family feed with a run and cheers, and a nudge that says "Maya still has today"', caption: 'arro · the web build\'s sample family, names made up', w: 1600, h: 1125, phone: { src: '/projects/arro/today.jpg', w: 780, h: 1688 } },
+  facts: [
+    { label: 'role', value: 'Product design, the iPhone app and its Supabase backend' },
+    { label: 'built with', value: 'Expo, React Native and Supabase, with Apple Health and Sign in with Apple' },
+  ],
+  source: { href: 'https://github.com/brambach/arro', label: 'GitHub, MIT' },
+  does: {
+    title: 'What it does',
+    items: [
+      ['Any workout counts.', 'It comes in from Apple Health on its own, or from one tap on "I moved today".'],
+      ['Gentle on purpose.', 'There are no rankings and no red badges. Each person gets one nudge a day at most, and pushes only go out between 7am and 9pm where they live.'],
+      ['Room to miss a day.', 'If you can\'t move, your one freeze covers the day, and a break of up to two weeks lets the family streak carry on without you.'],
+      ['Routes stay private.', 'Before a route leaves the phone, Arro cuts 200 meters off each end so nobody\'s front door shows.'],
+    ],
+  },
+  call: { title: 'The call', body: 'A missed day is never public. Arro says "Maya still has today", and never that Maya broke the streak.' },
+  shot: { src: '/projects/arro/log.jpg', alt: 'Two Arro screens: logging today with a type and how long, and a run with its route, distance and time', caption: 'logging a day, and a run from apple health', w: 1600, h: 1000 },
+  stands: {
+    title: 'Where it stands',
+    body: [
+      'It got as far as TestFlight in October 2026 and never went on the App Store. I stopped working on it there.',
+      'The code is on GitHub under the MIT license. The screens come from the web build, which draws routes on paper where the iPhone shows a real map.',
+    ],
+  },
+  description: 'Arro is an iPhone app for families who live apart. Everyone moves a little each day and the family keeps one streak together, and a missed day is never public.',
+  og: { src: '/og/arro-block.jpg', alt: 'Arro: "One streak for a family that lives apart." above three of its iPhone screens in black and white' },
 };
 
 export const storyById = (id: string | null | undefined) => (STORY_IDS as readonly string[]).includes(id ?? '') ? STORIES[id as StoryId] : null;

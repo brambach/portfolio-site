@@ -49,6 +49,9 @@ export default defineConfig(({mode})=>{
     if(local[key]&&!process.env[key])process.env[key]=local[key];
   }
   return {
+  // Lines in src/site/voice.ts marked draft are guesses for Bryce to confirm. They show in dev, tests and Vercel
+  // previews, and never in a production build, so merging can't publish one.
+  define: { __DRAFTS__: JSON.stringify(mode !== 'production' || process.env.VERCEL_ENV === 'preview') },
   plugins: [react(), tailwindcss(), sitePages(), {name:"local-race-api",configureServer(server){server.middlewares.use("/api/race",raceHandler);server.middlewares.use("/api/admin",adminHandler);server.middlewares.use("/api/journey",journeyHandler);},configurePreviewServer(server){server.middlewares.use("/api/race",raceHandler);server.middlewares.use("/api/admin",adminHandler);server.middlewares.use("/api/journey",journeyHandler);}}],
   resolve: {
     alias: {

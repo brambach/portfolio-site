@@ -2,7 +2,9 @@ import { projects } from '../projects/catalog';
 import { NAME } from './content';
 import { LOOK } from './look';
 import { WORK_IDS } from './routes';
-import { STORY_IDS, STORIES, type Story } from './stories';
+import { TEAMMATE } from './block/teammate';
+import { PSYCHE } from './block/psyche';
+import { ARRO, STORY_IDS, STORIES, type Story } from './stories';
 
 /* What each page tells search engines and link previews: its title, a description, its address and its picture.
    The build writes a copy of index.html for every page with these filled in (see vite.config.ts), so they're there
@@ -36,7 +38,10 @@ export const HOME_META: PageMeta = {
   title: NAME,
   description: HOME_DESCRIPTION,
   // The card wears the same look as the home page, so switching LOOK switches it too.
-  ...(LOOK === 'snow' ? {
+  ...(LOOK === 'block' ? {
+    image: `/og/home-block.jpg?v=${V}`,
+    imageAlt: 'Bryce Rambach’s home page in black and white: his name, his links and a list of his work beside a tall etched drawing of a city block with brownstones, a walk-up with a fire escape, towers behind, a street lamp and trees',
+  } : LOOK === 'snow' ? {
     image: `/og/home-snow.jpg?v=${V}`,
     imageAlt: 'Bryce Rambach’s home page as a Sunday comic: his name in a title box with snow on it and “I fuss over the pixels, the motion and the code.” in a speech balloon, over a snowy yard with a snowman, a little pine with presents under it and a bedsheet ghost in a knit hat and scarf',
   } : LOOK === 'harvest' ? {
@@ -52,6 +57,8 @@ export const HOME_META: PageMeta = {
 };
 
 export const PROJECT_META: PageMeta[] = WORK_IDS.map(id => {
+  // In the black and white look Arro's page is a product page (SiteApp.tsx), so its preview says what that page says.
+  if (id === 'arro' && LOOK === 'block') return { file: 'projects/arro.html', path: '/projects/arro', title: `${ARRO.name.toLowerCase()}, ${NAME.toLowerCase()}`, description: ARRO.description, image: `${ARRO.og.src}?v=${V}`, imageAlt: ARRO.og.alt };
   const p = projects.find(project => project.id === id)!;
   return {
     file: `projects/${id}.html`,
@@ -81,7 +88,26 @@ export const STORY_META: PageMeta[] = STORY_IDS.map(id => {
   return { file: `projects/${id}.html`, path: `/projects/${id}`, title: storyTitle(s), description: s.description, image: `${s.og.src}?v=${V}`, imageAlt: s.og.alt };
 });
 
-export const PAGES = [HOME_META, ...PROJECT_META, ...STORY_META, NOT_FOUND_META];
+/** The case studies. The AI teammate's is unnamed, like its page. */
+export const TEAMMATE_META: PageMeta = {
+  file: 'projects/ai-teammate.html',
+  path: '/projects/ai-teammate',
+  title: TEAMMATE.title,
+  description: TEAMMATE.description,
+  image: `/og/ai-teammate.jpg?v=${V}`,
+  imageAlt: 'The AI teammate case study in black and white: "From forked prototype to a production AI teammate in three weeks", with its role, timeline, team and first numbers',
+};
+
+export const PSYCHE_META: PageMeta = {
+  file: 'projects/psyche.html',
+  path: '/projects/psyche',
+  title: PSYCHE.title,
+  description: PSYCHE.description,
+  image: `/og/psyche.jpg?v=${V}`,
+  imageAlt: 'The Psyche case study in black and white: "A civilization of AI villagers whose psychology is real machinery." over its role, team and timeline',
+};
+
+export const PAGES = [HOME_META, ...PROJECT_META, ...STORY_META, TEAMMATE_META, PSYCHE_META, NOT_FOUND_META];
 
 const attr = (text: string) => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
@@ -125,6 +151,6 @@ export function withMeta(html: string, page: PageMeta) {
 
 /** The sitemap: the home page, the project pages and the product pages. */
 export function sitemap() {
-  const urls = [HOME_META, ...PROJECT_META, ...STORY_META].map(p => `  <url><loc>${ORIGIN}${p.path}</loc></url>`);
+  const urls = [HOME_META, ...PROJECT_META, ...STORY_META, TEAMMATE_META, PSYCHE_META].map(p => `  <url><loc>${ORIGIN}${p.path}</loc></url>`);
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
 }
