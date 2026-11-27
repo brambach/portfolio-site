@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { PROJECT_META } from '../meta';
 import { DERVO, NAME } from './copy';
 import DervoDemo from './DervoDemo';
+import InMyWords from './InMyWords';
 import { A, ArrowLeft, ArrowRight, paintPaper } from './parts';
 import { useEntrance } from '../useEntrance';
 import { PROJECT_PAGE } from '../look';
@@ -46,6 +47,8 @@ export default function DervoPage() {
           {DERVO.facts.map(f => <div key={f.label}><dt className="mono">{f.label}</dt><dd>{f.value}</dd></div>)}
           <div><dt className="mono">source</dt><dd><A className="link" href={DERVO.source.href}>{DERVO.source.label}</A></dd></div>
         </dl>
+
+        <InMyWords id="dervo" />
 
         <section className="p-col" aria-labelledby="c-does">
           <h2 className="serif" id="c-does">{DERVO.does.title}</h2>

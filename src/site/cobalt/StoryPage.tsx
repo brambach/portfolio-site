@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { NAME } from './copy';
 import { A, ArrowLeft, ArrowRight, paintPaper } from './parts';
-import { STORIES, type StoryId } from '../stories';
+import { ARRO, STORIES, type StoryId } from '../stories';
+import InMyWords from './InMyWords';
 import { storyTitle } from '../meta';
 import { useEntrance } from '../useEntrance';
 import { PROJECT_PAGE } from '../look';
@@ -12,8 +13,8 @@ import './cobalt.css';
 /* A product's page in the cobalt look, laid out like Dervo's: one calm column, the live product's picture that the
    home page's picture grows into, and an honest account of where it stands. */
 
-export default function StoryPage({ id }: { id: StoryId }) {
-  const s = STORIES[id], root = useRef<HTMLDivElement>(null);
+export default function StoryPage({ id }: { id: StoryId | 'arro' }) {
+  const s = id === 'arro' ? ARRO : STORIES[id], root = useRef<HTMLDivElement>(null);
   useEntrance(root, 'Alegreya');
   useEffect(() => {
     const unpaint = paintPaper(), title = document.title;
@@ -48,6 +49,8 @@ export default function StoryPage({ id }: { id: StoryId }) {
           <div><dt className="mono">source</dt><dd>{s.source.href ? <A className="link" href={s.source.href}>{s.source.label}</A> : s.source.label}</dd></div>
         </dl>
 
+        <InMyWords id={id} />
+
         <section className="p-col" aria-labelledby={`c-${id}-does`}>
           <h2 className="serif" id={`c-${id}-does`}>{s.does.title}</h2>
           <ul>{s.does.items.map(([b, t]) => <li key={b}><strong>{b}</strong> {t}</li>)}</ul>
@@ -71,7 +74,7 @@ export default function StoryPage({ id }: { id: StoryId }) {
 
       <footer className="next-row">
         <a href="/#work" className="back mono"><ArrowLeft />all work</a>
-        <A href={s.live.href} className="next"><span className="mono">live</span><span className="serif">{s.name}</span><ArrowRight size={16} /></A>
+        <A href={s.live.href} className="next"><span className="mono">{s.live.kind ?? 'live'}</span><span className="serif">{s.name}</span><ArrowRight size={16} /></A>
       </footer>
     </div>
   </div>;

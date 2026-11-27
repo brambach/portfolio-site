@@ -3,6 +3,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { HOME_META, headTags, NOT_FOUND_META, PAGES, PROJECT_META, sitemap, withMeta } from './meta';
 import { STORY_IDS, WORK_IDS } from './routes';
+import { LOOK } from './look';
 
 const DASHES = /[\u2013\u2014]/;
 const root = process.cwd();
@@ -41,7 +42,8 @@ describe('what each page tells search engines and link previews', () => {
     const arro = withMeta(html, PROJECT_META[1]);
     expect(arro.match(/<title>/g)).toHaveLength(1);
     expect(arro).toContain('<title>arro, bryce rambach</title>');
-    expect(arro).toContain('content="https://brycerambach.com/og/arro.jpg?');
+    // Arro's page is a product page in the black and white look, with its own picture.
+    expect(arro).toContain(`content="https://brycerambach.com/og/${LOOK === 'block' ? 'arro-block' : 'arro'}.jpg?`);
     expect(arro).not.toContain('__notFound = true');
     const missing = withMeta(html, NOT_FOUND_META);
     expect(missing.indexOf('window.__notFound = true')).toBeLessThan(missing.indexOf('Paint the page'));

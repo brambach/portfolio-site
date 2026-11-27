@@ -240,3 +240,11 @@
 
 /* a product page's way to the live product */
 .cb .p-head .live { display: inline-flex; align-items: center; gap: 10px; margin-top: 26px; font-size: 17px; color: var(--ink); }
+
+/* In my words (InMyWords.tsx): his lines, each under a small label, set a step larger than the body. */
+.cb .words dl { display: flex; flex-direction: column; gap: 28px; margin: 4px 0 0; }
+.cb .words dl > div { display: flex; flex-direction: column; gap: 8px; padding-left: 20px; border-left: 2px solid var(--ink); }
+.cb .words dd { margin: 0; font-family: var(--serif); font-size: clamp(20px, 2.2vw, 24px); line-height: 1.4; letter-spacing: -.01em; color: var(--text); }
+.cb .words .draft { border-left-style: dashed; border-left-color: var(--faint); }
+.cb .words .draft dd { color: var(--soft); }
+.cb .words .tag { margin-left: 10px; padding: 1px 6px; border: 1px solid var(--faint); border-radius: 4px; font-size: 10px; }

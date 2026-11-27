@@ -3,6 +3,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BANNED } from '../../banned-names';
 import * as COBALT from '../cobalt/copy';
 import DervoPage from '../cobalt/DervoPage';
+import StoryPage from '../cobalt/StoryPage';
+import { ARRO, STORIES } from '../stories';
+import { DRAFTS, said, VOICE } from '../voice';
 import * as COPY from './copy';
 import Home from './Home';
 import TeammatePage from './TeammatePage';
@@ -171,17 +174,67 @@ describe('The Psyche story', () => {
   });
 });
 
+describe('Arro\'s story', () => {
+  it('opens from its row in the black and white look, with the same page as the products', () => {
+    expect(siteRoute('/projects/arro')).toEqual({ name: 'project', id: 'arro' });
+    expect(COPY.ROWS.find(r => r.name === 'Arro')).toMatchObject({ href: '/projects/arro', go: 'Read the story' });
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    render(<StoryPage id="arro" />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Arro' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: ARRO.hero.alt })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /GitHub, MIT/ })).toHaveAttribute('href', 'https://github.com/brambach/arro');
+    expect(screen.getByRole('heading', { level: 2, name: 'In my words' })).toBeInTheDocument();
+  });
+
+  it('ships its pictures as files under 200 KB', async () => {
+    const { existsSync, statSync } = await import('node:fs');
+    for (const src of [ARRO.hero.src, ARRO.hero.phone!.src, ARRO.shot.src]) {
+      const file = `${process.cwd()}/public${src}`;
+      expect(existsSync(file), file).toBe(true);
+      expect(statSync(file).size, file).toBeLessThan(200_000);
+    }
+  });
+});
+
+describe('In my words', () => {
+  it('has why, the hardest part and a favorite moment, in that order, for every page with a story', () => {
+    for (const id of ['dervo', 'arro', 'trace', 'easeprint', 'dryline', 'comehome'] as const) {
+      expect(VOICE[id]!.map(r => r.label), id).toEqual(['why', 'hardest part', 'favorite moment']);
+    }
+  });
+
+  it('leaves every draft out of a live build, and the section with them when nothing is left', () => {
+    for (const rows of Object.values(VOICE)) expect(said(rows!, false).some(r => r.draft)).toBe(false);
+    expect(said(VOICE.arro!, false)).toEqual([]);
+    expect(said(VOICE.comehome!, false).map(r => r.label)).toEqual(['why']);
+  });
+
+  it('shows drafts with a tag in tests and previews', () => {
+    expect(DRAFTS).toBe(true);
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    const { container } = render(<StoryPage id="trace" />);
+    const drafts = VOICE.trace!.filter(r => r.draft);
+    expect(container.querySelectorAll('.words .draft .tag')).toHaveLength(drafts.length);
+    for (const r of VOICE.trace!) expect(screen.getByText(r.text)).toBeInTheDocument();
+  });
+
+  it('names Boots as the cat she is', () => {
+    expect(VOICE.comehome![0].text).toMatch(/Boots, my family's cat/);
+    expect(strings(STORIES).join(' ')).not.toMatch(/dog Boots/);
+  });
+});
+
 describe('The words', () => {
   it('use no dashes, never say parked, and name no port, city or employer', () => {
     vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-    const { container } = render(<><Home /><DervoPage /><TeammatePage /><PsychePage /></>);
-    const texts = [container.textContent!, ...strings(COPY), ...strings(TEAMMATE), ...strings(PSYCHE)];
+    const { container } = render(<><Home /><DervoPage /><TeammatePage /><PsychePage /><StoryPage id="arro" /></>);
+    const texts = [container.textContent!, ...strings(COPY), ...strings(TEAMMATE), ...strings(PSYCHE), ...strings(VOICE), ...strings(ARRO).filter(t => !t.startsWith('http') && !t.startsWith('/'))];
     const employer = [...BANNED, /\bdd\b/i, /\bcontract/i, /\bfreelanc/i];
     for (const t of texts) {
       expect(t, t).not.toMatch(DASHES);
       expect(t, t).not.toMatch(/parked/i);
       expect(t, t).not.toMatch(/\bport\b/i);
-      expect(t, t).not.toMatch(/\bs[f]\b|\bn[y]c\b|san fr[a]ncisco|new y[o]rk|manh[a]ttan|brookl[y]n/i);
+      expect(t, t).not.toMatch(/\bs[f]\b|\bn[y]c\b|san fr[a]ncisco|new y[o]rk|manh[a]ttan|brookl[y]n|incl[i]ne/i);
       for (const re of employer) expect(t, t).not.toMatch(re);
     }
   });

@@ -4,7 +4,7 @@ import { LOOK } from './look';
 import { WORK_IDS } from './routes';
 import { TEAMMATE } from './block/teammate';
 import { PSYCHE } from './block/psyche';
-import { STORY_IDS, STORIES, type Story } from './stories';
+import { ARRO, STORY_IDS, STORIES, type Story } from './stories';
 
 /* What each page tells search engines and link previews: its title, a description, its address and its picture.
    The build writes a copy of index.html for every page with these filled in (see vite.config.ts), so they're there
@@ -57,6 +57,8 @@ export const HOME_META: PageMeta = {
 };
 
 export const PROJECT_META: PageMeta[] = WORK_IDS.map(id => {
+  // In the black and white look Arro's page is a product page (SiteApp.tsx), so its preview says what that page says.
+  if (id === 'arro' && LOOK === 'block') return { file: 'projects/arro.html', path: '/projects/arro', title: `${ARRO.name.toLowerCase()}, ${NAME.toLowerCase()}`, description: ARRO.description, image: `${ARRO.og.src}?v=${V}`, imageAlt: ARRO.og.alt };
   const p = projects.find(project => project.id === id)!;
   return {
     file: `projects/${id}.html`,
