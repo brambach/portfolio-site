@@ -1,7 +1,7 @@
 import type { Sounds } from './creature';
 
 /* Tiny sounds, made on the spot (no files): a pop when a doodle comes alive, a boing when it jumps, a soft thud when
-   it lands, a giggle when you poke it, a squeak when you pick it up. Quiet, and only ever after the visitor has
+   it lands, a giggle when you poke it, a squeak when you pick it up, a babble when it says something. Quiet, and only ever after the visitor has
    touched the page, which is also the only time a browser lets a page make sound. Bigger creatures sound lower. A
    phone on silent stays silent. */
 
@@ -75,6 +75,18 @@ export function makeSounds(): Voice {
       if (!ready('giggle', 0.25)) return;
       const k = pitch(size);
       [1, 1.25, 1.1, 1.4, 1.2].forEach((m, i) => tone('sine', [[0, 620 * k * m], [0.045, 760 * k * m]], [[0.008, 0.06], [0.06, 0.0001]], i * 0.062));
+    },
+    /** Talking, in its own language: a few quick syllables that wander up and down, lower for bigger creatures. */
+    babble(size, syllables) {
+      if (!ready('babble', 0.4)) return;
+      const k = pitch(size);
+      let at = 0;
+      for (let i = 0; i < syllables; i++) {
+        const base = (360 + Math.random() * 240) * k, len = 0.055 + Math.random() * 0.04;
+        const rise = i === syllables - 1 ? 1.25 : 0.85 + Math.random() * 0.35;
+        tone(i % 2 ? 'triangle' : 'sine', [[0, base], [len, base * rise]], [[0.01, 0.07], [len, 0.0001]], at);
+        at += len + 0.025 + Math.random() * 0.03;
+      }
     },
     squeak(size) {
       if (!ready('squeak', 0.2)) return;

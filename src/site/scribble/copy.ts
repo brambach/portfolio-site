@@ -9,6 +9,8 @@ export const SCRIBBLE = {
   soundOn: 'Turn sound on',
   soundOff: 'Turn sound off',
   save: 'Save your creature as a card',
+  /** The creature along on a project page, as a button: tapping it takes you back. */
+  buddy: 'Back to all work',
   /** On the saved card, under the creature. */
   card: 'drawn on brycerambach.com',
 };

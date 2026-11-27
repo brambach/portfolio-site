@@ -18,6 +18,8 @@ export type Play = {
   done: boolean;
   step(t: number, env: Env): void;
   draw(ctx: CanvasRenderingContext2D, t: number): void;
+  /** Hands over something from the scene that goes on with the creature (the cat), and stops drawing it. */
+  release?(): { x: number; y: number } | null;
 };
 
 type XY = [number, number];
@@ -431,10 +433,12 @@ const SCENES: Record<StageId, Make> = {
       },
       draw(ctx, t) {
         const e = t - t0;
-        if (e < 0.25) return;
+        if (e < 0.25 || gone) return;
         drawCat(ctx, cat.x, cat.y, sc, cat.mode === 'sit' ? 'sit' : 'run', cat.ph, cat.face, t);
       },
+      release() { if (gone || cat.mode !== 'sit') return null; gone = true; return { x: cat.x, y: cat.y }; },
     };
+    let gone = false;
     return p;
   },
 

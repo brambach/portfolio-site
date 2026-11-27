@@ -1,6 +1,9 @@
 import { INK, clamp, line, noise, quad, rand, ring, stroke, type Pt } from './ink';
 import { read, type Kind, type Reading } from './shape';
 import { STYLE, ink } from './clean';
+import { HELD, arm, back, badge, bubble, headband, held, nightcap, pencil, satchel, sparkle, zzz, type Ink, type Keep, type Pic } from './gear';
+
+export type { Keep, Pic };
 
 /* A creature: a doodle that came to life. It keeps the visitor's own lines as its body and grows what it needs from
    the page's own pen: legs, eyes, sometimes a mouth, a snail's foot. Everything it does is a few springs and some
@@ -12,7 +15,7 @@ import { STYLE, ink } from './clean';
 export type Floor = { x0: number; x1: number; y: number; fit?: number; id?: string };
 type XY = { x: number; y: number };
 
-export interface Sounds { pop(size: number): void; boing(size: number): void; land(size: number): void; giggle(size: number): void; squeak(size: number): void }
+export interface Sounds { pop(size: number): void; boing(size: number): void; land(size: number): void; giggle(size: number): void; squeak(size: number): void; babble?(size: number, syllables: number): void }
 
 export type Env = {
   t: number;
@@ -107,6 +110,24 @@ export class Creature {
   trail: { x: number; y: number; t: number }[] = [];
   gone = false;
   readonly seed = Math.random() * 100;
+  /** What it has picked up on the way: a hat, something behind its ear, something in its hand, what it held before
+   *  (in a satchel), a sticker. */
+  gear: { head: 'nightcap' | 'headband' | null; ear: boolean; hand: Keep | null; bag: Keep[]; badge: boolean } = { head: null, ear: false, hand: null, bag: [], badge: false };
+  private got: Keep[] = [];
+  private gotAt = -10; private gotWhat: Keep | null = null;
+  /** Projects it has been given something by, so each gives only once. */
+  readonly seen = new Set<string>();
+  /** A faint copy of itself that follows a beat behind (easeprint's gift). */
+  echo = false;
+  /** Asleep: eyes shut, legs folded, Zs. */
+  asleep = false;
+  private pointing: XY | null = null; private pointUntil = 0;
+  private bubbleOf: { pic: Pic; at: number; until: number } | null = null;
+  private ghost = false;
+  /** Where things go on it, in its own coordinates: the top of its head, its front and back at shoulder height, its
+   *  brow, a spot for a sticker, a spot for a satchel. */
+  private crown: XY = { x: 0, y: 0 }; private front: XY = { x: 0, y: 0 }; private rear: XY = { x: 0, y: 0 };
+  private brow: XY[] = []; private sticker: XY = { x: 0, y: 0 }; private bagAt: XY = { x: 0, y: 0 }; private earAt: XY = { x: 0, y: 0 };
   /** A little personality. */
   readonly p = { speed: rand(0.8, 1.25), eye: rand(0.9, 1.25), pupil: rand(0.4, 0.56), blink: rand(0.7, 1.4), curious: rand(0.3, 1), bounce: rand(0.85, 1.15) };
 
@@ -168,6 +189,86 @@ export class Creature {
     if (this.kind === 'snail') this.makeSnail();
     this.placeLegs(spec.legs);
     this.placeEyes();
+    this.placeGear();
+  }
+
+  /** Where a hat, a hand, a sticker and a satchel go, from the shape of its main line. */
+  private placeGear() {
+    const main = this.lines[0], { minX, minY, maxX, maxY, w, h } = this;
+    let top = main[0];
+    for (const p of main) if (p.y < top.y - 0.5 || (Math.abs(p.y - top.y) <= 0.5 && Math.abs(p.x) < Math.abs(top.x))) top = p;
+    // The crown: the top of the head, nudged toward the middle so a hat sits square.
+    this.crown = { x: top.x * 0.6, y: top.y + 1 };
+    const band = (lo: number, hi: number, pick: (a: Pt, b: Pt) => boolean) => {
+      let best: Pt | null = null;
+      for (const p of main) if (p.y >= minY + h * lo && p.y <= minY + h * hi && (!best || pick(p, best))) best = p;
+      return best;
+    };
+    const f = band(0.36, 0.7, (a, b) => a.x > b.x), r = band(0.36, 0.7, (a, b) => a.x < b.x);
+    this.front = f ? { x: f.x - 1, y: f.y } : { x: maxX, y: minY + h * 0.5 };
+    this.rear = r ? { x: r.x + 1, y: r.y } : { x: minX, y: minY + h * 0.5 };
+    this.brow = main.filter(p => p.y < minY + h * 0.17).sort((a, b) => a.x - b.x).map(p => ({ x: p.x, y: p.y + h * 0.07 }));
+    if (this.brow.length > 24) this.brow = this.brow.filter((_, i) => i % Math.ceil(this.brow.length / 24) === 0);
+    this.sticker = { x: minX + w * 0.68, y: minY + h * 0.7 };
+    this.bagAt = { x: this.rear.x + w * 0.06, y: Math.min(maxY - h * 0.16, this.rear.y + h * 0.22) };
+    this.earAt = { x: minX + w * 0.66, y: minY + h * 0.16 };
+    if (!this.closed) { this.sticker = { x: this.crown.x, y: this.crown.y - 6 }; this.bagAt = { x: this.crown.x - w * 0.25, y: this.crown.y - 4 }; }
+  }
+
+  /** It has arms when it needs them: to wave, to point, to hold something. */
+  get armed() { return this.kind !== 'worm' && this.kind !== 'snail' && this.kind !== 'flea'; }
+
+  /** Given a keepsake: it goes where it belongs, with a little pop. */
+  give(k: Keep, t: number) {
+    const g = this.gear;
+    if (k === 'check') g.badge = true;
+    else if (k === 'nightcap' || k === 'headband') g.head = k;
+    else if (k === 'pencil') g.ear = true;
+    else if (HELD.includes(k)) {
+      if (g.hand && g.hand !== k && !g.bag.includes(g.hand)) g.bag.push(g.hand);
+      g.hand = k;
+    }
+    if (!this.got.includes(k)) this.got.push(k);
+    this.gotAt = t; this.gotWhat = k;
+    this.jelly = Math.max(this.jelly, 0.5);
+    this.sqv += 3;
+  }
+  /** Everything it was carrying last time, put back on without any fuss. */
+  wearAll(keeps: Keep[]) { for (const k of keeps) this.give(k, -10); this.gotWhat = null; this.jelly = 0; this.sqv = 0; }
+  get keeps() { return [...this.got]; }
+
+  /** Points at something on the page until `until`, turning to face it and looking at it. */
+  pointAt(p: XY | null, until: number) {
+    this.pointing = p; this.pointUntil = until;
+    if (!p) return;
+    this.lookAt(p, until);
+    if (Math.abs(p.x - this.x) > 10) this.facing = Math.sign(p.x - this.x);
+  }
+
+  /** Says something with a little picture in a bubble, and a babble. */
+  talk(pic: Pic, seconds: number, t: number, sounds?: Sounds | null) {
+    this.bubbleOf = { pic, at: t, until: t + seconds };
+    sounds?.babble?.(this.size * this.k, pic === 'heart' ? 3 : pic === 'what' ? 2 : 4);
+  }
+
+  /** Nods off, or wakes up with a start. */
+  sleep(on: boolean, t: number, sounds?: Sounds | null) {
+    if (on === this.asleep) return;
+    this.asleep = on;
+    if (on) { this.say('sleepy', t + 9999); this.goal = null; this.legGoal = 0.3; this.pointing = null; return; }
+    this.say('surprised', t + 0.7);
+    this.legGoal = 1;
+    this.talk('bang', 1, t, sounds);
+    this.sqv += 4; this.jelly = Math.max(this.jelly, 0.4);
+    if (this.state === 'ground') { this.vy = -300; this.state = 'air'; }
+  }
+
+  /** Back again, already alive: no sketch, no waking up, just there, about to land. */
+  appear(t: number) {
+    this.state = 'air';
+    this.born = t - 5; this.inkedAt = -1; this.rough = null;
+    this.eyePop = 1; this.legOut = 1; this.popped = true; this.blinkAt = t + 0.8;
+    this.vy = 0; this.vx = 0;
   }
 
   // ---- building ------------------------------------------------------------------------------------------------
@@ -339,6 +440,14 @@ export class Creature {
     return true;
   }
 
+  /** Stands on a floor from now on, at the size that floor allows. */
+  setFloor(f: Floor) {
+    this.floor = f;
+    this.kGoal = f.fit ? Math.min(this.homeK, f.fit / this.size) : this.homeK;
+    this.k = this.kGoal;
+  }
+  /** The floor it's on, or on its way to. */
+  get bound() { return this.leap?.floor ?? this.floor; }
   get leaping() { return this.state === 'leap'; }
   get standing() { return this.state === 'ground'; }
   get awake() { return this.state !== 'drawn' && this.state !== 'wake'; }
@@ -413,6 +522,7 @@ export class Creature {
   private looking(dt: number, env: Env) {
     const t = env.t;
     let target: XY | null = null;
+    if (this.asleep) { this.px *= 0.9; this.py *= 0.9; return; }
     if (this.mood === 'dizzy') target = { x: this.x + Math.cos(t * 9) * 80, y: this.y + Math.sin(t * 9) * 80 };
     else if (this.stare && t < this.stareUntil) target = this.stare;
     else if (env.eye && Math.hypot(env.eye.x - this.x, env.eye.y - this.y) < 700 && this.p.curious > 0.15) target = env.eye;
@@ -541,13 +651,16 @@ export class Creature {
     // Startled by a pen rushing past.
     if (env.rush && this.cooldown < 0 && Math.hypot(env.rush.x - this.x, env.rush.y - this.y) < this.size * this.k * 0.6 + 50 && env.rush.v > 1.2) {
       this.say('surprised', t + 0.8);
+      this.asleep = false;
       this.crouch = -1;
       this.jump(env, (this.x > env.rush.x ? 1 : -1) * 160, 430);
       this.cooldown = 1.4;
       return;
     }
 
+    if (this.asleep) { this.vx *= Math.exp(-dt * 10); this.legGoal = 0.3; this.goal = null; return; }
     if (this.waving > t) { this.vx *= Math.exp(-dt * 10); this.legGoal = 1; return; }
+    if (this.pointing && t < this.pointUntil && this.goal === null) { this.vx *= Math.exp(-dt * 10); this.legGoal = 1; return; }
 
     const f = this.floor, margin = this.halfW() + 10;
     if (this.parade) {
@@ -629,7 +742,7 @@ export class Creature {
     for (let i = 0; i < this.legs.length; i++) {
       const l = this.legs[i];
       const hx = this.hipX(l), hy = this.hipY(l);
-      if (this.waving > t && l.front === (this.facing > 0) && i === (this.facing > 0 ? this.legs.length - 1 : 0)) {
+      if (!this.armed && this.waving > t && l.front === (this.facing > 0) && i === (this.facing > 0 ? this.legs.length - 1 : 0)) {
         // The front leg waves.
         l.planted = false;
         const wx = hx + this.facing * L * 0.75, wy = hy - L * 0.35 + Math.sin(t * 15) * L * 0.22;
@@ -692,7 +805,7 @@ export class Creature {
       if (this.kind === 'snail') d += 0.03 * Math.sin(this.phase * 0.25) * (lx > 0 ? 1 : 0.3);
       lx *= 1 + d; ly *= 1 + d;
     }
-    const breathe = 1 + 0.014 * Math.sin(t * 2.3 + this.seed);
+    const breathe = this.asleep ? 1 + 0.035 * Math.sin(t * 1.5 + this.seed) : 1 + 0.014 * Math.sin(t * 2.3 + this.seed);
     const sy = (1 + this.sq) * breathe, sx = (1 - this.sq * 0.6) / breathe;
     lx *= sx * this.fx;
     ly = (ly - this.maxY) * sy + this.maxY + this.dip / Math.max(this.k, 0.01);
@@ -789,22 +902,85 @@ export class Creature {
         // Their own eyes blink: squeezed toward their middle.
         const bx = box(this.lines[i]);
         const ox = clamp(this.px * 0.35, -2, 2), oy = clamp(this.py * 0.35, -2, 2);
-        line(ctx, this.mapped(body(i), i, t, 1, Math.max(0.12, this.blink), ox, oy, bx.cx, bx.cy), boil, seed + i);
+        line(ctx, this.mapped(body(i), i, t, 1, Math.max(0.12, this.asleep ? 0.12 : this.blink), ox, oy, bx.cx, bx.cy), boil, seed + i);
       } else line(ctx, this.mapped(body(i), i, t), boil, seed + i);
     }
 
     if (this.eyePop > 0.02 && !this.face.length) this.drawFace(ctx, t, boil, seed);
     if (this.face.length && this.eyePop > 0.02 && this.mood !== 'calm' && this.mood !== 'sleepy') this.mouth(ctx, t, boil, seed);
+    if (this.state !== 'drawn') this.extras(ctx, t, boil, seed);
+  }
+
+  /** Everything it has picked up, its arms, what it's saying. */
+  private extras(ctx: CanvasRenderingContext2D, t: number, boil: number, seed: number) {
+    const k: Ink = { boil: boil * 0.8, seed: seed + 50 };
+    const f = this.fx >= 0 ? 1 : -1, kk = this.k;
+    const sk = clamp((this.size * kk) / 90, 0.62, 1.2);
+    const grow = (what: Keep) => (this.gotWhat === what ? back((t - this.gotAt) / 0.4) : 1);
+    const turn = this.kind === 'fuzz' ? 0 : this.rot;
+    const g = this.gear;
+
+    if (g.bag.length) { const p = this.eyeAt(this.bagAt, t); satchel(ctx, p.x, p.y, sk * 0.95, f, g.bag, t, { ...k, seed: k.seed + 1 }); }
+    if (g.badge) { const p = this.eyeAt(this.sticker, t); badge(ctx, p.x, p.y, clamp(this.size * kk * 0.085, 4.6, 9.5) * grow('check'), { ...k, seed: k.seed + 2 }); }
+    const c = this.eyeAt(this.crown, t);
+    let hatTop = c.y;
+    if (g.head === 'nightcap') {
+      const B = clamp(this.w * kk * 0.6, 20, 62) * grow('nightcap');
+      nightcap(ctx, c.x, c.y + 2, B, f, turn, t, { ...k, seed: k.seed + 3 });
+      hatTop = c.y - B * 0.6;
+    } else if (g.head === 'headband' && this.brow.length > 2) {
+      const pts = this.brow.map(p => { const q = this.eyeAt(p, t); return [q.x, q.y] as [number, number]; });
+      headband(ctx, pts, f, Math.max(1.6, this.base * 0.75) * grow('headband'), t, { ...k, seed: k.seed + 4 });
+    }
+    if (g.ear) { const p = this.eyeAt(this.earAt, t); pencil(ctx, p.x, p.y, sk * 0.9 * grow('pencil'), f, { ...k, seed: k.seed + 5 }); }
+
+    // Arms: one to wave, point or hold with; the other takes what it's holding while the first is busy.
+    const hand = g.hand;
+    const now = this.pointing && t < this.pointUntil ? this.pointing : null;
+    const waving = this.waving > t;
+    if (this.armed && this.eyePop > 0.3 && this.legOut > 0.2) {
+      const A = clamp(this.size * 0.3, 11, 26) * kk;
+      const aw = Math.max(2, this.base * 0.85);
+      const R = this.eyeAt(this.front, t), Rb = this.eyeAt(this.rear, t);
+      const bob = Math.sin(this.phase * 0.12 + t * 2) * A * 0.05;
+      if (now) {
+        const dx = now.x - R.x, dy = now.y - R.y, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
+        arm(ctx, R.x, R.y, R.x + ux * A * 1.15, R.y + uy * A * 1.15 + bob, aw, { ...k, seed: k.seed + 6 }, [ux * A * 0.42, uy * A * 0.42]);
+      } else if (waving) {
+        const wv = Math.sin(t * 13);
+        arm(ctx, R.x, R.y, R.x + f * A * (0.5 + wv * 0.3), R.y - A * (0.95 - Math.abs(wv) * 0.1), aw, { ...k, seed: k.seed + 6 });
+      } else if (hand) {
+        const hx = R.x + f * A * 0.62, hy = R.y - A * 0.32 + bob;
+        arm(ctx, R.x, R.y, hx, hy, aw, { ...k, seed: k.seed + 6 });
+        held(ctx, hand, hx, hy, sk * grow(hand), f, t, { ...k, seed: k.seed + 7 }, this.top, this.x, this.w * kk);
+      }
+      if (hand && (now || waving)) {
+        const hx = Rb.x - f * A * 0.42, hy = Rb.y - A * 0.3 + bob;
+        arm(ctx, Rb.x, Rb.y, hx, hy, aw, { ...k, seed: k.seed + 8 });
+        held(ctx, hand, hx, hy, sk, -f, t, { ...k, seed: k.seed + 9 }, this.top, this.x, this.w * kk);
+      }
+    } else if (hand) held(ctx, hand, c.x, c.y - 2, sk * grow(hand), f, t, { ...k, seed: k.seed + 7 }, this.top, this.x, this.w * kk);
+
+    if (this.ghost) return;
+    if (this.gotWhat && t - this.gotAt < 0.7) sparkle(ctx, c.x, c.y + this.h * kk * 0.3, this.size * kk * 0.62, (t - this.gotAt) / 0.7, { ...k, seed: k.seed + 10 });
+    if (this.asleep) zzz(ctx, c.x - f * this.w * kk * 0.15, hatTop - 4, f, sk, t, { ...k, seed: k.seed + 11 });
+    const b = this.bubbleOf;
+    if (b && t < b.until) {
+      const u = Math.min(back((t - b.at) / 0.26), 1 - clamp((t - (b.until - 0.18)) / 0.18, 0, 1));
+      const hold = g.hand === 'umbrella' && !now && !waving ? this.top - clamp(this.w * kk * 1.35, 44, 130) * 0.45 : hatTop;
+      bubble(ctx, b.pic, c.x + f * this.w * kk * 0.18, Math.min(hatTop, hold) - 4, f, clamp((this.size * kk) / 80, 0.8, 1.15), u, t, { ...k, seed: k.seed + 12 });
+    } else if (b) this.bubbleOf = null;
   }
 
   /** Itself standing still on a floor at (x, floorY), looking out, for a picture of it. Nothing about it changes. */
   portrait(ctx: CanvasRenderingContext2D, x: number, floorY: number, t: number) {
-    const keys = ['x', 'y', 'k', 'sq', 'rot', 'fx', 'dip', 'jelly', 'mood', 'px', 'py', 'blink', 'eyePop', 'legOut', 'state', 'held'] as const;
+    const keys = ['x', 'y', 'k', 'sq', 'rot', 'fx', 'dip', 'jelly', 'mood', 'px', 'py', 'blink', 'eyePop', 'legOut', 'state', 'held', 'bubbleOf', 'asleep', 'pointing', 'waving', 'gotWhat'] as const;
     const keep: Record<string, unknown> = {};
     for (const k of keys) keep[k] = (this as unknown as Record<string, unknown>)[k];
     const feet = this.legs.map(l => [l.fx, l.fy, l.planted] as const);
     this.k = this.homeK; this.sq = 0; this.rot = 0; this.fx = 1; this.dip = 0; this.jelly = 0; this.mood = 'happy'; this.px = 0; this.py = 0;
     this.blink = 1; this.eyePop = 1; this.legOut = 1; this.state = 'ground'; this.held = null;
+    this.bubbleOf = null; this.asleep = false; this.pointing = null; this.waving = 0; this.gotWhat = null;
     this.x = x; this.y = floorY - this.stand();
     this.legs.forEach((l, i) => { l.fx = this.hipX(l) + (i % 2 ? 1 : -1) * 0.5; l.fy = floorY; });
     this.draw(ctx, t, true);
@@ -829,7 +1005,9 @@ export class Creature {
     this.legs.forEach((l, i) => { if (h.feet.length > i * 2) { l.fx = h.feet[i * 2] + dx; l.fy = h.feet[i * 2 + 1]; } });
     ctx.save();
     ctx.globalAlpha *= alpha;
+    this.ghost = true;
     this.draw(ctx, t, false);
+    this.ghost = false;
     ctx.restore();
     this.x = keep.x; this.y = keep.y; this.sq = keep.sq; this.rot = keep.rot; this.fx = keep.fx; this.dip = keep.dip;
     this.legs.forEach((l, i) => { l.fx = keep.feet[i * 2]; l.fy = keep.feet[i * 2 + 1]; });
@@ -902,7 +1080,7 @@ export class Creature {
         line(ctx, stroke(sp, ring_w, 0.8, 0.6), boil, seed + i);
         continue;
       }
-      const lid = this.mood === 'sleepy' ? Math.min(this.blink, 0.32) : this.mood === 'cold' ? Math.min(this.blink, 0.5) : this.blink;
+      const lid = this.asleep ? 0.05 : this.mood === 'sleepy' ? Math.min(this.blink, 0.32) : this.mood === 'cold' ? Math.min(this.blink, 0.5) : this.blink;
       const ry = r * Math.max(0.1, lid);
       ctx.save();
       ctx.fillStyle = '#fff';

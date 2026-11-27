@@ -1,7 +1,9 @@
 import { card } from './card';
 import { STYLE } from './clean';
 import { SCRIBBLE, type StageId } from './copy';
-import { Creature, TONE, type Env, type Floor } from './creature';
+import { Creature, TONE, type Env, type Floor, type Keep } from './creature';
+import { Cat } from './follower';
+import { leftFor, loadGuide, placed, readStories, saveGuide, visiting, type Saved } from './memory';
 import { INK, Pen, clamp, grain, line, noise, quad, stroke, type Pt } from './ink';
 import { play, type Play, type Stage } from './reactions';
 import { loadMine, samples, saveMine } from './samples';
@@ -35,7 +37,13 @@ type Opts = {
   reduced: boolean;
 };
 
-type StageRec = Stage & { el: HTMLElement; frame: Pt[][]; frameLen: number; ground: Pt[]; openAt: number; play: Play | null; top: number; bottom: number };
+type StageRec = Stage & { el: HTMLElement; frame: Pt[][]; frameLen: number; ground: Pt[]; openAt: number; play: Play | null; top: number; bottom: number; link: { x: number; y: number; w: number; h: number } | null; ring: Pt[] | null; ringAt: number; path: string | null; tick: Pt[] | null; tickAt: number };
+
+/** What each project gives the guide to keep (gear.ts draws them), or who comes along. */
+const GIFT: Record<StageId, Keep | 'cat' | 'echo'> = {
+  teammate: 'check', dervo: 'nightcap', psyche: 'flower', receipts: 'receipt', tastepack: 'snapshot',
+  trace: 'pencil', easeprint: 'echo', dryline: 'umbrella', comehome: 'cat', arro: 'headband',
+};
 
 const MAX = 6;
 const TAU = Math.PI * 2;
@@ -72,10 +80,14 @@ export function mountScene(o: Opts): Scene {
   // The invitation. A new creature looks at you, beckons, and a drawn arrow points down the page. If you don't
   // follow, the first one goes on ahead and waits for you on the first project.
   let invite: { c: Creature; step: 'meet' | 'look' | 'walk' | 'beckon' | 'wait'; at: number; spot: number; hopped: boolean; again: boolean } | null = null;
-  let arrow: { x: number; y: number; dir: number; at: number; out: number } | null = null;
+  let arrow: { x: number; y: number; dir: number; at: number; out: number; fy: number } | null = null;
   let wentAhead = false, aheadWait = false, lastInk = -10;
   // A stage the guide landed on before it was in view: its scene waits until the visitor gets there.
   let due: StageRec | null = null;
+  // The cat that comes along once it's found, and when the visitor last did anything (the guide dozes off without them).
+  let cat: Cat | null = null;
+  let lastInput = 0, dozed = false, lastNudge = -10;
+  const read = readStories();
 
   const isPhone = () => matchMedia('(pointer: coarse)').matches || innerWidth < 640;
   const base = () => (isPhone() ? 3.5 : 3.2);
@@ -108,6 +120,30 @@ export function mountScene(o: Opts): Scene {
     return [side(x - o, y, x + w + 3, y - 1, 1), side(x + w, y - o, x + w + 1, y + h + 3, 2), side(x + w + o, y + h, x - 3, y + h + 1, 3), side(x, y + h + o, x - 1, y - 3, 4)];
   }
 
+  /** A loop drawn round a link, the way you'd circle something on a printout: a bit past where it started. */
+  function loop(b: { x: number; y: number; w: number; h: number }, seed: number): Pt[] {
+    const cx = b.x + b.w / 2, cy = b.y + b.h / 2 + 1, rx = b.w / 2 + 13, ry = b.h / 2 + 9;
+    const out: Pt[] = [];
+    const a0 = -2.5, sweep = TAU + 0.55, n = 64;
+    for (let i = 0; i <= n; i++) {
+      const u = i / n, a = a0 + sweep * u, wob = 1 + noise(seed + u * 3) * 0.05 + u * 0.06;
+      out.push({ x: cx + Math.cos(a) * rx * wob, y: cy + Math.sin(a) * ry * wob - u * 3, w: 2.3 * (0.6 + 0.4 * Math.min(1, u * 6, (1 - u) * 5)) });
+    }
+    return out;
+  }
+
+  /** A tick beside a story the visitor has read: a short stroke down, a longer one up. */
+  function tickMark(b: { x: number; y: number; w: number; h: number }, seed: number): Pt[] {
+    const x = b.x + b.w + 12, y = b.y + b.h * 0.5;
+    const a = { x, y: y - 1 }, m = { x: x + 6, y: y + 7 }, z = { x: x + 21, y: y - 11 };
+    const out: Pt[] = [];
+    for (let i = 0; i <= 22; i++) {
+      const u = i / 22, down = u < 0.3, k = down ? u / 0.3 : (u - 0.3) / 0.7, p = down ? a : m, q = down ? m : z;
+      out.push({ x: p.x + (q.x - p.x) * k + noise(seed + u * 4) * 0.8, y: p.y + (q.y - p.y) * k, w: 2.5 * (0.55 + 0.45 * Math.min(1, u * 5, (1 - u) * 3)) });
+    }
+    return out;
+  }
+
   // ---- layout ---------------------------------------------------------------------------------------------------
 
   function layout() {
@@ -137,10 +173,15 @@ export function mountScene(o: Opts): Scene {
       const floor: Floor = { x0: room.x + 8, x1: room.x + room.w - 8, y: sec.y + sec.h, fit, id };
       const fr = frame(pic.x, pic.y, pic.w, pic.h, i * 13.7 + 2);
       const prev = old.get(id);
+      const go = el.querySelector<HTMLElement>('.go');
+      const link = go ? rectOf(go) : null;
+      const path = go instanceof HTMLAnchorElement ? go.pathname : null;
       stages.push({
         id, el, floor, pic, room: { x0: floor.x0, x1: floor.x1, y0: room.y },
         frame: fr, frameLen: fr.reduce((a, l) => a + l.length, 0), ground: ground(sec.x - 6, sec.x + sec.w + 6, floor.y, i * 3.1),
         openAt: prev?.openAt ?? -1, play: prev?.play ?? null, top: sec.y, bottom: sec.y + sec.h,
+        link, ring: link ? loop(link, i * 5.3 + 1) : null, ringAt: prev?.ringAt ?? -1,
+        path, tick: link ? tickMark(link, i * 2.9 + 4) : null, tickAt: prev?.tickAt ?? -1,
       });
     });
     const end = root.querySelector('[data-end]'), par = root.querySelector('[data-parade]');
@@ -268,6 +309,7 @@ export function mountScene(o: Opts): Scene {
     aheadWait = false;
     if (was && was !== c && was.floor !== heroFloor) send(was, heroFloor);
     beginInvite(c);
+    later(1.4, remember);
     const mine = creatures.filter(x => !x.leaving && x.awake);
     if (mine.length > MAX) mine[0].leave();
     if (!firstDone) {
@@ -393,6 +435,9 @@ export function mountScene(o: Opts): Scene {
     const st = stages.find(s => s.floor === c.floor);
     if (st?.play && !st.play.done) { st.play = null; }
     c.script = false; c.hurry = 1;
+    if (c.asleep) c.sleep(false, t, voice);
+    c.pointAt(null, 0);
+    if (arrow && arrow.out < 0 && !invite) arrow.out = t;
     c.leapTo(f, spot(f, c), t);
   }
 
@@ -442,9 +487,77 @@ export function mountScene(o: Opts): Scene {
     if (due && (g.floor !== due.floor || g.leaving)) due = null;
     if (due && g.standing && due.floor.y < vt + vh - 6 && due.floor.y > vt + vh * 0.25) {
       open(due);
-      due.play = play(due, g, t, { nib: (x, y, a = 1) => drawNib(x, y, a, -0.1), reduced: o.reduced });
+      // Been here before: no need to do it all again, just a hello and a nod at the story.
+      if (g.seen.has(due.id)) { const st = due; g.hop(env, 0, 260); later(0.6, () => pointTheWay(st, g)); }
+      else due.play = play(due, g, t, { nib: (x, y, a = 1) => drawNib(x, y, a, -0.1), reduced: o.reduced });
       due = null;
     }
+    // A scene just finished: a keepsake, then it points at the story.
+    for (const st of stages) if (st.play?.done && g.floor === st.floor && !g.seen.has(st.id)) reward(st, g);
+  }
+
+  // ---- keepsakes and pointing the way ----------------------------------------------------------------------------
+
+  function reward(st: StageRec, g: Creature) {
+    g.seen.add(st.id);
+    const gift = GIFT[st.id];
+    if (gift === 'cat') {
+      const at = st.play?.release?.();
+      if (at && !cat) cat = new Cat(at.x, at.y, st.floor);
+      g.talk('heart', 1.5, t, voice);
+    } else if (gift === 'echo') { g.echo = true; g.talk('note', 1.3, t, voice); }
+    else { g.give(gift, t); g.talk('star', 1.2, t, voice); voice.pop(g.size); }
+    g.say('happy', t + 1.4);
+    remember();
+    later(1.5, () => pointTheWay(st, g));
+  }
+
+  /** It turns to the story and points at it, and the pen circles the link. */
+  function pointTheWay(st: StageRec, g: Creature) {
+    if (!st.link || g.floor !== st.floor || !g.standing || g.script) return;
+    if (st.path && read.has(st.path)) { pointOn(st, g); return; }
+    const L = st.link;
+    g.pointAt({ x: L.x + L.w / 2, y: L.y + L.h / 2 }, t + 2.4);
+    if (st.ringAt < 0) st.ringAt = t + 0.25;
+    lastNudge = t;
+  }
+
+  /** A story already read: it ticks it off, and points on down to the next one still to read (or the goodbye). */
+  function pointOn(st: StageRec, g: Creature) {
+    const first = st.tickAt < 0;
+    if (first) st.tickAt = t + 0.2;
+    if (first) { g.talk('star', 1.2, t + 0.5, voice); g.say('happy', t + 1.6); }
+    let tries = 0;
+    const nod = () => {
+      if (g.floor !== st.floor || g.script || g !== guide) return;
+      // Mid hop: try again once it's back on its feet.
+      if (!g.standing) { if (++tries < 8) later(0.25, nod); return; }
+      // Down and over toward where the next one is to be read, or toward whichever side has room.
+      const i = stages.indexOf(st), next = stages.slice(i + 1).find(s => !(s.path && read.has(s.path)));
+      const f = st.floor, nx = next ? (next.floor.x0 + next.floor.x1) / 2 : g.x;
+      const dir = Math.abs(nx - g.x) > 60 ? Math.sign(nx - g.x) : (g.x - f.x0 > f.x1 - g.x ? -1 : 1);
+      g.pointAt({ x: g.x + dir * 140, y: f.y + 90 }, t + 2.2);
+      if (first) { arrow = { x: g.x + dir * (g.half + 8), y: (g.top + f.y) / 2 - 4, dir, at: t, out: -1, fy: f.y }; later(3.4, () => { if (arrow && arrow.out < 0 && arrow.fy === f.y) arrow.out = t; }); }
+      voice.giggle(g.size);
+    };
+    later(first ? 1.2 : 0, nod);
+    lastNudge = t;
+  }
+
+  function drawTick(st: StageRec) {
+    if (!st.tick || t < st.tickAt) return;
+    const u = o.reduced ? 1 : clamp((t - st.tickAt) / 0.4, 0, 1), e = 1 - Math.pow(1 - u, 2);
+    const n = Math.max(3, Math.ceil(st.tick.length * e));
+    line(ctx, st.tick, 0.25, Math.floor(t * 6) + 3, 0, n);
+    if (u < 1) { const q = st.tick[n - 1]; drawNib(q.x, q.y, 1, -0.2); }
+  }
+
+  function drawRing(st: StageRec) {
+    if (!st.ring || st.ringAt < 0 || t < st.ringAt) return;
+    const u = o.reduced ? 1 : clamp((t - st.ringAt) / 0.6, 0, 1), e = 1 - Math.pow(1 - u, 2);
+    const n = Math.max(3, Math.ceil(st.ring.length * e));
+    line(ctx, st.ring, 0.25, Math.floor(t * 6), 0, n);
+    if (u < 1) { const q = st.ring[n - 1]; drawNib(q.x, q.y, 1, -0.2); }
   }
 
   // ---- the invitation ------------------------------------------------------------------------------------------------
@@ -505,7 +618,7 @@ export function mountScene(o: Opts): Scene {
         c.wave(1.7, t);
         c.say('happy', t + 1.8);
         voice.giggle(c.size);
-        arrow = { x: c.x - c.half - 8, y: (c.top + heroFloor.y) / 2 - 4, dir: -1, at: t, out: -1 };
+        arrow = { x: c.x - c.half - 8, y: (c.top + heroFloor.y) / 2 - 4, dir: -1, at: t, out: -1, fy: heroFloor.y };
         go('wait');
         break;
       case 'wait':
@@ -531,7 +644,7 @@ export function mountScene(o: Opts): Scene {
     const age = t - a.at, fade = a.out >= 0 ? 1 - clamp((t - a.out) / 0.35, 0, 1) : 1;
     if (fade <= 0) { arrow = null; return; }
     const bob = age > 0.5 && !o.reduced ? Math.sin((age - 0.5) * 5.5) * 3 : 0;
-    const sx = a.x, sy = a.y, ex = sx + a.dir * 30, ey = heroFloor.y + (isPhone() ? 30 : 36) + bob;
+    const sx = a.x, sy = a.y, ex = sx + a.dir * 30, ey = a.fy + (isPhone() ? 30 : 36) + bob;
     const pts = quad(sx, sy, sx + a.dir * 46, sy + (ey - sy) * 0.3, ex, ey, 22);
     const u = o.reduced ? 1 : clamp(age / 0.42, 0, 1);
     const n = Math.max(3, Math.ceil(pts.length * (1 - Math.pow(1 - u, 2))));
@@ -556,6 +669,13 @@ export function mountScene(o: Opts): Scene {
     later(2.8, () => { if (g.floor === endFloor) g.script = false; });
     if (!bye) bye = { at: t, shown: false };
     later(1.2, () => showCard(g));
+    later(1.9, () => {
+      const b = o.card;
+      if (!b || b.hidden || g.floor !== endFloor || !g.standing) return;
+      const r = rectOf(b);
+      g.pointAt({ x: r.x + r.w / 2, y: r.y + r.h / 2 }, t + 1.8);
+      g.talk('heart', 1.6, t + 0.2, voice);
+    });
   }
 
   // ---- the card -----------------------------------------------------------------------------------------------------
@@ -566,7 +686,7 @@ export function mountScene(o: Opts): Scene {
     if (!btn || cardFor === g) return;
     cardFor = g;
     try {
-      const thumb = card(g, SCRIBBLE.card, 360, 450);
+      const thumb = card(g, SCRIBBLE.card, 360, 450, !!cat);
       const img = btn.querySelector('img');
       if (img) img.src = thumb.toDataURL('image/png');
       btn.hidden = false;
@@ -577,7 +697,7 @@ export function mountScene(o: Opts): Scene {
   async function saveCard() {
     const g = cardFor;
     if (!g) return;
-    const cv = card(g, SCRIBBLE.card);
+    const cv = card(g, SCRIBBLE.card, 1080, 1350, !!cat);
     const blob: Blob | null = await new Promise(r => cv.toBlob(r, 'image/png'));
     if (!blob) return;
     const file = new File([blob], 'my-creature.png', { type: 'image/png' });
@@ -658,6 +778,8 @@ export function mountScene(o: Opts): Scene {
     arrivals(en);
     for (const st of stages) if (st.play && !st.play.done) st.play.step(t, en);
     if (grabbed) grabbed.c.drag(grabbed.c.held!.tx, grabbed.c.held!.ty, dt);
+    if (cat && guide) cat.update(dt, t, guide, voice);
+    idle();
 
     // The pen in flight.
     if (nib.mode === 'fly') {
@@ -712,8 +834,13 @@ export function mountScene(o: Opts): Scene {
     ctx.restore();
 
     for (const st of stages) if (st.play && seen(st.top - 300, st.bottom + 60)) st.play.draw(ctx, t);
+    for (const st of stages) if (st.ringAt >= 0 && seen(st.top - 40, st.bottom + 40)) drawRing(st);
+    for (const st of stages) if (st.tickAt >= 0 && seen(st.top - 40, st.bottom + 40)) drawTick(st);
     if (arrow) drawArrow();
+    // easeprint's gift: an echo of the guide, a beat behind it.
+    if (guide?.echo && !o.reduced && seen(guide.y - 300, guide.y + 300)) guide.drawEcho(ctx, t, 0.3, -(guide.half * 2 + 14) * guide.fx, 0.22);
     for (const c of creatures) if (c !== grabbed?.c && seen(c.y - 300, c.y + 300)) c.draw(ctx, t, o.reduced);
+    if (cat && guide && seen(cat.y - 120, cat.y + 20)) cat.draw(ctx, t, guide);
     if (grabbed) grabbed.c.draw(ctx, t, o.reduced);
 
     // Rough ink has specks of paper showing through it. Inked lines are solid.
@@ -757,13 +884,109 @@ export function mountScene(o: Opts): Scene {
   // Pictures that load late move the floors.
   const imgs = Array.from(root.querySelectorAll('img'));
   for (const img of imgs) if (!img.complete) img.addEventListener('load', onResize, { once: true });
+  // ---- remembering ----------------------------------------------------------------------------------------------
+
+  function remember() { if (guide && guide.awake && !guide.leaving) saveGuide(guide, !!cat); }
+
+  /** The guide from before, back again. Coming back from a project page, it drops in where you are. On a new visit,
+   *  it's asleep on the sheet, and wakes up when you arrive. */
+  function restore(sv: Saved, awake: boolean) {
+    const f = awake ? reading() ?? heroFloor : heroFloor;
+    const x = f === heroFloor ? heroFloor.x0 + (heroFloor.x1 - heroFloor.x0) * (W < 640 ? 0.6 : 0.58) : (f.x0 + f.x1) / 2;
+    const c = new Creature(placed(sv, x, f.y - 60), f, sv.kind);
+    c.setFloor(f);
+    c.wearAll(sv.keeps);
+    c.echo = sv.echo;
+    for (const st of stages) if (sv.keeps.includes(GIFT[st.id] as Keep) || (GIFT[st.id] === 'cat' && sv.cat) || (GIFT[st.id] === 'echo' && sv.echo)) c.seen.add(st.id);
+    c.appear(t);
+    creatures.push(c);
+    guide = c;
+    if (sv.cat) cat = new Cat(x - 50, awake ? vt - 80 : f.y, f);
+    if (awake) {
+      c.y = vt - 140;
+      later(0.9, () => { c.talk('heart', 1.4, t, voice); c.wave(1.4, t); });
+      return;
+    }
+    c.y = f.y - 40;
+    c.sleep(true, t);
+    // It wakes with a start (oh! you're back), then it's all hearts and waving.
+    const rise = () => {
+      wakeUp = null;
+      if (!c.asleep || guide !== c) return;
+      c.sleep(false, t, voice);
+      c.lookAt(YOU, t + 2.4);
+      c.talk('bang', 0.7, t + 0.05, voice);
+      later(0.35, () => { if (c.standing) c.hop(env(), 0, 300); });
+      later(1.15, () => { c.talk('heart', 1.5, t, voice); c.wave(1.5, t); voice.giggle(c.size); });
+      later(2.9, () => { if (guide === c && c.floor === heroFloor && vt < 40) beginInvite(c); });
+    };
+    // A moment's nap first, so you catch it asleep, even if the mouse is already moving.
+    later(1.2, () => { if (c.asleep) wakeUp = rise; });
+    later(3, rise);
+  }
+  let wakeUp: (() => void) | null = null;
+
+  /** Nobody about: the guide nods off. Anything at all wakes it. */
+  function idle() {
+    const g = guide;
+    if (!g) return;
+    const quiet = t - lastInput > 16 && g.standing && !g.script && !invite && !grabbed && !pen && !g.asleep;
+    if (quiet && !o.reduced) { g.sleep(true, t); dozed = true; }
+    // Standing by a story it has pointed at, it reminds you now and then.
+    if (!g.asleep && g.standing && !g.script && t - lastNudge > 11 && t - lastInput < 8) {
+      const st = stages.find(s => s.floor === g.floor && (s.ringAt >= 0 || s.tickAt >= 0));
+      if (st) pointTheWay(st, g);
+    }
+  }
+  function poke() {
+    lastInput = t;
+    if (wakeUp) { const f = wakeUp; wakeUp = null; f(); return; }
+    if (dozed && guide?.asleep) { guide.sleep(false, t, voice); dozed = false; }
+  }
+  const onInput = () => poke();
+  for (const ev of ['pointermove', 'pointerdown', 'keydown', 'wheel', 'touchstart', 'scroll'] as const) window.addEventListener(ev, onInput, { passive: true });
+
+  // What the visitor points at, it looks at. A story link or a picture next to it gets it excited.
+  let lastHop = -10;
+  const onOver = (e: PointerEvent) => {
+    if (e.pointerType !== 'mouse') return;
+    const el = (e.target as Element).closest?.('.go, [data-pic], .sc-skip, .sc-card, .logos a, .mail');
+    const g = guide;
+    if (!el || !g || !g.awake || g.asleep) return;
+    const r = rectOf(el);
+    g.lookAt({ x: r.x + r.w / 2, y: r.y + r.h / 2 }, t + 1.6);
+    const st = el.closest('[data-stage]');
+    if (st && stages.find(s => s.el === st)?.floor === g.floor && g.standing && !g.script && t - lastHop > 2.2) {
+      lastHop = t;
+      g.hop(env(), 0, 280);
+      g.talk('bang', 0.9, t, voice);
+    }
+    if (el.classList.contains('sc-card') && g.floor === endFloor && t - lastHop > 2.2) { lastHop = t; g.talk('heart', 1.2, t, voice); }
+  };
+  root.addEventListener('pointerover', onOver);
+  // Off to a project: write it down now, so it's there when the page opens.
+  const onLeave = (e: Event) => {
+    const a = (e.target as Element).closest?.<HTMLAnchorElement>('a[href^="/projects/"]');
+    if (a) { remember(); leftFor(a.pathname); }
+  };
+  root.addEventListener('pointerdown', onLeave, true);
+  const onHide = () => { if (document.hidden) remember(); };
+  document.addEventListener('visibilitychange', onHide);
+
   start();
-  later(o.reduced ? 0.4 : 1.1, startExample);
+  const saved = loadGuide(), again = visiting();
+  if (saved) later(0.06, () => { layout(); restore(saved, again); });
+  else later(o.reduced ? 0.4 : 1.1, startExample);
 
   return {
     voice,
     destroy() {
+      remember();
       stop(); ro.disconnect();
+      for (const ev of ['pointermove', 'pointerdown', 'keydown', 'wheel', 'touchstart', 'scroll'] as const) window.removeEventListener(ev, onInput);
+      root.removeEventListener('pointerover', onOver);
+      root.removeEventListener('pointerdown', onLeave, true);
+      document.removeEventListener('visibilitychange', onHide);
       root.classList.remove('sc-live');
       document.removeEventListener('visibilitychange', onVis);
       window.removeEventListener('resize', onResize);

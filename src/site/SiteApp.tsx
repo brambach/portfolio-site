@@ -30,12 +30,18 @@ const pages = {
   missing: page(() => import('./NotFound')),
 };
 
+/** The visitor's creature, along with them on every page but the home page (which has its own). */
+const Buddy = lazy(() => import('./scribble/Companion'));
+const BUDDY = LOOK === 'block' && HOME_PAGE === 'scribble';
+const routeKey = (r: Route) => ('id' in r ? `${r.name}:${r.id}` : r.name);
+
 const pageOf = (r: Route) => r.name === 'home' ? pages.home : r.name === 'story' ? pages.story : r.name === 'case' ? r.id === 'psyche' ? pages.psyche : pages.teammate : r.name === 'project' ? r.id === 'dervo' ? pages.dervo : r.id === 'arro' && LOOK === 'block' ? pages.arro : pages.work : pages.missing;
 
 export default function SiteApp({ route: first }: { route: Route }) {
   const route = useSiteRoute(first, r => pageOf(r).fetch);
   const ArroPage = pages.arro.View, Home = pages.home.View, DervoPage = pages.dervo.View, StoryPage = pages.story.View, WorkPage = pages.work.View, TeammatePage = pages.teammate.View, PsychePage = pages.psyche.View, NotFound = pages.missing.View;
   return <Suspense fallback={null}>
+    {BUDDY && route.name !== 'home' && route.name !== 'missing' && <Buddy key={routeKey(route)} />}
     {route.name === 'home' ? <Home /> : route.name === 'story' ? <StoryPage key={route.id} id={route.id} /> : route.name === 'case' ? route.id === 'psyche' ? <PsychePage /> : <TeammatePage /> : route.name === 'project' ? route.id === 'dervo' ? <DervoPage /> : route.id === 'arro' && LOOK === 'block' ? <ArroPage id="arro" /> : <WorkPage key={route.id} id={route.id} /> : <NotFound />}
   </Suspense>;
 }
