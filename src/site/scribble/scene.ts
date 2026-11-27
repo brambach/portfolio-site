@@ -1,81 +1,173 @@
-import { Creature, type Env, type Floor } from './creature';
-import { INK, Pen, clamp, grain, line, noise, rand, stroke, type Pt } from './ink';
+import { card } from './card';
+import { STYLE } from './clean';
+import { SCRIBBLE, type StageId } from './copy';
+import { Creature, TONE, type Env, type Floor } from './creature';
+import { INK, Pen, clamp, grain, line, noise, quad, stroke, type Pt } from './ink';
+import { play, type Play, type Stage } from './reactions';
+import { loadMine, samples, saveMine } from './samples';
 import { makeSounds, type Voice } from './sounds';
 
-/* The first screen: a sheet of paper with a floor line, and a pen. The pen rests at the end of Bryce's name, blinking
-   like a cursor. Shortly after the page opens it lifts off, draws a little doodle on the paper, and puts itself back;
-   the doodle wakes up, drops onto the floor, looks at you and waves. That's the whole explanation. Whatever the
-   visitor draws after that comes alive the same way.
+/* The whole page as one sheet of paper.
 
-   One canvas covers the first screen and everything is drawn on it in the page's own coordinates (CSS px from the
-   top left of that screen), so ink never lags behind the page on a phone. The paper takes the pointer: on a phone it
-   doesn't scroll, so a finger can draw, and everything around it scrolls as usual. */
+   At the top: Bryce's name with a pen resting beside it, blinking like a cursor. Shortly after the page opens the
+   pen lifts off, draws a little doodle on the sheet and puts itself back; the doodle wakes up, drops onto the floor
+   line, looks at you and waves. That's the whole explanation. Whatever the visitor draws after that comes alive the
+   same way.
 
-export type Scene = { destroy(): void; voice: Voice; creatures: () => Creature[] };
+   Further down, each project stands on its own floor like a little stage. The newest creature is the guide: as you
+   scroll it leaps from floor to floor to keep up, and when it lands on a project's stage that project plays its
+   scene with it (reactions.ts). At the bottom it waves goodbye and can be kept as a card, next to a parade of other
+   creatures.
+
+   Drawing: one canvas, about two screens tall, laid over the page and moved down the page as you scroll. Everything
+   is drawn on it in the page's own coordinates, so ink scrolls with the page natively and never lags behind it on
+   a phone. The sheet at the top takes the pointer: there a finger draws instead of scrolling. */
+
+export type Scene = { destroy(): void; voice: Voice };
 
 type Opts = {
   root: HTMLElement;
+  hero: HTMLElement;
   canvas: HTMLCanvasElement;
   paper: HTMLElement;
   park: HTMLElement;
+  card: HTMLButtonElement | null;
   reduced: boolean;
-  /** Called once, when the first creature the visitor drew comes alive. */
-  onFirst?: () => void;
 };
 
+type StageRec = Stage & { el: HTMLElement; frame: Pt[][]; frameLen: number; ground: Pt[]; openAt: number; play: Play | null; top: number; bottom: number };
+
 const MAX = 6;
+const TAU = Math.PI * 2;
 
 export function mountScene(o: Opts): Scene {
-  const { root, canvas, paper, park } = o;
+  const { root, hero, canvas, paper, park } = o;
   const ctx = canvas.getContext('2d')!;
   const voice = makeSounds();
+  const cartoon = STYLE === 'cartoon';
   const tile = grain();
   let pattern: CanvasPattern | null = null;
-  let W = 0, H = 0, dpr = 1;
-  let floor: Floor = { x0: 0, x1: 0, y: 0 };
-  let floorLine: Pt[] = [];
+  let W = 0, H = 0, dpr = 1, top = 0, pageH = 0, vh = 0, vt = 0;
+  let heroFloor: Floor = { x0: 0, x1: 0, y: 0, id: 'hero' };
+  let heroLine: Pt[] = [];
+  let endFloor: Floor | null = null, endLine: Pt[] = [];
+  let paradeFloor: Floor | null = null, paradeLine: Pt[] = [];
   let parkAt = { x: 0, y: 0 };
+  const stages: StageRec[] = [];
   const creatures: Creature[] = [];
+  const parade: Creature[] = [];
+  let guide: Creature | null = null;
   let pending: { lines: Pt[][]; at: number; x0: number; y0: number; x1: number; y1: number } | null = null;
   let pen: Pen | null = null, penId = -1, penFrom = { x: 0, y: 0, t: 0, type: '' };
   let probe: { id: number; x: number; y: number; at: number; c: Creature; type: string } | null = null;
   let grabbed: { id: number; c: Creature } | null = null;
   let hover: { x: number; y: number; on: boolean; over: Creature | null } = { x: 0, y: 0, on: false, over: null };
   let eye: { x: number; y: number; until: number } | null = null;
-  let rush: (Env['rush']) = null;
+  let rush: Env['rush'] = null;
   let lastPen = { x: 0, y: 0, t: 0 };
   let touched = false, firstDone = false;
-  let t = 0, last = 0, raf = 0, running = false, visible = true;
+  let t = 0, last = 0, raf = 0, running = false;
+  let want: { floor: Floor; since: number } | null = null;
+  let bye: { at: number; shown: boolean } | null = null;
+  // The invitation. A new creature looks at you, beckons, and a drawn arrow points down the page. If you don't
+  // follow, the first one goes on ahead and waits for you on the first project.
+  let invite: { c: Creature; step: 'meet' | 'look' | 'walk' | 'beckon' | 'wait'; at: number; spot: number; hopped: boolean; again: boolean } | null = null;
+  let arrow: { x: number; y: number; dir: number; at: number; out: number } | null = null;
+  let wentAhead = false, aheadWait = false, lastInk = -10;
+  // A stage the guide landed on before it was in view: its scene waits until the visitor gets there.
+  let due: StageRec | null = null;
 
-  const isPhone = () => matchMedia('(pointer: coarse)').matches;
+  const isPhone = () => matchMedia('(pointer: coarse)').matches || innerWidth < 640;
   const base = () => (isPhone() ? 3.5 : 3.2);
+  const rectOf = (el: Element) => { const R = root.getBoundingClientRect(), r = el.getBoundingClientRect(); return { x: r.left - R.left, y: r.top - R.top, w: r.width, h: r.height }; };
+
+  /** A floor line: long and calm, a little heavier in places, like it was ruled by hand. */
+  function ground(x0: number, x1: number, y: number, seed: number, weight = 1): Pt[] {
+    const out: Pt[] = [];
+    const b = (cartoon ? 2.3 : base() * 0.62) * weight;
+    for (let x = x0; x <= x1; x += 3) {
+      const u = (x - x0) / Math.max(1, x1 - x0), taper = Math.min(1, u * 10, (1 - u) * 10);
+      const wob = cartoon ? noise(x * 0.006 + seed) * 0.6 : noise(x * 0.008 + seed) * 1.1 + noise(x * 0.05 + 9) * 0.25;
+      out.push({ x, y: y + 1 + wob, w: b * (cartoon ? 0.9 + 0.15 * noise(x * 0.01 + seed) : 0.75 + 0.35 * noise(x * 0.012 + 3)) * (0.3 + 0.7 * Math.max(0, taper)) });
+    }
+    return out;
+  }
+
+  /** A hand drawn frame round a picture: four strokes that run a little past the corners. */
+  function frame(x: number, y: number, w: number, h: number, seed: number): Pt[][] {
+    const side = (ax: number, ay: number, bx: number, by: number, k: number): Pt[] => {
+      const out: Pt[] = [], L = Math.hypot(bx - ax, by - ay), n = Math.max(2, Math.round(L / 4));
+      const nx = -(by - ay) / L, ny = (bx - ax) / L, bow = (noise(seed + k) * 0.5 + 0.5) * Math.min(3, L * 0.006);
+      for (let i = 0; i <= n; i++) {
+        const u = i / n, b = Math.sin(Math.PI * u) * bow + noise(seed * 3 + k * 7 + u * 4) * 0.5;
+        out.push({ x: ax + (bx - ax) * u + nx * b, y: ay + (by - ay) * u + ny * b, w: (cartoon ? 2.1 : 2) * (0.55 + 0.45 * Math.min(1, u * 8, (1 - u) * 8)) });
+      }
+      return out;
+    };
+    const o = 5;
+    return [side(x - o, y, x + w + 3, y - 1, 1), side(x + w, y - o, x + w + 1, y + h + 3, 2), side(x + w + o, y + h, x - 3, y + h + 1, 3), side(x, y + h + o, x - 1, y - 3, 4)];
+  }
 
   // ---- layout ---------------------------------------------------------------------------------------------------
 
   function layout() {
-    const r = root.getBoundingClientRect();
+    const R = root.getBoundingClientRect();
     dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-    W = r.width; H = r.height;
+    W = R.width; pageH = root.offsetHeight; vh = window.innerHeight;
+    H = Math.min(pageH, Math.round(Math.min(vh * 2.2, 3200)));
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     canvas.style.width = `${W}px`; canvas.style.height = `${H}px`;
-    const p = paper.getBoundingClientRect();
-    const inset = Math.min(28, Math.max(16, W * 0.04));
-    floor = { x0: p.left - r.left + inset, x1: p.right - r.left - inset, y: p.bottom - r.top - (isPhone() ? 8 : 14) };
-    for (const c of creatures) {
-      c.floor = floor;
-      if (c.state === 'ground') c.x = clamp(c.x, floor.x0 + 10, floor.x1 - 10);
-    }
-    // The floor: one long, calm line, a little heavier in places, like it was ruled by hand.
-    floorLine = [];
-    const b = base() * 0.62;
-    for (let x = floor.x0 - 4; x <= floor.x1 + 4; x += 3) {
-      const u = (x - floor.x0) / Math.max(1, floor.x1 - floor.x0);
-      const taper = Math.min(1, u * 9, (1 - u) * 9);
-      floorLine.push({ x, y: floor.y + 1 + noise(x * 0.008) * 1.1 + noise(x * 0.05 + 9) * 0.25, w: b * (0.75 + 0.35 * noise(x * 0.012 + 3)) * (0.35 + 0.65 * Math.max(0, taper)) });
-    }
-    const k = park.getBoundingClientRect();
-    parkAt = { x: k.left - r.left + 4, y: k.top - r.top + k.height * 0.78 };
     pattern = null;
+    TONE.texture = null;
+
+    const p = rectOf(paper);
+    const inset = Math.min(28, Math.max(16, W * 0.04));
+    const was = heroFloor;
+    heroFloor = { x0: p.x + inset, x1: p.x + p.w - inset, y: p.y + p.h - (isPhone() ? 8 : 14), id: 'hero' };
+    heroLine = ground(heroFloor.x0 - 4, heroFloor.x1 + 4, heroFloor.y, 1);
+    const k = rectOf(park);
+    parkAt = { x: k.x + 4, y: k.y + k.h * 0.78 };
+
+    const fit = isPhone() ? 74 : 112;
+    const old = new Map(stages.map(s => [s.id, s]));
+    stages.length = 0;
+    root.querySelectorAll<HTMLElement>('[data-stage]').forEach((el, i) => {
+      const sec = rectOf(el), pic = rectOf(el.querySelector('[data-pic] img') ?? el.querySelector('[data-pic]')!), room = rectOf(el.querySelector('[data-room]')!);
+      const id = el.dataset.stage as StageId;
+      const floor: Floor = { x0: room.x + 8, x1: room.x + room.w - 8, y: sec.y + sec.h, fit, id };
+      const fr = frame(pic.x, pic.y, pic.w, pic.h, i * 13.7 + 2);
+      const prev = old.get(id);
+      stages.push({
+        id, el, floor, pic, room: { x0: floor.x0, x1: floor.x1, y0: room.y },
+        frame: fr, frameLen: fr.reduce((a, l) => a + l.length, 0), ground: ground(sec.x - 6, sec.x + sec.w + 6, floor.y, i * 3.1),
+        openAt: prev?.openAt ?? -1, play: prev?.play ?? null, top: sec.y, bottom: sec.y + sec.h,
+      });
+    });
+    const end = root.querySelector('[data-end]'), par = root.querySelector('[data-parade]');
+    if (end) { const r = rectOf(end); endFloor = { x0: r.x + 8, x1: r.x + r.w - 8, y: r.y + r.h, fit, id: 'end' }; endLine = ground(r.x - 10, r.x + r.w + 10, endFloor.y, 7); }
+    if (par) { const r = rectOf(par); paradeFloor = { x0: r.x, x1: r.x + r.w, y: r.y + r.h, fit: isPhone() ? 46 : 58, id: 'parade' }; paradeLine = ground(r.x - 6, r.x + r.w + 6, paradeFloor.y, 11, 0.85); }
+
+    // Everyone stays on their floor as it moves.
+    const floors = [heroFloor, ...stages.map(s => s.floor), endFloor, paradeFloor].filter(Boolean) as Floor[];
+    for (const c of [...creatures, ...parade]) {
+      const f = floors.find(x => x.id === c.floor.id) ?? heroFloor;
+      const dy = f.y - c.floor.y;
+      c.floor = f;
+      if (c.standing) { c.y += dy; c.x = clamp(c.x, f.x0 + 6, f.x1 - 6); for (const l of c.legs) { l.fy += dy; } }
+      else if (c.floor === f && f === heroFloor) c.y += f.y - was.y;
+    }
+    anchor(true);
+  }
+
+  /** Keep the canvas over what's on screen, with room either side to scroll into. */
+  function anchor(force = false) {
+    const R = root.getBoundingClientRect();
+    vt = -R.top; vh = window.innerHeight;
+    const margin = Math.max(60, (H - vh) * 0.25);
+    if (force || vt < top + 4 || vt + vh > top + H - 4 || (vt < top + margin && top > 0) || (vt + vh > top + H - margin && top + H < pageH)) {
+      top = Math.round(clamp(vt - (H - vh) / 2, 0, Math.max(0, pageH - H)));
+      canvas.style.transform = `translate3d(0, ${top}px, 0)`;
+    }
   }
 
   // ---- the pen ---------------------------------------------------------------------------------------------------
@@ -87,14 +179,13 @@ export function mountScene(o: Opts): Scene {
     nib.mode = 'fly'; nib.from = { x: nib.x, y: nib.y }; nib.to = to; nib.at = t; nib.dur = dur; nib.then = then ?? null;
   }
 
-  function drawNib(x: number, y: number, a: number, alpha: number, tilt: number) {
+  function drawNib(x: number, y: number, alpha: number, tilt: number) {
     if (alpha <= 0.01) return;
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.translate(x, y);
     ctx.rotate(0.62 + tilt);
-    const s = 1.05;
-    ctx.scale(s, s);
+    ctx.scale(1.05, 1.05);
     ctx.fillStyle = INK;
     ctx.beginPath();
     ctx.moveTo(0, 0);
@@ -106,10 +197,9 @@ export function mountScene(o: Opts): Scene {
     ctx.fill();
     ctx.fillStyle = '#fff';
     ctx.fillRect(-0.45, -12.5, 0.9, 11);
-    ctx.beginPath(); ctx.arc(0, -13.6, 1.7, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, -13.6, 1.7, 0, TAU); ctx.fill();
     ctx.fillRect(-6.2, -21.4, 12.4, 0.9);
     ctx.restore();
-    void a;
   }
 
   // ---- the example ------------------------------------------------------------------------------------------------
@@ -117,18 +207,18 @@ export function mountScene(o: Opts): Scene {
   /** The doodle the pen draws by itself: a soft lumpy bean, drawn the way a hand would, a little fast, closing past
    *  where it started. */
   function exampleShape(): [number, number][] {
-    const cx = floor.x0 + (floor.x1 - floor.x0) * (W < 640 ? 0.58 : 0.64), cy = floor.y - Math.min(220, (floor.y - parkAt.y) * 0.55);
+    const cx = heroFloor.x0 + (heroFloor.x1 - heroFloor.x0) * (W < 640 ? 0.58 : 0.64), cy = heroFloor.y - Math.min(220, (heroFloor.y - parkAt.y) * 0.55);
     const R = clamp(W * 0.06, 30, 44);
     const pts: [number, number][] = [];
     const a0 = -2.2;
     for (let i = 0; i <= 64; i++) {
-      const u = i / 64, a = a0 + u * (Math.PI * 2 + 0.32);
+      const u = i / 64, a = a0 + u * (TAU + 0.32);
       const r = R * (1 + 0.1 * Math.sin(a * 2 + 1.1) + 0.05 * Math.sin(a * 3 + 0.3));
       pts.push([cx + Math.cos(a) * r * 1.08, cy + Math.sin(a) * r * 0.92 + (Math.sin(a) > 0 ? r * 0.06 : 0)]);
     }
     return pts;
   }
-  let example: { pts: [number, number][]; pen: Pen | null; at: number; done: boolean; creature?: Creature } | null = null;
+  let example: { pts: [number, number][]; pen: (Pen & { _i?: number }) | null; at: number; done: boolean; creature?: Creature } | null = null;
 
   function startExample() {
     if (touched || example) return;
@@ -143,18 +233,17 @@ export function mountScene(o: Opts): Scene {
     // A hand speeds up into a loop and slows as it closes it.
     const e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
     const upto = Math.floor(e * (example.pts.length - 1));
-    const pen = example.pen as Pen & { _i?: number };
+    const pen = example.pen;
     for (let i = pen._i ?? 1; i <= upto; i++) pen.add(example.pts[i][0], example.pts[i][1], (example.at + (dur * i) / example.pts.length) * 1000, 0.5);
     pen._i = upto + 1;
     const tip = example.pts[upto];
     nib.x = tip[0]; nib.y = tip[1];
     if (u >= 1) {
       example.done = true;
-      const lines = [pen.finish()];
-      const c = new Creature(lines, floor, 'walker');
+      const c = new Creature([pen.finish()], heroFloor, 'walker');
       example.creature = c;
       creatures.push(c);
-      later(0.26, () => { c.wake(t); later(1.9, () => { if (c.state === 'ground') { c.facing = -1; c.wave(1.7, t); } }); });
+      later(0.26, () => { c.wake(t); if (!guide) guide = c; later(1.9, () => { if (c.standing) { c.facing = -1; c.wave(1.7, t); } }); });
       fly(parkAt, 0.55, () => { nib.mode = 'park'; });
     }
   }
@@ -162,25 +251,30 @@ export function mountScene(o: Opts): Scene {
   const timers: { at: number; fn: () => void }[] = [];
   function later(s: number, fn: () => void) { timers.push({ at: t + s, fn }); }
 
-  // ---- drawing ---------------------------------------------------------------------------------------------------
+  // ---- drawing on the sheet ---------------------------------------------------------------------------------------
 
-  const local = (e: PointerEvent) => { const r = root.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+  const local = (e: { clientX: number; clientY: number }) => { const R = root.getBoundingClientRect(); return { x: e.clientX - R.left, y: e.clientY - R.top }; };
 
   function finalize() {
     if (!pending) return;
     const lines = pending.lines;
     pending = null;
-    const c = new Creature(lines, floor);
+    const c = new Creature(lines, heroFloor);
     creatures.push(c);
     c.wake(t);
-    const mine = creatures.filter(x => !x.leaving && x.state !== 'drawn');
+    // The newest creature is the guide. The one before stays home.
+    const was = guide;
+    guide = c;
+    aheadWait = false;
+    if (was && was !== c && was.floor !== heroFloor) send(was, heroFloor);
+    beginInvite(c);
+    const mine = creatures.filter(x => !x.leaving && x.awake);
     if (mine.length > MAX) mine[0].leave();
     if (!firstDone) {
       firstDone = true;
-      later(1.2, () => o.onFirst?.());
       // The pen's own doodle comes over to say hi.
       const ex = example?.creature;
-      if (ex && !ex.leaving && ex.state === 'ground') { ex.goal = clamp(c.x + (ex.x < c.x ? -1 : 1) * (c.w / 2 + ex.w / 2 + 24), floor.x0 + 30, floor.x1 - 30); }
+      if (ex && !ex.leaving && ex.standing && ex.floor === heroFloor) ex.goal = clamp(c.x + (ex.x < c.x ? -1 : 1) * (c.w / 2 + ex.w / 2 + 24), heroFloor.x0 + 30, heroFloor.x1 - 30);
     }
   }
 
@@ -189,7 +283,7 @@ export function mountScene(o: Opts): Scene {
     touched = true;
     voice.unlock();
     const p = local(e);
-    if (example && !example.done) { example = null; }
+    if (example && !example.done) example = null;
     try { paper.setPointerCapture(e.pointerId); } catch { /* fine */ }
     const pad = e.pointerType === 'touch' ? 16 : 6;
     const hit = [...creatures].reverse().find(c => c.hit(p.x, p.y, pad));
@@ -199,8 +293,9 @@ export function mountScene(o: Opts): Scene {
       const near = p.x > pending.x0 - 90 && p.x < pending.x1 + 90 && p.y > pending.y0 - 90 && p.y < pending.y1 + 90;
       if (!near) finalize();
     }
-    pending && (pending.at = Infinity);
+    if (pending) pending.at = Infinity;
     pen = new Pen(base(), e.pointerType, p.x, p.y, e.timeStamp, e.pressure);
+    lastInk = t;
     penFrom = { x: p.x, y: p.y, t: e.timeStamp, type: e.pointerType };
     penId = e.pointerId;
     nib.mode = e.pointerType === 'mouse' ? 'hand' : 'hide';
@@ -210,7 +305,7 @@ export function mountScene(o: Opts): Scene {
 
   function move(e: PointerEvent) {
     const p = local(e);
-    if (e.pointerType === 'mouse') { hover = { x: p.x, y: p.y, on: true, over: hover.over }; }
+    if (e.pointerType === 'mouse') hover = { x: p.x, y: p.y, on: true, over: hover.over };
     eye = { x: p.x, y: p.y, until: t + (e.pointerType === 'mouse' ? 0.6 : 1.2) };
     if (probe && probe.id === e.pointerId) {
       if (Math.hypot(p.x - probe.x, p.y - probe.y) > 7) { grabbed = { id: e.pointerId, c: probe.c }; probe.c.grab(p.x, p.y, env()); probe = null; }
@@ -236,25 +331,25 @@ export function mountScene(o: Opts): Scene {
   function up(e: PointerEvent) {
     if (probe && probe.id === e.pointerId) { probe.c.boop(env()); probe = null; return; }
     if (grabbed && grabbed.id === e.pointerId) { grabbed.c.drop(env()); grabbed = null; return; }
-    if (pen && e.pointerId === penId) {
-      const pts = pen.finish();
-      pen = null; penId = -1; rush = null;
-      // A quick, straight flick upward with a finger is someone trying to scroll, not draw: take them down the page.
-      const end = local(e), dx = end.x - penFrom.x, dy = end.y - penFrom.y;
-      if (penFrom.type === 'touch' && e.timeStamp - penFrom.t < 260 && dy < -90 && Math.abs(dx) < Math.abs(dy) * 0.4) {
-        const r = root.getBoundingClientRect();
-        window.scrollTo({ top: window.scrollY + r.bottom - 8, behavior: o.reduced ? 'auto' : 'smooth' });
-        return;
-      }
-      if (pts.length < 2 && e.type === 'pointercancel') return;
-      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-      for (const q of pts) { x0 = Math.min(x0, q.x); x1 = Math.max(x1, q.x); y0 = Math.min(y0, q.y); y1 = Math.max(y1, q.y); }
-      if (!pending) pending = { lines: [], at: t, x0, y0, x1, y1 };
-      pending.lines.push(pts);
-      pending.at = t;
-      pending.x0 = Math.min(pending.x0, x0); pending.y0 = Math.min(pending.y0, y0); pending.x1 = Math.max(pending.x1, x1); pending.y1 = Math.max(pending.y1, y1);
-      if (e.pointerType !== 'mouse') { nib.mode = 'hide'; later(1.1, () => { if (!pen && nib.mode === 'hide') { nib.x = parkAt.x; nib.y = parkAt.y; nib.mode = 'park'; nib.alpha = 0; } }); }
+    if (!pen || e.pointerId !== penId) return;
+    const pts = pen.finish();
+    pen = null; penId = -1; rush = null;
+    lastInk = t;
+    // A quick, straight flick upward with a finger is someone trying to scroll, not draw: take them down the page.
+    const end = local(e), dx = end.x - penFrom.x, dy = end.y - penFrom.y;
+    if (penFrom.type === 'touch' && e.timeStamp - penFrom.t < 260 && dy < -90 && Math.abs(dx) < Math.abs(dy) * 0.4) {
+      const r = hero.getBoundingClientRect();
+      window.scrollTo({ top: window.scrollY + r.bottom - 8, behavior: o.reduced ? 'auto' : 'smooth' });
+      return;
     }
+    if (pts.length < 2 && e.type === 'pointercancel') return;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const q of pts) { x0 = Math.min(x0, q.x); x1 = Math.max(x1, q.x); y0 = Math.min(y0, q.y); y1 = Math.max(y1, q.y); }
+    if (!pending) pending = { lines: [], at: t, x0, y0, x1, y1 };
+    pending.lines.push(pts);
+    pending.at = t;
+    pending.x0 = Math.min(pending.x0, x0); pending.y0 = Math.min(pending.y0, y0); pending.x1 = Math.max(pending.x1, x1); pending.y1 = Math.max(pending.y1, y1);
+    if (e.pointerType !== 'mouse') { nib.mode = 'hide'; later(1.1, () => { if (!pen && nib.mode === 'hide') { nib.x = parkAt.x; nib.y = parkAt.y; nib.mode = 'park'; nib.alpha = 0; } }); }
   }
 
   function leavePaper(e: PointerEvent) {
@@ -283,8 +378,252 @@ export function mountScene(o: Opts): Scene {
   paper.addEventListener('webkitmouseforcewillbegin', noForce);
   paper.addEventListener('contextmenu', noForce);
 
-  // ---- the loop --------------------------------------------------------------------------------------------------
+  // ---- the guide ----------------------------------------------------------------------------------------------------
 
+  /** Where a creature should stand on a floor. */
+  function spot(f: Floor, c: Creature) {
+    const m = c.half + 8;
+    if (f === endFloor) return clamp(f.x0 + (f.x1 - f.x0) * 0.4, f.x0 + m, f.x1 - m);
+    if (f === heroFloor) return clamp(c.x, f.x0 + m, f.x1 - m);
+    return clamp((f.x0 + f.x1) / 2 + (Math.random() - 0.5) * (f.x1 - f.x0) * 0.2, f.x0 + Math.min(m, (f.x1 - f.x0) / 2), f.x1 - Math.min(m, (f.x1 - f.x0) / 2));
+  }
+
+  function send(c: Creature, f: Floor) {
+    // Leaving a stage mid scene: the scene lets go of it.
+    const st = stages.find(s => s.floor === c.floor);
+    if (st?.play && !st.play.done) { st.play = null; }
+    c.script = false; c.hurry = 1;
+    c.leapTo(f, spot(f, c), t);
+  }
+
+  /** The floor nearest to where the visitor is reading. */
+  function reading(): Floor | null {
+    const line = vt + vh * 0.64;
+    let best: Floor | null = null, d = Infinity;
+    const all = [heroFloor, ...stages.map(s => s.floor), endFloor].filter(Boolean) as Floor[];
+    for (const f of all) {
+      if (f.y < vt + vh * 0.22 || f.y > vt + vh + 20) continue;
+      const dd = Math.abs(f.y - line);
+      if (dd < d) { d = dd; best = f; }
+    }
+    return best;
+  }
+
+  function steer() {
+    const g = guide;
+    if (!g || !g.awake || g.leaving || g === grabbed?.c || g.state === 'held') return;
+    const f = reading();
+    if (!f) return;
+    // It went on ahead: it waits down there rather than coming back up for a visitor still at the top.
+    if (aheadWait) { if (f === heroFloor) return; aheadWait = false; }
+    if (invite && invite.c === g && f === heroFloor) return;
+    if (!want || want.floor !== f) want = { floor: f, since: t };
+    // Wait a beat, so a quick scroll through doesn't send it bouncing off every floor on the way.
+    if (f !== g.floor && t - want.since > 0.16) {
+      if (g.leaping) { if (g.floor !== f) send(g, f); }
+      else send(g, f);
+      want = { floor: f, since: Infinity };
+    }
+  }
+
+  /** Something arrived on a floor: a stage plays its scene, the bottom says goodbye. */
+  let lastFloor: Floor | null = null;
+  function arrivals(env: Env) {
+    const g = guide;
+    if (!g) return;
+    if (g.standing && g.floor !== lastFloor) {
+      lastFloor = g.floor;
+      const st = stages.find(s => s.floor === g.floor);
+      if (st) due = st;
+      if (g.floor === endFloor) goodbye(g, env);
+    }
+    if (g.leaping) lastFloor = null;
+    // A stage plays its scene once the guide is standing on it and the visitor can see it.
+    if (due && (g.floor !== due.floor || g.leaving)) due = null;
+    if (due && g.standing && due.floor.y < vt + vh - 6 && due.floor.y > vt + vh * 0.25) {
+      open(due);
+      due.play = play(due, g, t, { nib: (x, y, a = 1) => drawNib(x, y, a, -0.1), reduced: o.reduced });
+      due = null;
+    }
+  }
+
+  // ---- the invitation ------------------------------------------------------------------------------------------------
+
+  function beginInvite(c: Creature) {
+    if (invite && invite.c !== c) invite.c.script = false;
+    if (arrow && arrow.out < 0) arrow.out = t;
+    invite = { c, step: 'meet', at: t, spot: c.x, hopped: false, again: false };
+  }
+
+  function endInvite() {
+    if (invite) invite.c.script = false;
+    invite = null;
+    if (arrow && arrow.out < 0) arrow.out = t;
+  }
+
+  function stepInvite(en: Env) {
+    const v = invite;
+    if (!v) return;
+    const c = v.c;
+    if (c.leaving || c.gone || c !== guide || c.floor !== heroFloor || vt > 40) { endInvite(); return; }
+    // Waking up, mid hop, or in someone's hand: carry on from here once it's back on its feet.
+    if (!c.standing) return;
+    const e = t - v.at;
+    const go = (step: typeof v.step) => { v.step = step; v.at = t; };
+    switch (v.step) {
+      case 'meet':
+        c.script = true;
+        c.lookAt(YOU, t + 1.1);
+        c.say('happy', t + 1.1);
+        go('look');
+        break;
+      case 'look':
+        if (e < 1) break;
+        {
+          // Off to one side of the middle, so the arrow it points with has room and misses the words below.
+          const f = heroFloor, mid = (f.x0 + f.x1) / 2, span = f.x1 - f.x0;
+          v.spot = clamp(mid + span * 0.18, f.x0 + c.half + 70, f.x1 - c.half - 12);
+          c.goal = v.spot;
+          // Anyone standing where it's about to point steps aside, to the far side of the arrow.
+          for (const o2 of creatures) {
+            if (o2 === c || o2.leaving || o2.floor !== f || !o2.awake) continue;
+            const clear = v.spot - c.half - 96 - o2.half;
+            if (o2.x + o2.half > clear) o2.goal = clamp(clear, f.x0 + o2.half + 6, f.x1 - o2.half - 6);
+          }
+        }
+        go('walk');
+        break;
+      case 'walk':
+        if (Math.abs(c.x - v.spot) > 8 && e < 3) { if (c.goal === null) c.goal = v.spot; break; }
+        c.goal = null;
+        c.facing = -1;
+        go('beckon');
+        break;
+      case 'beckon':
+        if (e < 0.25) break;
+        c.lookAt(YOU, t + 1.5);
+        c.wave(1.7, t);
+        c.say('happy', t + 1.8);
+        voice.giggle(c.size);
+        arrow = { x: c.x - c.half - 8, y: (c.top + heroFloor.y) / 2 - 4, dir: -1, at: t, out: -1 };
+        go('wait');
+        break;
+      case 'wait':
+        if (!v.hopped && e > 2) { v.hopped = true; c.lookAt({ x: arrow ? arrow.x - 24 : c.x, y: heroFloor.y + 40 }, t + 0.9); c.hop(en, 0, 300); }
+        if (!v.again && e > 3.6) { v.again = true; c.lookAt(YOU, t + 1.4); c.wave(1.3, t); }
+        // Nobody followed: the first one goes on ahead, as long as the visitor isn't busy drawing.
+        if (e > 4.4 && !wentAhead && stages.length && !pen && !pending && t - lastInk > 3) {
+          wentAhead = true; aheadWait = true;
+          endInvite();
+          send(c, stages[0].floor);
+          voice.boing(c.size);
+          break;
+        }
+        if (e > 9) endInvite();
+        break;
+    }
+  }
+
+  /** The arrow a creature points with: one confident curve down past the floor, a little bob at the end. */
+  function drawArrow() {
+    const a = arrow;
+    if (!a) return;
+    const age = t - a.at, fade = a.out >= 0 ? 1 - clamp((t - a.out) / 0.35, 0, 1) : 1;
+    if (fade <= 0) { arrow = null; return; }
+    const bob = age > 0.5 && !o.reduced ? Math.sin((age - 0.5) * 5.5) * 3 : 0;
+    const sx = a.x, sy = a.y, ex = sx + a.dir * 30, ey = heroFloor.y + (isPhone() ? 30 : 36) + bob;
+    const pts = quad(sx, sy, sx + a.dir * 46, sy + (ey - sy) * 0.3, ex, ey, 22);
+    const u = o.reduced ? 1 : clamp(age / 0.42, 0, 1);
+    const n = Math.max(3, Math.ceil(pts.length * (1 - Math.pow(1 - u, 2))));
+    ctx.save();
+    ctx.globalAlpha = fade;
+    line(ctx, stroke(pts.slice(0, n), 3.3, 0.95, 0.45), 0.3, Math.floor(t * 7));
+    if (u >= 1) {
+      const [px, py] = pts[pts.length - 3], tl = Math.hypot(ex - px, ey - py) || 1, tx = (ex - px) / tl, ty = (ey - py) / tl;
+      for (const sgn of [-1, 1]) {
+        const ang = Math.PI - 0.62 * sgn, hx = tx * Math.cos(ang) - ty * Math.sin(ang), hy = tx * Math.sin(ang) + ty * Math.cos(ang);
+        const arm: [number, number][] = [0, 1, 2, 3, 4].map(i => [ex + hx * 13 * (i / 4), ey + hy * 13 * (i / 4)]);
+        line(ctx, stroke(arm, 3.3, 0.7, 1), 0.3, Math.floor(t * 7) + sgn);
+      }
+    }
+    ctx.restore();
+  }
+
+  function goodbye(g: Creature, env: Env) {
+    g.script = true;
+    g.lookAt(env.you, t + 2.6);
+    later(0.35, () => { if (g.floor === endFloor) { g.wave(2.2, t); g.say('happy', t + 2.4); voice.giggle(g.size); } });
+    later(2.8, () => { if (g.floor === endFloor) g.script = false; });
+    if (!bye) bye = { at: t, shown: false };
+    later(1.2, () => showCard(g));
+  }
+
+  // ---- the card -----------------------------------------------------------------------------------------------------
+
+  let cardFor: Creature | null = null;
+  function showCard(g: Creature) {
+    const btn = o.card;
+    if (!btn || cardFor === g) return;
+    cardFor = g;
+    try {
+      const thumb = card(g, SCRIBBLE.card, 360, 450);
+      const img = btn.querySelector('img');
+      if (img) img.src = thumb.toDataURL('image/png');
+      btn.hidden = false;
+      requestAnimationFrame(() => btn.classList.add('in'));
+    } catch { /* a canvas that can't be read; no card */ }
+  }
+
+  async function saveCard() {
+    const g = cardFor;
+    if (!g) return;
+    const cv = card(g, SCRIBBLE.card);
+    const blob: Blob | null = await new Promise(r => cv.toBlob(r, 'image/png'));
+    if (!blob) return;
+    const file = new File([blob], 'my-creature.png', { type: 'image/png' });
+    const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+    try {
+      if (isPhone() && nav.canShare?.({ files: [file] })) await nav.share({ files: [file] });
+      else {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = 'my-creature.png';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      }
+    } catch { /* the visitor closed the share sheet */ }
+    // It joins the parade, and is still in it next time.
+    saveMine(g.drawing);
+    joinParade(g.drawing, 0.96);
+    o.card?.classList.add('saved');
+  }
+  const onCard = () => void saveCard();
+  o.card?.addEventListener('click', onCard);
+
+  // ---- the parade ----------------------------------------------------------------------------------------------------
+
+  /** Someone joins the parade, `at` of the way along it (0 is the left end). */
+  function joinParade(lines: Pt[][], at: number) {
+    if (!paradeFloor) return;
+    const f = paradeFloor;
+    const x = f.x0 + at * (f.x1 - f.x0);
+    const c = new Creature(lines.map(l => l.map(p => ({ x: p.x + x, y: p.y + f.y - 80, w: p.w }))), f);
+    c.kGoal = Math.min(c.kGoal, (f.fit ?? 56) / c.size); c.k = c.kGoal;
+    c.parade = true;
+    c.wake(t);
+    parade.push(c);
+  }
+
+  // ---- stages -------------------------------------------------------------------------------------------------------
+
+  function open(st: StageRec) {
+    if (st.openAt >= 0) return;
+    st.openAt = o.reduced ? t - 10 : t;
+    st.el.classList.add('open');
+  }
+
+  // ---- the loop ------------------------------------------------------------------------------------------------------
+
+  const YOU = { x: 0, y: 0 };
   const env = (): Env => ({
     t,
     eye: pen ? { x: lastPen.x, y: lastPen.y } : example && !example.done && example.pen ? { x: nib.x, y: nib.y } : eye && t < eye.until ? eye : hover.on ? hover : null,
@@ -294,21 +633,30 @@ export function mountScene(o: Opts): Scene {
     crowd: creatures,
     you: YOU,
   });
-  const YOU = { x: 0, y: 0 };
 
-  function frame(now: number) {
+  function tick(now: number) {
     raf = 0;
     if (!running) return;
     const s = now / 1000;
     const dt = last ? Math.min(1 / 30, Math.max(0, s - last)) : 1 / 60;
     last = s; t += dt;
+    anchor();
     for (let i = timers.length - 1; i >= 0; i--) if (t >= timers[i].at) { const f = timers[i].fn; timers.splice(i, 1); f(); }
     if (pending && t - pending.at > (isPhone() ? 0.62 : 0.5)) finalize();
     stepExample();
 
+    // Stages open as they come into view, whether or not anything has landed on them yet.
+    for (const st of stages) if (st.openAt < 0 && st.pic.y < vt + vh * 0.86) open(st);
+
     const en = env();
+    stepInvite(en);
+    steer();
     for (const c of creatures) c.update(dt, en);
-    for (let i = creatures.length - 1; i >= 0; i--) if (creatures[i].gone) creatures.splice(i, 1);
+    for (let i = creatures.length - 1; i >= 0; i--) if (creatures[i].gone) { if (creatures[i] === guide) guide = null; creatures.splice(i, 1); }
+    if (!guide) guide = [...creatures].reverse().find(c => c.awake && !c.leaving) ?? null;
+    if (paradeFloor && Math.abs(paradeFloor.y - (vt + vh / 2)) < vh * 1.5) { const pe = { ...en, crowd: parade }; for (const c of parade) c.update(dt, pe); }
+    arrivals(en);
+    for (const st of stages) if (st.play && !st.play.done) st.play.step(t, en);
     if (grabbed) grabbed.c.drag(grabbed.c.held!.tx, grabbed.c.held!.ty, dt);
 
     // The pen in flight.
@@ -329,65 +677,97 @@ export function mountScene(o: Opts): Scene {
       nib.alpha = 1;
     }
     draw();
-    raf = requestAnimationFrame(frame);
+    raf = requestAnimationFrame(tick);
   }
+
+  const seen = (y0: number, y1: number) => y1 > top - 40 && y0 < top + H + 40;
 
   function draw() {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, -top * dpr);
+    if (!pattern) { pattern = ctx.createPattern(tile, 'repeat'); TONE.texture = pattern; }
     ctx.fillStyle = INK;
-    line(ctx, floorLine);
+
+    if (seen(heroFloor.y - 10, heroFloor.y + 10)) line(ctx, heroLine);
+    // The stages: a floor each, and a frame drawn round the picture when it opens.
+    for (const st of stages) {
+      if (!seen(st.top - 200, st.bottom + 40)) continue;
+      line(ctx, st.ground);
+      if (st.openAt >= 0) {
+        const u = clamp((t - st.openAt) / 0.8, 0, 1), e = 1 - Math.pow(1 - u, 3);
+        let left = e * st.frameLen;
+        for (const l of st.frame) { if (left <= 0) break; const n = Math.min(l.length, Math.ceil(left)); line(ctx, l, 0, 0, 0, n); left -= l.length; }
+      }
+    }
+    if (endFloor && seen(endFloor.y - 10, endFloor.y + 10)) line(ctx, endLine);
+    if (paradeFloor && seen(paradeFloor.y - 120, paradeFloor.y + 10)) { line(ctx, paradeLine); for (const c of parade) c.draw(ctx, t, o.reduced); }
+
+    // A sketch waiting to be inked, and the line being drawn right now: pencil grey until it comes alive.
+    ctx.save();
+    if (cartoon) ctx.globalAlpha = 0.62;
     if (pending) for (const l of pending.lines) line(ctx, l);
     if (example?.pen && !example.done) line(ctx, example.pen.pts, 0, 0, 5);
-    for (const c of creatures) if (c !== grabbed?.c) c.draw(ctx, t, o.reduced);
-    if (grabbed) grabbed.c.draw(ctx, t, o.reduced);
     if (pen) line(ctx, pen.pts, 0, 0, 5);
+    ctx.restore();
 
-    // Grain: specks of paper showing through the ink.
-    if (!pattern) pattern = ctx.createPattern(tile, 'repeat');
-    if (pattern) {
+    for (const st of stages) if (st.play && seen(st.top - 300, st.bottom + 60)) st.play.draw(ctx, t);
+    if (arrow) drawArrow();
+    for (const c of creatures) if (c !== grabbed?.c && seen(c.y - 300, c.y + 300)) c.draw(ctx, t, o.reduced);
+    if (grabbed) grabbed.c.draw(ctx, t, o.reduced);
+
+    // Rough ink has specks of paper showing through it. Inked lines are solid.
+    if (!cartoon && pattern) {
       ctx.save();
       ctx.globalCompositeOperation = 'destination-out';
       ctx.globalAlpha = 0.5;
       ctx.fillStyle = pattern;
-      ctx.fillRect(0, 0, W, H);
+      ctx.fillRect(0, top, W, H);
       ctx.restore();
     }
 
-    // The pen goes on top of everything, untextured: it's an object, not ink.
-    // Resting by the name it blinks like a cursor, until the visitor has picked it up once.
+    // The pen goes on top of everything: it's an object, not ink. Resting by the name it blinks like a cursor,
+    // until the visitor has picked it up once.
     const blink = nib.mode === 'park' && !touched ? ((t % 1.06) < 0.6 ? 1 : 0) : 1;
     const drawingExample = !!example && !example.done;
     const showHand = nib.mode !== 'hand' || drawingExample || (hover.on && !hover.over) || pen;
-    if (nib.mode !== 'hide' && showHand) drawNib(nib.x, nib.y, 0, nib.alpha * blink, nib.tilt);
+    if (nib.mode !== 'hide' && showHand && seen(nib.y - 30, nib.y + 30)) drawNib(nib.x, nib.y, nib.alpha * blink, nib.tilt);
   }
 
   function start() {
-    if (running || !visible || document.hidden) return;
+    if (running || document.hidden) return;
     running = true; last = 0;
-    raf = requestAnimationFrame(frame);
+    raf = requestAnimationFrame(tick);
   }
   function stop() { running = false; cancelAnimationFrame(raf); raf = 0; }
 
+  root.classList.add('sc-live');
   layout();
   nib.x = parkAt.x; nib.y = parkAt.y;
-  const ro = new ResizeObserver(() => layout());
+  const mine = loadMine();
+  const crowd = [...samples().slice(0, isPhone() ? 4 : 6), ...(mine ? [mine] : [])];
+  crowd.forEach((l, i) => joinParade(l, (i + 0.5) / crowd.length));
+  let relayout = 0;
+  const ro = new ResizeObserver(() => { cancelAnimationFrame(relayout); relayout = requestAnimationFrame(layout); });
   ro.observe(root);
-  const io = new IntersectionObserver(es => { visible = es[0].isIntersecting; visible ? start() : stop(); });
-  io.observe(root);
   const onVis = () => (document.hidden ? stop() : start());
   document.addEventListener('visibilitychange', onVis);
+  const onResize = () => { cancelAnimationFrame(relayout); relayout = requestAnimationFrame(layout); };
+  window.addEventListener('resize', onResize);
+  // Pictures that load late move the floors.
+  const imgs = Array.from(root.querySelectorAll('img'));
+  for (const img of imgs) if (!img.complete) img.addEventListener('load', onResize, { once: true });
   start();
   later(o.reduced ? 0.4 : 1.1, startExample);
-  void rand; void stroke;
 
   return {
     voice,
-    creatures: () => creatures,
     destroy() {
-      stop(); ro.disconnect(); io.disconnect();
+      stop(); ro.disconnect();
+      root.classList.remove('sc-live');
       document.removeEventListener('visibilitychange', onVis);
+      window.removeEventListener('resize', onResize);
+      o.card?.removeEventListener('click', onCard);
       paper.removeEventListener('pointerdown', down);
       paper.removeEventListener('pointermove', move);
       paper.removeEventListener('pointerup', up);

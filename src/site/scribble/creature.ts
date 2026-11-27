@@ -1,5 +1,6 @@
 import { INK, clamp, line, noise, quad, rand, ring, stroke, type Pt } from './ink';
 import { read, type Kind, type Reading } from './shape';
+import { STYLE, ink } from './clean';
 
 /* A creature: a doodle that came to life. It keeps the visitor's own lines as its body and grows what it needs from
    the page's own pen: legs, eyes, sometimes a mouth, a snail's foot. Everything it does is a few springs and some
@@ -7,7 +8,8 @@ import { read, type Kind, type Reading } from './shape';
    crouches before it jumps, it overshoots and settles, it blinks, it looks at whatever moves, and its outline never
    quite holds still. How its line was drawn decides how it gets around (shape.ts). */
 
-export type Floor = { x0: number; x1: number; y: number };
+/** Somewhere to stand. `fit` caps a creature's size there (a project's stage is smaller than the sheet). */
+export type Floor = { x0: number; x1: number; y: number; fit?: number; id?: string };
 type XY = { x: number; y: number };
 
 export interface Sounds { pop(size: number): void; boing(size: number): void; land(size: number): void; giggle(size: number): void; squeak(size: number): void }
@@ -25,8 +27,8 @@ export type Env = {
   you: XY;
 };
 
-type Mood = 'calm' | 'happy' | 'surprised' | 'dizzy' | 'sleepy';
-type State = 'drawn' | 'wake' | 'ground' | 'air' | 'held' | 'leave';
+export type Mood = 'calm' | 'happy' | 'surprised' | 'dizzy' | 'sleepy' | 'cold';
+type State = 'drawn' | 'wake' | 'ground' | 'air' | 'held' | 'leave' | 'leap';
 type Leg = { hx: number; hy: number; fx: number; fy: number; planted: boolean; from: number; to: number; u: number; dur: number; group: number; front: boolean };
 
 const G = 2300;
@@ -82,6 +84,21 @@ export class Creature {
   blink = 1; private blinkAt = 0; private blinkT = -1; private doubleBlink = false;
   mood: Mood = 'calm'; moodUntil = 0;
   state: State = 'drawn';
+  /** Something else is directing it (a project's little scene): it doesn't wander off on its own. */
+  script = false;
+  /** Walking faster than it likes to, for a chase. */
+  hurry = 1;
+  shiverUntil = 0;
+  /** In a parade: walks left forever, coming back round from the right. */
+  parade = false;
+  private leap: { fx: number; fy: number; tx: number; ty: number; at: number; dur: number; h: number; floor: Floor } | null = null;
+  private stare: XY | null = null; private stareUntil = 0;
+  private homeK = 1;
+  /** The visitor's sketch, point for point with `lines`, while it melts into the inked line. */
+  private rough: Pt[][] | null = null;
+  private inkedAt = -1;
+  /** Where it's been over the last moment, for an echo that copies its moves a beat late. */
+  private past: { t: number; x: number; y: number; sq: number; rot: number; fx: number; dip: number; feet: number[] }[] = [];
   born = 0;
   floor: Floor;
   goal: number | null = null; wait = 0; private cooldown = 0; private crouch = -1; private rolled = 0;
@@ -116,6 +133,13 @@ export class Creature {
       lines = lines.map(l => l.map(p => ({ x: p.x * c - p.y * s, y: p.x * s + p.y * c, w: p.w })));
       this.rot = a;
     }
+    // Inked: the sketch is redrawn as one clean, bold line (clean.ts), and melts into it as the creature wakes.
+    if (STYLE === 'cartoon') {
+      const inked = ink(lines, Math.max(maxX - minX, maxY - minY, 4), this.kind === 'hopper');
+      this.rough = inked.rough;
+      lines = inked.lines;
+      this.base = inked.weight;
+    }
     this.lines = lines;
     let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity;
     for (const l of lines) for (const p of l) { a = Math.min(a, p.x); c = Math.max(c, p.x); b = Math.min(b, p.y); d = Math.max(d, p.y); }
@@ -135,9 +159,10 @@ export class Creature {
     this.knee = spec.knee;
     const room = Math.max(120, (floor.x1 - floor.x0) * 0.42);
     this.kGoal = this.kind === 'flea' ? clamp(16 / this.size, 1, 2.2) : Math.min(1, room / this.size, 230 / this.size);
+    this.homeK = this.kGoal;
     this.legLen = spec.legs ? clamp(this.size * spec.leg[0], spec.leg[1], spec.leg[2]) / Math.min(1, this.kGoal) : 0;
     if (this.kind === 'flea') this.legLen = spec.leg[1] / this.kGoal;
-    this.er = clamp(this.size * 0.085, 4.2, 11) * this.p.eye / Math.min(1, this.kGoal);
+    this.er = (STYLE === 'cartoon' ? clamp(this.size * 0.105, 5.2, 13.5) : clamp(this.size * 0.085, 4.2, 11)) * this.p.eye / Math.min(1, this.kGoal);
     if (this.kind === 'flea') this.er = 4 / this.kGoal;
 
     if (this.kind === 'snail') this.makeSnail();
@@ -222,6 +247,7 @@ export class Creature {
 
   wake(t: number) {
     this.state = 'wake';
+    this.inkedAt = t;
     this.born = t;
     this.jelly = 1;
     this.sqv = 3.2;
@@ -290,6 +316,38 @@ export class Creature {
 
   say(m: Mood, until: number) { this.mood = m; this.moodUntil = until; }
 
+  lookAt(p: XY | null, until: number) { this.stare = p; this.stareUntil = until; }
+
+  shiver(until: number) { this.shiverUntil = until; this.say('cold', until); }
+
+  hop(env: Env, dir = 0, v = 330) { if (this.state === 'ground') this.jump(env, dir, v); }
+
+  /** Off to another floor in one big leap: a crouch, an arc, a landing. */
+  leapTo(floor: Floor, x: number, t: number) {
+    if (this.state === 'held' || this.state === 'drawn' || this.state === 'wake') return false;
+    this.kGoal = floor.fit ? Math.min(this.homeK, floor.fit / this.size) : this.homeK;
+    const ty = floor.y - this.stand();
+    const up = this.y - ty;
+    const dur = clamp(0.5 + Math.abs(up) / 1900, 0.55, 1.15);
+    const h = up > 0 ? up * 0.55 + 60 : 70;
+    this.leap = { fx: this.x, fy: this.y, tx: x, ty, at: t, dur, h, floor };
+    this.state = 'leap';
+    this.goal = null;
+    this.facing = Math.sign(x - this.x) || this.facing;
+    this.sqv += 5;
+    this.say('happy', t + dur);
+    return true;
+  }
+
+  get leaping() { return this.state === 'leap'; }
+  get standing() { return this.state === 'ground'; }
+  get awake() { return this.state !== 'drawn' && this.state !== 'wake'; }
+  /** The top of its head and its half width, on the page. */
+  get top() { return this.y + (this.minY - (this.face.length ? 0 : this.er * 0.4)) * this.k; }
+  get half() { return (this.w / 2) * this.k; }
+  /** Its main line as it's drawn right now, for tracing over. */
+  outline(t: number): Pt[] { return this.mapped(this.lines[0], 98, t).map(p => ({ ...p })); }
+
   update(dt: number, env: Env) {
     const t = env.t, age = t - this.born;
     if (this.state === 'drawn') return;
@@ -320,6 +378,7 @@ export class Creature {
       case 'air': this.flying(dt, env); break;
       case 'ground': this.living(dt, env); break;
       case 'held': this.dangling(dt); break;
+      case 'leap': this.leaping_(dt, env); break;
     }
     this.feet(dt, t);
 
@@ -331,6 +390,10 @@ export class Creature {
     while (this.trail.length && t - this.trail[0].t > 7) this.trail.shift();
 
     if (this.leaving && (this.x < this.floor.x0 - this.w * this.k - 60 || this.x > this.floor.x1 + this.w * this.k + 60)) this.gone = true;
+    if (this.parade && this.x < this.floor.x0 - this.w * this.k - 30) { this.x = this.floor.x1 + this.w * this.k + 30; for (const l of this.legs) l.fx += this.floor.x1 - this.floor.x0 + this.w * this.k * 2 + 60; }
+    // Its last half second, for an echo.
+    this.past.push({ t, x: this.x, y: this.y, sq: this.sq, rot: this.rot, fx: this.fx, dip: this.dip, feet: this.legs.flatMap(l => [l.fx, l.fy]) });
+    while (this.past.length > 2 && t - this.past[0].t > 0.6) this.past.shift();
   }
   private popped = false;
 
@@ -351,6 +414,7 @@ export class Creature {
     const t = env.t;
     let target: XY | null = null;
     if (this.mood === 'dizzy') target = { x: this.x + Math.cos(t * 9) * 80, y: this.y + Math.sin(t * 9) * 80 };
+    else if (this.stare && t < this.stareUntil) target = this.stare;
     else if (env.eye && Math.hypot(env.eye.x - this.x, env.eye.y - this.y) < 700 && this.p.curious > 0.15) target = env.eye;
     else {
       if (!this.gaze || t > this.gazeUntil) {
@@ -382,11 +446,11 @@ export class Creature {
       this.vy = 0;
       this.say('happy', env.t + 0.9);
       this.cooldown = 0.2;
-      this.hop(env, 0, 330);
+      this.jump(env, 0, 330);
     }
   }
 
-  private hop(env: Env, dir: number, v: number) {
+  private jump(env: Env, dir: number, v: number) {
     this.vy = -v * this.p.bounce;
     this.vx = dir;
     this.state = 'air';
@@ -434,6 +498,26 @@ export class Creature {
     else if (this.mood === 'surprised') this.say('calm', env.t);
   }
 
+  private leaping_(dt: number, env: Env) {
+    const L = this.leap!, u = clamp((env.t - L.at) / L.dur, 0, 1);
+    const px = this.x, py = this.y;
+    const e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+    this.x = L.fx + (L.tx - L.fx) * (0.35 * u + 0.65 * e);
+    this.y = L.fy + (L.ty - L.fy) * u - 4 * L.h * u * (1 - u);
+    this.vx = (this.x - px) / Math.max(dt, 1e-3);
+    this.vy = (this.y - py) / Math.max(dt, 1e-3);
+    this.rot += (clamp(this.vx * 0.00025, -0.25, 0.25) - this.rot) * Math.min(1, dt * 8);
+    this.sq += (clamp(Math.abs(this.vy) / 5000, 0, 0.25) - this.sq) * Math.min(1, dt * 10);
+    if (u >= 1) {
+      this.leap = null;
+      this.floor = L.floor;
+      this.vx = 0;
+      // A ball may bounce off the landing, so it is in the air until land() says otherwise.
+      this.state = 'air';
+      this.land(env, 950);
+    }
+  }
+
   private dangling(dt: number) {
     const h = this.held!;
     const tx = h.tx + h.dx, ty = h.ty + h.dy;
@@ -458,7 +542,7 @@ export class Creature {
     if (env.rush && this.cooldown < 0 && Math.hypot(env.rush.x - this.x, env.rush.y - this.y) < this.size * this.k * 0.6 + 50 && env.rush.v > 1.2) {
       this.say('surprised', t + 0.8);
       this.crouch = -1;
-      this.hop(env, (this.x > env.rush.x ? 1 : -1) * 160, 430);
+      this.jump(env, (this.x > env.rush.x ? 1 : -1) * 160, 430);
       this.cooldown = 1.4;
       return;
     }
@@ -466,6 +550,13 @@ export class Creature {
     if (this.waving > t) { this.vx *= Math.exp(-dt * 10); this.legGoal = 1; return; }
 
     const f = this.floor, margin = this.halfW() + 10;
+    if (this.parade) {
+      // Single file: wait for whoever is just ahead to get going.
+      const ahead = env.crowd.find(c => c !== this && c.parade && c.x < this.x && this.x - c.x < this.half + c.half + 18);
+      if (ahead) { this.vx *= Math.exp(-dt * 9); this.legGoal = 1; return; }
+      this.goal = this.x - 300;
+    }
+    if (this.goal === null && this.script) { this.vx *= Math.exp(-dt * 9); this.legGoal = this.mood === 'sleepy' ? 0.45 : 1; return; }
     if (this.goal === null && !this.leaving) {
       this.wait -= dt;
       this.vx *= Math.exp(-dt * 9);
@@ -484,11 +575,11 @@ export class Creature {
       return;
     }
     if (this.goal === null) return;
-    if (!this.leaving) this.goal = clamp(this.goal, f.x0 + margin, f.x1 - margin);
+    if (!this.leaving && !this.parade) this.goal = clamp(this.goal, f.x0 + margin, f.x1 - margin);
     const dx = this.goal - this.x, dir = Math.sign(dx) || 1, far = Math.abs(dx);
     if (dir !== this.facing) this.facing = dir;
     const turning = Math.abs(this.fx - this.facing) > 0.6;
-    const speed = spec.speed * this.p.speed * (this.leaving ? 1.3 : 1);
+    const speed = spec.speed * this.p.speed * (this.leaving ? 1.3 : 1) * this.hurry * (this.parade ? 0.55 : 1);
     if (far < 4) { this.goal = null; this.wait = rand(0.8, 3.4); return; }
 
     if (spec.hop) {
@@ -499,7 +590,7 @@ export class Creature {
         const reach = Math.min(far, spec.hop[1] * 0.55 * this.p.speed);
         const v = spec.hop[0] * (this.kind === 'flea' ? rand(0.7, 1.15) : rand(0.85, 1.05));
         const air = (2 * v) / G;
-        this.hop(env, dir * (reach / air), v);
+        this.jump(env, dir * (reach / air), v);
         this.cooldown = this.kind === 'bouncer' ? rand(0.02, 0.12) : rand(0.18, 0.55);
       }
       return;
@@ -520,7 +611,7 @@ export class Creature {
 
   private trick(env: Env) {
     const r = Math.random();
-    if (r < 0.5 && this.kind !== 'worm' && this.kind !== 'snail') { this.sqv -= 4; this.say('happy', env.t + 0.7); this.hop(env, 0, 300); }
+    if (r < 0.5 && this.kind !== 'worm' && this.kind !== 'snail') { this.sqv -= 4; this.say('happy', env.t + 0.7); this.jump(env, 0, 300); }
     else if (r < 0.75) { this.gaze = env.you; this.gazeUntil = env.t + 1.4; this.blinkAt = env.t + 0.2; }
     else { this.facing = -this.facing; }
   }
@@ -587,6 +678,7 @@ export class Creature {
   /** Local to page, with squash, the jelly wobble, a worm's wave and the turn. */
   private map(p: Pt, t: number, out: Pt) {
     let lx = p.x, ly = p.y;
+    if (t < this.shiverUntil) lx += Math.sin(t * 75 + ly * 0.2) * 1.1 / Math.max(0.3, this.k);
     if (this.kind === 'worm') {
       const s = (lx - this.minX) / Math.max(1, this.w);
       const moving = Math.min(1, Math.abs(this.vx) / 30);
@@ -625,8 +717,25 @@ export class Creature {
   }
 
   draw(ctx: CanvasRenderingContext2D, t: number, reduced: boolean) {
-    const boil = reduced || this.state === 'drawn' ? 0 : this.kind === 'fuzz' ? 0.7 : 0.5;
-    const seed = this.state === 'drawn' ? 0 : Math.floor(t * 9) + this.seed;
+    const cartoon = STYLE === 'cartoon';
+    // The line only wanders much when something is happening to it; standing about, it barely breathes.
+    const busy = this.jelly > 0.15 || this.state === 'held' || this.state === 'wake' || t < this.shiverUntil;
+    const boil = reduced || this.state === 'drawn' ? 0 : cartoon ? (busy ? 0.5 : this.kind === 'fuzz' ? 0.35 : 0.16) : this.kind === 'fuzz' ? 0.7 : 0.5;
+    const seed = this.state === 'drawn' ? 0 : Math.floor(t * (cartoon ? 6 : 9)) + this.seed;
+    // Melting from the sketch into the inked line, just after it wakes.
+    const melt = this.rough ? clamp((t - this.inkedAt) / 0.28, 0, 1) : 1;
+    if (this.rough && melt >= 1 && this.inkedAt >= 0) this.rough = null;
+    const body = (i: number) => this.rough && melt < 1 ? blend(this.rough[i], this.lines[i], ease(melt)) : this.lines[i];
+
+    // A shadow on the floor under it, smaller the higher it is.
+    if (cartoon && this.state !== 'held' && this.state !== 'leap' && this.state !== 'drawn') {
+      const lift = Math.max(0, this.floor.y - (this.y + this.stand()));
+      const k = 1 / (1 + lift / 90), rx = Math.max(6, this.half * 0.95) * k;
+      ctx.save();
+      ctx.globalAlpha = 0.11 * k;
+      ctx.beginPath(); ctx.ellipse(this.x, this.floor.y + 1.5, rx, Math.max(2, rx * 0.15), 0, 0, TAU); ctx.fill();
+      ctx.restore();
+    }
 
     if (this.trail.length > 1) {
       ctx.save();
@@ -649,15 +758,28 @@ export class Creature {
       }
     }
 
-    // Closed bodies are paper inside, so they hide what they walk in front of.
+    // Closed bodies are filled, so they hide what they walk in front of. Inked ones get a flat tone with a darker
+    // crescent on the side away from the light (top left), and a little paper texture in it.
     let li = 0;
     if (this.closed && this.kind !== 'fuzz') {
-      const b = this.mapped(this.lines[0], 99, t);
+      const b = this.mapped(body(0), 99, t);
+      const path = new Path2D();
+      for (let j = 0; j < b.length; j++) (j ? path.lineTo(b[j].x, b[j].y) : path.moveTo(b[j].x, b[j].y));
+      path.closePath();
       ctx.save();
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      for (let j = 0; j < b.length; j++) (j ? ctx.lineTo(b[j].x, b[j].y) : ctx.moveTo(b[j].x, b[j].y));
-      ctx.closePath(); ctx.fill();
+      if (cartoon && melt > 0.3) {
+        const off = Math.max(3, this.size * this.k * 0.1);
+        ctx.fillStyle = TONE.shade; ctx.fill(path);
+        ctx.clip(path);
+        ctx.translate(-off * 0.55, -off);
+        ctx.fillStyle = TONE.light; ctx.fill(path);
+        ctx.translate(off * 0.55, off);
+        if (TONE.texture) {
+          ctx.globalAlpha = 0.07;
+          ctx.fillStyle = TONE.texture;
+          ctx.fillRect(this.x - this.size * this.k, this.y - this.size * this.k, this.size * this.k * 2, this.size * this.k * 2);
+        }
+      } else { ctx.fillStyle = '#ffffff'; ctx.fill(path); }
       ctx.restore();
     }
     if (this.kind === 'snail') for (const e of this.extra) line(ctx, this.mapped(e, 50 + li++, t), boil, seed + li);
@@ -667,12 +789,50 @@ export class Creature {
         // Their own eyes blink: squeezed toward their middle.
         const bx = box(this.lines[i]);
         const ox = clamp(this.px * 0.35, -2, 2), oy = clamp(this.py * 0.35, -2, 2);
-        line(ctx, this.mapped(this.lines[i], i, t, 1, Math.max(0.12, this.blink), ox, oy, bx.cx, bx.cy), boil, seed + i);
-      } else line(ctx, this.mapped(this.lines[i], i, t), boil, seed + i);
+        line(ctx, this.mapped(body(i), i, t, 1, Math.max(0.12, this.blink), ox, oy, bx.cx, bx.cy), boil, seed + i);
+      } else line(ctx, this.mapped(body(i), i, t), boil, seed + i);
     }
 
     if (this.eyePop > 0.02 && !this.face.length) this.drawFace(ctx, t, boil, seed);
     if (this.face.length && this.eyePop > 0.02 && this.mood !== 'calm' && this.mood !== 'sleepy') this.mouth(ctx, t, boil, seed);
+  }
+
+  /** Itself standing still on a floor at (x, floorY), looking out, for a picture of it. Nothing about it changes. */
+  portrait(ctx: CanvasRenderingContext2D, x: number, floorY: number, t: number) {
+    const keys = ['x', 'y', 'k', 'sq', 'rot', 'fx', 'dip', 'jelly', 'mood', 'px', 'py', 'blink', 'eyePop', 'legOut', 'state', 'held'] as const;
+    const keep: Record<string, unknown> = {};
+    for (const k of keys) keep[k] = (this as unknown as Record<string, unknown>)[k];
+    const feet = this.legs.map(l => [l.fx, l.fy, l.planted] as const);
+    this.k = this.homeK; this.sq = 0; this.rot = 0; this.fx = 1; this.dip = 0; this.jelly = 0; this.mood = 'happy'; this.px = 0; this.py = 0;
+    this.blink = 1; this.eyePop = 1; this.legOut = 1; this.state = 'ground'; this.held = null;
+    this.x = x; this.y = floorY - this.stand();
+    this.legs.forEach((l, i) => { l.fx = this.hipX(l) + (i % 2 ? 1 : -1) * 0.5; l.fy = floorY; });
+    this.draw(ctx, t, true);
+    for (const k of keys) (this as unknown as Record<string, unknown>)[k] = keep[k];
+    this.legs.forEach((l, i) => { l.fx = feet[i][0]; l.fy = feet[i][1]; l.planted = feet[i][2]; });
+  }
+
+  /** How big it is standing up, at its own size. */
+  get footprint() { return { w: this.w * this.homeK, h: (this.h + this.legLen * 0.9 + this.er) * this.homeK }; }
+
+  /** Its lines, ready to be drawn again somewhere else (a parade, a saved card). */
+  get drawing() { return this.lines.map(l => l.map(p => ({ ...p }))); }
+
+  /** Its echo: itself as it was `delay` seconds ago, `dx` to the side, faint. */
+  drawEcho(ctx: CanvasRenderingContext2D, t: number, delay: number, dx: number, alpha: number) {
+    const then = t - delay;
+    let h = this.past[0];
+    for (const p of this.past) { if (p.t <= then) h = p; else break; }
+    if (!h) return;
+    const keep = { x: this.x, y: this.y, sq: this.sq, rot: this.rot, fx: this.fx, dip: this.dip, feet: this.legs.flatMap(l => [l.fx, l.fy]) };
+    this.x = h.x + dx; this.y = h.y; this.sq = h.sq; this.rot = h.rot; this.fx = h.fx; this.dip = h.dip;
+    this.legs.forEach((l, i) => { if (h.feet.length > i * 2) { l.fx = h.feet[i * 2] + dx; l.fy = h.feet[i * 2 + 1]; } });
+    ctx.save();
+    ctx.globalAlpha *= alpha;
+    this.draw(ctx, t, false);
+    ctx.restore();
+    this.x = keep.x; this.y = keep.y; this.sq = keep.sq; this.rot = keep.rot; this.fx = keep.fx; this.dip = keep.dip;
+    this.legs.forEach((l, i) => { l.fx = keep.feet[i * 2]; l.fy = keep.feet[i * 2 + 1]; });
   }
 
   private leg(ctx: CanvasRenderingContext2D, hx: number, hy: number, fx: number, fy: number, L: number, boil: number, seed: number) {
@@ -684,10 +844,19 @@ export class Creature {
     if (Math.abs(nx) > 0.2 ? Math.sign(nx) !== want : ny > 0) { nx = -nx; ny = -ny; }
     const kx = (hx + fx) / 2 + nx * bend, ky = (hy + fy) / 2 + ny * bend;
     const cxp = 2 * kx - (hx + fx) / 2, cyp = 2 * ky - (hy + fy) / 2;
+    const f = this.fx >= 0 ? 1 : -1;
+    if (STYLE === 'cartoon') {
+      // Rubber hose: one even, bold curve, and a round little foot.
+      const w = Math.max(2.2, this.base * 0.92);
+      line(ctx, stroke(quad(hx, hy, cxp, cyp, fx, fy, Math.max(6, Math.round(L / 3))), w, 0.95, 1), boil * 0.8, seed);
+      const rx = clamp(L * 0.17, 3.2, 8) , ry = rx * 0.62;
+      ctx.beginPath(); ctx.ellipse(fx + f * rx * 0.45, fy - ry * 0.55, rx, ry, 0, 0, TAU); ctx.fill();
+      return;
+    }
     const w = Math.max(1.1, this.base * 0.82);
     line(ctx, stroke(quad(hx, hy, cxp, cyp, fx, fy, Math.max(6, Math.round(L / 3))), w, 0.85, 0.95), boil * 0.8, seed);
     // A little foot pointing forward.
-    const toe = Math.max(3, L * 0.2), f = this.fx >= 0 ? 1 : -1;
+    const toe = Math.max(3, L * 0.2);
     line(ctx, stroke([[fx - f * toe * 0.2, fy], [fx + f * toe * 0.5, fy + 0.3], [fx + f * toe, fy - toe * 0.12]], w * 1.05, 0.55, 1), boil * 0.6, seed + 3);
   }
 
@@ -719,7 +888,7 @@ export class Creature {
     if (!eyes.length) return;
     const surprised = this.mood === 'surprised';
     if (surprised) r *= 1.12;
-    const ring_w = Math.max(1, this.base * 0.55);
+    const ring_w = STYLE === 'cartoon' ? Math.max(1.8, this.base * 0.62) : Math.max(1, this.base * 0.55);
     for (let i = 0; i < eyes.length; i++) {
       const e = eyes[i];
       if (this.mood === 'happy') {
@@ -733,7 +902,7 @@ export class Creature {
         line(ctx, stroke(sp, ring_w, 0.8, 0.6), boil, seed + i);
         continue;
       }
-      const lid = this.mood === 'sleepy' ? Math.min(this.blink, 0.32) : this.blink;
+      const lid = this.mood === 'sleepy' ? Math.min(this.blink, 0.32) : this.mood === 'cold' ? Math.min(this.blink, 0.5) : this.blink;
       const ry = r * Math.max(0.1, lid);
       ctx.save();
       ctx.fillStyle = '#fff';
@@ -759,7 +928,7 @@ export class Creature {
   }
 
   private mouth(ctx: CanvasRenderingContext2D, t: number, boil: number, seed: number, eyes?: XY[], r = this.er * this.k) {
-    if (this.mood !== 'happy' && this.mood !== 'surprised' && !(this.state === 'held')) return;
+    if (this.mood !== 'happy' && this.mood !== 'surprised' && this.mood !== 'cold' && !(this.state === 'held')) return;
     let mx: number, my: number;
     if (eyes && eyes.length === 2 && this.kind !== 'snail') { mx = (eyes[0].x + eyes[1].x) / 2; my = Math.max(eyes[0].y, eyes[1].y) + r * 1.45; }
     else if (this.face.length) {
@@ -770,7 +939,12 @@ export class Creature {
     } else return;
     const w = Math.max(1, this.base * 0.6);
     if (this.mood === 'happy') line(ctx, stroke(ring(mx, my - r * 0.3, r * 0.62, r * 0.5, 9, Math.PI * 0.12, Math.PI * 0.76), w, 0.7, 0.7), boil, seed + 11);
-    else {
+    else if (this.mood === 'cold') {
+      // Teeth chattering.
+      const z: [number, number][] = [], chat = Math.sin(t * 38) > 0 ? 1 : -1;
+      for (let i = 0; i <= 6; i++) z.push([mx - r * 0.7 + (i * r * 1.4) / 6, my - r * 0.15 + (i % 2 ? 1 : -1) * r * 0.14 * chat]);
+      line(ctx, stroke(z, w * 0.9, 0.8, 0.8), boil, seed + 13);
+    } else {
       ctx.save(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(mx, my, r * 0.3, r * 0.38, 0, 0, TAU); ctx.fill(); ctx.restore();
       line(ctx, stroke(ring(mx, my, r * 0.3, r * 0.38, 10), w, 1, 1), boil, seed + 12);
     }
@@ -778,6 +952,15 @@ export class Creature {
 }
 
 const TMP: Pt = { x: 0, y: 0, w: 0 };
+
+/** The two greys an inked body is filled with, and a paper texture for it (set by the page once it has one). */
+export const TONE: { light: string; shade: string; texture: CanvasPattern | null } = { light: '#fbfaf7', shade: '#e3e1db', texture: null };
+
+function blend(a: Pt[], b: Pt[], u: number): Pt[] {
+  const out: Pt[] = new Array(b.length);
+  for (let j = 0; j < b.length; j++) { const p = a[Math.min(j, a.length - 1)], q = b[j]; out[j] = { x: p.x + (q.x - p.x) * u, y: p.y + (q.y - p.y) * u, w: p.w + (q.w - p.w) * u }; }
+  return out;
+}
 
 function box(l: { x: number; y: number }[]) {
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;

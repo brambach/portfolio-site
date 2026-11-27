@@ -4,7 +4,7 @@ import { A } from '../cobalt/parts';
 import { useEntrance } from '../useEntrance';
 import { ROWS, SOCIAL, BLOCK } from '../block/copy';
 import { mountScene, type Scene } from './scene';
-import { SCRIBBLE } from './copy';
+import { SCRIBBLE, stageId } from './copy';
 import '@fontsource-variable/inter';
 import '@fontsource-variable/inter-tight';
 import '../motion.css';
@@ -41,7 +41,7 @@ function Speaker({ quiet }: { quiet: boolean }) {
 
 export default function Home() {
   const root = useRef<HTMLDivElement>(null), hero = useRef<HTMLElement>(null), canvas = useRef<HTMLCanvasElement>(null);
-  const paper = useRef<HTMLDivElement>(null), park = useRef<HTMLSpanElement>(null), scene = useRef<Scene | null>(null);
+  const paper = useRef<HTMLDivElement>(null), park = useRef<HTMLSpanElement>(null), keep = useRef<HTMLButtonElement>(null), scene = useRef<Scene | null>(null);
   const [quiet, setQuiet] = useState(false);
   useEntrance(root, 'Inter Tight Variable');
 
@@ -54,9 +54,9 @@ export default function Home() {
 
   useEffect(() => {
     if (typeof ResizeObserver !== 'function' || typeof IntersectionObserver !== 'function' || /jsdom/i.test(navigator.userAgent)) return;
-    if (!hero.current || !canvas.current || !paper.current || !park.current) return;
+    if (!root.current || !hero.current || !canvas.current || !paper.current || !park.current) return;
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const s = scene.current = mountScene({ root: hero.current, canvas: canvas.current, paper: paper.current, park: park.current, reduced });
+    const s = scene.current = mountScene({ root: root.current, hero: hero.current, canvas: canvas.current, paper: paper.current, park: park.current, card: keep.current, reduced });
     setQuiet(s.voice.muted);
     return () => { s.destroy(); scene.current = null; };
   }, []);
@@ -76,28 +76,36 @@ export default function Home() {
       <div className="sc-under">
         <a className="sc-skip" href="#work" data-enter style={{ ['--d' as string]: '.5s' }}>{SCRIBBLE.skip}<svg width="11" height="11" viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 2v10M3 8l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg></a>
       </div>
-      <canvas className="sc-ink" ref={canvas} aria-hidden="true" />
     </section>
 
     <main id="work" className="sc-work" aria-labelledby="sc-work-h">
-      <h2 id="sc-work-h" className="sc-h">{SCRIBBLE.work}</h2>
-      <ul className="sc-rows">
-        {ROWS.map(r => <li key={r.name}>
-          <div className={r.portrait ? 'sc-ph tall' : 'sc-ph'}><img src={r.img} alt={r.alt} loading="lazy" decoding="async" /></div>
-          <div className="sc-txt">
-            <h3><span className="nm">{r.name}</span><span className="kd">{r.kind}</span></h3>
-            <p>{r.line}</p>
-            {r.href && r.go && <A href={r.href} className="go">{r.go}<svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 7h10M8 3l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg></A>}
-          </div>
-        </li>)}
-      </ul>
+      <h2 id="sc-work-h" className="sc-vh">{SCRIBBLE.work}</h2>
+      {ROWS.map((r, i) => <section key={r.name} className={i % 2 ? 'sc-stage flip' : 'sc-stage'} data-stage={stageId(r.name)} aria-label={r.name}>
+        <div className={r.portrait ? 'sc-pic tall' : 'sc-pic'} data-pic>
+          {r.href ? <A href={r.href} tabIndex={-1} aria-hidden="true"><img src={r.img} alt="" loading="lazy" decoding="async" /></A> : <img src={r.img} alt={r.alt} loading="lazy" decoding="async" />}
+        </div>
+        <div className="sc-txt">
+          <h3><span className="nm">{r.name}</span><span className="kd">{r.kind}</span></h3>
+          <p>{r.line}</p>
+          {r.href && r.go && <A href={r.href} className="go">{r.go}<span className="sc-vh"> about {r.name}</span><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 7h10M8 3l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg></A>}
+        </div>
+        <div className="sc-room" data-room aria-hidden="true" />
+      </section>)}
     </main>
 
     <footer className="sc-foot">
-      <h2 className="sc-h">{BLOCK.hello}</h2>
-      <a className="mail" href={`mailto:${EMAIL}`}>{EMAIL}</a>
-      <Logos className="logos" />
+      <div className="sc-bye">
+        <div className="sc-bye-txt">
+          <h2 className="sc-h">{BLOCK.hello}</h2>
+          <a className="mail" href={`mailto:${EMAIL}`}>{EMAIL}</a>
+          <Logos className="logos" />
+        </div>
+        <div className="sc-room sc-end" data-end aria-hidden="true" />
+        <button type="button" className="sc-card" ref={keep} hidden aria-label={SCRIBBLE.save} title={SCRIBBLE.save}><img alt="" /><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14" /></svg></button>
+      </div>
+      <div className="sc-room sc-parade" data-parade aria-hidden="true" />
       <p className="fine">{BLOCK.sign}</p>
     </footer>
+    <canvas className="sc-ink" ref={canvas} aria-hidden="true" />
   </div>;
 }

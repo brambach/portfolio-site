@@ -16,11 +16,13 @@
   font-family: var(--read);
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+  position: relative;
+  overflow: hidden; overflow: clip;
 }
 .sc a { color: inherit; }
 .sc button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
 .sc :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
-.sc-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.sc-vh, .sc .cb-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* the first screen: the sheet */
 .sc-hero {
@@ -55,28 +57,90 @@
 .sc .bi, .sc [data-enter] { animation: sc-in .9s var(--ease) both; animation-delay: var(--d, .1s); }
 @keyframes sc-in { from { opacity: 0; filter: blur(6px); transform: translateY(8px); } }
 
-/* the work, plainly */
-.sc-work, .sc-foot { max-width: 760px; margin: 0 auto; padding: 0 var(--gut); box-sizing: content-box; }
-.sc-h { font-family: var(--name); font-size: 13px; font-weight: 500; letter-spacing: .02em; color: var(--mute); margin: 72px 0 12px; }
-.sc-rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--hair); }
-.sc-rows li { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 22px; padding: 20px 0; border-bottom: 1px solid var(--hair); align-items: start; }
-.sc-ph { overflow: hidden; border-radius: 6px; border: 1px solid var(--hair); background: #f2f2f2; aspect-ratio: 16 / 10; }
-.sc-ph img { display: block; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); }
-.sc-ph.tall img { object-fit: contain; }
-.sc-txt h3 { margin: 0; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; font-size: 16px; font-weight: 500; letter-spacing: -.01em; }
-.sc-txt .kd { font-size: 13px; font-weight: 400; color: var(--mute); }
-.sc-txt p { margin: 6px 0 0; font-size: 15px; line-height: 1.6; }
-.sc .go { display: inline-flex; gap: 6px; align-items: center; margin-top: 10px; font-size: 14px; text-decoration: none; border-bottom: 1px solid; padding-bottom: 1px; }
+/* the work: each project stands on its own floor, like a little stage. The picture rests on the floor in a frame the
+   pen draws round it; the creature gets the empty room beside it (scene.ts). */
+.sc-work, .sc-foot { max-width: 1040px; margin: 0 auto; padding: 0 var(--gut); box-sizing: content-box; }
+.sc-stage {
+  position: relative;
+  display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  grid-template-areas: "pic txt" "pic room";
+  grid-template-rows: auto minmax(220px, auto);
+  column-gap: clamp(32px, 5vw, 64px);
+  padding-top: 132px;
+}
+.sc-stage:first-of-type { padding-top: 96px; }
+.sc-stage.flip { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); grid-template-areas: "txt pic" "room pic"; }
+.sc-pic { grid-area: pic; align-self: end; margin-bottom: 6px; line-height: 0; }
+.sc-pic a { display: block; }
+.sc-pic img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; filter: grayscale(1) contrast(1.04); background: #f3f3f2; outline: 1px solid var(--hair); }
+.sc-live .sc-pic img { outline: 0; }
+.sc-pic.tall { justify-self: center; }
+.sc-pic.tall img { width: auto; max-width: 100%; height: min(460px, 62vh); aspect-ratio: auto; object-fit: contain; background: none; }
+.sc-txt { grid-area: txt; align-self: end; max-width: 400px; }
+.sc-room { grid-area: room; min-height: 220px; }
+.sc-txt h3 { margin: 0; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; font-family: var(--name); font-size: 22px; font-weight: 600; letter-spacing: -.025em; }
+.sc-txt .kd { font-family: var(--read); font-size: 13px; font-weight: 400; letter-spacing: 0; color: var(--mute); }
+.sc-txt p { margin: 8px 0 0; font-size: 15.5px; line-height: 1.6; }
+.sc .go { display: inline-flex; gap: 6px; align-items: center; margin-top: 12px; font-size: 14px; text-decoration: none; border-bottom: 1px solid; padding-bottom: 1px; }
 .sc .go svg { transition: transform .4s var(--ease); }
 .sc .go:hover svg { transform: translateX(3px); }
 
-.sc-foot { padding-bottom: 96px; }
-.sc-foot .mail { display: inline-block; font-size: 15.5px; text-decoration: none; border-bottom: 1px solid var(--hair); }
+/* With the scene running, a stage stays quiet until it opens: its words come up as the pen frames the picture. */
+.sc-live .sc-stage .sc-txt, .sc-live .sc-stage .sc-pic img { opacity: 0; transform: translateY(10px); transition: opacity .7s var(--ease), transform .9s var(--ease); }
+.sc-live .sc-stage .sc-pic img { transform: scale(.985); transition-delay: .12s; }
+.sc-live .sc-stage.open .sc-txt, .sc-live .sc-stage.open .sc-pic img { opacity: 1; transform: none; }
+
+/* the end: say hello, and a creature that waves you off */
+.sc-foot { padding-bottom: 56px; }
+.sc-bye {
+  position: relative;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "txt room";
+  column-gap: clamp(32px, 5vw, 64px); padding-top: 150px;
+}
+.sc-bye-txt { grid-area: txt; align-self: end; padding-bottom: 14px; }
+.sc-end { grid-area: room; min-height: 230px; }
+.sc-h { font-family: var(--name); font-size: 22px; font-weight: 600; letter-spacing: -.025em; margin: 0 0 10px; }
+.sc-foot .mail { display: inline-block; font-size: 15.5px; text-decoration: none; border-bottom: 1px solid var(--hair); transition: border-color .3s var(--ease); }
+.sc-foot .mail:hover { border-color: var(--ink); }
 .sc-foot .logos { display: flex; gap: 6px; margin: 14px 0 0 -9px; }
 .sc .logo { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; transition: background .3s var(--ease), color .3s var(--ease); }
 .sc .logo svg { width: 19px; height: 19px; }
 .sc .logo:hover { background: var(--ink); color: var(--paper); }
+
+/* the card: a little print of the creature that pops up beside it once it has waved */
+.sc-card {
+  grid-area: room; justify-self: end; align-self: end; margin: 0 4px 16px 0;
+  position: relative; z-index: 4; width: 92px; padding: 6px 6px 0 !important;
+  background: var(--paper) !important; border: 1.5px solid var(--ink) !important; border-radius: 3px;
+  transform: rotate(4deg) scale(.4); opacity: 0;
+  transition: transform .55s cubic-bezier(.3, 1.6, .5, 1), opacity .25s var(--ease);
+}
+.sc-card[hidden] { display: none; }
+.sc-card.in { transform: rotate(4deg); opacity: 1; }
+.sc-card.in:hover { transform: rotate(1deg) translateY(-3px); }
+.sc-card.in:active { transform: rotate(1deg) scale(.96); }
+.sc-card img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; }
+.sc-card svg { position: absolute; right: -11px; bottom: -11px; width: 30px; height: 30px; padding: 6px; box-sizing: border-box; border-radius: 50%; background: var(--ink); color: var(--paper); }
+.sc-card.saved svg { background: var(--paper); color: var(--ink); border: 1.5px solid var(--ink); }
+
+/* the parade: everyone else who has been drawn here, out for a walk */
+.sc-parade { height: 118px; margin-top: 44px; }
 .sc-foot .fine { font-size: 12px; color: var(--mute); margin: 18px 0 0; }
+
+@media (max-width: 760px) {
+  .sc-stage, .sc-stage.flip { grid-template-columns: minmax(0, 1fr); grid-template-areas: "txt" "pic" "room"; grid-template-rows: auto auto minmax(150px, auto); padding-top: 96px; }
+  .sc-stage:first-of-type { padding-top: 64px; }
+  .sc-txt { margin-bottom: 22px; }
+  .sc-pic { margin-bottom: 0; }
+  .sc-pic.tall img { height: min(380px, 56vh); }
+  .sc-room { min-height: 150px; }
+  .sc-txt h3 { font-size: 20px; }
+  .sc-bye { grid-template-columns: minmax(0, 1fr); grid-template-areas: "txt" "room"; padding-top: 110px; }
+  .sc-bye-txt { padding-bottom: 0; }
+  .sc-end { min-height: 170px; }
+  .sc-card { width: 80px; }
+  .sc-parade { height: 96px; margin-top: 28px; }
+}
 
 @media (max-width: 640px) {
   .sc-hero { min-height: 500px; }
@@ -84,9 +148,9 @@
   .sc-name { font-size: 23px; }
   .sc-role { font-size: 13px; }
   .sc-under { height: 14vh; height: 14svh; }
-  .sc-rows li { grid-template-columns: 1fr; gap: 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .sc [data-enter] { animation: none; }
+  .sc-live .sc-stage .sc-txt, .sc-live .sc-stage .sc-pic img, .sc-card { transition: none; }
 }
