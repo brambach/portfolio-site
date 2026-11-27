@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ComponentType } from 'react';
-import { COMIC, LOOK } from './look';
+import { COMIC, HOME_PAGE, LOOK } from './look';
 import { useSiteRoute } from './navigate';
 import type { Route, StoryId, WorkId } from './routes';
 
@@ -20,7 +20,7 @@ function page<P extends object>(load: () => Promise<{ default: ComponentType<P> 
 }
 
 const pages = {
-  home: page(() => LOOK === 'block' ? import('./block/Home') : LOOK === 'snow' ? import('./snow/Home') : LOOK === 'harvest' ? import('./harvest/Home') : LOOK === 'patch' ? import('./patch/Home') : import('./cobalt/Home')),
+  home: page(() => LOOK === 'block' ? HOME_PAGE === 'scribble' ? import('./scribble/Home') : import('./block/Home') : LOOK === 'snow' ? import('./snow/Home') : LOOK === 'harvest' ? import('./harvest/Home') : LOOK === 'patch' ? import('./patch/Home') : import('./cobalt/Home')),
   dervo: page(() => COMIC ? import('./patch/DervoPage') : import('./cobalt/DervoPage')),
   story: page<{ id: StoryId }>(() => COMIC ? import('./patch/StoryPage') : import('./cobalt/StoryPage')),
   work: page<{ id: WorkId }>(() => import('./WorkPage')),

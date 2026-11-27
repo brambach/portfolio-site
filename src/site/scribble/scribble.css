@@ -1,0 +1,92 @@
+/* The scribble home (Home.tsx): white paper, black ink, Inter Tight for the name and Inter to read. The first screen is
+   a sheet to draw on; the canvas over it holds every line, the pen and the creatures (scene.ts). The page around it is
+   kept quiet so the drawing is the only thing with any noise. */
+
+.sc {
+  --paper: #ffffff;
+  --ink: #111110;
+  --mute: rgba(17, 17, 16, .55);
+  --hair: rgba(17, 17, 16, .13);
+  --ease: cubic-bezier(.2, .7, 0, 1);
+  --read: "Inter Variable", "Inter", system-ui, -apple-system, sans-serif;
+  --name: "Inter Tight Variable", "Inter Variable", system-ui, -apple-system, sans-serif;
+  --gut: max(20px, env(safe-area-inset-left, 0px));
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--read);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+.sc a { color: inherit; }
+.sc button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.sc :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+.sc-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* the first screen: the sheet */
+.sc-hero {
+  position: relative;
+  height: 100vh; height: 100svh; min-height: 540px; max-height: 1100px;
+  display: flex; flex-direction: column;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  overflow: hidden;
+}
+.sc-ink { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 3; }
+.sc-top {
+  position: relative; z-index: 2;
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
+  padding: max(28px, env(safe-area-inset-top, 0px)) var(--gut) 0;
+  max-width: 1240px; width: 100%; margin: 0 auto; box-sizing: border-box;
+}
+.sc-name { font-family: var(--name); font-size: 26px; font-weight: 600; letter-spacing: -.03em; margin: 0; line-height: 1.1; }
+.sc-park { display: inline-block; width: 22px; height: 1em; vertical-align: baseline; }
+.sc-role { margin: 4px 0 0; font-size: 14px; color: var(--mute); }
+.sc-skip { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; color: var(--mute); text-decoration: none; padding: 10px 8px; transition: color .3s var(--ease); white-space: nowrap; }
+.sc-skip:hover { color: var(--ink); }
+.sc-skip svg { transition: transform .4s var(--ease); }
+.sc-skip:hover svg { transform: translateY(2px); }
+.sc-sound { display: grid; place-items: center; width: 36px; height: 36px; margin: -4px -8px 0 0; border-radius: 10px; color: var(--mute); transition: color .3s var(--ease), background .3s var(--ease); }
+.sc-sound:hover { color: var(--ink); background: rgba(17, 17, 16, .05); }
+.sc-sound:active { transform: scale(.94); }
+
+.sc-paper { position: relative; z-index: 1; flex: 1; touch-action: none; -webkit-tap-highlight-color: transparent; max-width: 1240px; width: 100%; margin: 0 auto; }
+@media (pointer: fine) { .sc-paper { cursor: none; } }
+.sc-under { flex: 0 0 auto; height: 11vh; height: 11svh; min-height: 64px; display: flex; justify-content: center; align-items: center; position: relative; z-index: 4; }
+
+.sc .bi, .sc [data-enter] { animation: sc-in .9s var(--ease) both; animation-delay: var(--d, .1s); }
+@keyframes sc-in { from { opacity: 0; filter: blur(6px); transform: translateY(8px); } }
+
+/* the work, plainly */
+.sc-work, .sc-foot { max-width: 760px; margin: 0 auto; padding: 0 var(--gut); box-sizing: content-box; }
+.sc-h { font-family: var(--name); font-size: 13px; font-weight: 500; letter-spacing: .02em; color: var(--mute); margin: 72px 0 12px; }
+.sc-rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--hair); }
+.sc-rows li { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 22px; padding: 20px 0; border-bottom: 1px solid var(--hair); align-items: start; }
+.sc-ph { overflow: hidden; border-radius: 6px; border: 1px solid var(--hair); background: #f2f2f2; aspect-ratio: 16 / 10; }
+.sc-ph img { display: block; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); }
+.sc-ph.tall img { object-fit: contain; }
+.sc-txt h3 { margin: 0; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; font-size: 16px; font-weight: 500; letter-spacing: -.01em; }
+.sc-txt .kd { font-size: 13px; font-weight: 400; color: var(--mute); }
+.sc-txt p { margin: 6px 0 0; font-size: 15px; line-height: 1.6; }
+.sc .go { display: inline-flex; gap: 6px; align-items: center; margin-top: 10px; font-size: 14px; text-decoration: none; border-bottom: 1px solid; padding-bottom: 1px; }
+.sc .go svg { transition: transform .4s var(--ease); }
+.sc .go:hover svg { transform: translateX(3px); }
+
+.sc-foot { padding-bottom: 96px; }
+.sc-foot .mail { display: inline-block; font-size: 15.5px; text-decoration: none; border-bottom: 1px solid var(--hair); }
+.sc-foot .logos { display: flex; gap: 6px; margin: 14px 0 0 -9px; }
+.sc .logo { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; transition: background .3s var(--ease), color .3s var(--ease); }
+.sc .logo svg { width: 19px; height: 19px; }
+.sc .logo:hover { background: var(--ink); color: var(--paper); }
+.sc-foot .fine { font-size: 12px; color: var(--mute); margin: 18px 0 0; }
+
+@media (max-width: 640px) {
+  .sc-hero { min-height: 500px; }
+  .sc-top { padding-top: max(22px, env(safe-area-inset-top, 0px)); }
+  .sc-name { font-size: 23px; }
+  .sc-role { font-size: 13px; }
+  .sc-under { height: 14vh; height: 14svh; }
+  .sc-rows li { grid-template-columns: 1fr; gap: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc [data-enter] { animation: none; }
+}
