@@ -23,6 +23,6 @@ export const ArrowLeft = () =>
 export function paintPaper() {
   const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
   const before = meta?.content;
-  if (meta) meta.content = LOOK === 'block' ? '#ffffff' : '#f6f3ec';
+  if (meta) meta.content = LOOK === 'loupe' ? '#0a0a0a' : LOOK === 'block' ? '#ffffff' : '#f6f3ec';
   return () => { if (meta && before) meta.content = before; };
 }
