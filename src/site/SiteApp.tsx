@@ -27,7 +27,7 @@ const pages = {
   arro: page<{ id: 'arro' }>(() => import('./cobalt/StoryPage')),
   teammate: page(() => import('./block/TeammatePage')),
   psyche: page(() => import('./block/PsychePage')),
-  missing: page(() => import('./NotFound')),
+  missing: page(() => LOOK === 'block' ? import('./block/NotFound') : import('./NotFound')),
 };
 
 /** The visitor's creature, along with them on every page but the home page (which has its own). */

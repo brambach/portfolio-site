@@ -88,7 +88,7 @@ export const STORIES: Record<StoryId, Story> = {
       ],
     },
     call: { title: 'The call', body: 'No model writes anything. It counts and quotes, so every fix is something you actually said.' },
-    shot: { src: '/projects/trace/replay.jpg', alt: 'A Trace replay of one session on an ink strip, with the correction "no, pnpm vitest run" underlined in red and the fix Trace drafted from it', caption: 'a session replayed · the correction in red pencil', w: 1600, h: 1404 },
+    shot: { src: '/projects/trace/replay.jpg', alt: 'A Trace replay of one session on an ink strip, with the correction "no, pnpm vitest run" underlined in pencil and the fix Trace drafted from it', caption: 'a session replayed · the correction underlined in pencil', w: 1600, h: 1404 },
     stands: {
       title: 'Where it stands',
       body: [
