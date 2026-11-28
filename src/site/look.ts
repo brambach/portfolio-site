@@ -2,11 +2,12 @@
    (vite.config.ts) to preload that look's first screen: its page chunk, its stylesheet and the faces its headline is
    lettered in, and to paint its paper before anything loads. Switching looks is this one line. The comic looks
    (patch for Halloween, harvest for Thanksgiving, snow for Christmas) share the patch's project pages. The city block
-   (black and white, with an etched drawing that keeps the season) uses the cobalt project pages, worn in grey. */
+   (black and white, with an etched drawing that keeps the season) uses the cobalt project pages, worn in grey. The
+   loupe (dark, with a glass loupe over a wall of the work) has its own project pages (src/site/loupe/Chapter.tsx). */
 
-export type Look = 'patch' | 'harvest' | 'snow' | 'cobalt' | 'block';
+export type Look = 'patch' | 'harvest' | 'snow' | 'cobalt' | 'block' | 'loupe';
 
-export const LOOK = 'block' as Look;
+export const LOOK = 'loupe' as Look;
 
 /** The looks drawn as a Sunday comic. */
 export const COMIC = LOOK === 'patch' || LOOK === 'harvest' || LOOK === 'snow';
@@ -15,7 +16,7 @@ export const COMIC = LOOK === 'patch' || LOOK === 'harvest' || LOOK === 'snow';
 export const COMIC_PAGE = LOOK === 'snow' ? 'pk xmas' : 'pk';
 
 /** The class on a cobalt project page. Under the city block the pages drop the cobalt for black ink on white (cobalt.css). */
-export const PROJECT_PAGE = LOOK === 'block' ? 'cb bw' : 'cb';
+export const PROJECT_PAGE = LOOK === 'block' || LOOK === 'loupe' ? 'cb bw' : 'cb';
 
 /** Per look: its paper, its home page, the faces the home's first screen is lettered in, and (when they differ) the
  *  faces its project pages open in. */
@@ -30,5 +31,8 @@ export const LOOKS: Record<Look, { paper: string; home: string; fonts: RegExp[];
   // The city block: white paper and black ink, Inter Tight for the name and Inter to read.
   // Its project pages are the cobalt ones worn in grey: Inter Tight for the names and Hanken to read.
   block: { paper: '#ffffff', home: 'src/site/block/Home.tsx', fonts: [/inter-tight-latin-wght-normal-[\w-]+\.woff2$/, /(?<!tight-)inter-latin-wght-normal-[\w-]+\.woff2$/], pageFonts: [/inter-tight-latin-wght-normal-[\w-]+\.woff2$/, /hanken-grotesk-latin-wght-normal-[\w-]+\.woff2$/] },
+  // The loupe: black paper and warm white ink, Archivo for the name and Geist to read (src/site/loupe). Its project
+  // pages are lettered in the same faces.
+  loupe: { paper: '#0a0a0a', home: 'src/site/loupe/Home.tsx', fonts: [/archivo-latin-wdth-normal-[\w-]+\.woff2$/, /geist-latin-wght-normal-[\w-]+\.woff2$/] },
   cobalt: { paper: '#f6f3ec', home: 'src/site/cobalt/Home.tsx', fonts: [/alegreya-latin-400-normal-[\w-]+\.woff2$/, /alegreya-latin-400-italic-[\w-]+\.woff2$/, /hanken-grotesk-latin-wght-normal-[\w-]+\.woff2$/] },
 };

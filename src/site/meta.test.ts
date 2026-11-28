@@ -42,8 +42,8 @@ describe('what each page tells search engines and link previews', () => {
     const arro = withMeta(html, PROJECT_META[1]);
     expect(arro.match(/<title>/g)).toHaveLength(1);
     expect(arro).toContain('<title>arro, bryce rambach</title>');
-    // Arro's page is a product page in the black and white look, with its own picture.
-    expect(arro).toContain(`content="https://brycerambach.com/og/${LOOK === 'block' ? 'arro-block' : 'arro'}.jpg?`);
+    // Arro's page is a product page in the black and white look and the loupe, with its own picture.
+    expect(arro).toContain(`content="https://brycerambach.com/og/${LOOK === 'block' || LOOK === 'loupe' ? 'arro-block' : 'arro'}.jpg?`);
     expect(arro).not.toContain('__notFound = true');
     const missing = withMeta(html, NOT_FOUND_META);
     expect(missing.indexOf('window.__notFound = true')).toBeLessThan(missing.indexOf('Paint the page'));

@@ -38,7 +38,10 @@ export const HOME_META: PageMeta = {
   title: NAME,
   description: HOME_DESCRIPTION,
   // The card wears the same look as the home page, so switching LOOK switches it too.
-  ...(LOOK === 'block' ? {
+  ...(LOOK === 'loupe' ? {
+    image: `/og/home-loupe.jpg?v=${V}`,
+    imageAlt: 'Bryce Rambach’s home page in the dark: his name in tall white letters over a tilted wall of his projects’ screens, with a round glass lens magnifying part of the wall',
+  } : LOOK === 'block' ? {
     image: `/og/home-block.jpg?v=${V}`,
     imageAlt: 'Bryce Rambach’s home page in black and white: his name, his links and a list of his work beside a tall etched drawing of a city block with brownstones, a walk-up with a fire escape, towers behind, a street lamp and trees',
   } : LOOK === 'snow' ? {
@@ -57,8 +60,8 @@ export const HOME_META: PageMeta = {
 };
 
 export const PROJECT_META: PageMeta[] = WORK_IDS.map(id => {
-  // In the black and white look Arro's page is a product page (SiteApp.tsx), so its preview says what that page says.
-  if (id === 'arro' && LOOK === 'block') return { file: 'projects/arro.html', path: '/projects/arro', title: `${ARRO.name.toLowerCase()}, ${NAME.toLowerCase()}`, description: ARRO.description, image: `${ARRO.og.src}?v=${V}`, imageAlt: ARRO.og.alt };
+  // In the black and white look and the loupe, Arro's page is a product page (SiteApp.tsx), so its preview says what that page says.
+  if (id === 'arro' && (LOOK === 'block' || LOOK === 'loupe')) return { file: 'projects/arro.html', path: '/projects/arro', title: `${ARRO.name.toLowerCase()}, ${NAME.toLowerCase()}`, description: ARRO.description, image: `${ARRO.og.src}?v=${V}`, imageAlt: ARRO.og.alt };
   const p = projects.find(project => project.id === id)!;
   return {
     file: `projects/${id}.html`,
@@ -107,7 +110,11 @@ export const PSYCHE_META: PageMeta = {
   imageAlt: 'The Psyche case study in black and white: "A civilization of AI villagers whose psychology is real machinery." over its role, team and timeline',
 };
 
-export const PAGES = [HOME_META, ...PROJECT_META, ...STORY_META, TEAMMATE_META, PSYCHE_META, NOT_FOUND_META];
+/** In the loupe look the AI teammate's old named address shows the unnamed page (loupe/chapters.ts), so its preview
+ *  is the unnamed one too. */
+const stories = LOOK === 'loupe' ? STORY_META.map(m => m.path === '/projects/jared' ? { ...TEAMMATE_META, file: m.file, path: m.path } : m) : STORY_META;
+
+export const PAGES = [HOME_META, ...PROJECT_META, ...stories, TEAMMATE_META, PSYCHE_META, NOT_FOUND_META];
 
 const attr = (text: string) => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
