@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, type CSSProperties } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 import { startCursor } from './chrome';
 import { finePointer, NAME, reducedMotion } from './content';
+import { DotNumber } from './dotNumber';
 import { ECursor, ELink } from './links';
 import { PALETTES } from './palette';
 import { homeHref } from './routes';
@@ -9,18 +10,6 @@ import './not-found.css';
 
 /* An address that doesn't exist. The same paper, type and links as the rest of the site, with the number set in
    the site's dots, and two ways back in. */
-
-/** 4, 0, 4 on a grid of 3 by 5 dots each, with a column between them. */
-const DIGITS = ['101', '101', '111', '001', '001'].map((four, y) => [four, ['111', '101', '101', '101', '111'][y], four].join('0'));
-
-function DotNumber() {
-  const cols = DIGITS[0].length, rows = DIGITS.length;
-  return <svg className="e-404__dots" viewBox={`0 0 ${cols} ${rows}`} aria-hidden="true">
-    {DIGITS.flatMap((row, y) => [...row].map((on, x) => on === '1'
-      ? <circle key={`${x}-${y}`} className={x >= 4 && x <= 6 ? 'is-zero' : undefined} cx={x + 0.5} cy={y + 0.5} r={0.36} style={{ '--k': x + y } as CSSProperties} />
-      : null))}
-  </svg>;
-}
 
 export default function NotFound() {
   const root = useRef<HTMLDivElement>(null);
@@ -58,7 +47,7 @@ export default function NotFound() {
     </header>
     <main className="e-404__main">
       <div className="e-rule" aria-hidden="true"><span>404</span><i /><span>Not found</span></div>
-      <DotNumber />
+      <DotNumber className="e-404__dots" zero="is-zero" />
       <h1 className="e-404__title">Nothing here.</h1>
       <p className="e-404__line">This address doesn’t go anywhere. It might be an old link, or a typo.</p>
       <ul className="e-404__ways">

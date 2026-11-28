@@ -24,7 +24,7 @@ export const PSYCHE = {
     both: { src: '/projects/psyche/both-ways.jpg', w: 1440, h: 900, alt: 'The game\'s Both ways panel: three years run with and without the change, with a chart of differing choices per day and a comparison table.', caption: 'The real panel in the game. Every number above comes from this run.' },
     history: { src: '/projects/psyche/history.jpg', w: 1400, h: 826, alt: 'The history explorer: a timeline of choices across 36 years and one choice walked back through the minds that caused it.', caption: 'The history explorer. One choice in year 16, walked back through five minds to a belief formed 21 years earlier.' },
     walkIn: { src: '/projects/psyche/walk-in.jpg', w: 1400, h: 875, alt: 'Walking in as a character on a jetty, handing food to a fisher, with a card showing their reaction and trust changes.', caption: 'Walk in as a character. A gift goes through their cognitive cycle and changes what they think of you.' },
-    minds: { src: '/projects/psyche/minds.jpg', w: 1400, h: 875, alt: 'A villager card listing how she reads each neighbour, with likes, trust, what she thinks they feel and what they actually feel.', caption: 'Open anyone\'s head: how one villager reads everyone else, set against how they actually feel.' },
+    minds: { src: '/projects/psyche/minds.jpg', w: 1400, h: 875, alt: 'A villager card listing how she reads each neighbor, with likes, trust, what she thinks they feel and what they actually feel.', caption: 'Open anyone\'s head: how one villager reads everyone else, set against how they actually feel.' },
     night: { src: '/projects/psyche/night.jpg', w: 1400, h: 738, alt: 'A voxel village at night, gathered around a fire, with tents and a granary under construction.' },
   },
   principle: {
@@ -50,9 +50,11 @@ export const PSYCHE = {
       { label: 'Laws passed to force giving', a: '3', b: 'None', pips: 3 },
       { label: 'Leader', a: 'Someone new', b: 'The usual one' },
     ],
-    split: { total: '2,817', label: 'choices came out differently', a: 2519, aLabel: 'traced straight back to my edit', b: 298, bLabel: 'ripples through what others did' },
+    // From the game's Both ways panel in the picture above: 2,563 of the run's 2,817 choices came out differently, and
+    // the ledger traces 2,519 of those straight back to the edit and the other 44 to what people did differently.
+    split: { total: '2,563 of 2,817', label: 'choices came out differently', a: 2519, aLabel: 'traced straight back to my edit', b: 44, bLabel: 'ripples through what others did' },
     chainLabel: 'How it unfolded',
-    chain: ['People held back from the common store.', 'Neighbours saw it and held it against them.', '“Everyone puts into the store” became a norm.', 'A quarter still held back, so the leader wrote laws to force giving.', 'The resentment fell on the leader. The town named someone else the next spring.', 'Nobody scripted any of it.'],
+    chain: ['People held back from the common store.', 'Neighbors saw it and held it against them.', '“Everyone puts into the store” became a norm.', 'A quarter still held back, so the leader wrote laws to force giving.', 'The resentment fell on the leader. The town named someone else the next spring.', 'Nobody scripted any of it.'],
     pair: [
       { label: 'Vote to build the hall', rows: [['14 to 1', 'warm town, for'], ['9', 'hard town, against']] },
       { label: '48 days of trade', rows: [['24', 'gifts in a warm town'], ['46', 'refusals in a hard town, 0 gifts']] },
@@ -65,7 +67,7 @@ export const PSYCHE = {
     h3: 'A deterministic engine over a prompt-driven agent',
     dl: [
       ['The call', 'Psychology as code: memory that fades and is rewritten on recall, emotions from appraisal, trust, a four-slot workspace. The model is a narrow faculty that must cite its inputs.'],
-      ['Why', 'A prompt can\'t tell you why. If the reasons aren\'t real, the whole product is theatre.'],
+      ['Why', 'A prompt can\'t tell you why. If the reasons aren\'t real, the whole product is theater.'],
       ['What it bought', 'Real causes, byte-identical replays, and clean counterfactuals. Luck is keyed to what it decides, so a change that does nothing gives zero differences. A test checks that.'],
     ],
   },

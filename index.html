@@ -21,6 +21,9 @@
           var r = e.reason;
           if (r && ((r.name === 'AbortError' && /skipped/i.test(r.message)) || (r.name === 'InvalidStateError' && /transition/i.test(r.message)))) e.preventDefault();
         });
+        // A look can dress the not-found page as its own (the black and white one does, src/site/block/NotFound.tsx):
+        // then it gets the look's paper and faces like the pages it sits beside. The build fills this in.
+        var looked404 = !!window.__notFound && /* look-404 */false;
         var site = window.__notFound || moving || (path === ''
           ? !['mile', 'from', 'town', 'city', 'journey', 'forest'].some(function (k) { return q.has(k); })
           : older.indexOf(path) < 0);
@@ -34,7 +37,7 @@
         // self-hosted faces, and the older pages bring their own (/next asks for Sentient itself, in QuietIndex.tsx),
         // so only this page asks for it. Added from here it doesn't block the page; the stylesheets fall back to
         // Georgia until it arrives.
-        if (site && !work && (path !== '' || window.__notFound)) {
+        if (site && !work && !looked404 && (path !== '' || window.__notFound)) {
           [['preconnect', 'https://api.fontshare.com'], ['preconnect', 'https://cdn.fontshare.com'],
            ['stylesheet', 'https://api.fontshare.com/v2/css?f[]=sentient@400,400i&display=swap']].forEach(function (l) {
             var link = document.createElement('link');
@@ -47,11 +50,13 @@
         if (!site) return;
         var root = document.documentElement;
         var meta = document.querySelector('meta[name="theme-color"]');
-        if ((path === '' || work) && !window.__notFound) {
-          // The home's faces for the first screen (a project page's too), preloaded here and nowhere else: its CSS arrives with its chunk, after
-          // the JS, so without this the headline would wait on a round trip it doesn't need. The build fills the
-          // list (vite.config.ts).
-          [/* home-fonts */].forEach(function (href) {
+        if (((path === '' || work) && !window.__notFound) || looked404) {
+          // The faces for the first screen, preloaded here and nowhere else: a page's CSS arrives with its chunk, after
+          // the JS, so without this the headline would wait on a round trip it doesn't need. The home and the case
+          // studies are set in the home's faces, the other pages in the look wear its project faces, and the older
+          // project pages (lucid and friends) bring their own. The build fills the lists (vite.config.ts).
+          var home = path === '' || looked404 || /^\/projects\/(ai-teammate|psyche)$/.test(path);
+          (home ? [/* home-fonts */] : looked ? [/* page-fonts */] : []).forEach(function (href) {
             var link = document.createElement('link');
             link.rel = 'preload';
             link.as = 'font';
@@ -69,7 +74,7 @@
           });
           // The home and Dervo's page are on the paper of the look they wear (src/site/look.ts, filled in by the
           // build); the other project pages keep the cream.
-          var paper = looked ? /* home-paper */'#f6f3ec' : '#f3eee3';
+          var paper = looked || looked404 ? /* home-paper */'#f6f3ec' : '#f3eee3';
           root.style.background = paper;
           if (meta) meta.setAttribute('content', paper);
           return;
@@ -91,9 +96,9 @@
     <style>
       :root[data-e="night"] { color-scheme: dark; }
     </style>
-    <link rel="icon" href="/favicon.ico" sizes="48x48" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=e1" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=e1" />
+    <link rel="icon" href="/favicon.ico?v=bw1" sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=bw1" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=bw1" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="author" content="Bryce Rambach" />
     <script type="application/ld+json">
@@ -103,7 +108,7 @@
         "name": "Bryce Rambach",
         "url": "https://brycerambach.com",
         "sameAs": ["https://github.com/brambach", "https://x.com/brycerambach", "https://www.linkedin.com/in/bryce-rambach/"],
-        "jobTitle": "Software engineer"
+        "jobTitle": "Product engineer"
       }
     </script>
     <!-- page-meta -->

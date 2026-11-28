@@ -26,16 +26,18 @@ const sitePages = (): Plugin => ({
     // get this file too and don't use them.
     const look = LOOKS[LOOK];
     const font = (re: RegExp) => Object.keys(bundle).find(f => re.test(f));
-    const fonts = look.fonts.map(font).filter(Boolean).map(f => JSON.stringify(`/${f}`));
+    const faces = (list: RegExp[]) => list.map(font).filter(Boolean).map(f => JSON.stringify(`/${f}`));
+    const fonts = faces(look.fonts), pageFonts = faces(look.pageFonts ?? look.fonts);
     const home = Object.values(bundle).find(c => c.type === 'chunk' && c.facadeModuleId?.endsWith(look.home));
     if (!home || home.type !== 'chunk') throw new Error(`site-pages: no chunk for ${look.home}`);
     const chunks = [home.fileName, ...home.imports].map(f => JSON.stringify(`/${f}`));
-    for (const hole of ['[/* home-fonts */]', '[/* home-chunks */]', "/* home-paper */'#f6f3ec'"]) {
+    for (const hole of ['[/* home-fonts */]', '[/* page-fonts */]', '[/* home-chunks */]', "/* home-paper */'#f6f3ec'", '/* look-404 */false']) {
       if (!html.includes(hole)) throw new Error(`site-pages: no ${hole} in index.html`);
     }
     for (const page of PAGES) {
-      const source = withMeta(html, page).replace('[/* home-fonts */]', `[${fonts.join(', ')}]`)
-        .replace('[/* home-chunks */]', `[${chunks.join(', ')}]`).replace("/* home-paper */'#f6f3ec'", JSON.stringify(look.paper));
+      const source = withMeta(html, page).replace('[/* home-fonts */]', `[${fonts.join(', ')}]`).replace('[/* page-fonts */]', `[${pageFonts.join(', ')}]`)
+        .replace('[/* home-chunks */]', `[${chunks.join(', ')}]`).replace("/* home-paper */'#f6f3ec'", JSON.stringify(look.paper))
+        .replace('/* look-404 */false', String(LOOK === 'block'));
       if (page.file === 'index.html') index.source = source;
       else this.emitFile({ type: 'asset', fileName: page.file, source });
     }

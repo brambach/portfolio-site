@@ -34,6 +34,11 @@
   ],
   "redirects": [
     {
+      "source": "/projects/jared",
+      "destination": "/projects/ai-teammate",
+      "permanent": false
+    },
+    {
       "source": "/lab/e/projects/:id(dervo|arro|lucid|integration-portal|agentsky)",
       "destination": "/projects/:id",
       "permanent": false
@@ -55,7 +60,7 @@
       "destination": "/index.html"
     },
     {
-      "source": "/projects/:id(dervo|arro|lucid|integration-portal|agentsky|jared|trace|easeprint|dryline|comehome)",
+      "source": "/projects/:id(dervo|arro|lucid|integration-portal|agentsky|jared|trace|easeprint|dryline|comehome|ai-teammate|psyche)",
       "destination": "/projects/:id.html"
     },
     {
