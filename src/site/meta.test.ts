@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { HOME_META, headTags, NOT_FOUND_META, PAGES, PROJECT_META, sitemap, withMeta } from './meta';
-import { STORY_IDS, WORK_IDS } from './routes';
+import { CASE_IDS, MOVED, STORY_IDS, WORK_IDS } from './routes';
 import { LOOK } from './look';
 
 const DASHES = /[\u2013\u2014]/;
@@ -52,6 +52,8 @@ describe('what each page tells search engines and link previews', () => {
   it('lists the home page and the project pages in the sitemap, and robots.txt points at it', () => {
     const map = sitemap();
     for (const page of [HOME_META, ...PROJECT_META]) expect(map).toContain(`<loc>https://brycerambach.com${page.path}</loc>`);
+    for (const page of PAGES) if (page.path && page.path !== '/' && !MOVED[page.path]) expect(map).toContain(`<loc>https://brycerambach.com${page.path}</loc>`);
+    for (const from of Object.keys(MOVED)) expect(map).not.toContain(`<loc>https://brycerambach.com${from}</loc>`);
     expect(map).not.toContain('404');
     expect(map).not.toContain('/projects/port<');
     expect(PAGES.map(p => p.file)).not.toContain('projects/port.html');
@@ -69,10 +71,11 @@ describe('vercel.json', () => {
   const config = JSON.parse(readFileSync(path.join(root, 'vercel.json'), 'utf8')) as {
     redirects: { source: string; destination: string }[]; rewrites: { source: string; destination: string }[];
   };
-  const ids = WORK_IDS.join('|'), pages = [...WORK_IDS, ...STORY_IDS].join('|');
+  const ids = WORK_IDS.join('|'), pages = [...WORK_IDS, ...STORY_IDS, ...CASE_IDS].join('|');
 
-  it('sends the motion lab to the site, a lab project to the same project first', () => {
+  it('sends moved pages on, and the motion lab to the site, a lab project to the same project first', () => {
     expect(config.redirects.map(r => [r.source, r.destination])).toEqual([
+      ...Object.entries(MOVED),
       [`/lab/e/projects/:id(${ids})`, '/projects/:id'],
       ['/lab', '/'],
       ['/lab/:path*', '/'],
@@ -82,5 +85,21 @@ describe('vercel.json', () => {
   it('serves each project’s own page and nothing else under /projects, so the rest gets the not-found page', () => {
     expect(config.rewrites).toContainEqual({ source: `/projects/:id(${pages})`, destination: '/projects/:id.html' });
     expect(config.rewrites.some(r => r.source === '/projects/:path*' || r.source.startsWith('/lab'))).toBe(false);
+  });
+
+  // The host only finds a page's HTML through a rewrite (there are no clean URLs), so a page the build writes without
+  // one is a 404 when its address is opened directly, even though following a link to it on the site works.
+  it('reaches every page the build writes at its own address', () => {
+    const pattern = (source: string) => new RegExp(`^${source.replace(/:(\w+)\(([^)]+)\)/g, '(?<$1>$2)')}$`);
+    const served = (address: string) => config.rewrites.flatMap(r => {
+      const m = pattern(r.source).exec(address);
+      return m ? [r.destination.replace(/:(\w+)/g, (_, k: string) => m.groups?.[k] ?? '').replace(/^\//, '')] : [];
+    })[0];
+    for (const page of PAGES) {
+      if (page.path === null || page.path === '/') continue;
+      expect(served(page.path), page.path).toBe(page.file);
+    }
+    for (const id of CASE_IDS) expect(served(`/projects/${id}`), id).toBe(`projects/${id}.html`);
+    expect(served('/projects/nope')).toBeUndefined();
   });
 });

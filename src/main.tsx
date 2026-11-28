@@ -4,7 +4,7 @@ import './index.css';
 import {QuietIdleLoader} from './prototype/QuietIdleLoader';
 import {SiteAnalytics} from './lib/SiteAnalytics';
 import SiteApp from './site/SiteApp';
-import {fromLab, siteRoute} from './site/routes';
+import {fromLab, movedTo, siteRoute} from './site/routes';
 
 const Garage=lazy(()=>import('./admin/Garage'));
 const showGarage=window.location.pathname.replace(/\/$/,'')==='/admin';
@@ -13,9 +13,9 @@ const showProjectLab=window.location.pathname.replace(/\/$/,'')==='/project-lab'
 // The site is / and /projects/<id>, plus a not-found page for anything it doesn't know (see src/site/routes.ts).
 // The older pages it still links to keep their addresses: the road at /work (and /?mile=<id>), the 3D drive at
 // /drive with its old links (/?town and friends), and the quiet index at /next.
-// The motion lab's addresses (/lab and under it) moved to the site. vercel.json redirects them; this does the same
-// wherever that doesn't run.
-const labMoved = fromLab(window.location.pathname);
+// The motion lab's addresses (/lab and under it) moved to the site, and a few pages moved to new addresses (MOVED in
+// src/site/routes.ts). vercel.json redirects them; this does the same wherever that doesn't run.
+const labMoved = fromLab(window.location.pathname) ?? movedTo(window.location.pathname);
 if (labMoved) window.location.replace(labMoved + window.location.search + window.location.hash);
 // /projects on its own was the paper collection; the list is on the home page now.
 const toHome = !labMoved && window.location.pathname.replace(/\/$/, '') === '/projects';

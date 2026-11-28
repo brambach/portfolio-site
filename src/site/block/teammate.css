@@ -189,6 +189,20 @@
   .tm .t-pdr > div { grid-template-columns: 1fr; gap: 4px; }
   .tm .t-pipe { grid-template-columns: 1fr; gap: 18px; }
   .tm .t-pipe::before { left: 11px; right: auto; top: 12px; bottom: 12px; width: 1px; height: auto; }
-  .tm .t-pipe li { flex-direction: row; align-items: flex-start; text-align: left; gap: 14px; padding: 0; }
+  .tm .t-pipe li { flex-direction: row; align-items: flex-start; text-align: left; gap: 8px; padding: 0; }
+  /* Every dot keeps the room the stacked one needs, so all five labels start on the same line. */
+  .tm .t-dot { margin-right: 10px; }
   .tm .t-frame { padding: 22px 10px; }
 }
+
+/* the not-found page (NotFound.tsx): the same frame, the number in dots, two ways back */
+.tm .nf-main { min-height: calc(100svh - 120px); display: flex; flex-direction: column; justify-content: center; padding-block: 48px 96px; }
+.tm .nf-dots { display: block; width: min(56vw, 240px); height: auto; margin: 22px 0 16px; overflow: visible; }
+.tm .nf-dots circle { fill: var(--t-fg); transform-box: fill-box; transform-origin: center; animation: nf-dot .7s var(--m-arrive, cubic-bezier(.2, .7, .2, 1)) both; animation-delay: calc(.2s + var(--k) * 40ms); }
+.tm .nf-dots circle.ring { fill: var(--t-bg); stroke: var(--t-fg); stroke-width: .11; }
+@keyframes nf-dot { from { opacity: 0; scale: .2; } }
+.tm .nf-ways { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 32px; margin-top: 32px; }
+.tm .nf-go { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; color: var(--t-fg); border-bottom: 1px solid var(--t-line); padding-bottom: 2px; }
+.tm .nf-go svg { transition: transform .4s var(--m-spring, ease); }
+@media (hover: hover) { .tm .nf-go:hover svg { transform: translateX(3px); } }
+@media (prefers-reduced-motion: reduce) { .tm .nf-dots circle { animation: none; } }

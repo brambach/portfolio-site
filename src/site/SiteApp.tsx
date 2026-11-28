@@ -29,7 +29,7 @@ const pages = {
   teammate: page(() => import('./block/TeammatePage')),
   psyche: page(() => import('./block/PsychePage')),
   chapter: page<{ id: string }>(() => import('./loupe/Chapter')),
-  missing: page(() => import('./NotFound')),
+  missing: page(() => LOOK === 'block' ? import('./block/NotFound') : import('./NotFound')),
 };
 
 /** In the loupe look, every project with its own page wears the loupe's chapter (loupe/chapters.ts). */

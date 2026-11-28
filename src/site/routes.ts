@@ -26,6 +26,11 @@ export const DRIVE_KEYS = ['from', 'town', 'city', 'journey', 'forest'] as const
 export const CASE_IDS = ['ai-teammate', 'psyche'] as const;
 export type CaseId = (typeof CASE_IDS)[number];
 
+/** Addresses that now send people to another page (vercel.json does the same with a redirect, and main.tsx wherever
+ *  that doesn't run). The AI teammate's case study is unnamed, so the older page that used the product's name sends
+ *  people to it. */
+export const MOVED: Readonly<Record<string, string>> = { '/projects/jared': '/projects/ai-teammate' };
+
 export type Route = { name: 'home' } | { name: 'project'; id: WorkId } | { name: 'story'; id: StoryId } | { name: 'case'; id: CaseId } | { name: 'missing' };
 
 const trim = (pathname: string) => pathname.replace(/\/+$/, '');
@@ -42,7 +47,7 @@ export function siteRoute(pathname: string, search = ''): Route | null {
     const q = new URLSearchParams(search);
     return [...ROAD_KEYS, ...DRIVE_KEYS].some(k => q.has(k)) ? null : { name: 'home' };
   }
-  if ((OLDER_PATHS as readonly string[]).includes(path)) return null;
+  if ((OLDER_PATHS as readonly string[]).includes(path) || movedTo(path)) return null;
   const id = workId(path);
   if (id) return { name: 'project', id };
   const story = /^\/projects\/([^/]+)$/.exec(path)?.[1];
@@ -57,6 +62,11 @@ export function fromLab(pathname: string): string | null {
   if (path !== '/lab' && !path.startsWith('/lab/')) return null;
   const id = /^\/lab\/e\/projects\/([^/]+)$/.exec(path)?.[1];
   return id && (WORK_IDS as readonly string[]).includes(id) ? `/projects/${id}` : '/';
+}
+
+/** Where a moved address lives now, or null when it hasn't moved. */
+export function movedTo(pathname: string): string | null {
+  return MOVED[trim(pathname)] ?? null;
 }
 
 /** A project page's address, keeping a `?hour=` preview so the paper doesn't change on the way. */
