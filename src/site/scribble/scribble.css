@@ -1,0 +1,156 @@
+/* The scribble home (Home.tsx): white paper, black ink, Inter Tight for the name and Inter to read. The first screen is
+   a sheet to draw on; the canvas over it holds every line, the pen and the creatures (scene.ts). The page around it is
+   kept quiet so the drawing is the only thing with any noise. */
+
+.sc {
+  --paper: #ffffff;
+  --ink: #111110;
+  --mute: rgba(17, 17, 16, .55);
+  --hair: rgba(17, 17, 16, .13);
+  --ease: cubic-bezier(.2, .7, 0, 1);
+  --read: "Inter Variable", "Inter", system-ui, -apple-system, sans-serif;
+  --name: "Inter Tight Variable", "Inter Variable", system-ui, -apple-system, sans-serif;
+  --gut: max(20px, env(safe-area-inset-left, 0px));
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--read);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden; overflow: clip;
+}
+.sc a { color: inherit; }
+.sc button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.sc :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+.sc-vh, .sc .cb-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* the first screen: the sheet */
+.sc-hero {
+  position: relative;
+  height: 100vh; height: 100svh; min-height: 540px; max-height: 1100px;
+  display: flex; flex-direction: column;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  overflow: hidden;
+}
+.sc-ink { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 3; }
+.sc-top {
+  position: relative; z-index: 2;
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
+  padding: max(28px, env(safe-area-inset-top, 0px)) var(--gut) 0;
+  max-width: 1240px; width: 100%; margin: 0 auto; box-sizing: border-box;
+}
+.sc-name { font-family: var(--name); font-size: 26px; font-weight: 600; letter-spacing: -.03em; margin: 0; line-height: 1.1; }
+.sc-park { display: inline-block; width: 22px; height: 1em; vertical-align: baseline; }
+.sc-role { margin: 4px 0 0; font-size: 14px; color: var(--mute); }
+.sc-skip { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; color: var(--mute); text-decoration: none; padding: 10px 8px; transition: color .3s var(--ease); white-space: nowrap; }
+.sc-skip:hover { color: var(--ink); }
+.sc-skip svg { transition: transform .4s var(--ease); }
+.sc-skip:hover svg { transform: translateY(2px); }
+.sc-sound { display: grid; place-items: center; width: 36px; height: 36px; margin: -4px -8px 0 0; border-radius: 10px; color: var(--mute); transition: color .3s var(--ease), background .3s var(--ease); }
+.sc-sound:hover { color: var(--ink); background: rgba(17, 17, 16, .05); }
+.sc-sound:active { transform: scale(.94); }
+
+.sc-paper { position: relative; z-index: 1; flex: 1; touch-action: none; -webkit-tap-highlight-color: transparent; max-width: 1240px; width: 100%; margin: 0 auto; }
+@media (pointer: fine) { .sc-paper { cursor: none; } }
+.sc-under { flex: 0 0 auto; height: 11vh; height: 11svh; min-height: 64px; display: flex; justify-content: center; align-items: center; position: relative; z-index: 4; }
+
+.sc .bi, .sc [data-enter] { animation: sc-in .9s var(--ease) both; animation-delay: var(--d, .1s); }
+@keyframes sc-in { from { opacity: 0; filter: blur(6px); transform: translateY(8px); } }
+
+/* the work: each project stands on its own floor, like a little stage. The picture rests on the floor in a frame the
+   pen draws round it; the creature gets the empty room beside it (scene.ts). */
+.sc-work, .sc-foot { max-width: 1040px; margin: 0 auto; padding: 0 var(--gut); box-sizing: content-box; }
+.sc-stage {
+  position: relative;
+  display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  grid-template-areas: "pic txt" "pic room";
+  grid-template-rows: auto minmax(220px, auto);
+  column-gap: clamp(32px, 5vw, 64px);
+  padding-top: 132px;
+}
+.sc-stage:first-of-type { padding-top: 96px; }
+.sc-stage.flip { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); grid-template-areas: "txt pic" "room pic"; }
+.sc-pic { grid-area: pic; align-self: end; margin-bottom: 6px; line-height: 0; }
+.sc-pic a { display: block; }
+.sc-pic img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; filter: grayscale(1) contrast(1.04); background: #f3f3f2; outline: 1px solid var(--hair); }
+.sc-live .sc-pic img { outline: 0; }
+.sc-pic.tall { justify-self: center; }
+.sc-pic.tall img { width: auto; max-width: 100%; height: min(460px, 62vh); aspect-ratio: auto; object-fit: contain; background: none; }
+.sc-txt { grid-area: txt; align-self: end; max-width: 400px; }
+.sc-room { grid-area: room; min-height: 220px; }
+.sc-txt h3 { margin: 0; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; font-family: var(--name); font-size: 22px; font-weight: 600; letter-spacing: -.025em; }
+.sc-txt .kd { font-family: var(--read); font-size: 13px; font-weight: 400; letter-spacing: 0; color: var(--mute); }
+.sc-txt p { margin: 8px 0 0; font-size: 15.5px; line-height: 1.6; }
+.sc .go { display: inline-flex; gap: 6px; align-items: center; margin-top: 12px; font-size: 14px; text-decoration: none; border-bottom: 1px solid; padding-bottom: 1px; }
+.sc .go svg { transition: transform .4s var(--ease); }
+.sc .go:hover svg { transform: translateX(3px); }
+
+/* With the scene running, a stage stays quiet until it opens: its words come up as the pen frames the picture. */
+.sc-live .sc-stage .sc-txt, .sc-live .sc-stage .sc-pic img { opacity: 0; transform: translateY(10px); transition: opacity .7s var(--ease), transform .9s var(--ease); }
+.sc-live .sc-stage .sc-pic img { transform: scale(.985); transition-delay: .12s; }
+.sc-live .sc-stage.open .sc-txt, .sc-live .sc-stage.open .sc-pic img { opacity: 1; transform: none; }
+
+/* the end: say hello, and a creature that waves you off */
+.sc-foot { padding-bottom: 56px; }
+.sc-bye {
+  position: relative;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "txt room";
+  column-gap: clamp(32px, 5vw, 64px); padding-top: 150px;
+}
+.sc-bye-txt { grid-area: txt; align-self: end; padding-bottom: 14px; }
+.sc-end { grid-area: room; min-height: 230px; }
+.sc-h { font-family: var(--name); font-size: 22px; font-weight: 600; letter-spacing: -.025em; margin: 0 0 10px; }
+.sc-foot .mail { display: inline-block; font-size: 15.5px; text-decoration: none; border-bottom: 1px solid var(--hair); transition: border-color .3s var(--ease); }
+.sc-foot .mail:hover { border-color: var(--ink); }
+.sc-foot .logos { display: flex; gap: 6px; margin: 14px 0 0 -9px; }
+.sc .logo { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; transition: background .3s var(--ease), color .3s var(--ease); }
+.sc .logo svg { width: 19px; height: 19px; }
+.sc .logo:hover { background: var(--ink); color: var(--paper); }
+
+/* the card: a little print of the creature that pops up beside it once it has waved */
+.sc-card {
+  grid-area: room; justify-self: end; align-self: end; margin: 0 4px 16px 0;
+  position: relative; z-index: 4; width: 92px; padding: 6px 6px 0 !important;
+  background: var(--paper) !important; border: 1.5px solid var(--ink) !important; border-radius: 3px;
+  transform: rotate(4deg) scale(.4); opacity: 0;
+  transition: transform .55s cubic-bezier(.3, 1.6, .5, 1), opacity .25s var(--ease);
+}
+.sc-card[hidden] { display: none; }
+.sc-card.in { transform: rotate(4deg); opacity: 1; }
+.sc-card.in:hover { transform: rotate(1deg) translateY(-3px); }
+.sc-card.in:active { transform: rotate(1deg) scale(.96); }
+.sc-card img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; }
+.sc-card svg { position: absolute; right: -11px; bottom: -11px; width: 30px; height: 30px; padding: 6px; box-sizing: border-box; border-radius: 50%; background: var(--ink); color: var(--paper); }
+.sc-card.saved svg { background: var(--paper); color: var(--ink); border: 1.5px solid var(--ink); }
+
+/* the parade: everyone else who has been drawn here, out for a walk */
+.sc-parade { height: 118px; margin-top: 44px; }
+.sc-foot .fine { font-size: 12px; color: var(--mute); margin: 18px 0 0; }
+
+@media (max-width: 760px) {
+  .sc-stage, .sc-stage.flip { grid-template-columns: minmax(0, 1fr); grid-template-areas: "txt" "pic" "room"; grid-template-rows: auto auto minmax(150px, auto); padding-top: 96px; }
+  .sc-stage:first-of-type { padding-top: 64px; }
+  .sc-txt { margin-bottom: 22px; }
+  .sc-pic { margin-bottom: 0; }
+  .sc-pic.tall img { height: min(380px, 56vh); }
+  .sc-room { min-height: 150px; }
+  .sc-txt h3 { font-size: 20px; }
+  .sc-bye { grid-template-columns: minmax(0, 1fr); grid-template-areas: "txt" "room"; padding-top: 110px; }
+  .sc-bye-txt { padding-bottom: 0; }
+  .sc-end { min-height: 170px; }
+  .sc-card { width: 80px; }
+  .sc-parade { height: 96px; margin-top: 28px; }
+}
+
+@media (max-width: 640px) {
+  .sc-hero { min-height: 500px; }
+  .sc-top { padding-top: max(22px, env(safe-area-inset-top, 0px)); }
+  .sc-name { font-size: 23px; }
+  .sc-role { font-size: 13px; }
+  .sc-under { height: 14vh; height: 14svh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc [data-enter] { animation: none; }
+  .sc-live .sc-stage .sc-txt, .sc-live .sc-stage .sc-pic img, .sc-card { transition: none; }
+}

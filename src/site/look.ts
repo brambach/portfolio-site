@@ -8,6 +8,10 @@ export type Look = 'patch' | 'harvest' | 'snow' | 'cobalt' | 'block';
 
 export const LOOK = 'block' as Look;
 
+/** Which home the black and white look opens on: the city block (block/Home.tsx), or the sheet of paper where
+ *  whatever you draw comes alive (scribble/Home.tsx). The project pages are the same either way. */
+export const HOME_PAGE = 'scribble' as 'block' | 'scribble';
+
 /** The looks drawn as a Sunday comic. */
 export const COMIC = LOOK === 'patch' || LOOK === 'harvest' || LOOK === 'snow';
 
@@ -29,6 +33,6 @@ export const LOOKS: Record<Look, { paper: string; home: string; fonts: RegExp[];
   // Cobalt engraving: warm paper, Alegreya roman and italic for the headline, Hanken to read.
   // The city block: white paper and black ink, Inter Tight for the name and Inter to read.
   // Its project pages are the cobalt ones worn in grey: Inter Tight for the names and Hanken to read.
-  block: { paper: '#ffffff', home: 'src/site/block/Home.tsx', fonts: [/inter-tight-latin-wght-normal-[\w-]+\.woff2$/, /(?<!tight-)inter-latin-wght-normal-[\w-]+\.woff2$/], pageFonts: [/inter-tight-latin-wght-normal-[\w-]+\.woff2$/, /hanken-grotesk-latin-wght-normal-[\w-]+\.woff2$/] },
+  block: { paper: '#ffffff', home: HOME_PAGE === 'scribble' ? 'src/site/scribble/Home.tsx' : 'src/site/block/Home.tsx', fonts: [/inter-tight-latin-wght-normal-[\w-]+\.woff2$/, /(?<!tight-)inter-latin-wght-normal-[\w-]+\.woff2$/], pageFonts: [/inter-tight-latin-wght-normal-[\w-]+\.woff2$/, /hanken-grotesk-latin-wght-normal-[\w-]+\.woff2$/] },
   cobalt: { paper: '#f6f3ec', home: 'src/site/cobalt/Home.tsx', fonts: [/alegreya-latin-400-normal-[\w-]+\.woff2$/, /alegreya-latin-400-italic-[\w-]+\.woff2$/, /hanken-grotesk-latin-wght-normal-[\w-]+\.woff2$/] },
 };
