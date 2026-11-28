@@ -169,8 +169,10 @@ describe('The Psyche story', () => {
     }
   });
 
-  it('adds up: the split is 2,817 choices', () => {
-    expect(PSYCHE.both.split.a + PSYCHE.both.split.b).toBe(2817);
+  // The numbers match the game's own panel in the picture beside them: 2,563 of 2,817 choices came out differently.
+  it('adds up: the split is the 2,563 choices that came out differently, of 2,817', () => {
+    expect(PSYCHE.both.split.a + PSYCHE.both.split.b).toBe(2563);
+    expect(PSYCHE.both.split.total).toBe('2,563 of 2,817');
   });
 });
 

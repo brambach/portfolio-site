@@ -27,7 +27,7 @@ const pages = {
   arro: page<{ id: 'arro' }>(() => import('./cobalt/StoryPage')),
   teammate: page(() => import('./block/TeammatePage')),
   psyche: page(() => import('./block/PsychePage')),
-  missing: page(() => import('./NotFound')),
+  missing: page(() => LOOK === 'block' ? import('./block/NotFound') : import('./NotFound')),
 };
 
 const pageOf = (r: Route) => r.name === 'home' ? pages.home : r.name === 'story' ? pages.story : r.name === 'case' ? r.id === 'psyche' ? pages.psyche : pages.teammate : r.name === 'project' ? r.id === 'dervo' ? pages.dervo : r.id === 'arro' && LOOK === 'block' ? pages.arro : pages.work : pages.missing;

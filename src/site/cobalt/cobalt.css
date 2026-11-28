@@ -173,7 +173,8 @@
 @media (hover: hover) { .cb .back:hover svg { transform: translateX(-4px); } }
 .cb .p-head { max-width: 720px; margin: 0 auto; padding-top: 72px; }
 .cb .p-head .mono { margin-bottom: 18px; }
-.cb .p-head h1 { font-size: clamp(64px, 10vw, 124px); line-height: 1; }
+/* The floor gives way on the narrowest phones so a long name (comehome, easeprint) still fits on one line. */
+.cb .p-head h1 { font-size: clamp(min(64px, 18vw), 10vw, 124px); line-height: 1; }
 .cb .p-head .line { margin-top: 14px; font-size: clamp(24px, 3vw, 36px); line-height: 1.15; color: var(--ink); }
 .cb .p-head .lead { margin-top: 28px; font-size: clamp(18px, 2vw, 20px); line-height: 1.6; color: var(--body); }
 .cb .p-col { max-width: 720px; margin: 0 auto; padding-top: 88px; display: flex; flex-direction: column; gap: 20px; }
@@ -185,6 +186,9 @@
 .cb .facts div { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .cb .facts dd { margin: 0; }
 .cb .facts dd a { align-self: flex-start; }
+/* A source link sits among plain facts, so it keeps a faint underline at rest to say it's a link (a phone has no hover). */
+.cb .facts dd a.link { text-decoration: underline 1px color-mix(in srgb, currentColor 30%, transparent); text-underline-offset: 4px; }
+@media (hover: hover) { .cb .facts dd a.link:hover { text-decoration-color: transparent; } }
 @media (max-width: 560px) { .cb .facts { grid-template-columns: minmax(0, 1fr); } }
 .cb .wide { max-width: 1136px; margin: 72px auto 0; }
 .cb .wide img { display: block; width: 100%; height: auto; border-radius: 10px; box-shadow: var(--lift); }

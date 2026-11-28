@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fromLab, homeHref, siteRoute, workHref, workId, WORK_IDS } from './routes';
+import { fromLab, homeHref, MOVED, movedTo, siteRoute, workHref, workId, WORK_IDS } from './routes';
 
 describe('the site’s addresses', () => {
   it('answers / with the home page', () => {
@@ -50,5 +50,15 @@ describe('the site’s addresses', () => {
     expect(workHref('arro')).toBe('/projects/arro');
     expect(homeHref('?hour=7&x=1')).toBe('/?hour=7');
     expect(homeHref('', '#work')).toBe('/#work');
+  });
+});
+
+describe('moved pages', () => {
+  it('sends the named AI teammate page to the unnamed case study, and leaves the site to send it there', () => {
+    expect(movedTo('/projects/jared')).toBe('/projects/ai-teammate');
+    expect(movedTo('/projects/jared/')).toBe('/projects/ai-teammate');
+    expect(siteRoute('/projects/jared')).toBeNull();
+    for (const to of Object.values(MOVED)) expect(siteRoute(to)?.name, to).not.toBe('missing');
+    expect(movedTo('/projects/trace')).toBeNull();
   });
 });

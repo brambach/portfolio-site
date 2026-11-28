@@ -5,7 +5,7 @@ import CobaltStory from './cobalt/StoryPage';
 import { WORK } from './cobalt/copy';
 import { PAGES } from './meta';
 import PatchStory from './patch/StoryPage';
-import { siteRoute } from './routes';
+import { movedTo, siteRoute } from './routes';
 import { STORIES, STORY_IDS } from './stories';
 
 const DASHES = /[–—]/;
@@ -16,7 +16,8 @@ afterEach(() => vi.restoreAllMocks());
 describe('The product pages', () => {
   it('have an address, a built page and a row on the home page that leads to it', () => {
     for (const id of STORY_IDS) {
-      expect(siteRoute(`/projects/${id}`)).toEqual({ name: 'story', id });
+      // A page that moved (MOVED in routes.ts) sends people on instead of showing itself.
+      expect(siteRoute(`/projects/${id}`)).toEqual(movedTo(`/projects/${id}`) ? null : { name: 'story', id });
       expect(PAGES.some(p => p.file === `projects/${id}.html`)).toBe(true);
       expect(WORK.rows.some(r => r.href === `/projects/${id}`)).toBe(true);
     }

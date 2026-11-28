@@ -1,7 +1,7 @@
 import { projects } from '../projects/catalog';
 import { NAME } from './content';
 import { LOOK } from './look';
-import { WORK_IDS } from './routes';
+import { movedTo, WORK_IDS } from './routes';
 import { TEAMMATE } from './block/teammate';
 import { PSYCHE } from './block/psyche';
 import { ARRO, STORY_IDS, STORIES, type Story } from './stories';
@@ -149,8 +149,9 @@ export function withMeta(html: string, page: PageMeta) {
   return out;
 }
 
-/** The sitemap: the home page, the project pages and the product pages. */
+/** The sitemap: the home page, the project pages, the product pages and the case studies, less any that moved. */
 export function sitemap() {
-  const urls = [HOME_META, ...PROJECT_META, ...STORY_META, TEAMMATE_META, PSYCHE_META].map(p => `  <url><loc>${ORIGIN}${p.path}</loc></url>`);
+  const urls = [HOME_META, ...PROJECT_META, ...STORY_META, TEAMMATE_META, PSYCHE_META].filter(p => p.path && !movedTo(p.path))
+    .map(p => `  <url><loc>${ORIGIN}${p.path}</loc></url>`);
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
 }
